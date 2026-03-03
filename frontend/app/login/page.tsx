@@ -30,7 +30,13 @@ export default function LoginPage() {
                 router.push(`/dashboard/${result.role}`);
             }
         } catch (err: unknown) {
-            toast.error((err as Error).message || 'Login failed');
+            const e = err as Error & { needsVerification?: boolean; email?: string };
+            if (e.needsVerification && e.email) {
+                toast.error('Please verify your email first.');
+                router.push(`/signup/verify-otp?email=${encodeURIComponent(e.email)}`);
+            } else {
+                toast.error(e.message || 'Login failed');
+            }
         } finally {
             setLoading(false);
         }

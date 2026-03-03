@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { authAPI } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Building2, Mail, Lock, Eye, EyeOff, ChevronDown, DollarSign, FileText } from 'lucide-react';
@@ -14,7 +13,6 @@ const NICHES = ['Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gamin
 
 export default function BrandSignupPage() {
     const router = useRouter();
-    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [form, setForm] = useState({
@@ -45,11 +43,8 @@ export default function BrandSignupPage() {
                 approxBudgetUSD: form.approxBudgetUSD ? Number(form.approxBudgetUSD) : undefined,
                 role: 'brand',
             });
-            const result = await login(form.email, form.password);
-            if (result.success) {
-                toast.success('Welcome to Porchest! 🎉');
-                router.push('/dashboard/brand');
-            }
+            toast.success('Account created! Check your email for the verification code.');
+            router.push(`/signup/verify-otp?email=${encodeURIComponent(form.email)}`);
         } catch (err: unknown) {
             toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed');
         } finally {

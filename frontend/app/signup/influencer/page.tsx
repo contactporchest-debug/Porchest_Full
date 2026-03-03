@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { authAPI } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Star, Mail, Lock, Eye, EyeOff, ChevronDown, Globe, Calendar } from 'lucide-react';
@@ -39,7 +38,6 @@ By checking the box below, you acknowledge that you have read, understood, and a
 
 export default function InfluencerSignupPage() {
     const router = useRouter();
-    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
@@ -71,11 +69,8 @@ export default function InfluencerSignupPage() {
                 role: 'influencer',
                 termsAccepted: true,
             });
-            const result = await login(form.email, form.password);
-            if (result.success) {
-                toast.success('Welcome to Porchest! ⭐ Complete your profile to get discovered.');
-                router.push('/dashboard/influencer/profile');
-            }
+            toast.success('Account created! Check your email for the verification code.');
+            router.push(`/signup/verify-otp?email=${encodeURIComponent(form.email)}`);
         } catch (err: unknown) {
             toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed');
         } finally {

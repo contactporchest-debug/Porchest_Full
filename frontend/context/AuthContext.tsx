@@ -43,6 +43,7 @@ interface AuthContextType {
     token: string | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; role?: string }>;
+    loginWithToken: (token: string, user: User) => void;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
 }
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
     token: null,
     loading: true,
     login: async () => ({ success: false }),
+    loginWithToken: () => { },
     logout: () => { },
     updateUser: () => { },
 });
@@ -88,9 +90,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             return { success: false };
         } catch (err: unknown) {
-            const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
-            throw new Error(msg);
+            const errData = (err as { response?: { data?: { message?: string; needsVerification?: boolean; email?: string } } })?.response?.data;
+            const error = new Error(errData?.message || 'Login failed') as Error & { needsVerification?: boolean; email?: string };
+            error.needsVerification = errData?.needsVerification;
+            error.email = errData?.email;
+            throw error;
         }
+    };
+
+    const loginWithToken = (token: string, user: User) => {
+        localStorage.setItem('porchest_token', token);
+        localStorage.setItem('porchest_user', JSON.stringify(user));
+        setToken(token);
+        setUser(user);
     };
 
     const logout = () => {
@@ -109,7 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, token, loading, login, loginWithToken, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );
