@@ -66,3 +66,4 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 - ✅ Earnings tracking
 - ✅ Glassmorphism dark UI with neon purple accent
 - ✅ Responsive design + smooth animations
+# Porchest_Full
