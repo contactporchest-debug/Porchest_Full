@@ -1,0 +1,585 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════
+   PORCHEST — ANTI-GRAVITY DESIGN SYSTEM
+═══════════════════════════════════════════ */
+
+:root {
+  /* Color System */
+  --purple-primary: #7B3FF2;
+  --purple-accent: #A855F7;
+  --purple-glow: rgba(123, 63, 242, 0.35);
+  --purple-dim: rgba(123, 63, 242, 0.12);
+
+  /* Backgrounds */
+  --bg-base: #050505;
+  --bg-elevated: #0B0B0F;
+  --bg-card: rgba(20, 20, 30, 0.65);
+  --bg-card-hover: rgba(24, 24, 38, 0.80);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(123, 63, 242, 0.30);
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-muted: #A1A1AA;
+  --text-faint: rgba(255, 255, 255, 0.35);
+
+  /* Glows */
+  --glow-card: 0 0 60px rgba(123, 63, 242, 0.12), 0 0 120px rgba(123, 63, 242, 0.06);
+  --glow-btn: 0 0 30px rgba(123, 63, 242, 0.5), 0 0 80px rgba(123, 63, 242, 0.2);
+  --glow-btn-hover: 0 0 40px rgba(168, 85, 247, 0.65), 0 0 100px rgba(123, 63, 242, 0.3);
+  --glow-input: 0 0 0 1px rgba(123, 63, 242, 0.5), 0 0 20px rgba(123, 63, 242, 0.15);
+
+  /* Radius */
+  --radius-card: 28px;
+  --radius-btn: 999px;
+  --radius-sm: 16px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --radius-xl: 40px;
+
+  /* Transitions */
+  --transition: all 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-slow: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ───── BASE RESET ───── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', 'Inter', -apple-system, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ───── BACKGROUND SYSTEM ───── */
+
+/* Animated neon grid */
+.neon-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 180, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 180, 0.035) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Edge glow vignette */
+.edge-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 20% 100% at 0% 50%, rgba(123, 63, 242, 0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 100% at 100% 50%, rgba(123, 63, 242, 0.08) 0%, transparent 100%);
+}
+
+/* Hero glow */
+.hero-glow {
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(123, 63, 242, 0.2) 0%, transparent 65%);
+  pointer-events: none;
+  animation: pulse-glow 6s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+/* ───── GLASSMORPHISM CARD ───── */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(25px) saturate(160%);
+  -webkit-backdrop-filter: blur(25px) saturate(160%);
+  box-shadow: var(--glow-card), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-glow);
+  box-shadow: 0 0 80px rgba(123, 63, 242, 0.2), 0 0 160px rgba(123, 63, 242, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+}
+
+/* Larger radii variants */
+.glass-card-xl {
+  border-radius: var(--radius-xl);
+}
+
+.glass-card-sm {
+  border-radius: var(--radius-sm);
+  border-radius: 20px;
+}
+
+/* Stat card variant */
+.stat-card {
+  padding: 24px;
+  background: rgba(14, 14, 22, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 0 40px rgba(123, 63, 242, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  border-color: rgba(123, 63, 242, 0.3);
+  box-shadow: 0 0 60px rgba(123, 63, 242, 0.15);
+  transform: translateY(-3px);
+}
+
+/* ───── BUTTONS ───── */
+.glow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--radius-btn);
+  background: linear-gradient(135deg, var(--purple-primary), var(--purple-accent));
+  color: white;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  box-shadow: var(--glow-btn);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.glow-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transition: left 400ms ease;
+}
+
+.glow-btn:hover {
+  box-shadow: var(--glow-btn-hover);
+  transform: translateY(-2px);
+}
+
+.glow-btn:hover::before {
+  left: 100%;
+}
+
+.glow-btn:active {
+  transform: translateY(0px);
+}
+
+/* Outline Button */
+.outline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 30px;
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: 1px solid rgba(123, 63, 242, 0.45);
+  outline: none;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.outline-btn:hover {
+  background: rgba(123, 63, 242, 0.12);
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 30px rgba(123, 63, 242, 0.2);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
+/* ───── TYPOGRAPHY ───── */
+.gradient-text {
+  background: linear-gradient(90deg, var(--purple-primary), var(--purple-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.headline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+/* ───── INPUTS ───── */
+.input-dark {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 13px 16px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  display: block;
+}
+
+.input-dark::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.input-dark:focus {
+  border-color: var(--purple-primary);
+  background: rgba(123, 63, 242, 0.06);
+  box-shadow: var(--glow-input);
+}
+
+/* ───── SIDEBAR LINKS ───── */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.sidebar-link:hover {
+  background: rgba(123, 63, 242, 0.1);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--purple-primary);
+}
+
+.sidebar-link.active {
+  background: rgba(123, 63, 242, 0.15);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--purple-primary);
+}
+
+.sidebar-link.active svg {
+  color: #a855f7;
+}
+
+/* ───── BADGES ───── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge-purple {
+  background: rgba(123, 63, 242, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(123, 63, 242, 0.25);
+}
+
+.badge-green {
+  background: rgba(0, 255, 127, 0.08);
+  color: #4ade80;
+  border: 1px solid rgba(0, 255, 127, 0.2);
+}
+
+.badge-yellow {
+  background: rgba(255, 195, 0, 0.08);
+  color: #fbbf24;
+  border: 1px solid rgba(255, 195, 0, 0.2);
+}
+
+.badge-red {
+  background: rgba(255, 60, 60, 0.08);
+  color: #f87171;
+  border: 1px solid rgba(255, 60, 60, 0.2);
+}
+
+.badge-blue {
+  background: rgba(0, 212, 255, 0.08);
+  color: #60d5f8;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* ───── CHAT BUBBLES ───── */
+.chat-bubble-self {
+  background: linear-gradient(135deg, var(--purple-primary), var(--purple-accent));
+  color: #fff;
+  border-radius: 20px 20px 6px 20px;
+  padding: 11px 18px;
+  max-width: 75%;
+  box-shadow: 0 0 20px rgba(123, 63, 242, 0.3);
+}
+
+.chat-bubble-other {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 20px 20px 20px 6px;
+  padding: 11px 18px;
+  max-width: 75%;
+  backdrop-filter: blur(10px);
+}
+
+/* ───── DATA TABLE ───── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  padding: 12px 20px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.data-table td {
+  padding: 14px 20px;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.data-table tr:hover td {
+  background: rgba(123, 63, 242, 0.04);
+}
+
+/* ───── SCROLLBAR ───── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(123, 63, 242, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 63, 242, 0.5);
+}
+
+/* ───── SPINNER ───── */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(123, 63, 242, 0.2);
+  border-top-color: var(--purple-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ───── GLOW ACCENTS ───── */
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Horizontal rule with glow */
+.glow-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(123, 63, 242, 0.5), transparent);
+  border: none;
+  margin: 0;
+}
+
+/* Progress bar */
+.progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ───── ICON GLOW ───── */
+.icon-glow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(123, 63, 242, 0.12);
+  border: 1px solid rgba(123, 63, 242, 0.2);
+  color: #a78bfa;
+  transition: var(--transition);
+}
+
+.icon-glow:hover {
+  background: rgba(123, 63, 242, 0.2);
+  box-shadow: 0 0 20px rgba(123, 63, 242, 0.3);
+}
+
+/* ───── ANTI-GRAVITY FLOAT ───── */
+@keyframes float-a {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes float-b {
+
+  0%,
+  100% {
+    transform: translateY(-6px);
+  }
+
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.float-a {
+  animation: float-a 5s ease-in-out infinite;
+}
+
+.float-b {
+  animation: float-b 7s ease-in-out infinite;
+}
+
+/* ───── PULSE RING ───── */
+@keyframes ring-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.ring-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(123, 63, 242, 0.6);
+  animation: ring-pulse 2.5s ease-out infinite;
+}
+
+.ring-pulse-2 {
+  animation-delay: 0.8s;
+}
+
+.ring-pulse-3 {
+  animation-delay: 1.6s;
+}
+
+/* ───── GRADIENT BORDER ───── */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(123, 63, 242, 0.6), rgba(168, 85, 247, 0.3), transparent 60%);
+  z-index: -1;
+  pointer-events: none;
+}
