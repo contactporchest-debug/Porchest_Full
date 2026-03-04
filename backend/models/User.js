@@ -22,7 +22,17 @@ const userSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ['pending', 'active', 'suspended'],
-            default: 'active',
+            default: 'pending',
+        },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        otp: {
+            type: String,
+        },
+        otpExpires: {
+            type: Date,
         },
         profileImageURL: { type: String, default: '' },
 
