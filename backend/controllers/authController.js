@@ -186,6 +186,10 @@ exports.login = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Account suspended. Contact support.' });
         }
 
+        if (user.status === 'pending' && !user.isVerified) {
+            return res.status(403).json({ success: false, message: 'Please verify your email before logging in.', needsVerification: true, email: user.email });
+        }
+
         const token = generateToken(user);
         res.json({ success: true, token, user: user.toJSON() });
     } catch (error) {
