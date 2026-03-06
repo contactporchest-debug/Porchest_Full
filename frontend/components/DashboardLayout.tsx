@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <nav style={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
                     {nav.map((item) => {
                         const isExact = pathname === item.href;
-                        const isNested = item.href !== `/dashboard/${user.role}` && pathname.startsWith(item.href) && item.href !== '/dashboard/messages';
+                        const isNested = item.href !== `/dashboard/${user.role}` && pathname?.startsWith(item.href) && item.href !== '/dashboard/messages';
                         const isActive = isExact || isNested || (item.href === '/dashboard/messages' && pathname === '/dashboard/messages');
                         return (
                             <Link key={item.href} href={item.href}
