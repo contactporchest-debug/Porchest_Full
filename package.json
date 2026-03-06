@@ -1,6 +1,11 @@
 {
   "name": "porchest",
   "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
   "dependencies": {
     "next": "14.2.5"
   }

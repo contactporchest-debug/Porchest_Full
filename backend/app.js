@@ -16,12 +16,25 @@ const corsOptions = {
             'http://localhost:3001',
             process.env.FRONTEND_URL,
         ].filter(Boolean);
-        // Allow requests with no origin (curl, Postman, same-origin)
-        if (!origin || allowed.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, true); // allow all in dev
+
+        // Allow requests with no origin (curl, Postman, server-side)
+        if (!origin) return callback(null, true);
+
+        // Allow production domain and Vercel preview deployments
+        if (
+            allowed.includes(origin) ||
+            /\.vercel\.app$/.test(origin) ||
+            /\.porchest\.com$/.test(origin)
+        ) {
+            return callback(null, true);
         }
+
+        // Allow all in non-production for dev flexibility
+        if (process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+
+        callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
