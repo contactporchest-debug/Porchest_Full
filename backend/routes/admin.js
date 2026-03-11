@@ -19,7 +19,5 @@ router.get('/requests', adminController.getAllRequests);
 router.get('/verifications', adminController.getVerificationQueue);
 router.patch('/verifications/:id', adminController.reviewVerification);
 
-// Legacy
-router.get('/campaigns', adminController.getAllCampaigns);
 
 module.exports = router;
