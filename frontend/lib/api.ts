@@ -1,13 +1,27 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.porchest.com/api';
+/**
+ * API base URL resolution:
+ *
+ *  - On Vercel (production/preview):
+ *      NEXT_PUBLIC_API_URL should be set to "/api" in Vercel dashboard.
+ *      This makes all requests go to the same domain, hitting our
+ *      serverless function at api/index.js (no CORS issues).
+ *
+ *  - Locally:
+ *      NEXT_PUBLIC_API_URL in frontend/.env.local → "http://localhost:5001/api"
+ *
+ *  Fallback: "/api" (works correctly on Vercel even without env var set).
+ */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
     baseURL: API_URL,
     headers: { 'Content-Type': 'application/json' },
+    withCredentials: false, // Using JWT in Authorization header, not cookies
 });
 
-// Attach JWT token
+// Attach JWT token to every request
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
         const token = localStorage.getItem('porchest_token');
@@ -36,6 +50,8 @@ export const authAPI = {
     login: (data: { email: string; password: string }) => api.post('/auth/login', data),
     register: (data: Record<string, unknown>) => api.post('/auth/register', data),
     getMe: () => api.get('/auth/me'),
+    verifyOTP: (data: { email: string; otp: string }) => api.post('/auth/verify-otp', data),
+    resendOTP: (data: { email: string }) => api.post('/auth/resend-otp', data),
 };
 
 // ─── Admin ───────────────────────────────────────────

@@ -5,12 +5,9 @@ const nextConfig = {
     images: {
         domains: ['api.dicebear.com', 'ui-avatars.com'],
     },
-    env: {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://www.porchest.com/api',
-        NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL || 'https://www.porchest.com',
-    },
-    // Tell Next.js NOT to webpack-bundle these packages — they are resolved
-    // at runtime from node_modules (prevents the aws4/mongodb bundling warning)
+    // NOTE: Do NOT hardcode NEXT_PUBLIC_API_URL here.
+    // It is set via Vercel Environment Variables in the dashboard.
+    // For local dev, it is set in frontend/.env.local
     serverExternalPackages: [
         'mongoose',
         'express',
