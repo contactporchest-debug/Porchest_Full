@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, Shield, Building2, Star, Zap } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -17,14 +17,12 @@ export default function LoginPage() {
     const { login } = useAuth();
     const router = useRouter();
 
-    const handleLogin = async (e: React.FormEvent, demoEmail?: string, demoPass?: string) => {
-        e?.preventDefault();
-        const loginEmail = demoEmail || email;
-        const loginPassword = demoPass || password;
-        if (!loginEmail || !loginPassword) return toast.error('Enter email and password');
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return toast.error('Enter email and password');
         setLoading(true);
         try {
-            const result = await login(loginEmail, loginPassword);
+            const result = await login(email, password);
             if (result.success) {
                 toast.success('Welcome back!');
                 router.push(`/dashboard/${result.role}`);
@@ -36,18 +34,11 @@ export default function LoginPage() {
         }
     };
 
-    const demoLogins = [
-        { label: 'Login as Admin', email: 'admin@porchest.com', pass: 'Admin123!', icon: <Shield size={14} />, color: '#ff8c42' },
-        { label: 'Login as Brand', email: 'brand@demo.com', pass: 'Brand123!', icon: <Building2 size={14} />, color: '#7B3FF2' },
-        { label: 'Login as Influencer', email: 'influencer@demo.com', pass: 'Influencer123!', icon: <Star size={14} />, color: '#A855F7' },
-    ];
-
     return (
         <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: '#050505', position: 'relative', overflow: 'hidden' }}>
             <div className="neon-grid" />
             <div className="edge-glow" />
 
-            {/* Glow halo behind the card */}
             <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '500px', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(123,63,242,0.18) 0%, transparent 65%)', pointerEvents: 'none', zIndex: 0 }} />
 
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
@@ -98,33 +89,6 @@ export default function LoginPage() {
                             {!loading && <Zap size={15} />} Sign In
                         </GlowButton>
                     </form>
-
-                    {/* Demo divider */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '24px 0' }}>
-                        <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', fontFamily: 'Space Grotesk' }}>DEMO ACCESS</span>
-                        <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {demoLogins.map((d) => (
-                            <button key={d.label} onClick={(e) => handleLogin(e as React.FormEvent, d.email, d.pass)}
-                                disabled={loading}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
-                                    padding: '12px 16px', borderRadius: '16px', cursor: 'pointer',
-                                    background: `${d.color}0c`, border: `1px solid ${d.color}25`,
-                                    color: 'rgba(255,255,255,0.75)', fontSize: '13.5px', fontWeight: '500',
-                                    fontFamily: 'inherit', transition: 'all 200ms ease',
-                                }}
-                                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${d.color}18`; (e.currentTarget as HTMLElement).style.borderColor = `${d.color}50`; }}
-                                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = `${d.color}0c`; (e.currentTarget as HTMLElement).style.borderColor = `${d.color}25`; }}>
-                                <span style={{ color: d.color }}>{d.icon}</span>
-                                {d.label}
-                                <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>DEMO</span>
-                            </button>
-                        ))}
-                    </div>
                 </div>
 
                 <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'rgba(255,255,255,0.35)' }}>
