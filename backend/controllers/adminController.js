@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const Campaign = require('../models/Campaign');
 const CampaignRequest = require('../models/CampaignRequest');
 const VerificationSubmission = require('../models/VerificationSubmission');
 
@@ -142,15 +141,3 @@ exports.reviewVerification = async (req, res, next) => {
     }
 };
 
-// @desc    Get all campaigns (legacy, kept for admin view)
-// @route   GET /api/admin/campaigns
-exports.getAllCampaigns = async (req, res, next) => {
-    try {
-        const campaigns = await Campaign.find()
-            .populate('brandId', 'companyName email')
-            .sort({ createdAt: -1 });
-        res.json({ success: true, campaigns });
-    } catch (error) {
-        next(error);
-    }
-};

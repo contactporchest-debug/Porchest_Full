@@ -1,4 +1,3 @@
-const Campaign = require('../models/Campaign');
 const CampaignRequest = require('../models/CampaignRequest');
 const VerificationSubmission = require('../models/VerificationSubmission');
 const User = require('../models/User');
@@ -135,30 +134,6 @@ exports.getMatchedInfluencers = async (req, res, next) => {
     }
 };
 
-// Legacy: campaigns CRUD (kept for brand reference)
-exports.createCampaign = async (req, res, next) => {
-    try {
-        const campaign = await Campaign.create({ ...req.body, brandId: req.user._id });
-        res.status(201).json({ success: true, campaign });
-    } catch (error) { next(error); }
-};
-
-exports.getCampaigns = async (req, res, next) => {
-    try {
-        const campaigns = await Campaign.find({ brandId: req.user._id }).sort({ createdAt: -1 });
-        res.json({ success: true, campaigns });
-    } catch (error) { next(error); }
-};
-
-exports.updateCampaign = async (req, res, next) => {
-    try {
-        const campaign = await Campaign.findOneAndUpdate(
-            { _id: req.params.id, brandId: req.user._id }, req.body, { new: true }
-        );
-        if (!campaign) return res.status(404).json({ success: false, message: 'Campaign not found' });
-        res.json({ success: true, campaign });
-    } catch (error) { next(error); }
-};
 
 // @desc    Update brand profile
 // @route   PUT /api/brand/profile
