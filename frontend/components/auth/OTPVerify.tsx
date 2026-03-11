@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard, GlowButton } from '../ui';
-import axios from 'axios';
+import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 
 interface OTPVerifyProps {
     email: string;
-    onSuccess: (token: string, user: any) => void;
+    onSuccess: (token: string, user: unknown) => void;
 }
 
 export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
@@ -31,8 +30,6 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
         const newOtp = [...otp];
         newOtp[index] = value.slice(-1);
         setOtp(newOtp);
-
-        // Auto focus next input
         if (value && index < 5) {
             const nextInput = document.getElementById(`otp-${index + 1}`);
             nextInput?.focus();
@@ -53,20 +50,22 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
             toast.error('Please enter the 6-digit code');
             return;
         }
-
         setLoading(true);
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
-                email,
-                otp: code
-            });
-
+            // Uses the pre-configured api instance (baseURL = /api on Vercel)
+            const res = await api.post('/auth/verify-otp', { email, otp: code });
             if (res.data.success) {
+                // Save token & user to localStorage so AuthContext picks them up
+                if (res.data.token) {
+                    localStorage.setItem('porchest_token', res.data.token);
+                    localStorage.setItem('porchest_user', JSON.stringify(res.data.user));
+                }
                 toast.success('Email verified successfully!');
                 onSuccess(res.data.token, res.data.user);
             }
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Verification failed');
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            toast.error(err.response?.data?.message || 'Verification failed');
         } finally {
             setLoading(false);
         }
@@ -76,11 +75,12 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
         if (timer > 0) return;
         setResending(true);
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`, { email });
+            await api.post('/auth/resend-otp', { email });
             toast.success('New code sent to your email');
             setTimer(60);
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to resend code');
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            toast.error(err.response?.data?.message || 'Failed to resend code');
         } finally {
             setResending(false);
         }
@@ -96,7 +96,7 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
                 <GlassCard padding="40px" className="text-center">
                     <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>Verify Email</h2>
                     <p className="text-sm text-white/50 mb-8">
-                        We've sent a 6-digit code to <span className="text-white/80 font-medium">{email}</span>.
+                        We&apos;ve sent a 6-digit code to <span className="text-white/80 font-medium">{email}</span>.
                         It expires in 10 minutes.
                     </p>
 
@@ -107,6 +107,7 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
                                     key={idx}
                                     id={`otp-${idx}`}
                                     type="text"
+                                    inputMode="numeric"
                                     value={digit}
                                     onChange={(e) => handleChange(e.target.value, idx)}
                                     onKeyDown={(e) => handleKeyDown(e, idx)}
@@ -123,14 +124,14 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
 
                         <div className="pt-4">
                             <p className="text-sm text-white/40">
-                                Didn't receive the code?{' '}
+                                Didn&apos;t receive the code?{' '}
                                 <button
                                     type="button"
                                     onClick={handleResend}
                                     disabled={timer > 0 || resending}
                                     className={`font-medium transition-colors ${timer > 0 ? 'text-white/20 cursor-not-allowed' : 'text-purple-400 hover:text-purple-300'}`}
                                 >
-                                    {timer > 0 ? `Resend in ${timer}s` : 'Resend Code'}
+                                    {resending ? 'Sending…' : timer > 0 ? `Resend in ${timer}s` : 'Resend Code'}
                                 </button>
                             </p>
                         </div>
