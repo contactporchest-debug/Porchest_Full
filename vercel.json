@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "installCommand": "npm install --prefix backend && npm install --prefix frontend",
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/.next",
-  "installCommand": "npm install --prefix backend",
   "functions": {
     "api/index.js": {
       "memory": 1024,
