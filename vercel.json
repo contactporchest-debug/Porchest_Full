@@ -2,17 +2,5 @@
   "version": 2,
   "installCommand": "npm install && npm install --prefix backend",
   "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/.next",
-  "functions": {
-    "api/index.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/index.js"
-    }
-  ]
+  "outputDirectory": "frontend/.next"
 }

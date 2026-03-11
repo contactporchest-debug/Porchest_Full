@@ -1,10 +1,15 @@
 /**
- * Catch-all API route: wraps the Express backend as a Next.js serverless function.
- * All requests to /api/* are handled here and passed to the Express app.
+ * Next.js catch-all API route — serverless Express adapter.
  *
- * This runs on Vercel as a serverless function. The Express app is at
- * ../../backend/app relative to this file (frontend/pages/api → backend/).
+ * All /api/* requests on Vercel hit this handler automatically.
+ * Connects to MongoDB once (warm-instance cached) then delegates to Express.
+ *
+ * File: frontend/pages/api/[...path].js
+ * Backend:  ../../../backend/app  (root/backend/app.js)
  */
+
+const path = require('path');
+require('dotenv').config({ path: path.join(process.cwd(), '../backend/.env') });
 
 const app = require('../../../backend/app');
 const connectDB = require('../../../backend/config/db');
@@ -12,16 +17,26 @@ const connectDB = require('../../../backend/config/db');
 let isConnected = false;
 
 export default async function handler(req, res) {
-    // Establish DB connection on first invocation (reused in warm instances)
+    // Connect once; reused across warm serverless invocations
     if (!isConnected) {
-        await connectDB();
-        isConnected = true;
+        try {
+            await connectDB();
+            isConnected = true;
+        } catch (err) {
+            console.error('DB connect error:', err.message);
+            return res.status(500).json({ success: false, message: 'Database connection failed' });
+        }
     }
 
-    // Pass the request to Express
-    return new Promise((resolve, reject) => {
+    // Hand off to Express app and wait for it to finish
+    return new Promise((resolve) => {
         app(req, res, (err) => {
-            if (err) return reject(err);
+            if (err) {
+                console.error('Express handler error:', err);
+                if (!res.headersSent) {
+                    res.status(500).json({ success: false, message: err.message || 'Server error' });
+                }
+            }
             resolve();
         });
     });
@@ -29,8 +44,7 @@ export default async function handler(req, res) {
 
 export const config = {
     api: {
-        // Disable Next.js body parsing — Express handles it
-        bodyParser: false,
-        externalResolver: true,
+        bodyParser: false,      // Express handles body parsing itself
+        externalResolver: true, // Suppress Next.js "no response sent" warnings
     },
 };
