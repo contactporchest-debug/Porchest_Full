@@ -8,6 +8,7 @@ router.use(authMiddleware, roleMiddleware('brand'));
 
 // Dashboard & Profile
 router.get('/dashboard', brandController.getDashboard);
+router.get('/profile', brandController.getBrandProfile);
 router.put('/profile', brandController.updateProfile);
 
 // Campaign Requests (structured collaboration documents)
@@ -20,7 +21,6 @@ router.get('/verifications', brandController.getBrandVerifications);
 
 // Influencer discovery
 router.get('/influencers', brandController.getMatchedInfluencers);
-
-
+router.get('/influencers/:id/details', brandController.getInfluencerDetail);
 
 module.exports = router;

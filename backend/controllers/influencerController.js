@@ -3,17 +3,21 @@ const CampaignRequest = require('../models/CampaignRequest');
 const VerificationSubmission = require('../models/VerificationSubmission');
 const Earning = require('../models/Earning');
 const Cashout = require('../models/Cashout');
+const InstagramConnection = require('../models/InstagramConnection');
+const InstagramAnalyticsSnapshot = require('../models/InstagramAnalyticsSnapshot');
+const { validateInfluencerProfile } = require('../utils/validators');
 
 // @desc    Influencer dashboard counts
 // @route   GET /api/influencer/dashboard
 exports.getDashboard = async (req, res, next) => {
     try {
         const influencerId = req.user._id;
-        const [pending, accepted, rejected, completed] = await Promise.all([
+        const [pending, accepted, rejected, completed, igConnection] = await Promise.all([
             CampaignRequest.countDocuments({ influencerId, status: 'pending' }),
             CampaignRequest.countDocuments({ influencerId, status: 'accepted' }),
             CampaignRequest.countDocuments({ influencerId, status: 'rejected' }),
             VerificationSubmission.countDocuments({ influencerId, status: 'verified' }),
+            InstagramConnection.findOne({ userId: influencerId }).select('-accessToken -longLivedToken -oauthState'),
         ]);
 
         res.json({
@@ -24,7 +28,29 @@ exports.getDashboard = async (req, res, next) => {
                 totalRejected: rejected,
                 totalCompleted: completed,
                 profile: req.user,
+                instagramConnection: igConnection || null,
             },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get influencer profile (full)
+// @route   GET /api/influencer/profile
+exports.getProfile = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        const igConnection = await InstagramConnection.findOne({ userId: req.user._id })
+            .select('-accessToken -longLivedToken -oauthState');
+        const latestAnalytics = await InstagramAnalyticsSnapshot.findOne({ userId: req.user._id })
+            .sort({ fetchedAt: -1 });
+
+        res.json({
+            success: true,
+            user,
+            instagramConnection: igConnection || null,
+            latestAnalytics: latestAnalytics || null,
         });
     } catch (error) {
         next(error);
@@ -35,16 +61,31 @@ exports.getDashboard = async (req, res, next) => {
 // @route   PUT /api/influencer/profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        // followers and engagementRate are API-synced, not manually editable
+        // Backend validation
+        const { valid, errors } = validateInfluencerProfile(req.body);
+        if (!valid) {
+            return res.status(400).json({ success: false, message: errors.join('. '), errors });
+        }
+
+        // followers, engagementRate, avgLikes, avgComments, lastSyncedAt are API-synced — not manually editable
         const allowed = [
-            'fullName', 'age', 'country', 'contactEmail', 'niche', 'bio',
+            'fullName', 'age', 'country', 'city', 'contactEmail', 'niche', 'bio', 'shortBio',
             'instagramUsername', 'instagramProfileURL', 'instagramDPURL', 'accountType',
-            'avgPostCostUSD', 'avgReelCostUSD', 'avatar', 'instagramConnected',
+            'avgPostCostUSD', 'avgReelCostUSD', 'avatar', 'profileImageURL',
+            // NOTE: instagramConnected, followers, engagementRate are NOT allowed here
         ];
         const updates = {};
         allowed.forEach((field) => {
             if (req.body[field] !== undefined) updates[field] = req.body[field];
         });
+
+        // Compute profile completion
+        const merged = { ...req.user.toObject(), ...updates };
+        updates.profileCompletionStatus = !!(
+            merged.fullName && merged.contactEmail && merged.country &&
+            merged.niche && merged.avgPostCostUSD > 0 && merged.avgReelCostUSD > 0
+        );
+
         const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
         res.json({ success: true, user });
     } catch (error) {

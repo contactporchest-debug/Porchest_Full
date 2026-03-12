@@ -1,7 +1,9 @@
 const CampaignRequest = require('../models/CampaignRequest');
 const VerificationSubmission = require('../models/VerificationSubmission');
 const User = require('../models/User');
+const InstagramAnalyticsSnapshot = require('../models/InstagramAnalyticsSnapshot');
 const { matchInfluencers } = require('../utils/aiMatching');
+const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 
 // @desc    Brand dashboard overview
 // @route   GET /api/brand/dashboard
@@ -22,8 +24,24 @@ exports.getDashboard = async (req, res, next) => {
                 acceptedRequests,
                 pendingRequests,
                 verifiedPosts,
+                profile: req.user,
+                profileComplete: !!(
+                    req.user.brandName && req.user.officialEmail &&
+                    req.user.contactPersonName && req.user.brandNiche && req.user.companyCountry
+                ),
             },
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get brand profile
+// @route   GET /api/brand/profile
+exports.getBrandProfile = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        res.json({ success: true, user });
     } catch (error) {
         next(error);
     }
@@ -115,20 +133,53 @@ exports.getBrandVerifications = async (req, res, next) => {
 // @route   GET /api/brand/influencers
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
-        const { niche, minFollowers, maxFollowers } = req.query;
-        // Only return influencers who have completed their profile (niche must be set)
+        const { niche, minFollowers, maxFollowers, country, minEngagement, maxEngagement, minPostCost, maxPostCost } = req.query;
+        // Only return influencers who have completed their profile
         const filter = { role: 'influencer', status: 'active', niche: { $exists: true, $ne: null, $nin: ['', null] } };
-        if (niche) filter.niche = niche; // exact match from predefined enum
+        if (niche) filter.niche = niche;
+        if (country) filter.country = country;
         if (minFollowers || maxFollowers) {
             filter.followers = {};
             if (minFollowers) filter.followers.$gte = Number(minFollowers);
             if (maxFollowers) filter.followers.$lte = Number(maxFollowers);
         }
+        if (minEngagement || maxEngagement) {
+            filter.engagementRate = {};
+            if (minEngagement) filter.engagementRate.$gte = Number(minEngagement);
+            if (maxEngagement) filter.engagementRate.$lte = Number(maxEngagement);
+        }
+        if (minPostCost || maxPostCost) {
+            filter.avgPostCostUSD = {};
+            if (minPostCost) filter.avgPostCostUSD.$gte = Number(minPostCost);
+            if (maxPostCost) filter.avgPostCostUSD.$lte = Number(maxPostCost);
+        }
         const influencers = await User.find(filter).select(
-            'fullName niche country followers engagementRate instagramUsername instagramDPURL instagramProfileURL accountType avgPostCostUSD avgReelCostUSD bio'
+            'fullName niche country city followers followsCount mediaCount engagementRate avgLikes avgComments instagramUsername instagramDPURL instagramProfileURL accountType avgPostCostUSD avgReelCostUSD shortBio bio lastSyncedAt instagramConnected profileCompletionStatus'
         );
         const ranked = matchInfluencers(influencers, { niche });
         res.json({ success: true, influencers: ranked });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get full influencer details (for brand viewing)
+// @route   GET /api/brand/influencers/:id/details
+exports.getInfluencerDetail = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid influencer ID' });
+        }
+        const influencer = await User.findOne({ _id: id, role: 'influencer', status: 'active' }).select(
+            '-password -otp -otpExpires'
+        );
+        if (!influencer) {
+            return res.status(404).json({ success: false, message: 'Influencer not found' });
+        }
+        // Latest analytics snapshot
+        const analytics = await InstagramAnalyticsSnapshot.findOne({ userId: id }).sort({ fetchedAt: -1 });
+        res.json({ success: true, influencer, analytics: analytics || null });
     } catch (error) {
         next(error);
     }
@@ -139,13 +190,35 @@ exports.getMatchedInfluencers = async (req, res, next) => {
 // @route   PUT /api/brand/profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        const allowed = ['companyName', 'brandGoal', 'brandNiche', 'approxBudgetUSD', 'profileImageURL', 'website'];
+        // Backend validation
+        const { valid, errors } = validateBrandProfile(req.body);
+        if (!valid) {
+            return res.status(400).json({ success: false, message: errors.join('. '), errors });
+        }
+
+        const allowed = [
+            'companyName', 'brandName', 'officialEmail', 'contactPersonName',
+            'brandGoal', 'brandNiche', 'approxBudgetUSD', 'companyCountry',
+            'companyWebsite', 'profileImageURL', 'website', 'brandInstagramHandle',
+        ];
         const updates = {};
         allowed.forEach((field) => {
             if (req.body[field] !== undefined) updates[field] = req.body[field];
         });
 
-        const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+        // Sync companyName from brandName if not set separately
+        if (updates.brandName && !updates.companyName) {
+            updates.companyName = updates.brandName;
+        }
+
+        // Compute profile completion
+        const merged = { ...req.user.toObject(), ...updates };
+        updates.profileCompletionStatus = !!(
+            (merged.brandName || merged.companyName) && merged.officialEmail &&
+            merged.contactPersonName && merged.brandNiche && merged.companyCountry
+        );
+
+        const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
         res.json({ success: true, user });
     } catch (error) {
         next(error);

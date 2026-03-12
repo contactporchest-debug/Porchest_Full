@@ -10,6 +10,7 @@ import { influencerAPI } from '@/lib/api';
 import {
     Instagram, CheckCircle, AlertCircle,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function InfluencerPortal() {
     const { user } = useAuth();
@@ -19,6 +20,19 @@ export default function InfluencerPortal() {
     const displayName = user?.fullName || user?.email?.split('@')[0] || 'Influencer';
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const p = new URLSearchParams(window.location.search);
+            if (p.get('ig_connected') === '1') {
+                toast.success('Instagram connected! ✅', { id: 'ig-conn' });
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+            if (p.get('ig_error')) {
+                const m: Record<string, string> = { invalid_state: 'Security check failed.', missing_code: 'Authorization cancelled.', sync_failed: 'Sync failed. Try again.', token_expired: 'Token expired. Reconnect.' };
+                toast.error(m[p.get('ig_error')!] || 'Instagram connection failed.', { id: 'ig-err' });
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+        
         influencerAPI.getDashboard()
             .then(res => {
                 setDashStats(res.data.dashboard);

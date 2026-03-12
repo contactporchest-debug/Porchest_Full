@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, Clock, CheckCircle, XCircle, DollarSign, ArrowRight, Loader2, FileText } from 'lucide-react';
+import { Megaphone, Clock, CheckCircle, XCircle, DollarSign, ArrowRight, Loader2, FileText, AlertCircle, ChevronRight } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -17,15 +18,18 @@ export default function OverviewPage() {
     const router = useRouter();
     const [requests, setRequests] = useState<any[]>([]);
     const [verifications, setVerifications] = useState<any[]>([]);
+    const [profileComplete, setProfileComplete] = useState<boolean>(true);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         Promise.all([
             brandAPI.getRequests(),
             brandAPI.getBrandVerifications(),
-        ]).then(([reqRes, verRes]) => {
+            brandAPI.getDashboard(),
+        ]).then(([reqRes, verRes, dashRes]) => {
             setRequests(reqRes.data.requests || []);
             setVerifications(verRes.data.verifications || []);
+            setProfileComplete(dashRes.data.dashboard.profileComplete);
         }).catch(() => toast.error('Failed to load dashboard'))
             .finally(() => setLoading(false));
     }, []);
@@ -64,6 +68,25 @@ export default function OverviewPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+            {/* ── Profile Incomplete Banner ── */}
+            {!profileComplete && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderRadius: '18px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251,191,36,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', flexShrink: 0 }}>
+                            <AlertCircle size={18} />
+                        </div>
+                        <div>
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff', marginBottom: '2px' }}>Action Required: Complete Your Profile</p>
+                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>You need to complete your brand profile to start using AI Matching.</p>
+                        </div>
+                    </div>
+                    <Link href="/dashboard/brand/profile" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', fontSize: '12px', fontWeight: '700', textDecoration: 'none', transition: 'all 200ms ease' }}>
+                        Complete Profile <ChevronRight size={14} />
+                    </Link>
+                </motion.div>
+            )}
 
             {/* ── Status count row ── */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '14px' }}>

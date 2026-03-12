@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Instagram, RefreshCw, Unlink, Lock, CheckCircle, Zap } from 'lucide-react';
 import { influencerAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 interface DashboardStats {
     totalRequests: number;
@@ -37,20 +38,38 @@ export default function OverviewPage({ connected, onToggle, stats }: Props) {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    const handleConnect = () => {
+    const handleConnect = async () => {
         setLoading(true);
-        setTimeout(() => { onToggle(true); setLoading(false); }, 1500);
+        try {
+            const res = await influencerAPI.getInstagramConnectURL();
+            const { authURL } = res.data;
+            if (authURL) window.location.href = authURL;
+            else toast.error('Check server config for Meta API');
+        } catch { toast.error('Failed to init Meta OAuth'); }
+        finally { setLoading(false); }
     };
 
-    const handleDisconnect = () => {
-        if (confirm('Disconnecting will hide all API-synced metrics. Continue?')) onToggle(false);
+    const handleDisconnect = async () => {
+        if (!confirm('Disconnecting will hide all API-synced metrics. Continue?')) return;
+        setLoading(true);
+        try {
+            await influencerAPI.disconnectInstagram();
+            toast.success('Instagram disconnected');
+            onToggle(false);
+        } catch { toast.error('Failed to disconnect'); }
+        finally { setLoading(false); }
     };
 
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         setLoading(true);
-        influencerAPI.getDashboard()
-            .catch(() => { })
-            .finally(() => setLoading(false));
+        try {
+            await influencerAPI.refreshInstagramSync();
+            toast.success('Stats refreshed with Meta! ✅');
+            // Refresh parent dashboard data to update the overview UI
+            influencerAPI.getDashboard().catch(() => {});
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to refresh from Meta');
+        } finally { setLoading(false); }
     };
 
     const displayName = user?.fullName || user?.email?.split('@')[0] || '';

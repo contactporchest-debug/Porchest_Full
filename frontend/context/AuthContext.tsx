@@ -9,21 +9,30 @@ interface User {
     email: string;
     status: string;
     profileImageURL?: string;
+    profileCompletionStatus?: boolean;
 
     // Influencer fields
     fullName?: string;
     age?: number;
     country?: string;
+    city?: string;
     contactEmail?: string;
     niche?: string;
     bio?: string;
+    shortBio?: string;
     instagramUsername?: string;
     instagramProfileURL?: string;
     instagramDPURL?: string;
+    instagramUserId?: string;
     accountType?: string;
     followers?: number;
+    followsCount?: number;
+    mediaCount?: number;
     engagementRate?: number;
+    avgLikes?: number;
+    avgComments?: number;
     instagramConnected?: boolean;
+    lastSyncedAt?: string;
     avgPostCostUSD?: number;
     avgReelCostUSD?: number;
     avatar?: string;
@@ -31,11 +40,17 @@ interface User {
 
     // Brand fields
     companyName?: string;
+    brandName?: string;
+    officialEmail?: string;
+    contactPersonName?: string;
     brandGoal?: string;
     brandNiche?: string;
     approxBudgetUSD?: number;
     website?: string;
+    companyWebsite?: string;
+    companyCountry?: string;
     industry?: string;
+    brandInstagramHandle?: string;
 }
 
 interface AuthContextType {

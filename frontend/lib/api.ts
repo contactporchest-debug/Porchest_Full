@@ -71,21 +71,34 @@ export const adminAPI = {
 // ─── Brand ───────────────────────────────────────────
 export const brandAPI = {
     getDashboard: () => api.get('/brand/dashboard'),
+    // Profile
+    getProfile: () => api.get('/brand/profile'),
+    updateProfile: (data: Record<string, unknown>) => api.put('/brand/profile', data),
     // Influencer discovery
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),
+    getInfluencerDetail: (id: string) => api.get(`/brand/influencers/${id}/details`),
     // Structured Campaign Request Documents
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
     // Verified post data
     getBrandVerifications: () => api.get('/brand/verifications'),
-    updateProfile: (data: Record<string, unknown>) => api.put('/brand/profile', data),
 };
 
 // ─── Influencer ──────────────────────────────────────
 export const influencerAPI = {
     getDashboard: () => api.get('/influencer/dashboard'),
+    // Profile
+    getProfile: () => api.get('/influencer/profile'),
     updateProfile: (data: Record<string, unknown>) => api.put('/influencer/profile', data),
+    // Instagram OAuth
+    getInstagramConnectURL: () => api.get('/influencer/instagram/connect'),
+    disconnectInstagram: () => api.post('/influencer/instagram/disconnect'),
+    refreshInstagramSync: () => api.post('/influencer/instagram/refresh'),
+    // Instagram Data
+    getInstagramProfile: () => api.get('/influencer/instagram/profile'),
+    getInstagramAnalytics: () => api.get('/influencer/instagram/analytics'),
+    getInstagramMedia: () => api.get('/influencer/instagram/media'),
     // Incoming campaign requests
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
     respondToRequest: (id: string, status: 'accepted' | 'rejected', rejectionReason?: string) =>
