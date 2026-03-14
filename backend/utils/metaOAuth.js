@@ -87,6 +87,7 @@ exports.exchangeCodeForToken = async (code, role) => {
         client_id: getAppId(),
         client_secret: getAppSecret(),
         redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
         code,
     });
     const url = `${FB_GRAPH_BASE}/oauth/access_token?${params.toString()}`;
@@ -95,7 +96,10 @@ exports.exchangeCodeForToken = async (code, role) => {
     if (!res.ok || data.error) {
         throw new Error(data.error_message || data.error?.message || 'Token exchange failed');
     }
-    return data; // { access_token, user_id }
+    if (!data.access_token) {
+        throw new Error('Code exchanged successfully but no access_token was returned in response');
+    }
+    return data; // { access_token, ... }
 };
 
 /**
@@ -120,12 +124,13 @@ exports.getLongLivedToken = async (shortToken) => {
         const data = await res.json();
         if (res.ok && !data.error) return data;
         
-        console.warn('[metaOAuth] FB token extension failed, trying IG Basic fallback...');
+        console.warn(`[metaOAuth] FB token extension failed (${data.error?.message}). Trying IG Basic fallback...`);
         const igRes = await fetch(igUrl);
         const igData = await igRes.json();
         if (igRes.ok && !igData.error) return igData;
 
-        throw new Error(data.error?.message || igData.error?.message || 'Token extension failed');
+        // If both failed, throw the initial FB error so we know what went wrong with the FB token
+        throw new Error(`FB: ${data.error?.message || 'unknown'} | IG: ${igData.error?.message || 'unknown'}`);
     } catch (err) {
         throw new Error(`Long-lived token exchange failed: ${err.message}`);
     }
@@ -179,21 +184,19 @@ exports.fetchProfile = async (accessToken) => {
                     }
                 }
             }
+            throw new Error('Found Facebook Pages, but none were linked to an Instagram Professional Account. You MUST link your Instagram Business/Creator account to one of your Pages in Meta settings.');
+        } else {
+            throw new Error('No Facebook Pages linked to this account. You MUST link an Instagram Business/Creator account to a Facebook Page to use full analytics.');
         }
     } catch (discoveryErr) {
+        if (discoveryErr.message && discoveryErr.message.includes('MUST link')) throw discoveryErr;
         console.warn('[metaOAuth] IG Business discovery failed:', discoveryErr.message);
     }
 
-    // Attempt 2: Fallback to Basic Display API (graph.instagram.com)
-    const url = `${GRAPH_BASE}/me?fields=${fields}&access_token=${accessToken}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    if (!res.ok || data.error) {
-        throw new Error(data.error?.message || 'Profile fetch failed (all attempts)');
-    }
-    
-    return data;
+    // Attempt 2: Fallback to Basic Display API (ONLY if the token seems to belong to IG Basic)
+    // Actually, if we got the token via FB Login, it is ALWAYS a Facebook User Token.
+    // Facebook User Tokens CANNOT be used on graph.instagram.com/me.
+    throw new Error('Could not find a linked Instagram Business Account. Please ensure your Instagram is professional (Business/Creator) and linked to a Facebook Page.');
 };
 
 // ─── Facebook Page + IG Business Lookup ──────────────────────────
