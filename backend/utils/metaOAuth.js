@@ -21,29 +21,20 @@ const getAppId = () => process.env.META_APP_ID || process.env.INSTAGRAM_APP_ID;
 const getAppSecret = () => process.env.META_APP_SECRET || process.env.INSTAGRAM_APP_SECRET;
 
 const getRedirectUri = (role) => {
-    // 1. Try explicit role-based overrides first
+    // 1. Try explicit role-based overrides from .env first
     let uri = (role === 'brand')
         ? (process.env.META_REDIRECT_URI_BRAND || process.env.INSTAGRAM_REDIRECT_URI_BRAND)
         : (process.env.META_REDIRECT_URI_INFLUENCER || process.env.INSTAGRAM_REDIRECT_URI);
 
-    // 2. Fallback to generic callback if explicit ones missing
-    if (!uri && process.env.INSTAGRAM_REDIRECT_URI) {
-        uri = process.env.INSTAGRAM_REDIRECT_URI;
-    }
+    if (uri) return uri;
 
-    // 3. Fallback to construction from APP_BASE_URL
-    if (!uri && process.env.APP_BASE_URL) {
-        uri = `${process.env.APP_BASE_URL}/api/${role}/instagram/callback`;
-    }
+    // 2. Auto-construct based on environment
+    const isProd = process.env.NODE_ENV === 'production';
+    const baseUrl = isProd 
+        ? (process.env.APP_BASE_URL || 'https://www.porchest.com')
+        : 'http://localhost:5001';
 
-    // 4. Ultimate fallback for local development if everything is missing
-    if (!uri) {
-        // Only default to localhost if we are not in production or if explicitly needed
-        console.warn(`[metaOAuth] Redirect URI for ${role} not found in env, falling back to localhost default.`);
-        uri = `http://localhost:5001/api/${role}/instagram/callback`;
-    }
-
-    return uri;
+    return `${baseUrl}/api/${role}/instagram/callback`;
 };
 
 // ─── OAuth URL Builder ────────────────────────────────────────────
