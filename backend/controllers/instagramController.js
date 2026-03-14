@@ -29,7 +29,7 @@ const CALLBACK_PATH = '/dashboard/influencer/profile';
 
 exports.initiateConnect = async (req, res, next) => {
     try {
-        const state = crypto.randomBytes(16).toString('hex');
+        const state = `${crypto.randomBytes(12).toString('hex')}_${req.user._id}`;
 
         await InstagramConnection.findOneAndUpdate(
             { userId: req.user._id, role: ROLE },
@@ -63,8 +63,14 @@ exports.handleCallback = async (req, res, next) => {
             return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=missing_code`);
         }
 
+        // Extract userId from state (format: random_userId)
+        const userId = state.includes('_') ? state.split('_')[1] : null;
+        if (!userId) {
+            return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state_format`);
+        }
+
         // CSRF validation
-        const connection = await InstagramConnection.findOne({ userId: req.user._id, role: ROLE, oauthState: state });
+        const connection = await InstagramConnection.findOne({ userId, role: ROLE, oauthState: state });
         if (!connection) {
             return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state`);
         }
@@ -82,11 +88,11 @@ exports.handleCallback = async (req, res, next) => {
         const tokenExpiry = meta.tokenExpiresAt(longTokenData.expires_in);
 
         // Full data sync
-        const { profile, metrics } = await syncService.runFullSync(req.user._id, ROLE, longToken, connection);
+        const { profile, metrics } = await syncService.runFullSync(userId, ROLE, longToken, connection);
 
         // Update connection record (token stays server-side ONLY)
         await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
+            { userId, role: ROLE },
             {
                 instagramUserId: profile.id,
                 username: profile.username,
@@ -111,7 +117,7 @@ exports.handleCallback = async (req, res, next) => {
 
         // Update InfluencerProfile synced fields (non-sensitive only)
         await InfluencerProfile.findOneAndUpdate(
-            { userId: req.user._id },
+            { userId },
             {
                 $set: {
                     instagramUserId: profile.id,
@@ -134,7 +140,7 @@ exports.handleCallback = async (req, res, next) => {
         );
 
         // Mirror key fields in User doc for backward compat with brand search
-        await User.findByIdAndUpdate(req.user._id, {
+        await User.findByIdAndUpdate(userId, {
             instagramUsername: profile.username,
             instagramProfileURL: `https://instagram.com/${profile.username}`,
             instagramDPURL: profile.profile_picture_url || null,
@@ -152,10 +158,15 @@ exports.handleCallback = async (req, res, next) => {
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_connected=1`);
     } catch (error) {
         console.error('[influencerIG] Callback error:', error);
-        await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
-            { syncStatus: 'failed', syncError: error.message }
-        ).catch(() => {});
+        // Try to update error status if we can identify user
+        const state = req.query.state;
+        const userId = state && state.includes('_') ? state.split('_')[1] : null;
+        if (userId) {
+            await InstagramConnection.findOneAndUpdate(
+                { userId, role: ROLE },
+                { syncStatus: 'failed', syncError: error.message }
+            ).catch(() => {});
+        }
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=sync_failed`);
     }
 };

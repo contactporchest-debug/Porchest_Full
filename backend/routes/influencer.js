@@ -5,6 +5,9 @@ const instagramController = require('../controllers/instagramController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
+// Public callback — handles redirect from Meta/Facebook
+router.get('/instagram/callback', instagramController.handleCallback);
+
 router.use(authMiddleware, roleMiddleware('influencer'));
 
 // Dashboard
@@ -17,8 +20,8 @@ router.put('/profile', influencerController.updateProfile);
 // ── Instagram OAuth ──
 // Step 1: Get authorization URL (frontend will redirect to it)
 router.get('/instagram/connect', instagramController.initiateConnect);
-// Step 2: Meta calls this back with the code
-router.get('/instagram/callback', instagramController.handleCallback);
+// Step 2 handled above as public route
+// router.get('/instagram/callback', instagramController.handleCallback);
 // Disconnect
 router.post('/instagram/disconnect', instagramController.disconnect);
 // Refresh sync

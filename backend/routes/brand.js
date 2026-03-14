@@ -5,6 +5,10 @@ const brandInstagramController = require('../controllers/brandInstagramControlle
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
+// Public callback — handles redirect from Meta/Facebook
+// Validation is handled via 'state' parameter inside the controller
+router.get('/instagram/callback', brandInstagramController.handleCallback);
+
 router.use(authMiddleware, roleMiddleware('brand'));
 
 // ── Brand Dashboard & Profile ──────────────────────────────────────
@@ -15,8 +19,8 @@ router.put('/profile', brandController.updateProfile);
 // ── Brand Instagram OAuth ──────────────────────────────────────────
 // Step 1: Get Meta authorization URL
 router.get('/instagram/connect', brandInstagramController.initiateConnect);
-// Step 2: Meta calls back with code (must be in Meta app's allowed redirect URIs)
-router.get('/instagram/callback', brandInstagramController.handleCallback);
+// Step 2 handled above as a public route
+// router.get('/instagram/callback', brandInstagramController.handleCallback);
 // Disconnect
 router.post('/instagram/disconnect', brandInstagramController.disconnect);
 // Refresh sync
