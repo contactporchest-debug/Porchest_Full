@@ -1,14 +1,17 @@
 /**
- * instagramController.js — Influencer Instagram OAuth + Sync Controller
+ * brandInstagramController.js — Brand Instagram OAuth + Sync Controller
  *
- * Routes handled (all under /api/influencer/instagram/):
- *   GET  /connect       → initiate OAuth
- *   GET  /callback      → handle Meta callback
- *   POST /disconnect    → revoke connection
- *   POST /refresh       → re-sync data
- *   GET  /profile       → get connection + account data
- *   GET  /analytics     → get latest derived metrics
- *   GET  /media         → get stored media
+ * Routes handled (all under /api/brand/instagram/):
+ *   GET  /connect       → initiate OAuth for brand
+ *   GET  /callback      → handle Meta callback for brand
+ *   POST /disconnect    → revoke brand connection
+ *   POST /refresh       → re-sync brand data
+ *   GET  /profile       → get brand connection + account data
+ *   GET  /analytics     → get brand latest derived metrics
+ *   GET  /media         → get brand stored media
+ *
+ * CRITICAL: Brand and Influencer connections are SEPARATE records.
+ * All operations are scoped by role='brand'.
  */
 
 const crypto = require('crypto');
@@ -16,14 +19,14 @@ const InstagramConnection = require('../models/InstagramConnection');
 const InstagramAccount = require('../models/InstagramAccount');
 const InstagramMedia = require('../models/InstagramMedia');
 const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
-const InfluencerProfile = require('../models/InfluencerProfile');
+const BrandProfile = require('../models/BrandProfile');
 const User = require('../models/User');
 const meta = require('../utils/metaOAuth');
 const syncService = require('../utils/instagramSyncService');
 
-const ROLE = 'influencer';
+const ROLE = 'brand';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const CALLBACK_PATH = '/dashboard/influencer/profile';
+const CALLBACK_PATH = '/dashboard/brand/profile';
 
 // ─── INITIATE CONNECT ─────────────────────────────────────────────
 
@@ -59,12 +62,17 @@ exports.handleCallback = async (req, res, next) => {
         if (oauthError) {
             return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=auth_denied`);
         }
+
         if (!code || !state) {
             return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=missing_code`);
         }
 
-        // CSRF validation
-        const connection = await InstagramConnection.findOne({ userId: req.user._id, role: ROLE, oauthState: state });
+        // CSRF validation — brand-specific state
+        const connection = await InstagramConnection.findOne({
+            userId: req.user._id,
+            role: ROLE,
+            oauthState: state,
+        });
         if (!connection) {
             return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state`);
         }
@@ -72,7 +80,7 @@ exports.handleCallback = async (req, res, next) => {
         connection.syncStatus = 'syncing';
         await connection.save();
 
-        // Token exchange
+        // Token exchange with brand-specific redirect URI
         const shortTokenData = await meta.exchangeCodeForToken(code, ROLE);
         const shortToken = shortTokenData.access_token;
 
@@ -81,10 +89,33 @@ exports.handleCallback = async (req, res, next) => {
         const longToken = longTokenData.access_token;
         const tokenExpiry = meta.tokenExpiresAt(longTokenData.expires_in);
 
-        // Full data sync
-        const { profile, metrics } = await syncService.runFullSync(req.user._id, ROLE, longToken, connection);
+        // Full sync — same pipeline as influencer but stored under role='brand'
+        const { profile, metrics } = await syncService.runFullSync(
+            req.user._id, ROLE, longToken, connection
+        );
 
-        // Update connection record (token stays server-side ONLY)
+        // Try to fetch linked Facebook page (brands often link pages)
+        let linkedPageId = null;
+        let linkedPageName = null;
+        try {
+            const pages = await meta.fetchPages(longToken);
+            if (pages && pages.length > 0) {
+                const page = pages[0];
+                linkedPageId = page.id;
+                linkedPageName = page.name;
+
+                // Try to get IG Business Account ID from page
+                const igBusiness = await meta.fetchIGBusinessAccount(page.id, page.access_token || longToken);
+                if (igBusiness) {
+                    // Store the linked page info in connection
+                    linkedPageId = page.id;
+                }
+            }
+        } catch (pageErr) {
+            console.warn('[brandIG] Page fetch skipped:', pageErr.message);
+        }
+
+        // Update connection record (tokens NEVER leave server)
         await InstagramConnection.findOneAndUpdate(
             { userId: req.user._id, role: ROLE },
             {
@@ -93,6 +124,8 @@ exports.handleCallback = async (req, res, next) => {
                 profilePictureURL: profile.profile_picture_url || null,
                 biography: profile.biography || null,
                 accountType: profile.account_type || null,
+                linkedPageId,
+                linkedPageName,
                 accessToken: shortToken,
                 longLivedToken: longToken,
                 tokenExpiresAt: tokenExpiry,
@@ -109,8 +142,8 @@ exports.handleCallback = async (req, res, next) => {
             }
         );
 
-        // Update InfluencerProfile synced fields (non-sensitive only)
-        await InfluencerProfile.findOneAndUpdate(
+        // Update BrandProfile with synced Instagram data (non-sensitive)
+        await BrandProfile.findOneAndUpdate(
             { userId: req.user._id },
             {
                 $set: {
@@ -123,35 +156,23 @@ exports.handleCallback = async (req, res, next) => {
                     followersCount: profile.followers_count || 0,
                     followsCount: profile.follows_count || 0,
                     mediaCount: profile.media_count || 0,
-                    engagementRate: metrics.engagementRate || 0,
-                    avgLikes: metrics.avgLikesPerPost || 0,
-                    avgComments: metrics.avgCommentsPerPost || 0,
                     instagramConnected: true,
                     lastSyncedAt: new Date(),
+                    linkedPageId,
+                    linkedPageName,
                 }
             },
             { upsert: true }
         );
 
-        // Mirror key fields in User doc for backward compat with brand search
+        // Mirror brand instagram handle in User doc
         await User.findByIdAndUpdate(req.user._id, {
-            instagramUsername: profile.username,
-            instagramProfileURL: `https://instagram.com/${profile.username}`,
-            instagramDPURL: profile.profile_picture_url || null,
-            instagramConnected: true,
-            instagramUserId: profile.id,
-            followers: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            lastSyncedAt: new Date(),
+            brandInstagramHandle: profile.username,
         });
 
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_connected=1`);
     } catch (error) {
-        console.error('[influencerIG] Callback error:', error);
+        console.error('[brandIG] Callback error:', error);
         await InstagramConnection.findOneAndUpdate(
             { userId: req.user._id, role: ROLE },
             { syncStatus: 'failed', syncError: error.message }
@@ -176,12 +197,10 @@ exports.disconnect = async (req, res, next) => {
             }
         );
 
-        await InfluencerProfile.findOneAndUpdate(
+        await BrandProfile.findOneAndUpdate(
             { userId: req.user._id },
             { instagramConnected: false }
         );
-
-        await User.findByIdAndUpdate(req.user._id, { instagramConnected: false });
 
         res.json({ success: true, message: 'Instagram disconnected successfully' });
     } catch (error) {
@@ -199,7 +218,6 @@ exports.refreshSync = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Instagram not connected' });
         }
 
-        // Check token expiry
         if (connection.tokenExpiresAt && connection.tokenExpiresAt < new Date()) {
             await InstagramConnection.findOneAndUpdate(
                 { userId: req.user._id, role: ROLE },
@@ -217,7 +235,6 @@ exports.refreshSync = async (req, res, next) => {
 
         let activeToken = connection.longLivedToken || connection.accessToken;
 
-        // Try to refresh token
         try {
             const refreshed = await meta.refreshLongLivedToken(activeToken);
             activeToken = refreshed.access_token;
@@ -229,14 +246,12 @@ exports.refreshSync = async (req, res, next) => {
                     tokenStatus: 'active',
                 }
             );
-        } catch (refreshErr) {
-            console.warn('[influencerIG] Token refresh skipped:', refreshErr.message);
+        } catch (err) {
+            console.warn('[brandIG] Token refresh skipped:', err.message);
         }
 
-        // Quick sync (profile + derived metrics)
         const { profile, metrics } = await syncService.runQuickSync(req.user._id, ROLE, activeToken);
 
-        // Update connection
         await InstagramConnection.findOneAndUpdate(
             { userId: req.user._id, role: ROLE },
             {
@@ -246,40 +261,22 @@ exports.refreshSync = async (req, res, next) => {
                 lastSyncedAt: new Date(),
                 syncStatus: 'success',
                 syncError: null,
-                profilePictureURL: profile.profile_picture_url || connection.profilePictureURL,
             }
         );
 
-        // Update InfluencerProfile
-        await InfluencerProfile.findOneAndUpdate(
+        await BrandProfile.findOneAndUpdate(
             { userId: req.user._id },
             {
                 followersCount: profile.followers_count || 0,
                 followsCount: profile.follows_count || 0,
                 mediaCount: profile.media_count || 0,
-                engagementRate: metrics.engagementRate || 0,
-                avgLikes: metrics.avgLikesPerPost || 0,
-                avgComments: metrics.avgCommentsPerPost || 0,
                 lastSyncedAt: new Date(),
             }
         );
 
-        // Mirror to User doc
-        await User.findByIdAndUpdate(req.user._id, {
-            followers: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            lastSyncedAt: new Date(),
-        });
-
-        const freshUser = await User.findById(req.user._id).select('-password');
         res.json({
             success: true,
-            message: 'Instagram data refreshed successfully',
-            user: freshUser,
+            message: 'Brand Instagram data refreshed',
             lastSyncedAt: new Date(),
         });
     } catch (error) {
@@ -300,7 +297,6 @@ exports.getProfile = async (req, res, next) => {
                 .select('-accessToken -longLivedToken -oauthState'),
             InstagramAccount.findOne({ userId: req.user._id, role: ROLE }),
         ]);
-
         res.json({ success: true, connection, account });
     } catch (error) {
         next(error);
@@ -315,7 +311,6 @@ exports.getAnalytics = async (req, res, next) => {
             userId: req.user._id,
             role: ROLE,
         }).sort({ computedAt: -1 });
-
         res.json({ success: true, analytics: latestMetrics });
     } catch (error) {
         next(error);
@@ -329,7 +324,6 @@ exports.getMedia = async (req, res, next) => {
         const media = await InstagramMedia.find({ userId: req.user._id, role: ROLE })
             .sort({ timestamp: -1 })
             .limit(25);
-
         res.json({ success: true, media });
     } catch (error) {
         next(error);

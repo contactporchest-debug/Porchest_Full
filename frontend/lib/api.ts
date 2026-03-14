@@ -77,12 +77,19 @@ export const brandAPI = {
     // Influencer discovery
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),
     getInfluencerDetail: (id: string) => api.get(`/brand/influencers/${id}/details`),
-    // Structured Campaign Request Documents
+    // Campaign Requests
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
-    // Verified post data
+    // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
+    // ── Brand Instagram OAuth (separate from influencer) ──
+    getInstagramConnectURL: () => api.get('/brand/instagram/connect'),
+    disconnectInstagram: () => api.post('/brand/instagram/disconnect'),
+    refreshInstagramSync: () => api.post('/brand/instagram/refresh'),
+    getInstagramProfile: () => api.get('/brand/instagram/profile'),
+    getInstagramAnalytics: () => api.get('/brand/instagram/analytics'),
+    getInstagramMedia: () => api.get('/brand/instagram/media'),
 };
 
 // ─── Influencer ──────────────────────────────────────

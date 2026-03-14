@@ -118,10 +118,20 @@ exports.validateBrandProfile = (body) => {
     }
 
     if (companyWebsite !== undefined && companyWebsite !== null && companyWebsite !== '') {
-        try {
-            new URL(companyWebsite);
-        } catch {
+        try { new URL(companyWebsite); } catch {
             errors.push('Company website must be a valid URL (include https://)');
+        }
+    }
+
+    if (body.trackingWebsiteURL !== undefined && body.trackingWebsiteURL !== null && body.trackingWebsiteURL !== '') {
+        try { new URL(body.trackingWebsiteURL); } catch {
+            errors.push('Tracking website URL must be a valid URL (include https://)');
+        }
+    }
+
+    if (body.landingPageURL !== undefined && body.landingPageURL !== null && body.landingPageURL !== '') {
+        try { new URL(body.landingPageURL); } catch {
+            errors.push('Landing page URL must be a valid URL (include https://)');
         }
     }
 

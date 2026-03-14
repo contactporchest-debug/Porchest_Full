@@ -1,7 +1,8 @@
 const CampaignRequest = require('../models/CampaignRequest');
 const VerificationSubmission = require('../models/VerificationSubmission');
 const User = require('../models/User');
-const InstagramAnalyticsSnapshot = require('../models/InstagramAnalyticsSnapshot');
+const BrandProfile = require('../models/BrandProfile');
+const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
 const { matchInfluencers } = require('../utils/aiMatching');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 
@@ -10,12 +11,23 @@ const { validateBrandProfile, isValidObjectId } = require('../utils/validators')
 exports.getDashboard = async (req, res, next) => {
     try {
         const brandId = req.user._id;
-        const [totalRequests, acceptedRequests, pendingRequests, verifiedPosts] = await Promise.all([
+        const [totalRequests, acceptedRequests, pendingRequests, verifiedPosts, brandProfile] = await Promise.all([
             CampaignRequest.countDocuments({ brandId }),
             CampaignRequest.countDocuments({ brandId, status: 'accepted' }),
             CampaignRequest.countDocuments({ brandId, status: 'pending' }),
             VerificationSubmission.countDocuments({ brandId, status: 'verified' }),
+            BrandProfile.findOne({ userId: brandId }),
         ]);
+
+        const profileComplete = brandProfile
+            ? !!(
+                brandProfile.brandName && brandProfile.officialEmail &&
+                brandProfile.contactPersonName && brandProfile.brandNiche && brandProfile.companyCountry
+              )
+            : !!(
+                req.user.brandName && req.user.officialEmail &&
+                req.user.contactPersonName && req.user.brandNiche && req.user.companyCountry
+              );
 
         res.json({
             success: true,
@@ -25,10 +37,8 @@ exports.getDashboard = async (req, res, next) => {
                 pendingRequests,
                 verifiedPosts,
                 profile: req.user,
-                profileComplete: !!(
-                    req.user.brandName && req.user.officialEmail &&
-                    req.user.contactPersonName && req.user.brandNiche && req.user.companyCountry
-                ),
+                brandProfile: brandProfile || null,
+                profileComplete,
             },
         });
     } catch (error) {
@@ -40,8 +50,11 @@ exports.getDashboard = async (req, res, next) => {
 // @route   GET /api/brand/profile
 exports.getBrandProfile = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
-        res.json({ success: true, user });
+        const [user, brandProfile] = await Promise.all([
+            User.findById(req.user._id).select('-password'),
+            BrandProfile.findOne({ userId: req.user._id }),
+        ]);
+        res.json({ success: true, user, brandProfile: brandProfile || null });
     } catch (error) {
         next(error);
     }
@@ -177,8 +190,8 @@ exports.getInfluencerDetail = async (req, res, next) => {
         if (!influencer) {
             return res.status(404).json({ success: false, message: 'Influencer not found' });
         }
-        // Latest analytics snapshot
-        const analytics = await InstagramAnalyticsSnapshot.findOne({ userId: id }).sort({ fetchedAt: -1 });
+        // Latest derived metrics (new model)
+        const analytics = await InstagramDerivedMetric.findOne({ userId: id, role: 'influencer' }).sort({ computedAt: -1 });
         res.json({ success: true, influencer, analytics: analytics || null });
     } catch (error) {
         next(error);
@@ -190,36 +203,56 @@ exports.getInfluencerDetail = async (req, res, next) => {
 // @route   PUT /api/brand/profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        // Backend validation
         const { valid, errors } = validateBrandProfile(req.body);
         if (!valid) {
             return res.status(400).json({ success: false, message: errors.join('. '), errors });
         }
 
-        const allowed = [
+        // Fields for User doc (structural / auth-adjacent)
+        const userAllowed = [
             'companyName', 'brandName', 'officialEmail', 'contactPersonName',
             'brandGoal', 'brandNiche', 'approxBudgetUSD', 'companyCountry',
             'companyWebsite', 'profileImageURL', 'website', 'brandInstagramHandle',
         ];
-        const updates = {};
-        allowed.forEach((field) => {
-            if (req.body[field] !== undefined) updates[field] = req.body[field];
+        const userUpdates = {};
+        userAllowed.forEach((field) => {
+            if (req.body[field] !== undefined) userUpdates[field] = req.body[field];
         });
 
-        // Sync companyName from brandName if not set separately
-        if (updates.brandName && !updates.companyName) {
-            updates.companyName = updates.brandName;
+        if (userUpdates.brandName && !userUpdates.companyName) {
+            userUpdates.companyName = userUpdates.brandName;
         }
 
-        // Compute profile completion
-        const merged = { ...req.user.toObject(), ...updates };
-        updates.profileCompletionStatus = !!(
+        const merged = { ...req.user.toObject(), ...userUpdates };
+        userUpdates.profileCompletionStatus = !!(
             (merged.brandName || merged.companyName) && merged.officialEmail &&
             merged.contactPersonName && merged.brandNiche && merged.companyCountry
         );
 
-        const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select('-password');
-        res.json({ success: true, user });
+        // Fields for BrandProfile doc (extended profile + tracking links)
+        const profileFields = [
+            'brandName', 'officialEmail', 'contactPersonName', 'brandGoal',
+            'brandNiche', 'approxBudgetUSD', 'companyCountry', 'companyWebsite',
+            'brandInstagramHandle', 'trackingWebsiteURL', 'landingPageURL', 'trackingNotes',
+        ];
+        const profileUpdates = {};
+        profileFields.forEach((field) => {
+            if (req.body[field] !== undefined) profileUpdates[field] = req.body[field];
+        });
+        profileUpdates.profileCompletionStatus = userUpdates.profileCompletionStatus;
+
+        // Run both updates in parallel
+        const [user] = await Promise.all([
+            User.findByIdAndUpdate(req.user._id, userUpdates, { new: true }).select('-password'),
+            BrandProfile.findOneAndUpdate(
+                { userId: req.user._id },
+                { $set: profileUpdates },
+                { upsert: true, new: true }
+            ),
+        ]);
+
+        const brandProfile = await BrandProfile.findOne({ userId: req.user._id });
+        res.json({ success: true, user, brandProfile });
     } catch (error) {
         next(error);
     }
