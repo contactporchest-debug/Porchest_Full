@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
 const brandRoutes = require('./routes/brand');
 const influencerRoutes = require('./routes/influencer');
 const errorHandler = require('./middleware/errorHandler');
@@ -54,7 +53,6 @@ app.get('/api/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/brand', brandRoutes);
 app.use('/api/influencer', influencerRoutes);
 
