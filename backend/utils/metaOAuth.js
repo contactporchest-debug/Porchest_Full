@@ -156,7 +156,9 @@ exports.refreshLongLivedToken = async (existingToken) => {
  * Handles both Basic Display (personal/creator) and Graph API (Business/Creator via Facebook).
  */
 exports.fetchProfile = async (accessToken) => {
-    const fields = 'id,username,name,biography,profile_picture_url,website,followers_count,follows_count,media_count,account_type';
+    const igBasicFields = 'id,username,name,biography,profile_picture_url,website,followers_count,follows_count,media_count,account_type';
+    // Facebook Graph API for IG Business/Creator accounts does not support 'account_type'
+    const fbFields = 'id,username,name,biography,profile_picture_url,website,followers_count,follows_count,media_count';
     
     // Attempt 1: Try Direct Graph API lookup (if token is from Facebook)
     try {
@@ -183,7 +185,7 @@ exports.fetchProfile = async (accessToken) => {
                 if (igAccount && igAccount.id) {
                     console.log(`[metaOAuth] 🚀 FOUND linked IG Business Account: ${igAccount.id}`);
                     // Fetch full profile for this IG Business ID
-                    const igUrl = `${FB_GRAPH_BASE}/${igAccount.id}?fields=${fields}&access_token=${accessToken}`;
+                    const igUrl = `${FB_GRAPH_BASE}/${igAccount.id}?fields=${fbFields}&access_token=${accessToken}`;
                     const igRes = await fetch(igUrl);
                     const igData = await igRes.json();
                     if (igRes.ok && !igData.error) {
