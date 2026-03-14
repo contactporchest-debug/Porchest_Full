@@ -100,15 +100,35 @@ exports.exchangeCodeForToken = async (code, role) => {
 
 /**
  * Exchange short-lived token for long-lived token (60 days).
+ * Uses Facebook Graph API if discovery is active/Facebook login used.
  */
 exports.getLongLivedToken = async (shortToken) => {
-    const url = `${GRAPH_BASE}/access_token?grant_type=ig_exchange_token&client_secret=${getAppSecret()}&access_token=${shortToken}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!res.ok || data.error) {
-        throw new Error(data.error?.message || 'Long-lived token exchange failed');
+    // For Facebook Login / Instagram Graph API
+    const params = new URLSearchParams({
+        grant_type: 'fb_exchange_token',
+        client_id: getAppId(),
+        client_secret: getAppSecret(),
+        fb_exchange_token: shortToken,
+    });
+    const url = `${FB_GRAPH_BASE}/oauth/access_token?${params.toString()}`;
+    
+    // Fallback attempt for IG Basic Display if the above fails
+    const igUrl = `${GRAPH_BASE}/access_token?grant_type=ig_exchange_token&client_secret=${getAppSecret()}&access_token=${shortToken}`;
+
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (res.ok && !data.error) return data;
+        
+        console.warn('[metaOAuth] FB token extension failed, trying IG Basic fallback...');
+        const igRes = await fetch(igUrl);
+        const igData = await igRes.json();
+        if (igRes.ok && !igData.error) return igData;
+
+        throw new Error(data.error?.message || igData.error?.message || 'Token extension failed');
+    } catch (err) {
+        throw new Error(`Long-lived token exchange failed: ${err.message}`);
     }
-    return data; // { access_token, token_type, expires_in }
 };
 
 /**
@@ -127,23 +147,52 @@ exports.refreshLongLivedToken = async (existingToken) => {
 // ─── Profile Fetch ────────────────────────────────────────────────
 
 /**
- * Fetch basic Instagram profile using the Graph API.
- * Works for both Basic Display API (personal/creator) and Business accounts.
+ * Fetch Instagram profile data.
+ * Handles both Basic Display (personal/creator) and Graph API (Business/Creator via Facebook).
  */
 exports.fetchProfile = async (accessToken) => {
-    const fields = [
-        'id', 'username', 'name', 'biography',
-        'profile_picture_url', 'website',
-        'followers_count', 'follows_count', 'media_count',
-        'account_type',
-    ].join(',');
+    const fields = 'id,username,name,biography,profile_picture_url,website,followers_count,follows_count,media_count,account_type';
+    
+    // Attempt 1: Try Direct Graph API lookup (if token is from Facebook)
+    try {
+        console.log('[metaOAuth] Attempting IG Business discovery via Facebook Pages...');
+        // First discover the IG User ID from the user's pages
+        const pages = await exports.fetchPages(accessToken);
+        console.log(`[metaOAuth] Found ${pages.length} pages associated with this account`);
+        
+        if (pages && pages.length > 0) {
+            // Find the first page with a linked IG Business account
+            for (const page of pages) {
+                console.log(`[metaOAuth] Checking page: ${page.name} (${page.id})`);
+                const igAccount = await exports.fetchIGBusinessAccount(page.id, page.access_token || accessToken);
+                
+                if (igAccount && igAccount.id) {
+                    console.log(`[metaOAuth] 🚀 FOUND linked IG Business Account: ${igAccount.id}`);
+                    // Fetch full profile for this IG Business ID
+                    const igUrl = `${FB_GRAPH_BASE}/${igAccount.id}?fields=${fields}&access_token=${accessToken}`;
+                    const igRes = await fetch(igUrl);
+                    const igData = await igRes.json();
+                    if (igRes.ok && !igData.error) {
+                        return { ...igData, isBusiness: true, linkedPageId: page.id };
+                    } else {
+                        console.warn(`[metaOAuth] Profile fetch for discovered IG ID ${igAccount.id} failed:`, igData.error?.message);
+                    }
+                }
+            }
+        }
+    } catch (discoveryErr) {
+        console.warn('[metaOAuth] IG Business discovery failed:', discoveryErr.message);
+    }
 
+    // Attempt 2: Fallback to Basic Display API (graph.instagram.com)
     const url = `${GRAPH_BASE}/me?fields=${fields}&access_token=${accessToken}`;
     const res = await fetch(url);
     const data = await res.json();
+    
     if (!res.ok || data.error) {
-        throw new Error(data.error?.message || 'Profile fetch failed');
+        throw new Error(data.error?.message || 'Profile fetch failed (all attempts)');
     }
+    
     return data;
 };
 
@@ -187,13 +236,9 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
  * Returns [] if permissions are missing or fetch fails (non-fatal).
  */
 exports.fetchMediaList = async (accessToken, igUserId) => {
-    const fields = [
-        'id', 'caption', 'media_type', 'permalink',
-        'thumbnail_url', 'timestamp',
-        'like_count', 'comments_count',
-    ].join(',');
-
-    const url = `${GRAPH_BASE}/${igUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
+    const fields = 'id,caption,media_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
+    const base = igUserId.startsWith('1784') ? FB_GRAPH_BASE : GRAPH_BASE; // 1784 is typical for IG Business IDs on FB Graph
+    const url = `${base}/${igUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
     try {
         const res = await fetch(url);
         const data = await res.json();
@@ -222,7 +267,8 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
     };
 
     const metrics = metricsByType[mediaType] || 'reach,impressions,saved';
-    const url = `${GRAPH_BASE}/${mediaId}/insights?metric=${metrics}&access_token=${accessToken}`;
+    const base = mediaId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE; // Heuristic to switch between FB and IG domains
+    const url = `${base}/${mediaId}/insights?metric=${metrics}&access_token=${accessToken}`;
 
     try {
         const res = await fetch(url);
@@ -244,7 +290,8 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
  * Returns [] if fetch fails or permissions missing.
  */
 exports.fetchComments = async (accessToken, mediaId) => {
-    const url = `${GRAPH_BASE}/${mediaId}/comments?fields=id,text,username,timestamp&limit=50&access_token=${accessToken}`;
+    const base = mediaId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE;
+    const url = `${base}/${mediaId}/comments?fields=id,text,username,timestamp&limit=50&access_token=${accessToken}`;
     try {
         const res = await fetch(url);
         const data = await res.json();

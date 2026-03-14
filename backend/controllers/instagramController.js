@@ -167,7 +167,8 @@ exports.handleCallback = async (req, res, next) => {
                 { syncStatus: 'failed', syncError: error.message }
             ).catch(() => {});
         }
-        res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=sync_failed`);
+        const errorMsg = encodeURIComponent(error.message || 'Unknown error');
+        res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=sync_failed&details=${errorMsg}`);
     }
 };
 
