@@ -12,8 +12,10 @@
  * - Facebook Graph: https://graph.facebook.com/v19.0 (for page + IG Business lookup)
  */
 
+const FB_GRAPH_VERSION = process.env.META_GRAPH_API_VERSION || 'v19.0';
 const GRAPH_BASE = 'https://graph.instagram.com';
-const FB_GRAPH_BASE = `https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v19.0'}`;
+const FB_GRAPH_BASE = `https://graph.facebook.com/${FB_GRAPH_VERSION}`;
+const FB_OAUTH_BASE = `https://www.facebook.com/${FB_GRAPH_VERSION}/dialog/oauth`;
 
 // ─── Env helpers ─────────────────────────────────────────────────
 
@@ -69,7 +71,7 @@ exports.buildAuthURL = (role, state) => {
         state: state || '',
     });
 
-    return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
+    return `${FB_OAUTH_BASE}?${params.toString()}`;
 };
 
 // ─── Token Exchange ───────────────────────────────────────────────
@@ -84,16 +86,11 @@ exports.exchangeCodeForToken = async (code, role) => {
     const params = new URLSearchParams({
         client_id: getAppId(),
         client_secret: getAppSecret(),
-        grant_type: 'authorization_code',
         redirect_uri: redirectUri,
         code,
     });
-
-    const res = await fetch('https://api.instagram.com/oauth/access_token', {
-        method: 'POST',
-        body: params,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
+    const url = `${FB_GRAPH_BASE}/oauth/access_token?${params.toString()}`;
+    const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || data.error) {
         throw new Error(data.error_message || data.error?.message || 'Token exchange failed');
