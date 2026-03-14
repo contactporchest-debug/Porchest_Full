@@ -184,7 +184,7 @@ exports.fetchProfile = async (accessToken) => {
                     }
                 }
             }
-            throw new Error('Found Facebook Pages, but none were linked to an Instagram Professional Account. You MUST link your Instagram Business/Creator account to one of your Pages in Meta settings.');
+            throw new Error('Found Facebook Pages, but Meta did not return an Instagram account for them. Make sure you select BOTH your Facebook Page AND your Instagram account and grant ALL permissions during the login popup.');
         } else {
             throw new Error('No Facebook Pages linked to this account. You MUST link an Instagram Business/Creator account to a Facebook Page to use full analytics.');
         }
@@ -221,12 +221,12 @@ exports.fetchPages = async (accessToken) => {
  * Given a Facebook Page access token, fetch the linked Instagram Business Account.
  */
 exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
-    const url = `${FB_GRAPH_BASE}/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`;
+    const url = `${FB_GRAPH_BASE}/${pageId}?fields=instagram_business_account,connected_instagram_account&access_token=${pageAccessToken}`;
     try {
         const res = await fetch(url);
         const data = await res.json();
         if (!res.ok || data.error) return null;
-        return data.instagram_business_account || null; // { id }
+        return data.instagram_business_account || data.connected_instagram_account || null; // { id }
     } catch {
         return null;
     }
