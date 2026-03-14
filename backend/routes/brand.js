@@ -33,12 +33,10 @@ router.get('/instagram/media', brandInstagramController.getMedia);
 router.post('/instagram/post-lookup', brandInstagramController.lookupPostByUrl);
 
 // ── Campaign Requests ──────────────────────────────────────────────
-router.post('/requests', brandController.createRequest);
-router.get('/requests', brandController.getRequests);
-router.get('/requests/:id', brandController.getRequest);
+// (Reserved for future implementation)
 
 // ── Verification data ──────────────────────────────────────────────
-router.get('/verifications', brandController.getBrandVerifications);
+// (Reserved for future implementation)
 
 // ── Influencer Discovery ───────────────────────────────────────────
 router.get('/influencers', brandController.getMatchedInfluencers);
