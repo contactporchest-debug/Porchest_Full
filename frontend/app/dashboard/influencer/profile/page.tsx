@@ -264,8 +264,17 @@ export default function InfluencerProfilePage() {
             const p = new URLSearchParams(window.location.search);
             if (p.get('ig_connected') === '1') { toast.success('Instagram connected! ✅'); window.history.replaceState({}, '', window.location.pathname); }
             if (p.get('ig_error')) {
-                const m: Record<string, string> = { invalid_state: 'Security check failed.', missing_code: 'Authorization cancelled.', sync_failed: 'Sync failed. Try again.', token_expired: 'Token expired. Reconnect.' };
-                toast.error(m[p.get('ig_error')!] || 'Instagram connection failed.');
+                const errType = p.get('ig_error')!;
+                const details = p.get('details') ? ` (${decodeURIComponent(p.get('details')!)})` : '';
+                const m: Record<string, string> = { 
+                    invalid_state: 'Security check failed.', 
+                    missing_code: 'Authorization cancelled.', 
+                    sync_failed: 'Sync failed. Try again.', 
+                    token_expired: 'Token expired. Reconnect.',
+                    auth_denied: 'You declined the connection.',
+                    invalid_state_format: 'Session corrupted.'
+                };
+                toast.error((m[errType] || 'Instagram connection failed.') + details);
                 window.history.replaceState({}, '', window.location.pathname);
             }
         }
