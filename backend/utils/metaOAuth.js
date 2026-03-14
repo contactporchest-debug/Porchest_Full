@@ -21,14 +21,29 @@ const getAppId = () => process.env.META_APP_ID || process.env.INSTAGRAM_APP_ID;
 const getAppSecret = () => process.env.META_APP_SECRET || process.env.INSTAGRAM_APP_SECRET;
 
 const getRedirectUri = (role) => {
-    if (role === 'brand') {
-        return process.env.META_REDIRECT_URI_BRAND ||
-               process.env.INSTAGRAM_REDIRECT_URI_BRAND ||
-               (process.env.APP_BASE_URL ? `${process.env.APP_BASE_URL}/api/brand/instagram/callback` : null);
+    // 1. Try explicit role-based overrides first
+    let uri = (role === 'brand')
+        ? (process.env.META_REDIRECT_URI_BRAND || process.env.INSTAGRAM_REDIRECT_URI_BRAND)
+        : (process.env.META_REDIRECT_URI_INFLUENCER || process.env.INSTAGRAM_REDIRECT_URI);
+
+    // 2. Fallback to generic callback if explicit ones missing
+    if (!uri && process.env.INSTAGRAM_REDIRECT_URI) {
+        uri = process.env.INSTAGRAM_REDIRECT_URI;
     }
-    return process.env.META_REDIRECT_URI_INFLUENCER ||
-           process.env.INSTAGRAM_REDIRECT_URI ||
-           (process.env.APP_BASE_URL ? `${process.env.APP_BASE_URL}/api/influencer/instagram/callback` : null);
+
+    // 3. Fallback to construction from APP_BASE_URL
+    if (!uri && process.env.APP_BASE_URL) {
+        uri = `${process.env.APP_BASE_URL}/api/${role}/instagram/callback`;
+    }
+
+    // 4. Ultimate fallback for local development if everything is missing
+    if (!uri) {
+        // Only default to localhost if we are not in production or if explicitly needed
+        console.warn(`[metaOAuth] Redirect URI for ${role} not found in env, falling back to localhost default.`);
+        uri = `http://localhost:5001/api/${role}/instagram/callback`;
+    }
+
+    return uri;
 };
 
 // ─── OAuth URL Builder ────────────────────────────────────────────
