@@ -15,6 +15,8 @@ const crypto = require('crypto');
 const InstagramConnection = require('../models/InstagramConnection');
 const InstagramAccount = require('../models/InstagramAccount');
 const InstagramMedia = require('../models/InstagramMedia');
+const InstagramMediaInsight = require('../models/InstagramMediaInsight');
+const InstagramComment = require('../models/InstagramComment');
 const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
@@ -343,6 +345,68 @@ exports.getMedia = async (req, res, next) => {
             .limit(25);
 
         res.json({ success: true, media });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ─── LOOKUP POST BY URL ──────────────────────────────────────────
+
+exports.lookupPostByUrl = async (req, res, next) => {
+    try {
+        const { postUrl } = req.body;
+        if (!postUrl) return res.status(400).json({ success: false, message: 'postUrl is required' });
+
+        // Try to find by permalink in stored media first
+        const media = await InstagramMedia.findOne({
+            userId: req.user._id,
+            role: ROLE,
+            permalink: { $regex: postUrl.trim(), $options: 'i' }
+        });
+
+        if (!media) {
+            return res.status(404).json({
+                success: false,
+                message: 'Post not found in your synced media. Try refreshing your sync first.'
+            });
+        }
+
+        // Fetch associated insights
+        const insight = await InstagramMediaInsight.findOne({
+            userId: req.user._id,
+            role: ROLE,
+            mediaId: media.mediaId
+        }).sort({ createdAt: -1 });
+
+        // Fetch comments for this post
+        const comments = await InstagramComment.find({
+            userId: req.user._id,
+            role: ROLE,
+            mediaId: media.mediaId
+        }).sort({ timestamp: -1 }).limit(20);
+
+        // Compute post-level derived metrics
+        const engagement = (media.likeCount || 0) + (media.commentsCount || 0) + (insight?.saved || 0);
+        const connection = await InstagramConnection.findOne({ userId: req.user._id, role: ROLE });
+        const followers = connection?.followersCount || 1;
+
+        const postMetrics = {
+            engagementTotal: engagement,
+            engagementRateByFollowers: parseFloat(((engagement / followers) * 100).toFixed(2)),
+            engagementRateByReach: insight?.reach ? parseFloat(((engagement / insight.reach) * 100).toFixed(2)) : null,
+            engagementPerImpression: insight?.impressions ? parseFloat((engagement / insight.impressions).toFixed(4)) : null,
+            likeToCommentRatio: media.commentsCount > 0 ? parseFloat((media.likeCount / media.commentsCount).toFixed(2)) : null,
+            savesPerReach: (insight?.saved && insight?.reach) ? parseFloat(((insight.saved / insight.reach) * 100).toFixed(2)) : null,
+            commentRate: parseFloat(((media.commentsCount / followers) * 100).toFixed(3)),
+        };
+
+        res.json({
+            success: true,
+            media,
+            insight: insight || null,
+            comments,
+            postMetrics
+        });
     } catch (error) {
         next(error);
     }

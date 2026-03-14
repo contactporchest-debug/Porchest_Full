@@ -90,6 +90,7 @@ export const brandAPI = {
     getInstagramProfile: () => api.get('/brand/instagram/profile'),
     getInstagramAnalytics: () => api.get('/brand/instagram/analytics'),
     getInstagramMedia: () => api.get('/brand/instagram/media'),
+    lookupPost: (postUrl: string) => api.post('/brand/instagram/post-lookup', { postUrl }),
 };
 
 // ─── Influencer ──────────────────────────────────────
@@ -102,10 +103,10 @@ export const influencerAPI = {
     getInstagramConnectURL: () => api.get('/influencer/instagram/connect'),
     disconnectInstagram: () => api.post('/influencer/instagram/disconnect'),
     refreshInstagramSync: () => api.post('/influencer/instagram/refresh'),
-    // Instagram Data
     getInstagramProfile: () => api.get('/influencer/instagram/profile'),
     getInstagramAnalytics: () => api.get('/influencer/instagram/analytics'),
     getInstagramMedia: () => api.get('/influencer/instagram/media'),
+    lookupPost: (postUrl: string) => api.post('/influencer/instagram/post-lookup', { postUrl }),
     // Incoming campaign requests
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
     respondToRequest: (id: string, status: 'accepted' | 'rejected', rejectionReason?: string) =>

@@ -10,41 +10,20 @@ router.get('/instagram/callback', instagramController.handleCallback);
 
 router.use(authMiddleware, roleMiddleware('influencer'));
 
-// Dashboard
-router.get('/dashboard', influencerController.getDashboard);
-
 // Profile
+router.get('/dashboard', influencerController.getDashboard);
 router.get('/profile', influencerController.getProfile);
 router.put('/profile', influencerController.updateProfile);
 
 // ── Instagram OAuth ──
-// Step 1: Get authorization URL (frontend will redirect to it)
 router.get('/instagram/connect', instagramController.initiateConnect);
-// Step 2 handled above as public route
-// router.get('/instagram/callback', instagramController.handleCallback);
-// Disconnect
 router.post('/instagram/disconnect', instagramController.disconnect);
-// Refresh sync
 router.post('/instagram/refresh', instagramController.refreshSync);
 
 // ── Instagram Data ──
 router.get('/instagram/profile', instagramController.getProfile);
 router.get('/instagram/analytics', instagramController.getAnalytics);
 router.get('/instagram/media', instagramController.getMedia);
-
-// Campaign Requests (incoming from brands)
-router.get('/requests', influencerController.getRequests);
-router.patch('/requests/:id', influencerController.respondToRequest);
-
-// Content Verification
-router.post('/verify', influencerController.submitVerification);
-router.get('/verifications', influencerController.getVerifications);
-
-// Earnings
-router.get('/earnings', influencerController.getEarnings);
-
-// Cashouts
-router.post('/cashout', influencerController.requestCashout);
-router.get('/cashouts', influencerController.getCashouts);
+router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
 
 module.exports = router;

@@ -30,6 +30,7 @@ router.post('/instagram/refresh', brandInstagramController.refreshSync);
 router.get('/instagram/profile', brandInstagramController.getProfile);
 router.get('/instagram/analytics', brandInstagramController.getAnalytics);
 router.get('/instagram/media', brandInstagramController.getMedia);
+router.post('/instagram/post-lookup', brandInstagramController.lookupPostByUrl);
 
 // ── Campaign Requests ──────────────────────────────────────────────
 router.post('/requests', brandController.createRequest);
