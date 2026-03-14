@@ -166,10 +166,19 @@ exports.fetchProfile = async (accessToken) => {
         console.log(`[metaOAuth] Found ${pages.length} pages associated with this account`);
         
         if (pages && pages.length > 0) {
+            let debugTrace = [];
             // Find the first page with a linked IG Business account
             for (const page of pages) {
                 console.log(`[metaOAuth] Checking page: ${page.name} (${page.id})`);
-                const igAccount = await exports.fetchIGBusinessAccount(page.id, page.access_token || accessToken);
+                debugTrace.push(`[Pg:${page.id},Tok:${!!(page.access_token)}]`);
+                
+                const url = `${FB_GRAPH_BASE}/${page.id}?fields=instagram_business_account,connected_instagram_account&access_token=${page.access_token || accessToken}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                debugTrace.push(`[Data:${JSON.stringify(data).substring(0, 100)}]`);
+
+                const igAccount = data.instagram_business_account || data.connected_instagram_account || null;
                 
                 if (igAccount && igAccount.id) {
                     console.log(`[metaOAuth] 🚀 FOUND linked IG Business Account: ${igAccount.id}`);
@@ -180,23 +189,21 @@ exports.fetchProfile = async (accessToken) => {
                     if (igRes.ok && !igData.error) {
                         return { ...igData, isBusiness: true, linkedPageId: page.id };
                     } else {
-                        console.warn(`[metaOAuth] Profile fetch for discovered IG ID ${igAccount.id} failed:`, igData.error?.message);
+                        throw new Error(`Failed IG fetch: ${igData.error?.message}`);
                     }
                 }
             }
-            throw new Error('Found Facebook Pages, but Meta did not return an Instagram account for them. Make sure you select BOTH your Facebook Page AND your Instagram account and grant ALL permissions during the login popup.');
+            throw new Error(`Failed IG: MultiPage Trace: ${debugTrace.join(' ')}`);
         } else {
-            throw new Error('No Facebook Pages linked to this account. You MUST link an Instagram Business/Creator account to a Facebook Page to use full analytics.');
+            throw new Error('Failed IG: 0 Facebook Pages returned by Meta.');
         }
     } catch (discoveryErr) {
-        if (discoveryErr.message && discoveryErr.message.includes('MUST link')) throw discoveryErr;
+        if (discoveryErr.message && discoveryErr.message.includes('Failed IG')) throw discoveryErr;
         console.warn('[metaOAuth] IG Business discovery failed:', discoveryErr.message);
     }
 
     // Attempt 2: Fallback to Basic Display API (ONLY if the token seems to belong to IG Basic)
-    // Actually, if we got the token via FB Login, it is ALWAYS a Facebook User Token.
-    // Facebook User Tokens CANNOT be used on graph.instagram.com/me.
-    throw new Error('Could not find a linked Instagram Business Account. Please ensure your Instagram is professional (Business/Creator) and linked to a Facebook Page.');
+    throw new Error('Failed IG: Not an Instagram token, and Facebook discovery failed.');
 };
 
 // ─── Facebook Page + IG Business Lookup ──────────────────────────
