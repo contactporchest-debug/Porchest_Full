@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authAPI } from '@/lib/api';
 
 interface User {
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string) => {
         try {
             const { data } = await authAPI.login({ email, password });
             if (data.success) {
@@ -106,22 +106,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Login failed';
             throw new Error(msg);
         }
-    };
+    }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         localStorage.removeItem('porchest_token');
         localStorage.removeItem('porchest_user');
         setToken(null);
         setUser(null);
-    };
+    }, []);
 
-    const updateUser = (userData: Partial<User>) => {
-        if (user) {
-            const updated = { ...user, ...userData };
-            setUser(updated);
+    const updateUser = useCallback((userData: Partial<User>) => {
+        setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, ...userData };
             localStorage.setItem('porchest_user', JSON.stringify(updated));
-        }
-    };
+            return updated;
+        });
+    }, []);
 
     return (
         <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
