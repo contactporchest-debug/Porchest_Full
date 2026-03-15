@@ -27,6 +27,7 @@ const brandNav = [
 const influencerNav = [
     { label: 'Overview', href: '/dashboard/influencer', icon: <LayoutDashboard size={17} /> },
     { label: 'My Profile', href: '/dashboard/influencer/profile', icon: <UserCircle size={17} /> },
+    { label: 'Analytics', href: '/dashboard/influencer/analytics', icon: <BarChart3 size={17} /> },
     { label: 'Collaborations', href: '/dashboard/influencer/collaborations', icon: <Briefcase size={17} /> },
     { label: 'Earnings', href: '/dashboard/influencer/earnings', icon: <DollarSign size={17} /> },
 ];
