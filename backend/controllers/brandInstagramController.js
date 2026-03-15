@@ -25,6 +25,7 @@ const BrandProfile = require('../models/BrandProfile');
 const User = require('../models/User');
 const meta = require('../utils/metaOAuth');
 const syncService = require('../utils/instagramSyncService');
+const { generateUniqueCode } = require('../utils/generateCode');
 
 const ROLE = 'brand';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -151,27 +152,34 @@ exports.handleCallback = async (req, res, next) => {
         );
 
         // Update BrandProfile with synced Instagram data (non-sensitive)
-        await BrandProfile.findOneAndUpdate(
-            { userId },
-            {
-                $set: {
-                    instagramUserId: profile.id,
-                    instagramUsername: profile.username,
-                    instagramProfileURL: `https://instagram.com/${profile.username}`,
-                    instagramDPURL: profile.profile_picture_url || null,
-                    instagramAccountType: profile.account_type || null,
-                    instagramBiography: profile.biography || null,
-                    followersCount: profile.followers_count || 0,
-                    followsCount: profile.follows_count || 0,
-                    mediaCount: profile.media_count || 0,
-                    instagramConnected: true,
-                    lastSyncedAt: new Date(),
-                    linkedPageId,
-                    linkedPageName,
-                }
-            },
-            { upsert: true }
-        );
+        const profileUpdates = {
+            instagramUserId: profile.id,
+            instagramUsername: profile.username,
+            instagramProfileURL: `https://instagram.com/${profile.username}`,
+            instagramDPURL: profile.profile_picture_url || null,
+            instagramAccountType: profile.account_type || null,
+            instagramBiography: profile.biography || null,
+            followersCount: profile.followers_count || 0,
+            followsCount: profile.follows_count || 0,
+            mediaCount: profile.media_count || 0,
+            instagramConnected: true,
+            lastSyncedAt: new Date(),
+            linkedPageId,
+            linkedPageName,
+        };
+
+        let brandProfile = await BrandProfile.findOne({ userId });
+        if (!brandProfile) {
+            const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
+            await BrandProfile.create({
+                userId,
+                brandProfileId,
+                ...profileUpdates
+            });
+        } else {
+            Object.assign(brandProfile, profileUpdates);
+            await brandProfile.save();
+        }
 
         // Mirror brand instagram handle in User doc
         await User.findByIdAndUpdate(userId, {
@@ -278,15 +286,26 @@ exports.refreshSync = async (req, res, next) => {
             }
         );
 
-        await BrandProfile.findOneAndUpdate(
-            { userId: req.user._id },
-            {
-                followersCount: profile.followers_count || 0,
-                followsCount: profile.follows_count || 0,
-                mediaCount: profile.media_count || 0,
-                lastSyncedAt: new Date(),
-            }
-        );
+        // Update BrandProfile
+        const profileUpdates = {
+            followersCount: profile.followers_count || 0,
+            followsCount: profile.follows_count || 0,
+            mediaCount: profile.media_count || 0,
+            lastSyncedAt: new Date(),
+        };
+
+        let brandProfile = await BrandProfile.findOne({ userId: req.user._id });
+        if (!brandProfile) {
+            const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
+            await BrandProfile.create({
+                userId: req.user._id,
+                brandProfileId,
+                ...profileUpdates
+            });
+        } else {
+            Object.assign(brandProfile, profileUpdates);
+            await brandProfile.save();
+        }
 
         res.json({
             success: true,

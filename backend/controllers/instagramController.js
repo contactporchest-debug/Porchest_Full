@@ -22,6 +22,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
 const meta = require('../utils/metaOAuth');
 const syncService = require('../utils/instagramSyncService');
+const { generateUniqueCode } = require('../utils/generateCode');
 
 const ROLE = 'influencer';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -118,28 +119,35 @@ exports.handleCallback = async (req, res, next) => {
         );
 
         // Update InfluencerProfile synced fields (non-sensitive only)
-        await InfluencerProfile.findOneAndUpdate(
-            { userId },
-            {
-                $set: {
-                    instagramUserId: profile.id,
-                    instagramUsername: profile.username,
-                    instagramProfileURL: `https://instagram.com/${profile.username}`,
-                    instagramDPURL: profile.profile_picture_url || null,
-                    instagramAccountType: profile.account_type || null,
-                    instagramBiography: profile.biography || null,
-                    followersCount: profile.followers_count || 0,
-                    followsCount: profile.follows_count || 0,
-                    mediaCount: profile.media_count || 0,
-                    engagementRate: metrics.engagementRate || 0,
-                    avgLikes: metrics.avgLikesPerPost || 0,
-                    avgComments: metrics.avgCommentsPerPost || 0,
-                    instagramConnected: true,
-                    lastSyncedAt: new Date(),
-                }
-            },
-            { upsert: true }
-        );
+        const profileUpdates = {
+            instagramUserId: profile.id,
+            instagramUsername: profile.username,
+            instagramProfileURL: `https://instagram.com/${profile.username}`,
+            instagramDPURL: profile.profile_picture_url || null,
+            instagramAccountType: profile.account_type || null,
+            instagramBiography: profile.biography || null,
+            followersCount: profile.followers_count || 0,
+            followsCount: profile.follows_count || 0,
+            mediaCount: profile.media_count || 0,
+            engagementRate: metrics.engagementRate || 0,
+            avgLikes: metrics.avgLikesPerPost || 0,
+            avgComments: metrics.avgCommentsPerPost || 0,
+            instagramConnected: true,
+            lastSyncedAt: new Date(),
+        };
+
+        let infProfile = await InfluencerProfile.findOne({ userId });
+        if (!infProfile) {
+            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            await InfluencerProfile.create({
+                userId,
+                influencerProfileId,
+                ...profileUpdates
+            });
+        } else {
+            Object.assign(infProfile, profileUpdates);
+            await infProfile.save();
+        }
 
         // Mirror key fields in User doc for backward compat with brand search
         await User.findByIdAndUpdate(userId, {
@@ -265,18 +273,28 @@ exports.refreshSync = async (req, res, next) => {
         );
 
         // Update InfluencerProfile
-        await InfluencerProfile.findOneAndUpdate(
-            { userId: req.user._id },
-            {
-                followersCount: profile.followers_count || 0,
-                followsCount: profile.follows_count || 0,
-                mediaCount: profile.media_count || 0,
-                engagementRate: metrics.engagementRate || 0,
-                avgLikes: metrics.avgLikesPerPost || 0,
-                avgComments: metrics.avgCommentsPerPost || 0,
-                lastSyncedAt: new Date(),
-            }
-        );
+        const profileUpdates = {
+            followersCount: profile.followers_count || 0,
+            followsCount: profile.follows_count || 0,
+            mediaCount: profile.media_count || 0,
+            engagementRate: metrics.engagementRate || 0,
+            avgLikes: metrics.avgLikesPerPost || 0,
+            avgComments: metrics.avgCommentsPerPost || 0,
+            lastSyncedAt: new Date(),
+        };
+
+        let infProfile = await InfluencerProfile.findOne({ userId: req.user._id });
+        if (!infProfile) {
+            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            await InfluencerProfile.create({
+                userId: req.user._id,
+                influencerProfileId,
+                ...profileUpdates
+            });
+        } else {
+            Object.assign(infProfile, profileUpdates);
+            await infProfile.save();
+        }
 
         // Mirror to User doc
         await User.findByIdAndUpdate(req.user._id, {
