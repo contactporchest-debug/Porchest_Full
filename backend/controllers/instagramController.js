@@ -357,17 +357,34 @@ exports.lookupPostByUrl = async (req, res, next) => {
         const { postUrl } = req.body;
         if (!postUrl) return res.status(400).json({ success: false, message: 'postUrl is required' });
 
-        // Try to find by permalink in stored media first
-        const media = await InstagramMedia.findOne({
-            userId: req.user._id,
-            role: ROLE,
-            permalink: { $regex: postUrl.trim(), $options: 'i' }
-        });
+        // Strip query params and trailing slashes, then extract the shortcode
+        // Handles: /p/SHORTCODE/, /reel/SHORTCODE/, /tv/SHORTCODE/
+        // Works even with ?utm_source=... &igsh=... tracking params
+        let cleanUrl;
+        try {
+            const parsed = new URL(postUrl.trim());
+            cleanUrl = parsed.origin + parsed.pathname; // drops ?query and #hash
+        } catch {
+            cleanUrl = postUrl.trim().split('?')[0]; // fallback: strip at ?
+        }
+        // Remove trailing slash for consistent matching
+        cleanUrl = cleanUrl.replace(/\/+$/, '');
+
+        // Extract shortcode — the path segment after /p/, /reel/, /tv/
+        const shortcodeMatch = cleanUrl.match(/\/(?:p|reel|tv)\/([^/]+)/);
+        const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
+
+        // Build search: match by shortcode in permalink, or fallback to full clean URL
+        const searchQuery = shortcode
+            ? { userId: req.user._id, role: ROLE, permalink: { $regex: shortcode, $options: 'i' } }
+            : { userId: req.user._id, role: ROLE, permalink: { $regex: cleanUrl, $options: 'i' } };
+
+        const media = await InstagramMedia.findOne(searchQuery);
 
         if (!media) {
             return res.status(404).json({
                 success: false,
-                message: 'Post not found in your synced media. Try refreshing your sync first.'
+                message: 'Post not found in your synced media. Try refreshing your Instagram sync first, then paste the post URL again.'
             });
         }
 

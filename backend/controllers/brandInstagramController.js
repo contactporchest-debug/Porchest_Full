@@ -351,16 +351,30 @@ exports.lookupPostByUrl = async (req, res, next) => {
         const { postUrl } = req.body;
         if (!postUrl) return res.status(400).json({ success: false, message: 'postUrl is required' });
 
-        const media = await InstagramMedia.findOne({
-            userId: req.user._id,
-            role: ROLE,
-            permalink: { $regex: postUrl.trim(), $options: 'i' }
-        });
+        // Strip query params / tracking (utm_source, igsh, etc.) and extract shortcode
+        let cleanUrl;
+        try {
+            const parsed = new URL(postUrl.trim());
+            cleanUrl = parsed.origin + parsed.pathname;
+        } catch {
+            cleanUrl = postUrl.trim().split('?')[0];
+        }
+        cleanUrl = cleanUrl.replace(/\/+$/, '');
+
+        // Extract shortcode after /p/, /reel/, /tv/
+        const shortcodeMatch = cleanUrl.match(/\/(?:p|reel|tv)\/([^/]+)/);
+        const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
+
+        const searchQuery = shortcode
+            ? { userId: req.user._id, role: ROLE, permalink: { $regex: shortcode, $options: 'i' } }
+            : { userId: req.user._id, role: ROLE, permalink: { $regex: cleanUrl, $options: 'i' } };
+
+        const media = await InstagramMedia.findOne(searchQuery);
 
         if (!media) {
             return res.status(404).json({
                 success: false,
-                message: 'Post not found in your synced media. Try refreshing your sync first.'
+                message: 'Post not found in your synced media. Try refreshing your Instagram sync first, then paste the post URL again.'
             });
         }
 
