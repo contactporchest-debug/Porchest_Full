@@ -20,9 +20,10 @@ const adminNav = [
 const brandNav = [
     { label: 'Overview', href: '/dashboard/brand', icon: <LayoutDashboard size={17} /> },
     { label: 'My Profile', href: '/dashboard/brand/profile', icon: <UserCircle size={17} /> },
-    { label: 'Campaigns', href: '/dashboard/brand/campaigns', icon: <Megaphone size={17} /> },
-    { label: 'AI Matching', href: '/dashboard/brand/matching', icon: <Bot size={17} /> },
+    { label: 'Influencers', href: '/dashboard/brand/influencers', icon: <Users size={17} /> },
+    { label: 'Collaborations', href: '/dashboard/brand/collaborations', icon: <Briefcase size={17} /> },
     { label: 'Analytics', href: '/dashboard/brand/analytics', icon: <BarChart3 size={17} /> },
+    { label: 'AI Matching', href: '/dashboard/brand/matching', icon: <Bot size={17} /> },
 ];
 const influencerNav = [
     { label: 'Overview', href: '/dashboard/influencer', icon: <LayoutDashboard size={17} /> },

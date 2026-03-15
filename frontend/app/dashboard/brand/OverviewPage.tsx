@@ -138,7 +138,7 @@ export default function OverviewPage() {
                 className="glass-card" style={{ padding: '26px 30px', borderRadius: '28px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Campaigns</p>
-                    <button onClick={() => router.push('/dashboard/brand/campaigns')}
+                    <button onClick={() => router.push('/dashboard/brand/collaborations')}
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                         View All <ArrowRight size={12} />
                     </button>
@@ -150,7 +150,7 @@ export default function OverviewPage() {
                         <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', fontWeight: '500', marginBottom: '4px' }}>No campaigns yet</p>
                         <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>
                             Create your first campaign request from{' '}
-                            <button onClick={() => router.push('/dashboard/brand/campaigns')} style={{ color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>Campaigns →</button>
+                            <button onClick={() => router.push('/dashboard/brand/influencers')} style={{ color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>Influencers →</button>
                         </p>
                     </div>
                 ) : (
@@ -170,7 +170,7 @@ export default function OverviewPage() {
                                     </div>
                                     <span style={{ padding: '3px 11px', borderRadius: '99px', background: `${statusColor}12`, border: `1px solid ${statusColor}28`, color: statusColor, fontSize: '11px', fontWeight: '700' }}>{statusLabel}</span>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>
-                                    <button onClick={() => router.push('/dashboard/brand/campaigns')}
+                                    <button onClick={() => router.push('/dashboard/brand/collaborations')}
                                         style={{ padding: '5px 12px', borderRadius: '9px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.2)', color: '#a78bfa', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                                         View
                                     </button>

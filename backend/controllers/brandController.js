@@ -3,7 +3,35 @@ const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const InstagramConnection = require('../models/InstagramConnection');
 const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
+const InstagramMedia = require('../models/InstagramMedia');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
+
+// Helper for quality score
+function getQualityScore(profile, igConn) {
+    let score = 5.0;
+    const er = profile.engagementRate || 0;
+    const followers = profile.followersCount || igConn?.followersCount || 0;
+    
+    if (er > 5) score += 2;
+    else if (er > 2) score += 1;
+    else if (er > 0) score += 0.5;
+    
+    if (followers > 500000) score += 2;
+    else if (followers > 100000) score += 1.5;
+    else if (followers > 10000) score += 1;
+    
+    if (profile.profileCompletionStatus) score += 1;
+    
+    score = Math.min(Math.max(score, 1.0), 10.0);
+    
+    let stars = Math.max(1, Math.round(score / 2));
+    let label = 'Low Fit';
+    if (score >= 8) label = 'Best Fit';
+    else if (score >= 6) label = 'Strong Fit';
+    else if (score >= 4) label = 'Good Fit';
+    
+    return { qualityScore: parseFloat(score.toFixed(1)), starRating: stars, qualityLabel: label };
+}
 
 // @desc    Brand dashboard overview
 // @route   GET /api/brand/dashboard
@@ -125,7 +153,10 @@ exports.getMatchedInfluencers = async (req, res, next) => {
                     role: 'influencer',
                     isConnected: true,
                 }).select('username followersCount followsCount mediaCount profilePictureURL lastSyncedAt');
-                return { profile, instagram: igConn || null };
+                
+                const quality = getQualityScore(profile, igConn);
+                
+                return { profile, instagram: igConn || null, ...quality };
             })
         );
 
@@ -149,13 +180,25 @@ exports.getInfluencerDetail = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Influencer not found' });
         }
 
-        const [igConnection, analytics] = await Promise.all([
+        const [igConnection, analytics, recentPosts] = await Promise.all([
             InstagramConnection.findOne({ userId: id, role: 'influencer', isConnected: true })
                 .select('-accessToken -longLivedToken -oauthState'),
             InstagramDerivedMetric.findOne({ userId: id, role: 'influencer' }).sort({ computedAt: -1 }),
+            InstagramMedia.find({ userId: id, role: 'influencer' })
+                .sort({ timestamp: -1 })
+                .limit(6)
         ]);
+        
+        const quality = getQualityScore(profile, igConnection);
 
-        res.json({ success: true, profile, instagram: igConnection || null, analytics: analytics || null });
+        res.json({ 
+            success: true, 
+            profile, 
+            instagram: igConnection || null, 
+            analytics: analytics || null,
+            recentPosts: recentPosts || [],
+            ...quality
+        });
     } catch (error) {
         next(error);
     }

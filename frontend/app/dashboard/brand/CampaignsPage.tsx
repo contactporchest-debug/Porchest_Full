@@ -115,7 +115,7 @@ function CampaignDetail({ request, verifications }: { request: any; verification
     );
 }
 
-export default function CampaignsPage() {
+export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) {
     const router = useRouter();
     const [requests, setRequests] = useState<any[]>([]);
     const [verifications, setVerifications] = useState<any[]>([]);
@@ -149,16 +149,14 @@ export default function CampaignsPage() {
     return (
         <div>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
-                <div>
-                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns</h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>{filtered.length} campaign{filtered.length !== 1 ? 's' : ''}</p>
+            {!hideHeader && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div>
+                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns</h1>
+                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>{filtered.length} campaign{filtered.length !== 1 ? 's' : ''}</p>
+                    </div>
                 </div>
-                <button onClick={() => router.push('/dashboard/brand')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '10px 20px', borderRadius: '14px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 0 22px rgba(123,63,242,0.35)' }}>
-                    <Plus size={14} /> New Request
-                </button>
-            </div>
+            )}
 
             {/* Filter tabs + search */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
