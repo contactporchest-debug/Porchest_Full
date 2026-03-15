@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
+const { generateUniqueCode } = require('../utils/generateCode');
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -43,6 +44,7 @@ exports.register = async (req, res, next) => {
         const otp = generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+        userData.userCode = await generateUniqueCode('USR', User, 'userCode');
         userData.otp = otp;
         userData.otpExpires = otpExpires;
         userData.status = 'pending';
