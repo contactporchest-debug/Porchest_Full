@@ -72,8 +72,15 @@ export default function InfluencerSearch() {
     const filtered = influencers.filter(inf => {
         const fullName = inf.profile?.fullName?.toLowerCase() || '';
         const infNiche = inf.profile?.niche?.toLowerCase() || '';
+        const handle = inf.instagram?.username?.toLowerCase() || inf.profile?.instagramUsername?.toLowerCase() || '';
+        const bio = inf.instagram?.biography?.toLowerCase() || inf.profile?.shortBio?.toLowerCase() || '';
         const search = query.toLowerCase();
-        return !query || fullName.includes(search) || infNiche.includes(search);
+        
+        return !query || 
+               fullName.includes(search) || 
+               infNiche.includes(search) || 
+               handle.includes(search) || 
+               bio.includes(search);
     });
 
     const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (

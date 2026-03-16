@@ -186,7 +186,7 @@ exports.getInfluencerDetail = async (req, res, next) => {
             InstagramDerivedMetric.findOne({ userId: id, role: 'influencer' }).sort({ computedAt: -1 }),
             InstagramMedia.find({ userId: id, role: 'influencer' })
                 .sort({ timestamp: -1 })
-                .limit(6)
+                .limit(60)
         ]);
         
         const quality = getQualityScore(profile, igConnection);
