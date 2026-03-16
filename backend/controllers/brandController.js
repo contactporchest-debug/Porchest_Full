@@ -146,7 +146,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             .populate('userId', 'email status')
             .sort({ createdAt: -1 });
 
-        // Enrich with latest IG connection data
+    // Enrich with latest IG connection data and demographics
         const result = await Promise.all(
             influencerProfiles.map(async (profile) => {
                 const igConn = await InstagramConnection.findOne({
@@ -155,9 +155,23 @@ exports.getMatchedInfluencers = async (req, res, next) => {
                     isConnected: true,
                 }).select('username followersCount followsCount mediaCount profilePictureURL lastSyncedAt');
                 
+                const latestStats = await InstagramAccountDailyStat.findOne({
+                    userId: profile.userId?._id,
+                    role: 'influencer'
+                }).sort({ date: -1 });
+
+                let audienceDemographics = null;
+                if (latestStats && (latestStats.audienceCountryJson || latestStats.audienceCityJson || latestStats.audienceGenderAgeJson)) {
+                    audienceDemographics = {
+                        countries: latestStats.audienceCountryJson ? JSON.parse(latestStats.audienceCountryJson) : null,
+                        cities: latestStats.audienceCityJson ? JSON.parse(latestStats.audienceCityJson) : null,
+                        genderAge: latestStats.audienceGenderAgeJson ? JSON.parse(latestStats.audienceGenderAgeJson) : null
+                    };
+                }
+                
                 const quality = getQualityScore(profile, igConn);
                 
-                return { profile, instagram: igConn || null, ...quality };
+                return { profile, instagram: igConn || null, analytics: { audienceDemographics }, ...quality };
             })
         );
 

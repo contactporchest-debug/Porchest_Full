@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, TrendingUp, BarChart3, Send, Loader2, UserX, DollarSign, MessageCircle, Heart, Film, Star, ExternalLink, Image, Instagram } from 'lucide-react';
+import { Search, Globe, TrendingUp, BarChart3, Send, Loader2, UserX, DollarSign, MessageCircle, Heart, Film, Star, ExternalLink, Image, Instagram, Users } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import CreateRequestModal from './CreateRequestModal';
 import InfluencerProfileModal from './InfluencerProfileModal';
@@ -212,6 +212,37 @@ export default function InfluencerSearch() {
                             const engagement = p.engagementRate || 0;
                             const igLink = handle ? `https://instagram.com/${handle}` : '#';
 
+                            // Parse demographics for card display
+                            const demos = inf.analytics?.audienceDemographics;
+                            let topCountry = '';
+                            let genderSplit = '';
+                            let topAge = '';
+
+                            if (demos) {
+                                if (demos.countries && Object.keys(demos.countries).length > 0) {
+                                    topCountry = Object.keys(demos.countries).reduce((a, b) => demos.countries[a] > demos.countries[b] ? a : b).split(',')[0];
+                                }
+                                if (demos.genderAge && Object.keys(demos.genderAge).length > 0) {
+                                    let f = 0, m = 0;
+                                    const ages: Record<string, number> = {};
+                                    Object.entries(demos.genderAge).forEach(([key, val]: [string, any]) => {
+                                        if (key.startsWith('F.')) f += val;
+                                        if (key.startsWith('M.')) m += val;
+                                        const ageGroup = key.split('.')[1];
+                                        if (ageGroup) {
+                                            ages[ageGroup] = (ages[ageGroup] || 0) + val;
+                                        }
+                                    });
+                                    const totalGender = f + m;
+                                    if (totalGender > 0) {
+                                        genderSplit = `${Math.round((f/totalGender)*100)}% F / ${Math.round((m/totalGender)*100)}% M`;
+                                    }
+                                    if (Object.keys(ages).length > 0) {
+                                        topAge = Object.keys(ages).reduce((a, b) => ages[a] > ages[b] ? a : b);
+                                    }
+                                }
+                            }
+
                             return (
                                 <motion.div key={p._id || i} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.04, duration: 0.35 }}
@@ -270,6 +301,17 @@ export default function InfluencerSearch() {
                                                 <BarChart3 size={10} /> {engagement}% ER
                                             </span>
                                         </div>
+
+                                        {/* Demographics Row */}
+                                        {(topCountry || genderSplit) && (
+                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a78bfa" /> {topCountry} Top</div>}
+                                                {topCountry && genderSplit && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
+                                                {genderSplit && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={11} color="#f472b6" /> {genderSplit}</div>}
+                                                {genderSplit && topAge && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
+                                                {topAge && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} Yrs</div>}
+                                            </div>
+                                        )}
 
                                         {/* Rates */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
