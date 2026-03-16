@@ -90,6 +90,9 @@ exports.updateProfile = async (req, res, next) => {
                 ...profileUpdates,
             });
         } else {
+            if (!influencerProfile.influencerProfileId) {
+                influencerProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            }
             Object.assign(influencerProfile, profileUpdates);
             await influencerProfile.save();
         }

@@ -145,6 +145,9 @@ exports.handleCallback = async (req, res, next) => {
                 ...profileUpdates
             });
         } else {
+            if (!infProfile.influencerProfileId) {
+                infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            }
             Object.assign(infProfile, profileUpdates);
             await infProfile.save();
         }
@@ -292,6 +295,9 @@ exports.refreshSync = async (req, res, next) => {
                 ...profileUpdates
             });
         } else {
+            if (!infProfile.influencerProfileId) {
+                infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            }
             Object.assign(infProfile, profileUpdates);
             await infProfile.save();
         }
