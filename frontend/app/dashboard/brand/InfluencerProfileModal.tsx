@@ -398,17 +398,45 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                 )}
                             </div>
                             
-                            {/* Audience Demographics - Mock/Fallback UI */}
+                            {/* Audience Demographics */}
                             <div style={{ background: 'rgba(20,18,34,0.4)', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                     <Users size={16} color="#facc15" />
                                     <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Audience Demographics</h3>
                                 </div>
-                                {analytics?.audienceDemographics ? (
-                                    <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {/* Implement pie chart or bars here if demographics actually exist in data model */}
-                                    </div>
-                                ) : (
+                                {analytics?.audienceDemographics?.countries ? (() => {
+                                    // Parse top countries
+                                    const c = analytics.audienceDemographics.countries;
+                                    const cKeys = Object.keys(c).sort((a,b) => c[b]-c[a]).slice(0, 5);
+                                    let total = 0; cKeys.forEach(k => total+=c[k]);
+                                    const demoData = cKeys.map(k => ({ name: k, value: total > 0 ? (c[k]/total)*100 : 0 }));
+                                    
+                                    if(demoData.length === 0) return <EmptyChartState message="Insufficient demographic data available." />;
+
+                                    return (
+                                        <div style={{ height: '220px', width: '100%', display: 'flex', alignItems: 'center' }}>
+                                            <ResponsiveContainer width="60%" height="100%">
+                                                <PieChart>
+                                                    <Pie data={demoData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} dataKey="value" stroke="none">
+                                                        {demoData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                                    </Pie>
+                                                    <RechartsTooltip formatter={(val: number) => val.toFixed(1) + '%'} contentStyle={customTooltipStyle} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                {demoData.map((d, i) => (
+                                                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '10px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[i % COLORS.length] }}></div>
+                                                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{d.name.split(',')[0]}</p>
+                                                        </div>
+                                                        <p style={{ fontSize: '11px', fontWeight: '700', color: '#fff' }}>{d.value.toFixed(1)}%</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })() : (
                                     <EmptyChartState message="Audience demographic visualization data is currently not cached or unavailable for this profile." />
                                 )}
                             </div>

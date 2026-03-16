@@ -52,7 +52,10 @@ exports.runFullSync = async (userId, role, accessToken, existingConnection = nul
         { upsert: true, new: true }
     );
 
-    // 3. Daily stats snapshot (one per day — ignore duplicate error)
+    // 3. Fetch audience demographics
+    const audienceData = await meta.fetchAudienceDemographics(accessToken, igUserId);
+
+    // 4. Daily stats snapshot (one per day — ignore duplicate error)
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     await InstagramAccountDailyStat.findOneAndUpdate(
@@ -63,13 +66,16 @@ exports.runFullSync = async (userId, role, accessToken, existingConnection = nul
                 followersCount: profile.followers_count || 0,
                 followsCount: profile.follows_count || 0,
                 mediaCount: profile.media_count || 0,
+                audienceCityJson: audienceData?.cities ? JSON.stringify(audienceData.cities) : null,
+                audienceCountryJson: audienceData?.countries ? JSON.stringify(audienceData.countries) : null,
+                audienceGenderAgeJson: audienceData?.genderAge ? JSON.stringify(audienceData.genderAge) : null,
                 fetchedAt: new Date(),
             }
         },
         { upsert: true }
     ).catch(() => {}); // ignore duplicate key on re-run
 
-    // 4. Fetch media
+    // 5. Fetch media
     const mediaList = await meta.fetchMediaList(accessToken, igUserId);
     const storedMedia = [];
 

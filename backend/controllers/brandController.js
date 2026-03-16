@@ -4,6 +4,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const InstagramConnection = require('../models/InstagramConnection');
 const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
 const InstagramMedia = require('../models/InstagramMedia');
+const InstagramAccountDailyStat = require('../models/InstagramAccountDailyStat');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 
 // Helper for quality score
@@ -180,22 +181,38 @@ exports.getInfluencerDetail = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Influencer not found' });
         }
 
-        const [igConnection, analytics, recentPosts] = await Promise.all([
+        const [igConnection, rawAnalytics, recentPosts, latestStats] = await Promise.all([
             InstagramConnection.findOne({ userId: id, role: 'influencer', isConnected: true })
                 .select('-accessToken -longLivedToken -oauthState'),
             InstagramDerivedMetric.findOne({ userId: id, role: 'influencer' }).sort({ computedAt: -1 }),
             InstagramMedia.find({ userId: id, role: 'influencer' })
                 .sort({ timestamp: -1 })
-                .limit(60)
+                .limit(60),
+            InstagramAccountDailyStat.findOne({ userId: id, role: 'influencer' }).sort({ date: -1 })
         ]);
         
         const quality = getQualityScore(profile, igConnection);
+
+        // Parse audience demographics safely
+        let audienceDemographics = null;
+        if (latestStats && (latestStats.audienceCountryJson || latestStats.audienceCityJson || latestStats.audienceGenderAgeJson)) {
+            audienceDemographics = {
+                countries: latestStats.audienceCountryJson ? JSON.parse(latestStats.audienceCountryJson) : null,
+                cities: latestStats.audienceCityJson ? JSON.parse(latestStats.audienceCityJson) : null,
+                genderAge: latestStats.audienceGenderAgeJson ? JSON.parse(latestStats.audienceGenderAgeJson) : null
+            };
+        }
+
+        const analytics = rawAnalytics ? rawAnalytics.toObject() : {};
+        if (audienceDemographics) {
+            analytics.audienceDemographics = audienceDemographics;
+        }
 
         res.json({ 
             success: true, 
             profile, 
             instagram: igConnection || null, 
-            analytics: analytics || null,
+            analytics: analytics,
             recentPosts: recentPosts || [],
             ...quality
         });

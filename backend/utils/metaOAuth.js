@@ -314,6 +314,32 @@ exports.fetchComments = async (accessToken, mediaId) => {
     }
 };
 
+/**
+ * Fetch lifetime audience demographics for the Instagram User.
+ */
+exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
+    // Note: Business discovery requires FB_GRAPH_BASE
+    const base = igUserId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE;
+    // Audience demographics use period=lifetime
+    const url = `${base}/${igUserId}/insights?metric=audience_city,audience_country,audience_gender_age&period=lifetime&access_token=${accessToken}`;
+    
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok || data.error) return null;
+
+        const result = { cities: null, countries: null, genderAge: null };
+        (data.data || []).forEach(m => {
+            if (m.name === 'audience_city') result.cities = m.values?.[0]?.value ?? null;
+            if (m.name === 'audience_country') result.countries = m.values?.[0]?.value ?? null;
+            if (m.name === 'audience_gender_age') result.genderAge = m.values?.[0]?.value ?? null;
+        });
+        return result;
+    } catch {
+        return null;
+    }
+};
+
 // ─── Analytics Computation ────────────────────────────────────────
 
 /**
