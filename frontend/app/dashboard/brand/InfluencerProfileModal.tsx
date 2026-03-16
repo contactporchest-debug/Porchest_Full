@@ -422,7 +422,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                 <Instagram size={16} /> Recent Content Feed
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-                                {safeRecentPosts.map((post: Media) => (
+                                {safeRecentPosts.slice(0, 3).map((post: Media) => (
                                     <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block', borderRadius: '20px', overflow: 'hidden', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', aspectRatio: '4/5' }}>
                                         <img src={post.mediaUrl} alt="Instagram Media" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9, transition: 'transform 400ms ease, opacity 400ms ease' }} onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.opacity = '1'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '0.9'; }} />
                                         
