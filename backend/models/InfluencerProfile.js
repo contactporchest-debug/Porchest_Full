@@ -2,74 +2,118 @@ const mongoose = require('mongoose');
 
 const influencerProfileSchema = new mongoose.Schema(
     {
-        // ── Identity ───────────────────────────────────────────────────
+        // ── A. Identity ──────────────────────────────────────────────────
         influencerProfileId: { type: String, unique: true, required: true }, // INF-xxx
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-            unique: true,
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+        username: { type: String }, // App username
+        displayName: { type: String },
+        fullName: { type: String },
+        bio: { type: String },
+        profilePictureUrl: { type: String },
+        platform: { type: String, default: 'Instagram' },
+        instagramAccountId: { type: String },
+        instagramUsername: { type: String },
+        instagramAccountType: { type: String },
+        isVerified: { type: Boolean, default: false }, // Platform verification
+        profileUrl: { type: String },
+        country: { type: String },
+        city: { type: String },
+        languages: [{ type: String }],
+        niche: { type: String },
+        categories: [{ type: String }],
+        tags: [{ type: String }],
+
+        // ── B. Profile Status ────────────────────────────────────────────
+        profileCompletionStatus: { type: Boolean, default: false },
+        verificationStatus: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' }, // App verification
+        instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
+        lastConnectedAt: { type: Date },
+        lastDisconnectedAt: { type: Date },
+        isActive: { type: Boolean, default: true },
+        isSearchable: { type: Boolean, default: false },
+        lastSyncAt: { type: Date },
+        lastAnalyticsRefreshAt: { type: Date },
+        nextScheduledRefreshAt: { type: Date },
+
+        // ── C. Instagram Account Summary ─────────────────────────────────
+        followersCount: { type: Number, default: 0 },
+        followingCount: { type: Number, default: 0 },
+        mediaCount: { type: Number, default: 0 },
+        postsCount: { type: Number, default: 0 },
+        reelsCount: { type: Number, default: 0 },
+
+        // ── D. Analytics / Metrics ───────────────────────────────────────
+        engagementRate: { type: Number, default: 0 }, // e.g., 3.45 (%)
+        avgLikes: { type: Number, default: 0 },
+        avgComments: { type: Number, default: 0 },
+        avgShares: { type: Number, default: 0 },
+        avgViews: { type: Number, default: 0 },
+        avgReach: { type: Number, default: 0 },
+        avgImpressions: { type: Number, default: 0 },
+        growthRate: { type: Number, default: 0 }, // MoM Growth
+        postingFrequency: { type: Number, default: 0 }, // posts per 7 days/30 days
+        topPerformingContentType: { type: String },
+        
+        // ── E. Demographics ──────────────────────────────────────────────
+        demographics: {
+            genderDistribution: { type: mongoose.Schema.Types.Mixed }, // { "M": 60, "F": 40 }
+            ageDistribution: { type: mongoose.Schema.Types.Mixed }, // { "18-24": 40, ... }
+            topCountries: { type: mongoose.Schema.Types.Mixed }, // { "US": 50, "PK": 30, ... }
+            topCities: { type: mongoose.Schema.Types.Mixed }, // { "New York": 20, ... }
+            languages: { type: mongoose.Schema.Types.Mixed },
+            audienceType: { type: String }
         },
 
-        // ── Editable profile fields (set by influencer in portal) ──────
-        fullName:        { type: String },
-        contactEmail:    { type: String },
-        age:             { type: Number },
-        countryOfResidence: { type: String },
-        city:            { type: String },
-        niche:           { type: String },
-        shortBio:        { type: String },
-        profileImageURL: { type: String },
-        avgPostCostUSD:  { type: Number, default: 0 },
-        avgReelCostUSD:  { type: Number, default: 0 },
+        // ── F. Pricing / Cost Information ────────────────────────────────
+        avgPostPrice: { type: Number, default: 0 },
+        avgReelPrice: { type: Number, default: 0 },
+        pricingNotes: { type: String },
+        currency: { type: String, default: 'USD' },
 
-        // ── Platform identity (promoted from Instagram sync) ───────────
-        instagramConnected:   { type: Boolean, default: false },
-        instagramUserId:      { type: String },
-        instagramUsername:    { type: String },
-        instagramProfileURL:  { type: String },
-        instagramDPURL:       { type: String },
-        instagramBiography:   { type: String },
-        instagramAccountType: { type: String },
+        // ── G. Score / Rating Section ────────────────────────────────────
+        profileScore: { type: Number, default: 0 },
+        fitScore: { type: Number, default: 0 }, // 0 - 100
+        credibilityScore: { type: Number, default: 0 },
+        scoreLabel: { type: String },
+        scoreBreakdown: { type: mongoose.Schema.Types.Mixed },
 
-        // ── Account stats (promoted from Instagram sync) ───────────────
-        followersCount: { type: Number, default: 0 },
-        followsCount:   { type: Number, default: 0 },
-        mediaCount:     { type: Number, default: 0 },
+        // ── H. Refresh Metadata & Authorization (No separate tables!) ────
+        sync: {
+            source: { type: String, default: 'Instagram Graph API' },
+            lastRawFetchAt: { type: Date },
+            lastMetricsCalculationAt: { type: Date },
+            lastDemographicsCalculationAt: { type: Date },
+            refreshStatus: { type: String, enum: ['idle', 'syncing', 'success', 'failed'] },
+            refreshError: { type: String },
+            retryCount: { type: Number, default: 0 },
+            // Tokens strictly scoped to the profile, wiped on disconnect
+            oauthState: { type: String },
+            accessToken: { type: String },
+            longLivedToken: { type: String },
+            tokenExpiresAt: { type: Date }
+        },
 
-        // ── Engagement / Analytics (promoted from derived metrics) ─────
-        engagementRate:       { type: Number, default: 0 },  // percentage (e.g. 3.45 = 3.45%)
-        avgLikes:             { type: Number, default: 0 },
-        avgComments:          { type: Number, default: 0 },
-        avgEngagementPerPost: { type: Number, default: 0 },
-        likeToCommentRatio:   { type: Number, default: 0 },
-        postingFrequency7d:   { type: Number, default: 0 },  // posts per 7 days
-        postingFrequency30d:  { type: Number, default: 0 },  // posts per 30 days
-        topPostScore:         { type: Number },
-        topReelScore:         { type: Number },
-
-        // ── Fit / Quality Score (normalised 0-100) ─────────────────────
-        // Computed on every sync. Based on ER, followers, completeness, freq.
-        fitScore: { type: Number, default: 0 },  // 0–100
-
-        // ── Demographics (promoted from latest daily stats) ────────────
-        // Stored as structured objects, NOT stringified JSON blobs.
-        demographicsTopCountries: { type: mongoose.Schema.Types.Mixed }, // { "PK": 1200, "US": 800, ... }
-        demographicsTopCities:    { type: mongoose.Schema.Types.Mixed }, // { "Karachi": 500, ... }
-        demographicsGenderAge:    { type: mongoose.Schema.Types.Mixed }, // { "F.18-24": 340, "M.25-34": 120, ... }
-
-        // ── Sync metadata ──────────────────────────────────────────────
-        lastSyncedAt:            { type: Date },
-        lastDemographicsSyncAt:  { type: Date },
-        profileCompletionStatus: { type: Boolean, default: false },
+        // ── I. Optional Recent Content Summary ───────────────────────────
+        recentMediaSummary: [{
+            mediaId: { type: String },
+            mediaUrl: { type: String },
+            permalink: { type: String },
+            mediaType: { type: String },
+            caption: { type: String },
+            likeCount: { type: Number },
+            commentsCount: { type: Number },
+            timestamp: { type: Date }
+        }]
     },
     { timestamps: true }
 );
 
 influencerProfileSchema.index({ niche: 1 });
-influencerProfileSchema.index({ countryOfResidence: 1 });
+influencerProfileSchema.index({ country: 1 });
 influencerProfileSchema.index({ followersCount: -1 });
 influencerProfileSchema.index({ engagementRate: -1 });
 influencerProfileSchema.index({ fitScore: -1 });
+influencerProfileSchema.index({ isSearchable: 1, isActive: 1 });
+influencerProfileSchema.index({ 'sync.tokenExpiresAt': 1 }); // For scheduler
 
 module.exports = mongoose.model('InfluencerProfile', influencerProfileSchema);

@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema(
             enum: ['admin', 'brand', 'influencer'],
             required: true,
         },
-        fullName: { type: String }, // optional, extracted during signup
         email: {
             type: String,
             required: true,
@@ -17,16 +16,23 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
         },
-        password: { type: String }, // optional if using social login later
+        password: { type: String },
         status: {
             type: String,
             enum: ['pending', 'active', 'suspended'],
-            default: 'active', // default active for now
+            default: 'active',
         },
         isVerified: { type: Boolean, default: false },
-        loginProvider: { type: String, default: 'local' }, // local, google, etc.
+        loginProvider: { type: String, default: 'local' },
         profileCompletionStatus: { type: Boolean, default: false },
+        instagramConnected: { type: Boolean, default: false },
         lastLoginAt: { type: Date },
+        
+        // Linkage fields for the profile-centric architecture
+        influencerProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'InfluencerProfile' },
+        brandProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'BrandProfile' },
+        
+        // Allowed auth/recovery
         otp: { type: String },
         otpExpires: { type: Date }
     },

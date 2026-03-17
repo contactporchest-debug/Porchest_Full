@@ -1,23 +1,11 @@
 /**
  * instagramController.js — Influencer Instagram OAuth + Sync Controller
  *
- * Routes handled (all under /api/influencer/instagram/):
- *   GET  /connect       → initiate OAuth
- *   GET  /callback      → handle Meta callback
- *   POST /disconnect    → revoke connection
- *   POST /refresh       → re-sync data
- *   GET  /profile       → get connection + account data
- *   GET  /analytics     → get latest derived metrics
- *   GET  /media         → get stored media
+ * All raw collections are removed. This controller writes OAuth state and
+ * sync triggers DIRECTLY to the InfluencerProfile.
  */
 
 const crypto = require('crypto');
-const InstagramConnection = require('../models/InstagramConnection');
-const InstagramAccount = require('../models/InstagramAccount');
-const InstagramMedia = require('../models/InstagramMedia');
-const InstagramMediaInsight = require('../models/InstagramMediaInsight');
-const InstagramComment = require('../models/InstagramComment');
-const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
 const meta = require('../utils/metaOAuth');
@@ -28,22 +16,31 @@ const ROLE = 'influencer';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const CALLBACK_PATH = '/dashboard/influencer/profile';
 
-// ─── INITIATE CONNECT ─────────────────────────────────────────────
+// ─── HELPER: ENSURE PROFILE EXISTS ──────────────────────────────────
+async function ensureProfileObj(userId) {
+    let profile = await InfluencerProfile.findOne({ userId });
+    if (!profile) {
+        const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+        profile = await InfluencerProfile.create({ userId, influencerProfileId });
+        await User.findByIdAndUpdate(userId, { influencerProfileId: profile._id });
+    }
+    return profile;
+}
 
+// ─── INITIATE CONNECT ─────────────────────────────────────────────
 exports.initiateConnect = async (req, res, next) => {
     try {
         const state = `${crypto.randomBytes(12).toString('hex')}_${req.user._id}`;
+        
+        await ensureProfileObj(req.user._id);
 
-        await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
+        await InfluencerProfile.findOneAndUpdate(
+            { userId: req.user._id },
             {
-                userId: req.user._id,
-                role: ROLE,
-                oauthState: state,
-                isConnected: false,
-                syncStatus: 'idle',
-            },
-            { upsert: true, new: true }
+                'sync.oauthState': state,
+                'sync.refreshStatus': 'idle',
+                instagramConnectionStatus: 'disconnected'
+            }
         );
 
         const authURL = meta.buildAuthURL(ROLE, state);
@@ -54,143 +51,75 @@ exports.initiateConnect = async (req, res, next) => {
 };
 
 // ─── HANDLE CALLBACK ──────────────────────────────────────────────
-
 exports.handleCallback = async (req, res, next) => {
     try {
         const { code, state, error: oauthError } = req.query;
 
-        if (oauthError) {
-            return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=auth_denied`);
-        }
-        if (!code || !state) {
-            return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=missing_code`);
-        }
+        if (oauthError) return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=auth_denied`);
+        if (!code || !state) return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=missing_code`);
 
-        // Extract userId from state (format: random_userId)
         const userId = state.includes('_') ? state.split('_')[1] : null;
-        if (!userId) {
-            return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state_format`);
-        }
+        if (!userId) return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state_format`);
 
-        // CSRF validation
-        const connection = await InstagramConnection.findOne({ userId, role: ROLE, oauthState: state });
-        if (!connection) {
-            return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state`);
-        }
+        // CSRF validation via profile doc
+        const profile = await InfluencerProfile.findOne({ userId, 'sync.oauthState': state });
+        if (!profile) return res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=invalid_state`);
 
-        connection.syncStatus = 'syncing';
-        await connection.save();
+        profile.sync.refreshStatus = 'syncing';
+        await profile.save();
 
-        // Token exchange
+        // Standard Token exchange
         const shortTokenData = await meta.exchangeCodeForToken(code, ROLE);
         const shortToken = shortTokenData.access_token;
 
-        // Long-lived token
         const longTokenData = await meta.getLongLivedToken(shortToken);
         const longToken = longTokenData.access_token;
         const tokenExpiry = meta.tokenExpiresAt(longTokenData.expires_in);
 
-        // Full data sync
-        const { profile, metrics } = await syncService.runFullSync(userId, ROLE, longToken, connection);
-
-        // Update connection record (token stays server-side ONLY)
-        await InstagramConnection.findOneAndUpdate(
-            { userId, role: ROLE },
+        // Store tokens securely in profile BEFORE full sync so the sync layer can use it
+        await InfluencerProfile.findOneAndUpdate(
+            { userId },
             {
-                instagramUserId: profile.id,
-                username: profile.username,
-                profilePictureURL: profile.profile_picture_url || null,
-                biography: profile.biography || null,
-                accountType: profile.account_type || null,
-                accessToken: shortToken,
-                longLivedToken: longToken,
-                tokenExpiresAt: tokenExpiry,
-                tokenStatus: 'active',
-                isConnected: true,
-                connectedAt: new Date(),
-                lastSyncedAt: new Date(),
-                syncStatus: 'success',
-                syncError: null,
-                oauthState: null,
-                followersCount: profile.followers_count || 0,
-                followsCount: profile.follows_count || 0,
-                mediaCount: profile.media_count || 0,
+                'sync.oauthState': null,
+                'sync.accessToken': shortToken,
+                'sync.longLivedToken': longToken,
+                'sync.tokenExpiresAt': tokenExpiry,
             }
         );
 
-        // Update InfluencerProfile synced fields — write-through happens in syncService.runFullSync,
-        // but we also need to ensure the record exists with the required influencerProfileId.
-        let infProfile = await InfluencerProfile.findOne({ userId });
-        if (!infProfile) {
-            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-            await InfluencerProfile.create({
-                userId,
-                influencerProfileId,
-                instagramConnected: true,
-            });
-        } else {
-            if (!infProfile.influencerProfileId) {
-                infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-                await infProfile.save();
-            }
-        }
+        // Run full sync (it internally updates InfluencerProfile with ALL analytics)
+        await syncService.runFullSync(userId, ROLE, longToken);
 
-        // Mirror key fields in User doc for backward compat with brand search
-        await User.findByIdAndUpdate(userId, {
-            instagramUsername: profile.username,
-            instagramProfileURL: `https://instagram.com/${profile.username}`,
-            instagramDPURL: profile.profile_picture_url || null,
-            instagramConnected: true,
-            instagramUserId: profile.id,
-            followers: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            lastSyncedAt: new Date(),
-        });
+        // Finalize User layer
+        await User.findByIdAndUpdate(userId, { instagramConnected: true });
 
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_connected=1`);
     } catch (error) {
         console.error('[influencerIG] Callback error:', error);
-        // Try to update error status if we can identify user
         const state = req.query.state;
         const userId = state && state.includes('_') ? state.split('_')[1] : null;
         if (userId) {
-            await InstagramConnection.findOneAndUpdate(
-                { userId, role: ROLE },
-                { syncStatus: 'failed', syncError: error.message }
+            await InfluencerProfile.findOneAndUpdate(
+                { userId },
+                { 'sync.refreshStatus': 'failed', 'sync.refreshError': error.message }
             ).catch(() => {});
         }
-        const errorMsg = encodeURIComponent(error.message || 'Unknown error');
-        res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=sync_failed&details=${errorMsg}`);
+        res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_error=sync_failed`);
     }
 };
 
 // ─── DISCONNECT ───────────────────────────────────────────────────
-
 exports.disconnect = async (req, res, next) => {
     try {
         const userId = req.user._id;
 
-        // 1. Delete all raw Instagram collections for this user
-        await Promise.all([
-            InstagramConnection.findOneAndDelete({ userId, role: ROLE }),
-            InstagramAccount.findOneAndDelete({ userId, role: ROLE }),
-            InstagramAccountDailyStat.deleteMany({ userId, role: ROLE }),
-            InstagramDerivedMetric.deleteMany({ userId, role: ROLE }),
-            InstagramMedia.deleteMany({ userId, role: ROLE }),
-            InstagramMediaInsight.deleteMany({ userId, role: ROLE }),
-            InstagramComment.deleteMany({ userId, role: ROLE }),
-        ]);
-
-        // 2. Clear out all Instagram-promoted fields from InfluencerProfile
+        // Strip ALL Instagram Data natively
         await InfluencerProfile.findOneAndUpdate(
             { userId },
             {
                 $set: {
-                    instagramConnected:    false,
+                    instagramConnectedStatus: 'disconnected',
+                    lastDisconnectedAt:    new Date(),
                     instagramUserId:       null,
                     instagramUsername:     null,
                     instagramProfileURL:   null,
@@ -198,258 +127,129 @@ exports.disconnect = async (req, res, next) => {
                     instagramBiography:    null,
                     instagramAccountType:  null,
                     followersCount:        0,
-                    followsCount:          0,
+                    followingCount:        0,
                     mediaCount:            0,
+                    postsCount:            0,
+                    reelsCount:            0,
                     engagementRate:        0,
                     avgLikes:              0,
                     avgComments:           0,
-                    avgEngagementPerPost:  0,
-                    likeToCommentRatio:    0,
-                    postingFrequency7d:    0,
-                    postingFrequency30d:   0,
-                    topPostScore:          null,
-                    topReelScore:          null,
+                    avgShares:             0,
+                    avgViews:              0,
+                    avgReach:              0,
+                    avgImpressions:        0,
+                    growthRate:            0,
+                    postingFrequency:      0,
+                    topPerformingContentType: null,
+                    demographics:          null,
+                    recentMediaSummary:    [],
                     fitScore:              0,
-                    demographicsTopCountries: null,
-                    demographicsTopCities:    null,
-                    demographicsGenderAge:    null,
-                    lastSyncedAt:             null,
-                    lastDemographicsSyncAt:   null,
+                    scoreLabel:            null,
+                    lastSyncAt:            null,
+                    lastAnalyticsRefreshAt: null,
+                    nextScheduledRefreshAt: null,
+                    'sync.oauthState':     null,
+                    'sync.accessToken':    null,
+                    'sync.longLivedToken': null,
+                    'sync.tokenExpiresAt': null,
+                    'sync.refreshStatus':  'idle',
                 }
             }
         );
 
-        // 3. Mark User as disconnected
         await User.findByIdAndUpdate(userId, { instagramConnected: false });
 
-        res.json({ success: true, message: 'Instagram disconnected and all associated data completely removed.' });
+        res.json({ success: true, message: 'Instagram completely disconnected. Privacy reset applied.' });
     } catch (error) {
         next(error);
     }
 };
 
 // ─── REFRESH SYNC ─────────────────────────────────────────────────
-
 exports.refreshSync = async (req, res, next) => {
     try {
-        const connection = await InstagramConnection.findOne({ userId: req.user._id, role: ROLE });
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id });
 
-        if (!connection || !connection.isConnected) {
-            return res.status(400).json({ success: false, message: 'Instagram not connected' });
+        if (!profile || profile.instagramConnectionStatus === 'disconnected' || !profile.sync.longLivedToken) {
+            return res.status(400).json({ success: false, message: 'Instagram is not currently connected.' });
         }
 
-        // Check token expiry
-        if (connection.tokenExpiresAt && connection.tokenExpiresAt < new Date()) {
-            await InstagramConnection.findOneAndUpdate(
-                { userId: req.user._id, role: ROLE },
-                { syncStatus: 'token_expired', tokenStatus: 'expired' }
-            );
-            return res.status(401).json({
-                success: false,
-                message: 'Instagram token has expired. Please reconnect your account.',
-                code: 'TOKEN_EXPIRED',
-            });
+        if (profile.sync.tokenExpiresAt && profile.sync.tokenExpiresAt < new Date()) {
+            profile.instagramConnectionStatus = 'token_expired';
+            profile.sync.refreshStatus = 'failed';
+            await profile.save();
+            return res.status(401).json({ success: false, message: 'Token expired. Reconnect required.', code: 'TOKEN_EXPIRED' });
         }
 
-        connection.syncStatus = 'syncing';
-        await connection.save();
+        profile.sync.refreshStatus = 'syncing';
+        await profile.save();
 
-        let activeToken = connection.longLivedToken || connection.accessToken;
+        let activeToken = profile.sync.longLivedToken;
 
-        // Try to refresh token
         try {
             const refreshed = await meta.refreshLongLivedToken(activeToken);
             activeToken = refreshed.access_token;
-            await InstagramConnection.findOneAndUpdate(
-                { userId: req.user._id, role: ROLE },
-                {
-                    longLivedToken: activeToken,
-                    tokenExpiresAt: meta.tokenExpiresAt(refreshed.expires_in),
-                    tokenStatus: 'active',
-                }
-            );
+            profile.sync.longLivedToken = activeToken;
+            profile.sync.tokenExpiresAt = meta.tokenExpiresAt(refreshed.expires_in);
+            await profile.save();
         } catch (refreshErr) {
             console.warn('[influencerIG] Token refresh skipped:', refreshErr.message);
         }
 
-        // Quick sync (profile + derived metrics)
-        const { profile, metrics } = await syncService.runQuickSync(req.user._id, ROLE, activeToken);
+        // Run full sync safely natively into profile
+        await syncService.runFullSync(req.user._id, ROLE, activeToken);
 
-        // Update connection
-        await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
-            {
-                followersCount: profile.followers_count || 0,
-                followsCount: profile.follows_count || 0,
-                mediaCount: profile.media_count || 0,
-                lastSyncedAt: new Date(),
-                syncStatus: 'success',
-                syncError: null,
-                profilePictureURL: profile.profile_picture_url || connection.profilePictureURL,
-            }
-        );
-
-        // Update InfluencerProfile — write-through happens inside runQuickSync,
-        // but ensure record exists
-        let infProfile = await InfluencerProfile.findOne({ userId: req.user._id });
-        if (!infProfile) {
-            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-            await InfluencerProfile.create({
-                userId: req.user._id,
-                influencerProfileId,
-                instagramConnected: true,
-            });
-        } else if (!infProfile.influencerProfileId) {
-            infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-            await infProfile.save();
-        }
-
-        // Mirror to User doc
-        await User.findByIdAndUpdate(req.user._id, {
-            followers: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            lastSyncedAt: new Date(),
-        });
-
-        const freshUser = await User.findById(req.user._id).select('-password');
-        res.json({
-            success: true,
-            message: 'Instagram data refreshed successfully',
-            user: freshUser,
-            lastSyncedAt: new Date(),
-        });
+        res.json({ success: true, message: 'Instagram data completely refreshed natively.' });
     } catch (error) {
-        await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
-            { syncStatus: 'failed', syncError: error.message }
+        await InfluencerProfile.findOneAndUpdate(
+            { userId: req.user._id },
+            { 'sync.refreshStatus': 'failed', 'sync.refreshError': error.message }
         ).catch(() => {});
         next(error);
     }
 };
 
-// ─── GET PROFILE ──────────────────────────────────────────────────
-
+// ─── GET PROFILE / RECENT MEDIA DISPLAY ROUTE ─────────────────────
+// The UI expects connection and account object shapes originally, so we map them out of the unified profile document to avoid breaking frontend immediately
 exports.getProfile = async (req, res, next) => {
     try {
-        const [connection, account] = await Promise.all([
-            InstagramConnection.findOne({ userId: req.user._id, role: ROLE })
-                .select('-accessToken -longLivedToken -oauthState'),
-            InstagramAccount.findOne({ userId: req.user._id, role: ROLE }),
-        ]);
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id });
+        if (!profile) return res.json({ success: true, connection: null, account: null });
 
-        res.json({ success: true, connection, account });
+        const connection = {
+            isConnected: profile.instagramConnectionStatus === 'connected',
+            syncStatus: profile.sync?.refreshStatus,
+            followersCount: profile.followersCount,
+            lastSyncedAt: profile.lastSyncAt
+        };
+
+        const account = {
+            username: profile.instagramUsername,
+            profilePictureURL: profile.instagramDPURL,
+            biography: profile.instagramBiography,
+            mediaCount: profile.mediaCount,
+        };
+
+        res.json({ success: true, connection, account, identity: profile });
     } catch (error) {
         next(error);
     }
 };
-
-// ─── GET ANALYTICS ────────────────────────────────────────────────
 
 exports.getAnalytics = async (req, res, next) => {
     try {
-        const latestMetrics = await InstagramDerivedMetric.findOne({
-            userId: req.user._id,
-            role: ROLE,
-        }).sort({ computedAt: -1 });
-
-        res.json({ success: true, analytics: latestMetrics });
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id });
+        // The frontend expects the analytics block to look like this
+        res.json({ success: true, analytics: profile || {} });
     } catch (error) {
         next(error);
     }
 };
-
-// ─── GET MEDIA ────────────────────────────────────────────────────
 
 exports.getMedia = async (req, res, next) => {
     try {
-        const media = await InstagramMedia.find({ userId: req.user._id, role: ROLE })
-            .sort({ timestamp: -1 })
-            .limit(25);
-
-        res.json({ success: true, media });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// ─── LOOKUP POST BY URL ──────────────────────────────────────────
-
-exports.lookupPostByUrl = async (req, res, next) => {
-    try {
-        const { postUrl } = req.body;
-        if (!postUrl) return res.status(400).json({ success: false, message: 'postUrl is required' });
-
-        // Strip query params and trailing slashes, then extract the shortcode
-        // Handles: /p/SHORTCODE/, /reel/SHORTCODE/, /tv/SHORTCODE/
-        // Works even with ?utm_source=... &igsh=... tracking params
-        let cleanUrl;
-        try {
-            const parsed = new URL(postUrl.trim());
-            cleanUrl = parsed.origin + parsed.pathname; // drops ?query and #hash
-        } catch {
-            cleanUrl = postUrl.trim().split('?')[0]; // fallback: strip at ?
-        }
-        // Remove trailing slash for consistent matching
-        cleanUrl = cleanUrl.replace(/\/+$/, '');
-
-        // Extract shortcode — the path segment after /p/, /reel/, /tv/
-        const shortcodeMatch = cleanUrl.match(/\/(?:p|reel|tv)\/([^/]+)/);
-        const shortcode = shortcodeMatch ? shortcodeMatch[1] : null;
-
-        // Build search: match by shortcode in permalink, or fallback to full clean URL
-        const searchQuery = shortcode
-            ? { userId: req.user._id, role: ROLE, permalink: { $regex: shortcode, $options: 'i' } }
-            : { userId: req.user._id, role: ROLE, permalink: { $regex: cleanUrl, $options: 'i' } };
-
-        const media = await InstagramMedia.findOne(searchQuery);
-
-        if (!media) {
-            return res.status(404).json({
-                success: false,
-                message: 'Post not found in your synced media. Try refreshing your Instagram sync first, then paste the post URL again.'
-            });
-        }
-
-        // Fetch associated insights
-        const insight = await InstagramMediaInsight.findOne({
-            userId: req.user._id,
-            role: ROLE,
-            mediaId: media.mediaId
-        }).sort({ createdAt: -1 });
-
-        // Fetch comments for this post
-        const comments = await InstagramComment.find({
-            userId: req.user._id,
-            role: ROLE,
-            mediaId: media.mediaId
-        }).sort({ timestamp: -1 }).limit(20);
-
-        // Compute post-level derived metrics
-        const engagement = (media.likeCount || 0) + (media.commentsCount || 0) + (insight?.saved || 0);
-        const connection = await InstagramConnection.findOne({ userId: req.user._id, role: ROLE });
-        const followers = connection?.followersCount || 1;
-
-        const postMetrics = {
-            engagementTotal: engagement,
-            engagementRateByFollowers: parseFloat(((engagement / followers) * 100).toFixed(2)),
-            engagementRateByReach: insight?.reach ? parseFloat(((engagement / insight.reach) * 100).toFixed(2)) : null,
-            engagementPerImpression: insight?.impressions ? parseFloat((engagement / insight.impressions).toFixed(4)) : null,
-            likeToCommentRatio: media.commentsCount > 0 ? parseFloat((media.likeCount / media.commentsCount).toFixed(2)) : null,
-            savesPerReach: (insight?.saved && insight?.reach) ? parseFloat(((insight.saved / insight.reach) * 100).toFixed(2)) : null,
-            commentRate: parseFloat(((media.commentsCount / followers) * 100).toFixed(3)),
-        };
-
-        res.json({
-            success: true,
-            media,
-            insight: insight || null,
-            comments,
-            postMetrics
-        });
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id });
+        res.json({ success: true, media: profile?.recentMediaSummary || [] });
     } catch (error) {
         next(error);
     }

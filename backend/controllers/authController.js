@@ -105,6 +105,23 @@ exports.verifyOTP = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
         }
 
+        const InfluencerProfile = require('../models/InfluencerProfile');
+        const BrandProfile = require('../models/BrandProfile');
+        const { generateUniqueCode } = require('../utils/generateCode');
+
+        let profileObj = null;
+
+        // Auto-provision native profile based on role
+        if (user.role === 'influencer' && !user.influencerProfileId) {
+            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            profileObj = await InfluencerProfile.create({ userId: user._id, influencerProfileId });
+            user.influencerProfileId = profileObj._id;
+        } else if (user.role === 'brand' && !user.brandProfileId) {
+            const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
+            profileObj = await BrandProfile.create({ userId: user._id, brandProfileId });
+            user.brandProfileId = profileObj._id;
+        }
+
         user.isVerified = true;
         user.status = 'active';
         user.otp = undefined;
@@ -115,7 +132,7 @@ exports.verifyOTP = async (req, res, next) => {
 
         res.json({
             success: true,
-            message: 'Email verified successfully',
+            message: 'Email verified successfully. Profile seeded natively.',
             token,
             user: user.toJSON()
         });
