@@ -232,7 +232,7 @@ exports.getProfile = async (req, res, next) => {
         if (!profile) return res.json({ success: true, connection: null, account: null });
 
         const connection = {
-            isConnected: profile.instagramConnectionStatus === 'connected',
+            isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
             syncStatus: profile.sync?.refreshStatus,
             lastSyncedAt: profile.lastSyncAt,
             username: profile.instagramUsername,

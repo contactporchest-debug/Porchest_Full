@@ -15,7 +15,6 @@ exports.getDashboard = async (req, res, next) => {
             dashboard: {
                 profile: req.user,
                 influencerProfile: profile || null,
-                instagramConnection: profile ? {
                     isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
                     lastSyncedAt: profile.lastSyncAt || null,
                     username: profile.instagramUsername,
