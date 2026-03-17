@@ -220,3 +220,10 @@ exports.getAnalytics = async (req, res, next) => {
 exports.getMedia = async (req, res, next) => {
     res.json({ success: true, media: [] }); // We don't keep brand media array right now.
 };
+
+exports.lookupPostByUrl = async (req, res, next) => {
+    res.json({
+        success: false,
+        message: 'Real-time post analyzer is temporarily out of service as we transition to the native profile architecture.' 
+    });
+};

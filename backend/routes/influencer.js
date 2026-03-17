@@ -24,5 +24,6 @@ router.post('/instagram/refresh', instagramController.refreshSync);
 router.get('/instagram/profile', instagramController.getProfile);
 router.get('/instagram/analytics', instagramController.getAnalytics);
 router.get('/instagram/media', instagramController.getMedia);
+router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
 
 module.exports = router;
