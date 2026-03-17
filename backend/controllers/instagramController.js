@@ -247,22 +247,25 @@ exports.getAnalytics = async (req, res, next) => {
         const profile = await InfluencerProfile.findOne({ userId: req.user._id });
         if (!profile) return res.json({ success: true, analytics: {} });
 
-        // Map the fields from the profile document to the shape the frontend expects
+        // Map the fields from the profile document to the shape the frontend/user requested
         const analytics = {
-            engagementRate: profile.engagementRate,
-            avgLikesPerPost: profile.avgLikesPerPost,
-            avgCommentsPerPost: profile.avgCommentsPerPost,
-            avgEngagementPerPost: profile.avgEngagementPerPost,
+            followersCount: profile.followersCount || 0,
+            avgLikes: profile.avgLikes || 0,
+            avgComments: profile.avgComments || 0,
+            engagementRate: profile.engagementRate || 0,
+            growthRate: profile.growthRate || 0,
+            postsLast7Days: profile.postingFrequency7d || 0,
+            postsLast30Days: profile.postingFrequency30d || 0,
+            efficiencyRate: profile.influencerEfficiencyRate || 0,
+            qualityScore: profile.qualityScore || 0,
+            scoreLabel: profile.scoreLabel || 'Average',
+            
+            // Helpful supporting fields
+            topPostScore: profile.topPostScore || 0,
+            topReelScore: profile.topReelScore || 0,
             likeToCommentRatio: profile.likeToCommentRatio,
-            postingFrequency7d: profile.postingFrequency7d,
-            postingFrequency30d: profile.postingFrequency30d,
-            topPostScore: profile.topPostScore,
-            topReelScore: profile.topReelScore,
-            qualityScore: profile.qualityScore,
-            influencerEfficiencyRate: profile.influencerEfficiencyRate,
-            postsAnalyzed: profile.postsAnalyzed,
-            isEstimated: true, // Mark as server-calculated
-            fetchedAt: profile.lastSyncAt
+            postsAnalyzed: profile.postsAnalyzed || 0,
+            lastSyncedAt: profile.lastSyncAt
         };
 
         res.json({ success: true, analytics });

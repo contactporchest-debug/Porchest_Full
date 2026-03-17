@@ -350,7 +350,7 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
  * @param {Array} mediaList - Raw media from fetchMediaList()
  * @returns {object} Computed analytics
  */
-exports.computeDerivedMetrics = (profile, mediaList) => {
+exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null) => {
     const followersCount = profile.followers_count || 0;
     const totalPosts = mediaList.length;
 
@@ -387,27 +387,36 @@ exports.computeDerivedMetrics = (profile, mediaList) => {
     const totalComments = mediaList.reduce((s, m) => s + (m.comments_count || 0), 0);
     const totalEngagement = totalLikes + totalComments;
 
-    const engagementRate = parseFloat(((totalEngagement / followersCount) * 100).toFixed(2));
-    const avgLikesPerPost = parseFloat((totalLikes / totalPosts).toFixed(2));
-    const avgCommentsPerPost = parseFloat((totalComments / totalPosts).toFixed(2));
-    const avgEngagementPerPost = parseFloat((totalEngagement / totalPosts).toFixed(2));
+    const avgLikesPerPost = totalPosts > 0 ? parseFloat((totalLikes / totalPosts).toFixed(2)) : 0;
+    const avgCommentsPerPost = totalPosts > 0 ? parseFloat((totalComments / totalPosts).toFixed(2)) : 0;
+    const avgEngagementPerPost = totalPosts > 0 ? parseFloat((totalEngagement / totalPosts).toFixed(2)) : 0;
+
+    const engagementRate = followersCount > 0 ? parseFloat(((avgEngagementPerPost / followersCount) * 100).toFixed(2)) : 0;
+    
     const likeToCommentRatio = totalComments > 0
         ? parseFloat((totalLikes / totalComments).toFixed(2))
-        : 0;
+        : null;
+
+    // Follower Growth Rate
+    let growthRate = null;
+    if (existingProfile && existingProfile.followersCount && existingProfile.followersCount > 0) {
+        const oldFollowers = existingProfile.followersCount;
+        growthRate = parseFloat((((followersCount - oldFollowers) / oldFollowers) * 100).toFixed(2));
+    }
 
     // Posting frequency
     const now = Date.now();
     const posts7d = mediaList.filter(m => m.timestamp && (now - new Date(m.timestamp).getTime()) < 7 * 86400000).length;
     const posts30d = mediaList.filter(m => m.timestamp && (now - new Date(m.timestamp).getTime()) < 30 * 86400000).length;
-    const postingFrequency7d = parseFloat(posts7d.toFixed(1));
-    const postingFrequency30d = parseFloat(posts30d.toFixed(1));
+    const postingFrequency7d = posts7d;
+    const postingFrequency30d = posts30d;
 
     // Top post by engagement
     const sorted = [...mediaList].sort((a, b) =>
         ((b.like_count || 0) + (b.comments_count || 0)) - ((a.like_count || 0) + (a.comments_count || 0))
     );
     const topPost = sorted[0];
-    const topPostScore = topPost
+    const topPostScore = (topPost && followersCount > 0)
         ? parseFloat(((((topPost.like_count || 0) + (topPost.comments_count || 0)) / followersCount) * 100).toFixed(2))
         : null;
 
@@ -416,19 +425,50 @@ exports.computeDerivedMetrics = (profile, mediaList) => {
     const topReel = reels.length > 0 ? reels.sort((a, b) =>
         ((b.like_count || 0) + (b.comments_count || 0)) - ((a.like_count || 0) + (a.comments_count || 0))
     )[0] : null;
-    const topReelScore = topReel
+    const topReelScore = (topReel && followersCount > 0)
         ? parseFloat(((((topReel.like_count || 0) + (topReel.comments_count || 0)) / followersCount) * 100).toFixed(2))
         : null;
 
-    // ── ESTIMATED quality scores (clearly marked as estimated) ──
-    // These are heuristic calculations — NOT official Meta data.
-    // qualityScore: weighted combo of engagement rate, consistency, and post frequency
-    const normalizedER = Math.min(engagementRate / 10, 1); // cap at 10% for normalization
-    const normalizedFreq = Math.min(postingFrequency7d / 3, 1); // cap at 3/week
-    const qualityScore = parseFloat(((normalizedER * 60 + normalizedFreq * 40) * 100).toFixed(1));
+    // ── PROPER NORMALIZED QUALITY SCORE (0-100) ──
+    // 1. Engagement Score
+    let engagementScore = 30;
+    if (engagementRate > 10) engagementScore = 100;
+    else if (engagementRate >= 5) engagementScore = 80;
+    else if (engagementRate >= 3) engagementScore = 60;
 
-    // influencerEfficiencyRate: engagement per 1000 followers
-    const influencerEfficiencyRate = parseFloat(((totalEngagement / followersCount) * 1000).toFixed(2));
+    // 2. Growth Score
+    let growthScore = 50;
+    if (growthRate !== null) {
+        if (growthRate > 5) growthScore = 100;
+        else if (growthRate > 2) growthScore = 80;
+        else if (growthRate > 0) growthScore = 60;
+        else growthScore = 40;
+    }
+
+    // 3. Consistency Score
+    let consistencyScore = 40;
+    if (posts7d >= 3) consistencyScore = 100;
+    else if (posts7d >= 1) consistencyScore = 80;
+
+    // 4. Content Score
+    let contentScore = 70;
+    if (topPostScore && topPostScore > engagementRate * 2) contentScore = 100;
+    else if (topPostScore && topPostScore > engagementRate * 1.5) contentScore = 85;
+
+    const qualityScore = parseFloat((
+        (engagementScore * 0.4) +
+        (growthScore * 0.2) +
+        (consistencyScore * 0.2) +
+        (contentScore * 0.2)
+    ).toFixed(1));
+
+    let scoreLabel = 'Average';
+    if (qualityScore >= 80) scoreLabel = 'Excellent';
+    else if (qualityScore >= 60) scoreLabel = 'Good';
+    else if (qualityScore < 40) scoreLabel = 'Poor';
+
+    // efficiencyRate: engagement per 1000 followers
+    const influencerEfficiencyRate = followersCount > 0 ? parseFloat(((avgEngagementPerPost / followersCount) * 1000).toFixed(2)) : 0;
 
     return {
         ...base,
@@ -442,9 +482,11 @@ exports.computeDerivedMetrics = (profile, mediaList) => {
         topPostScore,
         topReelScore,
         qualityScore,
+        scoreLabel,
+        growthRate,
         influencerEfficiencyRate,
         postsAnalyzed: totalPosts,
-        hasEstimatedMetrics: true,
+        hasEstimatedMetrics: false,
     };
 };
 

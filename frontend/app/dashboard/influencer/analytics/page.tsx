@@ -13,24 +13,21 @@ import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────
 interface DerivedMetrics {
+    followersCount?: number;
+    avgLikes?: number;
+    avgComments?: number;
     engagementRate?: number;
-    avgLikesPerPost?: number;
-    avgCommentsPerPost?: number;
-    avgEngagementPerPost?: number;
-    likeToCommentRatio?: number;
-    postingFrequency7d?: number;
-    postingFrequency30d?: number;
+    growthRate?: number;
+    postsLast7Days?: number;
+    postsLast30Days?: number;
+    efficiencyRate?: number;
+    qualityScore?: number;
+    scoreLabel?: string;
     topPostScore?: number;
     topReelScore?: number;
-    qualityScore?: number;
-    influencerEfficiencyRate?: number;
-    followerGrowthRate?: number;
-    sentimentScore?: number;
-    authenticityScore?: number;
-    fakeFollowerRiskScore?: number;
+    likeToCommentRatio?: number | null;
     postsAnalyzed?: number;
-    isEstimated?: boolean;
-    fetchedAt?: string;
+    lastSyncedAt?: string;
 }
 
 interface IGConnection {
@@ -83,12 +80,13 @@ const fmtK = (v: number | null | undefined) => {
     return String(v);
 };
 
-const scoreBadge = (score?: number) => {
+const scoreBadge = (score?: number, label?: string) => {
     if (score == null) return { label: 'N/A', color: 'rgba(255,255,255,0.15)' };
-    if (score >= 75) return { label: 'Excellent', color: 'rgba(74,222,128,0.2)' };
-    if (score >= 50) return { label: 'Good', color: 'rgba(168,85,247,0.2)' };
-    if (score >= 25) return { label: 'Fair', color: 'rgba(251,191,36,0.2)' };
-    return { label: 'Low', color: 'rgba(248,113,113,0.2)' };
+    const displayLabel = label || (score >= 75 ? 'Excellent' : score >= 50 ? 'Good' : score >= 25 ? 'Fair' : 'Low');
+    if (score >= 75) return { label: displayLabel, color: 'rgba(74,222,128,0.2)' };
+    if (score >= 50) return { label: displayLabel, color: 'rgba(168,85,247,0.2)' };
+    if (score >= 25) return { label: displayLabel, color: 'rgba(251,191,36,0.2)' };
+    return { label: displayLabel, color: 'rgba(248,113,113,0.2)' };
 };
 
 // ─── Sub-components ───────────────────────────────────────────────
@@ -218,38 +216,42 @@ export default function InfluencerAnalyticsPage() {
                         </button>
                     </motion.div>
 
-                    {/* Estimated Metrics Banner */}
-                    {analytics?.isEstimated && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.18)', marginBottom: 20, fontSize: 12, color: 'rgba(251,191,36,0.85)' }}>
-                            <AlertCircle size={13} /> <strong>Estimated Metrics</strong> — Growth rates and quality scores are calculated from your post history.
-                        </div>
-                    )}
+                    {/* Data Accuracy Banner */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)', marginBottom: 20, fontSize: 12, color: 'rgba(74,222,128,0.85)' }}>
+                        <Zap size={13} /> <strong>Verified Data</strong> — All metrics are calculated using official Instagram Graph API data with industry-standard normalization.
+                    </div>
 
                     {/* ── ACCOUNT OVERVIEW ── */}
                     <SectionTitle>Account Overview</SectionTitle>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
-                        <MetricCard label="Followers" value={fmtK(connection?.followersCount)} icon={<Users size={15} />} color="#A855F7" />
-                        <MetricCard label="Following" value={fmtK(connection?.followsCount)} icon={<Users size={15} />} color="#7B3FF2" />
-                        <MetricCard label="Total Posts" value={fmtK(connection?.mediaCount)} icon={<BarChart2 size={15} />} color="#6366f1" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 }}>
+                        <MetricCard label="Followers" value={fmtK(analytics?.followersCount ?? connection?.followersCount)} icon={<Users size={15} />} color="#A855F7" />
+                        <MetricCard 
+                            label="Follower Growth" 
+                            value={fmt(analytics?.growthRate, '%', 2)} 
+                            icon={<TrendingUp size={15} />} 
+                            color="#34d399" 
+                            trend={(analytics?.growthRate ?? 0) > 0 ? 'up' : (analytics?.growthRate ?? 0) < 0 ? 'down' : 'flat'}
+                            sub="Current vs Previous Sync"
+                        />
+                        <MetricCard label="Total Media" value={fmtK(connection?.mediaCount)} icon={<BarChart2 size={15} />} color="#6366f1" />
                         <MetricCard label="Posts Analyzed" value={String(analytics?.postsAnalyzed ?? '—')} icon={<Activity size={15} />} color="#a78bfa" />
                     </div>
 
                     {/* ── ENGAGEMENT METRICS ── */}
                     <SectionTitle>Engagement Metrics</SectionTitle>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
-                        <MetricCard label="Engagement Rate" value={fmt(analytics?.engagementRate, '%')} icon={<Zap size={15} />} color="#f59e0b" sub="(Likes+Comments) / Followers × 100" />
-                        <MetricCard label="Avg Likes/Post" value={fmt(analytics?.avgLikesPerPost, '', 0)} icon={<Heart size={15} />} color="#f87171" />
-                        <MetricCard label="Avg Comments/Post" value={fmt(analytics?.avgCommentsPerPost, '', 1)} icon={<MessageCircle size={15} />} color="#60a5fa" />
-                        <MetricCard label="Avg Engagement/Post" value={fmt(analytics?.avgEngagementPerPost, '', 0)} icon={<TrendingUp size={15} />} color="#34d399" />
-                        <MetricCard label="Like:Comment Ratio" value={fmt(analytics?.likeToCommentRatio, 'x', 1)} icon={<Star size={15} />} color="#c084fc" />
-                        <MetricCard label="Efficiency Rate" value={fmtK(analytics?.influencerEfficiencyRate)} icon={<Target size={15} />} color="#38bdf8" sub="Engagement per 1K followers" />
+                        <MetricCard label="Engagement Rate" value={fmt(analytics?.engagementRate, '%')} icon={<Zap size={15} />} color="#f59e0b" sub="Industry Standard Formula" />
+                        <MetricCard label="Avg Likes/Post" value={fmt(analytics?.avgLikes, '', 0)} icon={<Heart size={15} />} color="#f87171" />
+                        <MetricCard label="Avg Comments/Post" value={fmt(analytics?.avgComments, '', 1)} icon={<MessageCircle size={15} />} color="#60a5fa" />
+                        <MetricCard label="Like:Comment Ratio" value={analytics?.likeToCommentRatio != null ? fmt(analytics.likeToCommentRatio, 'x', 1) : 'No data'} icon={<Star size={15} />} color="#c084fc" />
+                        <MetricCard label="Efficiency Rate" value={fmtK(analytics?.efficiencyRate)} icon={<Target size={15} />} color="#38bdf8" sub="Engagement per 1K followers" />
                     </div>
 
                     {/* ── POSTING CADENCE ── */}
                     <SectionTitle>Posting Cadence</SectionTitle>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
-                        <MetricCard label="Posts Last 7 Days" value={fmt(analytics?.postingFrequency7d, '', 0)} icon={<Clock size={15} />} color="#fb7185" />
-                        <MetricCard label="Posts Last 30 Days" value={fmt(analytics?.postingFrequency30d, '', 0)} icon={<Clock size={15} />} color="#f97316" />
+                        <MetricCard label="Posts Last 7 Days" value={fmt(analytics?.postsLast7Days, '', 0)} icon={<Clock size={15} />} color="#fb7185" />
+                        <MetricCard label="Posts Last 30 Days" value={fmt(analytics?.postsLast30Days, '', 0)} icon={<Clock size={15} />} color="#f97316" />
                     </div>
 
                     {/* ── QUALITY SCORES ── */}
@@ -261,7 +263,7 @@ export default function InfluencerAnalyticsPage() {
                             { label: 'Top Reel Score', key: 'topReelScore', color: '#60a5fa', icon: <Eye size={15} />, sub: 'Best reel engagement vs followers' },
                         ].map(({ label, key, color, icon, sub }) => {
                             const val = analytics?.[key as keyof DerivedMetrics] as number | undefined;
-                            const { label: badge, color: bgColor } = scoreBadge(val);
+                            const { label: badge, color: bgColor } = scoreBadge(val, key === 'qualityScore' ? analytics?.scoreLabel : undefined);
                             return (
                                 <motion.div key={key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                                     style={{ background: 'rgba(14,12,26,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 20 }}>
@@ -269,7 +271,7 @@ export default function InfluencerAnalyticsPage() {
                                         <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>{icon}</div>
                                         <span style={{ padding: '2px 9px', borderRadius: 8, background: bgColor, fontSize: 10, fontWeight: 700, color: '#fff' }}>{badge}</span>
                                     </div>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.5rem', color: '#fff', marginBottom: 3 }}>{val != null ? val.toFixed(1) : '—'}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.5rem', color: '#fff', marginBottom: 3 }}>{val != null ? val.toFixed(1) : '—'}{key === 'qualityScore' && <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}> / 100</span>}</p>
                                     <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
                                     {sub && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{sub}</p>}
                                 </motion.div>

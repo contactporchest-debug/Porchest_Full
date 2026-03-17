@@ -69,8 +69,15 @@ exports.runFullSync = async (userId, role, accessToken) => {
         }
     }
 
+    let existingProfile = null;
+    if (role === 'influencer') {
+        existingProfile = await InfluencerProfile.findOne({ userId });
+    } else if (role === 'brand') {
+        existingProfile = await BrandProfile.findOne({ userId });
+    }
+
     // 4. Compute derived metrics natively
-    const metrics = meta.computeDerivedMetrics(profile, mediaList);
+    const metrics = meta.computeDerivedMetrics(profile, mediaList, existingProfile);
     const followersCount = profile.followers_count || 0;
 
     // Build the Recent Media Summary block (save only top 12 posts)
@@ -120,7 +127,6 @@ exports.runFullSync = async (userId, role, accessToken) => {
 
     // Role Specific Payload additions
     if (role === 'influencer') {
-        const existingProfile = await InfluencerProfile.findOne({ userId });
         const isComplete = !!(
             existingProfile?.niche &&
             existingProfile?.country
@@ -143,23 +149,10 @@ exports.runFullSync = async (userId, role, accessToken) => {
         updatePayload.topPerformingContentType = metrics.topReelScore > metrics.topPostScore ? 'REELS' : 'POSTS';
         updatePayload.recentMediaSummary   = recentMediaSummary;
         
-        // Quality Scores
-        updatePayload.qualityScore         = metrics.qualityScore || 0;
-        updatePayload.topPostScore         = metrics.topPostScore || 0;
         updatePayload.topReelScore         = metrics.topReelScore || 0;
-        
-        // Native Demographics structure
-        if (audienceData) {
-            updatePayload.demographics = {
-                genderDistribution: audienceData.genderAge || null,
-                ageDistribution: audienceData.genderAge || null,
-                topCountries: audienceData.countries || null,
-                topCities: audienceData.cities || null,
-            };
-        }
-
-        updatePayload.fitScore = computeFitScore(metrics, followersCount, isComplete);
-        updatePayload.scoreLabel = updatePayload.fitScore >= 80 ? 'Excellent Match' : updatePayload.fitScore >= 50 ? 'Good Match' : 'Fair Match';
+        updatePayload.scoreLabel           = metrics.scoreLabel || 'Average';
+        updatePayload.growthRate           = metrics.growthRate || 0;
+        updatePayload.fitScore             = computeFitScore(metrics, followersCount, isComplete);
 
         await InfluencerProfile.findOneAndUpdate(
             { userId },
