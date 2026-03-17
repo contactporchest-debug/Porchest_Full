@@ -207,24 +207,49 @@ exports.handleCallback = async (req, res, next) => {
 
 exports.disconnect = async (req, res, next) => {
     try {
-        await InstagramConnection.findOneAndUpdate(
-            { userId: req.user._id, role: ROLE },
+        const userId = req.user._id;
+
+        // 1. Delete all raw Instagram collections for this brand
+        await Promise.all([
+            InstagramConnection.findOneAndDelete({ userId, role: ROLE }),
+            InstagramAccount.findOneAndDelete({ userId, role: ROLE }),
+            InstagramAccountDailyStat.deleteMany({ userId, role: ROLE }),
+            InstagramDerivedMetric.deleteMany({ userId, role: ROLE }),
+            InstagramMedia.deleteMany({ userId, role: ROLE }),
+            InstagramMediaInsight.deleteMany({ userId, role: ROLE }),
+            InstagramComment.deleteMany({ userId, role: ROLE }),
+        ]);
+
+        // 2. Clear out all Instagram-promoted fields from BrandProfile
+        await BrandProfile.findOneAndUpdate(
+            { userId },
             {
-                isConnected: false,
-                accessToken: null,
-                longLivedToken: null,
-                tokenExpiresAt: null,
-                tokenStatus: 'revoked',
-                syncStatus: 'idle',
+                $set: {
+                    instagramConnected:    false,
+                    instagramUserId:       null,
+                    instagramUsername:     null,
+                    instagramProfileURL:   null,
+                    instagramDPURL:        null,
+                    instagramBiography:    null,
+                    instagramAccountType:  null,
+                    followersCount:        0,
+                    followsCount:          0,
+                    mediaCount:            0,
+                    linkedPageId:          null,
+                    linkedPageName:        null,
+                    lastSyncedAt:          null,
+                }
             }
         );
 
-        await BrandProfile.findOneAndUpdate(
-            { userId: req.user._id },
-            { instagramConnected: false }
-        );
+        // 3. Update top-level User record
+        await User.findByIdAndUpdate(userId, { 
+            brandInstagramHandle: null,
+            // (Brands do not set instagramConnected on the user doc natively, but just in case, unset it)
+            instagramConnected: false 
+        });
 
-        res.json({ success: true, message: 'Instagram disconnected successfully' });
+        res.json({ success: true, message: 'Instagram disconnected and all associated data completely removed.' });
     } catch (error) {
         next(error);
     }
