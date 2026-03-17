@@ -197,8 +197,15 @@ exports.getProfile = async (req, res, next) => {
         const connection = {
             isConnected: profile.instagramConnected,
             syncStatus: profile.sync?.refreshStatus,
+            lastSyncedAt: profile.lastSyncedAt,
+            username: profile.instagramUsername,
+            profilePictureURL: profile.instagramDPURL,
             followersCount: profile.followersCount,
-            lastSyncedAt: profile.lastSyncedAt
+            followsCount: profile.followsCount,
+            mediaCount: profile.mediaCount,
+            accountType: profile.instagramAccountType,
+            biography: profile.instagramBiography,
+            linkedPageName: profile.linkedPageName
         };
         const account = {
             username: profile.instagramUsername,
