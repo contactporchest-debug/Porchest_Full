@@ -63,6 +63,20 @@ const brandProfileSchema = new mongoose.Schema(
         linkedPageId: { type: String },
         linkedPageName: { type: String },
         
+        // Derived Analytics (Brand self-tracking)
+        engagementRate: { type: Number, default: 0 },
+        avgLikesPerPost: { type: Number, default: 0 },
+        avgCommentsPerPost: { type: Number, default: 0 },
+        avgEngagementPerPost: { type: Number, default: 0 },
+        likeToCommentRatio: { type: Number, default: 0 },
+        postsAnalyzed: { type: Number, default: 0 },
+        influencerEfficiencyRate: { type: Number, default: 0 },
+        postingFrequency7d: { type: Number, default: 0 },
+        postingFrequency30d: { type: Number, default: 0 },
+        qualityScore: { type: Number, default: 0 },
+        topPostScore: { type: Number, default: 0 },
+        topReelScore: { type: Number, default: 0 },
+
         lastSyncedAt: { type: Date },
 
         sync: {

@@ -170,6 +170,20 @@ exports.runFullSync = async (userId, role, accessToken) => {
         console.log(`[syncService] ✅ Influencer ${userId} data written natively. ER=${metrics.engagementRate}%, FitScore=${updatePayload.fitScore}`);
         
     } else if (role === 'brand') {
+        updatePayload.engagementRate       = metrics.engagementRate || 0;
+        updatePayload.avgLikesPerPost      = metrics.avgLikesPerPost || 0;
+        updatePayload.avgCommentsPerPost   = metrics.avgCommentsPerPost || 0;
+        updatePayload.avgEngagementPerPost = metrics.avgEngagementPerPost || 0;
+        updatePayload.likeToCommentRatio   = metrics.likeToCommentRatio || 0;
+        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || 0;
+        updatePayload.influencerEfficiencyRate = metrics.influencerEfficiencyRate || 0;
+        updatePayload.postingFrequency7d   = metrics.postingFrequency7d || 0;
+        updatePayload.postingFrequency30d  = metrics.postingFrequency30d || 0;
+        updatePayload.qualityScore         = metrics.qualityScore || 0;
+        updatePayload.topPostScore         = metrics.topPostScore || 0;
+        updatePayload.topReelScore         = metrics.topReelScore || 0;
+        updatePayload.lastSyncedAt         = new Date();
+
         await BrandProfile.findOneAndUpdate(
             { userId },
             { $set: updatePayload },

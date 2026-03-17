@@ -221,7 +221,32 @@ exports.getProfile = async (req, res, next) => {
 };
 
 exports.getAnalytics = async (req, res, next) => {
-    res.json({ success: true, analytics: {} }); // We don't trace brand engagement right now.
+    try {
+        const profile = await BrandProfile.findOne({ userId: req.user._id });
+        if (!profile) return res.json({ success: true, analytics: {} });
+
+        res.json({ 
+            success: true, 
+            analytics: {
+                engagementRate: profile.engagementRate || 0,
+                avgLikesPerPost: profile.avgLikesPerPost || 0,
+                avgCommentsPerPost: profile.avgCommentsPerPost || 0,
+                avgEngagementPerPost: profile.avgEngagementPerPost || 0,
+                likeToCommentRatio: profile.likeToCommentRatio || 0,
+                postingFrequency7d: profile.postingFrequency7d || 0,
+                postingFrequency30d: profile.postingFrequency30d || 0,
+                qualityScore: profile.qualityScore || 0,
+                topPostScore: profile.topPostScore || 0,
+                topReelScore: profile.topReelScore || 0,
+                influencerEfficiencyRate: profile.influencerEfficiencyRate || 0,
+                postsAnalyzed: profile.postsAnalyzed || 0,
+                isEstimated: true,
+                fetchedAt: profile.lastSyncedAt
+            } 
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 exports.getMedia = async (req, res, next) => {
