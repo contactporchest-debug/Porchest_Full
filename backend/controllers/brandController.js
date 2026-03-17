@@ -2,36 +2,85 @@ const User = require('../models/User');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const InstagramConnection = require('../models/InstagramConnection');
-const InstagramDerivedMetric = require('../models/InstagramDerivedMetric');
 const InstagramMedia = require('../models/InstagramMedia');
-const InstagramAccountDailyStat = require('../models/InstagramAccountDailyStat');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 
-// Helper for quality score
-function getQualityScore(profile, igConn) {
-    let score = 5.0;
-    const er = profile.engagementRate || 0;
-    const followers = profile.followersCount || igConn?.followersCount || 0;
-    
-    if (er > 5) score += 2;
-    else if (er > 2) score += 1;
-    else if (er > 0) score += 0.5;
-    
-    if (followers > 500000) score += 2;
-    else if (followers > 100000) score += 1.5;
-    else if (followers > 10000) score += 1;
-    
-    if (profile.profileCompletionStatus) score += 1;
-    
-    score = Math.min(Math.max(score, 1.0), 10.0);
-    
-    let stars = Math.max(1, Math.round(score / 2));
-    let label = 'Low Fit';
-    if (score >= 8) label = 'Best Fit';
-    else if (score >= 6) label = 'Strong Fit';
-    else if (score >= 4) label = 'Good Fit';
-    
-    return { qualityScore: parseFloat(score.toFixed(1)), starRating: stars, qualityLabel: label };
+/**
+ * Build a presentation-ready influencer card object from a flat InfluencerProfile doc.
+ * All values come from InfluencerProfile — the single source of truth after write-through sync.
+ *
+ * fitScore   : 0–100 (computed on sync, stored in profile)
+ * starRating : 1–5  (derived from fitScore tiers)
+ * qualityLabel: human-readable tier label
+ */
+function buildInfluencerCard(profile) {
+    const fitScore = profile.fitScore || 0;
+
+    let stars = 1;
+    let qualityLabel = 'Low Fit';
+    if (fitScore >= 80) { stars = 5; qualityLabel = 'Best Fit'; }
+    else if (fitScore >= 60) { stars = 4; qualityLabel = 'Strong Fit'; }
+    else if (fitScore >= 40) { stars = 3; qualityLabel = 'Good Fit'; }
+    else if (fitScore >= 20) { stars = 2; qualityLabel = 'Average Fit'; }
+
+    // Demographics — already structured objects from write-through (no JSON.parse needed)
+    const audienceDemographics = (
+        profile.demographicsTopCountries ||
+        profile.demographicsTopCities    ||
+        profile.demographicsGenderAge
+    ) ? {
+        countries: profile.demographicsTopCountries || null,
+        cities:    profile.demographicsTopCities    || null,
+        genderAge: profile.demographicsGenderAge    || null,
+    } : null;
+
+    return {
+        // Identity
+        _id:                   profile._id,
+        influencerProfileId:   profile.influencerProfileId,
+        userId:                profile.userId,
+        fullName:              profile.fullName  || null,
+        username:              profile.instagramUsername || null,
+        instagramProfileURL:   profile.instagramProfileURL || null,
+        profileImageURL:       profile.instagramDPURL || profile.profileImageURL || null,
+        bio:                   profile.instagramBiography || profile.shortBio || null,
+        niche:                 profile.niche || null,
+        country:               profile.countryOfResidence || null,
+        city:                  profile.city || null,
+
+        // Account stats
+        followersCount: profile.followersCount || 0,
+        followsCount:   profile.followsCount   || 0,
+        mediaCount:     profile.mediaCount     || 0,
+
+        // Engagement metrics (correct formula, stored on InfluencerProfile from sync)
+        engagementRate:       profile.engagementRate       || 0,   // e.g. 3.45 = 3.45%
+        avgLikes:             profile.avgLikes             || 0,
+        avgComments:          profile.avgComments          || 0,
+        avgEngagementPerPost: profile.avgEngagementPerPost || 0,
+        postingFrequency7d:   profile.postingFrequency7d   || 0,
+        postingFrequency30d:  profile.postingFrequency30d  || 0,
+        topPostScore:         profile.topPostScore         || null,
+        topReelScore:         profile.topReelScore         || null,
+
+        // Pricing
+        avgPostCostUSD:  profile.avgPostCostUSD  || 0,
+        avgReelCostUSD:  profile.avgReelCostUSD  || 0,
+
+        // Demographics (structured, ready to render)
+        audienceDemographics,
+
+        // Fit scoring
+        fitScore,
+        starRating:   stars,
+        qualityLabel,
+
+        // Metadata
+        instagramConnected:      profile.instagramConnected || false,
+        profileCompletionStatus: profile.profileCompletionStatus || false,
+        lastSyncedAt:            profile.lastSyncedAt || null,
+        lastDemographicsSyncAt:  profile.lastDemographicsSyncAt || null,
+    };
 }
 
 // @desc    Brand dashboard overview
@@ -107,7 +156,7 @@ exports.updateProfile = async (req, res, next) => {
         const { generateUniqueCode } = require('../utils/generateCode');
 
         // Upsert BrandProfile
-        let brandProfile = await BrandProfile.findOne({ userId: req.user._id });
+        let brandProfile = existing;
         if (!brandProfile) {
             const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
             brandProfile = await BrandProfile.create({
@@ -120,7 +169,6 @@ exports.updateProfile = async (req, res, next) => {
             await brandProfile.save();
         }
 
-        // Mirror instagramConnected status to User
         await User.findByIdAndUpdate(req.user._id, {
             profileCompletionStatus: profileUpdates.profileCompletionStatus,
         });
@@ -132,48 +180,31 @@ exports.updateProfile = async (req, res, next) => {
     }
 };
 
-// @desc    AI Influencer Discovery
+// @desc    AI Influencer Discovery — brand-facing search
 // @route   GET /api/brand/influencers
+// NOTE: Single-collection query — no N+1 joins needed since InfluencerProfile
+//       is now the source of truth with all data promoted from sync.
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
-        const { niche, country } = req.query;
+        const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
 
-        const filter = {};
-        if (niche) filter.niche = niche;
-        if (country) filter.countryOfResidence = country;
+        const filter = { instagramConnected: true }; // only show synced profiles
+        if (niche && niche !== 'All') filter.niche = niche;
+        if (country && country !== 'Any') filter.countryOfResidence = country;
+        if (minFollowers || maxFollowers) {
+            filter.followersCount = {};
+            if (minFollowers) filter.followersCount.$gte = Number(minFollowers);
+            if (maxFollowers) filter.followersCount.$lte = Number(maxFollowers);
+        }
+        if (minEngagement) filter.engagementRate = { $gte: Number(minEngagement) };
+        if (maxPostCost) filter.avgPostCostUSD = { $lte: Number(maxPostCost), $gt: 0 };
 
         const influencerProfiles = await InfluencerProfile.find(filter)
-            .populate('userId', 'email status')
-            .sort({ createdAt: -1 });
+            .sort({ fitScore: -1, followersCount: -1 })
+            .limit(100)
+            .lean();
 
-    // Enrich with latest IG connection data and demographics
-        const result = await Promise.all(
-            influencerProfiles.map(async (profile) => {
-                const igConn = await InstagramConnection.findOne({
-                    userId: profile.userId?._id,
-                    role: 'influencer',
-                    isConnected: true,
-                }).select('username followersCount followsCount mediaCount profilePictureURL lastSyncedAt');
-                
-                const latestStats = await InstagramAccountDailyStat.findOne({
-                    userId: profile.userId?._id,
-                    role: 'influencer'
-                }).sort({ date: -1 });
-
-                let audienceDemographics = null;
-                if (latestStats && (latestStats.audienceCountryJson || latestStats.audienceCityJson || latestStats.audienceGenderAgeJson)) {
-                    audienceDemographics = {
-                        countries: latestStats.audienceCountryJson ? JSON.parse(latestStats.audienceCountryJson) : null,
-                        cities: latestStats.audienceCityJson ? JSON.parse(latestStats.audienceCityJson) : null,
-                        genderAge: latestStats.audienceGenderAgeJson ? JSON.parse(latestStats.audienceGenderAgeJson) : null
-                    };
-                }
-                
-                const quality = getQualityScore(profile, igConn);
-                
-                return { profile, instagram: igConn || null, analytics: { audienceDemographics }, ...quality };
-            })
-        );
+        const result = influencerProfiles.map(buildInfluencerCard);
 
         res.json({ success: true, influencers: result });
     } catch (error) {
@@ -181,7 +212,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
     }
 };
 
-// @desc    Get full influencer details (for brand viewing)
+// @desc    Get full influencer details (for brand viewing a profile modal)
 // @route   GET /api/brand/influencers/:id/details
 exports.getInfluencerDetail = async (req, res, next) => {
     try {
@@ -190,45 +221,54 @@ exports.getInfluencerDetail = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid influencer ID' });
         }
 
-        const profile = await InfluencerProfile.findOne({ userId: id });
+        const profile = await InfluencerProfile.findOne({ userId: id }).lean();
         if (!profile) {
             return res.status(404).json({ success: false, message: 'Influencer not found' });
         }
 
-        const [igConnection, rawAnalytics, recentPosts, latestStats] = await Promise.all([
+        // Fetch the extra data needed only for the detail modal (not needed for list cards)
+        const [igConnection, recentPosts] = await Promise.all([
             InstagramConnection.findOne({ userId: id, role: 'influencer', isConnected: true })
                 .select('-accessToken -longLivedToken -oauthState'),
-            InstagramDerivedMetric.findOne({ userId: id, role: 'influencer' }).sort({ computedAt: -1 }),
             InstagramMedia.find({ userId: id, role: 'influencer' })
                 .sort({ timestamp: -1 })
-                .limit(60),
-            InstagramAccountDailyStat.findOne({ userId: id, role: 'influencer' }).sort({ date: -1 })
+                .limit(60)
+                .lean(),
         ]);
-        
-        const quality = getQualityScore(profile, igConnection);
 
-        // Parse audience demographics safely
-        let audienceDemographics = null;
-        if (latestStats && (latestStats.audienceCountryJson || latestStats.audienceCityJson || latestStats.audienceGenderAgeJson)) {
-            audienceDemographics = {
-                countries: latestStats.audienceCountryJson ? JSON.parse(latestStats.audienceCountryJson) : null,
-                cities: latestStats.audienceCityJson ? JSON.parse(latestStats.audienceCityJson) : null,
-                genderAge: latestStats.audienceGenderAgeJson ? JSON.parse(latestStats.audienceGenderAgeJson) : null
-            };
-        }
+        // Build analytics object from what is already in InfluencerProfile (write-through data)
+        // Plus the structured demographics already stored on the profile
+        const analytics = {
+            engagementRate:       profile.engagementRate       || 0,
+            avgLikesPerPost:      profile.avgLikes             || 0,
+            avgCommentsPerPost:   profile.avgComments          || 0,
+            avgEngagementPerPost: profile.avgEngagementPerPost || 0,
+            likeToCommentRatio:   profile.likeToCommentRatio   || 0,
+            postingFrequency7d:   profile.postingFrequency7d    || 0,
+            postingFrequency30d:  profile.postingFrequency30d   || 0,
+            topPostScore:         profile.topPostScore          || null,
+            topReelScore:         profile.topReelScore          || null,
+            // Demographics already structured — no JSON.parse needed
+            audienceDemographics: (
+                profile.demographicsTopCountries ||
+                profile.demographicsTopCities    ||
+                profile.demographicsGenderAge
+            ) ? {
+                countries: profile.demographicsTopCountries || null,
+                cities:    profile.demographicsTopCities    || null,
+                genderAge: profile.demographicsGenderAge    || null,
+            } : null,
+        };
 
-        const analytics = rawAnalytics ? rawAnalytics.toObject() : {};
-        if (audienceDemographics) {
-            analytics.audienceDemographics = audienceDemographics;
-        }
+        const card = buildInfluencerCard(profile);
 
-        res.json({ 
-            success: true, 
-            profile, 
-            instagram: igConnection || null, 
-            analytics: analytics,
+        res.json({
+            success: true,
+            profile,
+            instagram: igConnection || null,
+            analytics,
             recentPosts: recentPosts || [],
-            ...quality
+            ...{ fitScore: card.fitScore, starRating: card.starRating, qualityLabel: card.qualityLabel },
         });
     } catch (error) {
         next(error);

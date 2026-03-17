@@ -118,38 +118,21 @@ exports.handleCallback = async (req, res, next) => {
             }
         );
 
-        // Update InfluencerProfile synced fields (non-sensitive only)
-        const profileUpdates = {
-            instagramUserId: profile.id,
-            instagramUsername: profile.username,
-            instagramProfileURL: `https://instagram.com/${profile.username}`,
-            instagramDPURL: profile.profile_picture_url || null,
-            instagramAccountType: profile.account_type || null,
-            instagramBiography: profile.biography || null,
-            followersCount: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            instagramConnected: true,
-            lastSyncedAt: new Date(),
-        };
-
+        // Update InfluencerProfile synced fields — write-through happens in syncService.runFullSync,
+        // but we also need to ensure the record exists with the required influencerProfileId.
         let infProfile = await InfluencerProfile.findOne({ userId });
         if (!infProfile) {
             const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
             await InfluencerProfile.create({
                 userId,
                 influencerProfileId,
-                ...profileUpdates
+                instagramConnected: true,
             });
         } else {
             if (!infProfile.influencerProfileId) {
                 infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+                await infProfile.save();
             }
-            Object.assign(infProfile, profileUpdates);
-            await infProfile.save();
         }
 
         // Mirror key fields in User doc for backward compat with brand search
@@ -275,30 +258,18 @@ exports.refreshSync = async (req, res, next) => {
             }
         );
 
-        // Update InfluencerProfile
-        const profileUpdates = {
-            followersCount: profile.followers_count || 0,
-            followsCount: profile.follows_count || 0,
-            mediaCount: profile.media_count || 0,
-            engagementRate: metrics.engagementRate || 0,
-            avgLikes: metrics.avgLikesPerPost || 0,
-            avgComments: metrics.avgCommentsPerPost || 0,
-            lastSyncedAt: new Date(),
-        };
-
+        // Update InfluencerProfile — write-through happens inside runQuickSync,
+        // but ensure record exists
         let infProfile = await InfluencerProfile.findOne({ userId: req.user._id });
         if (!infProfile) {
             const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
             await InfluencerProfile.create({
                 userId: req.user._id,
                 influencerProfileId,
-                ...profileUpdates
+                instagramConnected: true,
             });
-        } else {
-            if (!infProfile.influencerProfileId) {
-                infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-            }
-            Object.assign(infProfile, profileUpdates);
+        } else if (!infProfile.influencerProfileId) {
+            infProfile.influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
             await infProfile.save();
         }
 

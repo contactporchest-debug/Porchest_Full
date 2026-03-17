@@ -68,18 +68,17 @@ export default function InfluencerSearch() {
 
     useEffect(() => { fetchInfluencers(); }, [fetchInfluencers]);
 
-    // Local client-side filter
-    const filtered = influencers.filter(inf => {
-        const fullName = inf.profile?.fullName?.toLowerCase() || '';
-        const infNiche = inf.profile?.niche?.toLowerCase() || '';
-        const handle = inf.instagram?.username?.toLowerCase() || inf.profile?.instagramUsername?.toLowerCase() || '';
-        const bio = inf.instagram?.biography?.toLowerCase() || inf.profile?.shortBio?.toLowerCase() || '';
-        const search = query.toLowerCase();
-        
-        return !query || 
-               fullName.includes(search) || 
-               infNiche.includes(search) || 
-               handle.includes(search) || 
+    // Local client-side filter — works on flat card fields
+    const filtered = influencers.filter((inf: any) => {
+        const fullName = inf.fullName?.toLowerCase() || '';
+        const infNiche = inf.niche?.toLowerCase() || '';
+        const handle   = inf.username?.toLowerCase()  || '';
+        const bio      = inf.bio?.toLowerCase()        || '';
+        const search   = query.toLowerCase();
+        return !query ||
+               fullName.includes(search) ||
+               infNiche.includes(search) ||
+               handle.includes(search)   ||
                bio.includes(search);
     });
 
@@ -103,15 +102,16 @@ export default function InfluencerSearch() {
     };
 
     const handleOpenProfile = async (inf: any) => {
+        // inf.userId comes from the flat card object (buildInfluencerCard sets it as ObjectId ref)
+        const uid = inf.userId?._id || inf.userId;
         try {
-            // Fetch detailed view data
-            const res = await brandAPI.getInfluencerDetail(inf.profile.userId?._id);
+            const res = await brandAPI.getInfluencerDetail(uid);
             if (res.data?.success) {
                 setSelectedInfluencerProfile(res.data);
             } else {
                 setSelectedInfluencerProfile(inf);
             }
-        } catch (err) {
+        } catch {
             toast.error('Could not load detailed profile.');
             setSelectedInfluencerProfile(inf);
         }
@@ -120,10 +120,10 @@ export default function InfluencerSearch() {
     const handleRequestCollaboration = (inf: any) => {
         setSelectedInfluencerProfile(null);
         setSelectedForCollaboration({
-            _id: inf.profile?.userId?._id,
-            fullName: inf.profile?.fullName,
-            niche: inf.profile?.niche,
-            followers: inf.profile?.followersCount || inf.instagram?.followersCount || 0,
+            _id:      inf.userId?._id || inf.userId,
+            fullName: inf.fullName,
+            niche:    inf.niche,
+            followers: inf.followersCount || 0,
         });
     };
 
@@ -199,28 +199,28 @@ export default function InfluencerSearch() {
             {!loading && filtered.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
                     <AnimatePresence>
-                        {filtered.map((inf, i) => {
-                            const p = inf.profile || {};
-                            const ig = inf.instagram || {};
-                            const nc = NICHE_COLORS[p.niche] || '#a78bfa';
-                            
-                            // Safe fallbacks for display
-                            const dp = p.profileImageURL || ig.profilePictureURL;
-                            const handle = ig.username || p.instagramUsername;
-                            const initials = (p.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-                            const followers = p.followersCount || ig.followersCount || 0;
-                            const engagement = p.engagementRate || 0;
+                        {filtered.map((inf: any, i: number) => {
+                            // All fields are flat on the card object (built by brandController.buildInfluencerCard)
+                            const nc = NICHE_COLORS[inf.niche || ''] || '#a78bfa';
+
+                            const dp       = inf.profileImageURL || null;
+                            const handle   = inf.username || null;
+                            const initials = (inf.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+                            const followers = inf.followersCount || 0;
+                            const engagement = typeof inf.engagementRate === 'number' ? inf.engagementRate.toFixed(2) : '0.00';
                             const igLink = handle ? `https://instagram.com/${handle}` : '#';
 
-                            // Parse demographics for card display
-                            const demos = inf.analytics?.audienceDemographics;
+                            // Demographics — already structured on card (no JSON.parse)
+                            const demos = inf.audienceDemographics;
                             let topCountry = '';
                             let genderSplit = '';
                             let topAge = '';
 
                             if (demos) {
                                 if (demos.countries && Object.keys(demos.countries).length > 0) {
-                                    topCountry = Object.keys(demos.countries).reduce((a, b) => demos.countries[a] > demos.countries[b] ? a : b).split(',')[0];
+                                    topCountry = Object.keys(demos.countries)
+                                        .reduce((a, b) => demos.countries[a] > demos.countries[b] ? a : b)
+                                        .split(',')[0];
                                 }
                                 if (demos.genderAge && Object.keys(demos.genderAge).length > 0) {
                                     let f = 0, m = 0;
@@ -229,22 +229,16 @@ export default function InfluencerSearch() {
                                         if (key.startsWith('F.')) f += val;
                                         if (key.startsWith('M.')) m += val;
                                         const ageGroup = key.split('.')[1];
-                                        if (ageGroup) {
-                                            ages[ageGroup] = (ages[ageGroup] || 0) + val;
-                                        }
+                                        if (ageGroup) ages[ageGroup] = (ages[ageGroup] || 0) + val;
                                     });
                                     const totalGender = f + m;
-                                    if (totalGender > 0) {
-                                        genderSplit = `${Math.round((f/totalGender)*100)}% F / ${Math.round((m/totalGender)*100)}% M`;
-                                    }
-                                    if (Object.keys(ages).length > 0) {
-                                        topAge = Object.keys(ages).reduce((a, b) => ages[a] > ages[b] ? a : b);
-                                    }
+                                    if (totalGender > 0) genderSplit = `${Math.round((f / totalGender) * 100)}% F / ${Math.round((m / totalGender) * 100)}% M`;
+                                    if (Object.keys(ages).length > 0) topAge = Object.keys(ages).reduce((a, b) => ages[a] > ages[b] ? a : b);
                                 }
                             }
 
                             return (
-                                <motion.div key={p._id || i} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                                <motion.div key={inf._id || i} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.04, duration: 0.35 }}
                                     className="glass-card flex-col" style={{ borderRadius: '26px', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,255,255,0.06)', background: `linear-gradient(180deg, rgba(20,18,34,0.7) 0%, rgba(14,12,26,0.95) 100%)`, overflow: 'hidden' }}>
 
@@ -254,11 +248,11 @@ export default function InfluencerSearch() {
                                             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                                                 {/* DP */}
                                                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #7B3FF2, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
-                                                    {dp ? <img src={dp} alt={p.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                                                    {dp ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
                                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                                                        {p.fullName || 'Influencer'}
+                                                        {inf.fullName || 'Influencer'}
                                                     </p>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                         {handle && (
@@ -266,50 +260,50 @@ export default function InfluencerSearch() {
                                                                 <Instagram size={10} /> @{handle}
                                                             </a>
                                                         )}
-                                                        {p.country && (
+                                                        {inf.country && (
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                                 <Globe size={10} style={{ color: 'rgba(255,255,255,0.3)' }} />
-                                                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'capitalize' }}>{p.country}</p>
+                                                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'capitalize' }}>{inf.country}</p>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
-                                            {/* Quality Stars */}
+                                            {/* Fit Score Stars */}
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                                                 <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inf.qualityLabel}</p>
                                                 <div style={{ display: 'flex', gap: '2px' }}>
                                                     {[1, 2, 3, 4, 5].map(star => (
-                                                        <Star key={star} size={11} fill={star <= (inf.starRating || 3) ? '#facc15' : 'transparent'} color={star <= (inf.starRating || 3) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                                        <Star key={star} size={11} fill={star <= (inf.starRating || 1) ? '#facc15' : 'transparent'} color={star <= (inf.starRating || 1) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
                                                     ))}
                                                 </div>
+                                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '600' }}>Fit {inf.fitScore || 0}/100</p>
                                             </div>
                                         </div>
 
-                                        {/* BioSnippet */}
+                                        {/* Bio */}
                                         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '42px' }}>
-                                            {ig.biography || p.shortBio || 'No biography available.'}
+                                            {inf.bio || 'No biography available.'}
                                         </p>
 
-                                        {/* Tags */}
-                                        <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                                            {p.niche && <span style={{ padding: '4px 12px', borderRadius: '99px', background: `${nc}12`, border: `1px solid ${nc}25`, color: nc, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>{p.niche}</span>}
+                                        {/* Tags: Niche + Followers + ER */}
+                                        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                                            {inf.niche && <span style={{ padding: '4px 12px', borderRadius: '99px', background: `${nc}12`, border: `1px solid ${nc}25`, color: nc, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>{inf.niche}</span>}
                                             <span style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <TrendingUp size={10} /> {formatNum(followers)} Subs
+                                                <TrendingUp size={10} /> {formatNum(followers)} Followers
                                             </span>
                                             <span style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <BarChart3 size={10} /> {engagement}% ER
                                             </span>
                                         </div>
 
-                                        {/* Demographics Row */}
+                                        {/* Demographics Row — only shown when data exists */}
                                         {(topCountry || genderSplit) && (
-                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
-                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a78bfa" /> {topCountry} Top</div>}
+                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a78bfa" /> {topCountry}</div>}
                                                 {topCountry && genderSplit && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
                                                 {genderSplit && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={11} color="#f472b6" /> {genderSplit}</div>}
-                                                {genderSplit && topAge && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
-                                                {topAge && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} Yrs</div>}
+                                                {topAge && <><div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div><div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} yrs</div></>}
                                             </div>
                                         )}
 
@@ -319,13 +313,13 @@ export default function InfluencerSearch() {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Image size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Post</span>
                                                 </div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{p.avgPostCostUSD > 0 ? `$${p.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
+                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgPostCostUSD > 0 ? `$${inf.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
                                             <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Film size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Reel</span>
                                                 </div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{p.avgReelCostUSD > 0 ? `$${p.avgReelCostUSD.toLocaleString()}` : 'Negotiable'}</p>
+                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgReelCostUSD > 0 ? `$${inf.avgReelCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -333,7 +327,7 @@ export default function InfluencerSearch() {
                                     {/* Action Row */}
                                     <div style={{ background: 'rgba(0,0,0,0.15)', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '16px 24px', display: 'flex', gap: '10px' }}>
                                         <button onClick={() => handleOpenProfile(inf)}
-                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 200ms ease', }}
+                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 200ms ease' }}
                                             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
                                             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}>
                                             View Profile

@@ -64,16 +64,20 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
     if (!influencer) return null;
 
-    const { profile, instagram, qualityScore, starRating, qualityLabel, analytics, recentPosts } = influencer;
+    // The detail response shape is: { profile, instagram, analytics, recentPosts, fitScore, starRating, qualityLabel }
+    // profile is the full flat InfluencerProfile document (source of truth after write-through sync)
+    const { profile, instagram, fitScore, starRating, qualityLabel, analytics, recentPosts } = influencer;
     
-    // Fallbacks
-    const dp = profile?.profileImageURL || instagram?.profilePictureURL;
-    const handle = instagram?.username || profile?.instagramUsername;
+    // Resolve display fields — prefer write-through profile fields, fall back to raw instagram connection doc
+    const dp       = profile?.instagramDPURL   || profile?.profileImageURL  || instagram?.profilePictureURL;
+    const handle   = profile?.instagramUsername || instagram?.username;
     const initials = (profile?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-    const followers = profile?.followersCount || instagram?.followersCount || 0;
+    const followers = profile?.followersCount  || instagram?.followersCount || 0;
     const baseEngagement = profile?.engagementRate || analytics?.engagementRate || 0;
-    const igLink = handle ? `https://instagram.com/${handle}` : '#';
-    const bio = instagram?.biography || profile?.shortBio || 'No biography available.';
+    const igLink   = handle ? `https://instagram.com/${handle}` : '#';
+    const bio      = profile?.instagramBiography || profile?.shortBio || instagram?.biography || 'No biography available.';
+    const country  = profile?.countryOfResidence || null;
+    const city     = profile?.city || null;
 
     // Safe parsing of recent posts
     const safeRecentPosts: Media[] = Array.isArray(recentPosts) ? recentPosts : [];
@@ -131,9 +135,9 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
         };
     }, [filteredPosts, followers]);
 
-    const displayEngagement = derived.postsCount > 0 ? derived.engagementRate : baseEngagement;
-    const displayAvgLikes = derived.postsCount > 0 ? derived.avgLikes : (profile?.avgLikes || analytics?.avgLikesPerPost || 0);
-    const displayAvgComments = derived.postsCount > 0 ? derived.avgComments : (analytics?.avgCommentsPerPost || 0);
+    const displayEngagement  = derived.postsCount > 0 ? derived.engagementRate  : baseEngagement;
+    const displayAvgLikes    = derived.postsCount > 0 ? derived.avgLikes    : (profile?.avgLikes    || analytics?.avgLikesPerPost    || 0);
+    const displayAvgComments = derived.postsCount > 0 ? derived.avgComments : (profile?.avgComments || analytics?.avgCommentsPerPost || 0);
 
     const TimeButton = ({ days, label }: { days: any, label: string }) => (
         <button onClick={() => setTimeRange(days)} style={{
@@ -196,9 +200,9 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                 {profile?.niche && (
                                     <span style={{ padding: '3px 10px', borderRadius: '99px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#d8b4fe', fontSize: '11px', fontWeight: '700' }}>{profile.niche}</span>
                                 )}
-                                {profile?.country && (
+                                {country && (
                                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        📍 {profile.city ? `${profile.city}, ` : ''}{profile.country}
+                                        📍 {city ? `${city}, ` : ''}{country}
                                     </span>
                                 )}
                             </div>
@@ -222,17 +226,18 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
                         {/* Right Column (Header Stats) */}
                         <div style={{ flex: '1 1 300px' }}>
-                            {/* Quality Score Badge */}
+                            {/* Fit Score Badge */}
                             <div style={{ padding: '18px', borderRadius: '20px', background: 'linear-gradient(145deg, rgba(20,18,34,0.9), rgba(123,63,242,0.08))', border: '1px solid rgba(123,63,242,0.2)', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
                                 <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(123,63,242,0.15)', border: '1px solid rgba(123,63,242,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#c084fc' }}>
-                                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', lineHeight: '1' }}>{qualityScore}</span>
+                                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', lineHeight: '1' }}>{fitScore ?? 0}</span>
+                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', marginTop: '2px' }}>/100</span>
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Brand Fit Match</p>
-                                    <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '4px' }}>{qualityLabel}</h3>
+                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Brand Fit Score</p>
+                                    <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '4px' }}>{qualityLabel || 'Low Fit'}</h3>
                                     <div style={{ display: 'flex', gap: '2px' }}>
                                         {[1, 2, 3, 4, 5].map(star => (
-                                            <Star key={star} size={13} fill={star <= (starRating || 3) ? '#facc15' : 'transparent'} color={star <= (starRating || 3) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                            <Star key={star} size={13} fill={star <= (starRating || 1) ? '#facc15' : 'transparent'} color={star <= (starRating || 1) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
                                         ))}
                                     </div>
                                 </div>
@@ -398,21 +403,20 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                 )}
                             </div>
                             
-                            {/* Audience Demographics */}
+                            {/* Audience Demographics — reads structured objects from write-through InfluencerProfile */}
                             <div style={{ background: 'rgba(20,18,34,0.4)', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                                     <Users size={16} color="#facc15" />
                                     <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Audience Demographics</h3>
                                 </div>
                                 {analytics?.audienceDemographics?.countries ? (() => {
-                                    // Parse top countries
+                                    // countries is a plain object: { "PK": 1200, "US": 800, ... }
                                     const c = analytics.audienceDemographics.countries;
-                                    const cKeys = Object.keys(c).sort((a,b) => c[b]-c[a]).slice(0, 5);
-                                    let total = 0; cKeys.forEach(k => total+=c[k]);
-                                    const demoData = cKeys.map(k => ({ name: k, value: total > 0 ? (c[k]/total)*100 : 0 }));
-                                    
-                                    if(demoData.length === 0) return <EmptyChartState message="Insufficient demographic data available." />;
-
+                                    const cKeys = Object.keys(c).sort((a, b) => c[b] - c[a]).slice(0, 5);
+                                    let total = 0;
+                                    cKeys.forEach(k => total += c[k]);
+                                    const demoData = cKeys.map(k => ({ name: k, value: total > 0 ? (c[k] / total) * 100 : 0 }));
+                                    if (demoData.length === 0) return <EmptyChartState message="Insufficient demographic data." />;
                                     return (
                                         <div style={{ height: '220px', width: '100%', display: 'flex', alignItems: 'center' }}>
                                             <ResponsiveContainer width="60%" height="100%">
@@ -437,7 +441,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         </div>
                                     );
                                 })() : (
-                                    <EmptyChartState message="Audience demographic visualization data is currently not cached or unavailable for this profile." />
+                                    <EmptyChartState message="Demographic data not yet synced. Re-connect Instagram to load demographics." />
                                 )}
                             </div>
                         </div>
