@@ -50,8 +50,16 @@ const influencerProfileSchema = new mongoose.Schema(
         avgViews: { type: Number, default: 0 },
         avgReach: { type: Number, default: 0 },
         avgImpressions: { type: Number, default: 0 },
+        avgLikesPerPost: { type: Number, default: 0 },
+        avgCommentsPerPost: { type: Number, default: 0 },
+        avgEngagementPerPost: { type: Number, default: 0 },
+        likeToCommentRatio: { type: Number, default: 0 },
+        postsAnalyzed: { type: Number, default: 0 },
+        influencerEfficiencyRate: { type: Number, default: 0 },
         growthRate: { type: Number, default: 0 }, // MoM Growth
-        postingFrequency: { type: Number, default: 0 }, // posts per 7 days/30 days
+        postingFrequency: { type: Number, default: 0 }, // legacy
+        postingFrequency7d: { type: Number, default: 0 },
+        postingFrequency30d: { type: Number, default: 0 },
         topPerformingContentType: { type: String },
         
         // ── E. Demographics ──────────────────────────────────────────────
@@ -73,6 +81,9 @@ const influencerProfileSchema = new mongoose.Schema(
         // ── G. Score / Rating Section ────────────────────────────────────
         profileScore: { type: Number, default: 0 },
         fitScore: { type: Number, default: 0 }, // 0 - 100
+        qualityScore: { type: Number, default: 0 },
+        topPostScore: { type: Number, default: 0 },
+        topReelScore: { type: Number, default: 0 },
         credibilityScore: { type: Number, default: 0 },
         scoreLabel: { type: String },
         scoreBreakdown: { type: mongoose.Schema.Types.Mixed },

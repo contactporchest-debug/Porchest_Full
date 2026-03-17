@@ -245,8 +245,27 @@ exports.getProfile = async (req, res, next) => {
 exports.getAnalytics = async (req, res, next) => {
     try {
         const profile = await InfluencerProfile.findOne({ userId: req.user._id });
-        // The frontend expects the analytics block to look like this
-        res.json({ success: true, analytics: profile || {} });
+        if (!profile) return res.json({ success: true, analytics: {} });
+
+        // Map the fields from the profile document to the shape the frontend expects
+        const analytics = {
+            engagementRate: profile.engagementRate,
+            avgLikesPerPost: profile.avgLikesPerPost,
+            avgCommentsPerPost: profile.avgCommentsPerPost,
+            avgEngagementPerPost: profile.avgEngagementPerPost,
+            likeToCommentRatio: profile.likeToCommentRatio,
+            postingFrequency7d: profile.postingFrequency7d,
+            postingFrequency30d: profile.postingFrequency30d,
+            topPostScore: profile.topPostScore,
+            topReelScore: profile.topReelScore,
+            qualityScore: profile.qualityScore,
+            influencerEfficiencyRate: profile.influencerEfficiencyRate,
+            postsAnalyzed: profile.postsAnalyzed,
+            isEstimated: true, // Mark as server-calculated
+            fetchedAt: profile.lastSyncAt
+        };
+
+        res.json({ success: true, analytics });
     } catch (error) {
         next(error);
     }

@@ -129,14 +129,29 @@ exports.runFullSync = async (userId, role, accessToken) => {
         updatePayload.engagementRate       = metrics.engagementRate || 0;
         updatePayload.avgLikes             = metrics.avgLikesPerPost || 0;
         updatePayload.avgComments          = metrics.avgCommentsPerPost || 0;
+        updatePayload.avgLikesPerPost      = metrics.avgLikesPerPost || 0;
+        updatePayload.avgCommentsPerPost   = metrics.avgCommentsPerPost || 0;
+        updatePayload.avgEngagementPerPost = metrics.avgEngagementPerPost || 0;
+        updatePayload.likeToCommentRatio   = metrics.likeToCommentRatio || 0;
+        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || 0;
+        updatePayload.influencerEfficiencyRate = metrics.influencerEfficiencyRate || 0;
+        
         updatePayload.postingFrequency     = metrics.postingFrequency7d || 0;
+        updatePayload.postingFrequency7d   = metrics.postingFrequency7d || 0;
+        updatePayload.postingFrequency30d  = metrics.postingFrequency30d || 0;
+        
         updatePayload.topPerformingContentType = metrics.topReelScore > metrics.topPostScore ? 'REELS' : 'POSTS';
         updatePayload.recentMediaSummary   = recentMediaSummary;
+        
+        // Quality Scores
+        updatePayload.qualityScore         = metrics.qualityScore || 0;
+        updatePayload.topPostScore         = metrics.topPostScore || 0;
+        updatePayload.topReelScore         = metrics.topReelScore || 0;
         
         // Native Demographics structure
         if (audienceData) {
             updatePayload.demographics = {
-                genderDistribution: audienceData.genderAge || null, // Best approximation provided by Meta Insights usually mixes them
+                genderDistribution: audienceData.genderAge || null,
                 ageDistribution: audienceData.genderAge || null,
                 topCountries: audienceData.countries || null,
                 topCities: audienceData.cities || null,
