@@ -63,7 +63,13 @@ exports.getDashboard = async (req, res, next) => {
                 brandProfile: brandProfile || null,
                 instagramConnection: {
                     isConnected: brandProfile?.instagramConnected || false,
-                    lastSyncedAt: brandProfile?.lastSyncedAt || null
+                    lastSyncedAt: brandProfile?.lastSyncedAt || null,
+                    username: brandProfile?.instagramUsername,
+                    profilePictureURL: brandProfile?.instagramDPURL,
+                    followersCount: brandProfile?.followersCount,
+                    followsCount: brandProfile?.followsCount,
+                    mediaCount: brandProfile?.mediaCount,
+                    accountType: brandProfile?.instagramAccountType
                 },
                 profileComplete,
             },
@@ -80,7 +86,21 @@ exports.getBrandProfile = async (req, res, next) => {
             User.findById(req.user._id).select('-password'),
             BrandProfile.findOne({ userId: req.user._id }),
         ]);
-        res.json({ success: true, user, brandProfile });
+        res.json({ 
+            success: true, 
+            user, 
+            brandProfile,
+            instagramConnection: brandProfile ? {
+                isConnected: brandProfile.instagramConnected || false,
+                lastSyncedAt: brandProfile.lastSyncedAt || null,
+                username: brandProfile.instagramUsername,
+                profilePictureURL: brandProfile.instagramDPURL,
+                followersCount: brandProfile.followersCount,
+                followsCount: brandProfile.followsCount,
+                mediaCount: brandProfile.mediaCount,
+                accountType: brandProfile.instagramAccountType
+            } : null
+        });
     } catch (error) {
         next(error);
     }

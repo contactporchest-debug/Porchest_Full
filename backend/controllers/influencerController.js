@@ -17,7 +17,13 @@ exports.getDashboard = async (req, res, next) => {
                 influencerProfile: profile || null,
                 instagramConnection: profile ? {
                     isConnected: profile.instagramConnectionStatus === 'connected',
-                    lastSyncedAt: profile.lastSyncAt || null
+                    lastSyncedAt: profile.lastSyncAt || null,
+                    username: profile.instagramUsername,
+                    profilePictureURL: profile.instagramDPURL || profile.profilePictureUrl,
+                    followersCount: profile.followersCount,
+                    followsCount: profile.followingCount,
+                    mediaCount: profile.mediaCount,
+                    accountType: profile.instagramAccountType
                 } : null,
             },
         });
@@ -41,7 +47,13 @@ exports.getProfile = async (req, res, next) => {
             influencerProfile: influencerProfile || null,
             instagramConnection: influencerProfile ? {
                 isConnected: influencerProfile.instagramConnectionStatus === 'connected',
-                lastSyncedAt: influencerProfile.lastSyncAt || null
+                lastSyncedAt: influencerProfile.lastSyncAt || null,
+                username: influencerProfile.instagramUsername,
+                profilePictureURL: influencerProfile.instagramDPURL || influencerProfile.profilePictureUrl,
+                followersCount: influencerProfile.followersCount,
+                followsCount: influencerProfile.followingCount,
+                mediaCount: influencerProfile.mediaCount,
+                accountType: influencerProfile.instagramAccountType
             } : null,
             instagramAccount: influencerProfile ? {
                 instagramUserId: influencerProfile.instagramUserId,
