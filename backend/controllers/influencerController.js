@@ -16,7 +16,7 @@ exports.getDashboard = async (req, res, next) => {
                 profile: req.user,
                 influencerProfile: profile || null,
                 instagramConnection: profile ? {
-                    isConnected: profile.instagramConnectionStatus === 'connected',
+                    isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
                     lastSyncedAt: profile.lastSyncAt || null,
                     username: profile.instagramUsername,
                     profilePictureURL: profile.instagramDPURL || profile.profilePictureUrl,
@@ -46,7 +46,7 @@ exports.getProfile = async (req, res, next) => {
             user,
             influencerProfile: influencerProfile || null,
             instagramConnection: influencerProfile ? {
-                isConnected: influencerProfile.instagramConnectionStatus === 'connected',
+                isConnected: influencerProfile.instagramConnected || influencerProfile.instagramConnectionStatus === 'connected',
                 lastSyncedAt: influencerProfile.lastSyncAt || null,
                 username: influencerProfile.instagramUsername,
                 profilePictureURL: influencerProfile.instagramDPURL || influencerProfile.profilePictureUrl,

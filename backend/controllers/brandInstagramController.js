@@ -84,7 +84,8 @@ exports.handleCallback = async (req, res, next) => {
                 'sync.accessToken': shortToken,
                 'sync.longLivedToken': longToken,
                 'sync.tokenExpiresAt': tokenExpiry,
-                instagramConnected: true
+                instagramConnected: true,
+                instagramConnectionStatus: 'connected'
             }
         );
 
@@ -117,6 +118,7 @@ exports.disconnect = async (req, res, next) => {
             {
                 $set: {
                     instagramConnected:    false,
+                    instagramConnectionStatus: 'disconnected',
                     instagramUserId:       null,
                     instagramUsername:     null,
                     instagramProfileURL:   null,
@@ -128,6 +130,18 @@ exports.disconnect = async (req, res, next) => {
                     mediaCount:            0,
                     linkedPageId:          null,
                     linkedPageName:        null,
+                    engagementRate:        0,
+                    avgLikesPerPost:       0,
+                    avgCommentsPerPost:    0,
+                    avgEngagementPerPost:  0,
+                    likeToCommentRatio:    0,
+                    postsAnalyzed:         0,
+                    influencerEfficiencyRate: 0,
+                    postingFrequency7d:    0,
+                    postingFrequency30d:   0,
+                    qualityScore:          0,
+                    topPostScore:          0,
+                    topReelScore:          0,
                     lastSyncedAt:          null,
                     'sync.oauthState':     null,
                     'sync.accessToken':    null,
@@ -137,6 +151,8 @@ exports.disconnect = async (req, res, next) => {
                 }
             }
         );
+
+        await User.findByIdAndUpdate(userId, { instagramConnected: false });
 
         res.json({ success: true, message: 'Instagram disconnected completely. Brand data reset.' });
     } catch (error) {

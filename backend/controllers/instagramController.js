@@ -91,7 +91,10 @@ exports.handleCallback = async (req, res, next) => {
         await syncService.runFullSync(userId, ROLE, longToken);
 
         // Finalize User layer
-        await User.findByIdAndUpdate(userId, { instagramConnected: true });
+        await Promise.all([
+            User.findByIdAndUpdate(userId, { instagramConnected: true }),
+            InfluencerProfile.findOneAndUpdate({ userId }, { instagramConnected: true, instagramConnectionStatus: 'connected' })
+        ]);
 
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_connected=1`);
     } catch (error) {
@@ -118,7 +121,8 @@ exports.disconnect = async (req, res, next) => {
             { userId },
             {
                 $set: {
-                    instagramConnectedStatus: 'disconnected',
+                    instagramConnected:    false,
+                    instagramConnectionStatus: 'disconnected',
                     lastDisconnectedAt:    new Date(),
                     instagramUserId:       null,
                     instagramUsername:     null,
@@ -134,16 +138,27 @@ exports.disconnect = async (req, res, next) => {
                     engagementRate:        0,
                     avgLikes:              0,
                     avgComments:           0,
+                    avgLikesPerPost:       0,
+                    avgCommentsPerPost:    0,
+                    avgEngagementPerPost:  0,
+                    likeToCommentRatio:    null,
                     avgShares:             0,
                     avgViews:              0,
                     avgReach:              0,
                     avgImpressions:        0,
                     growthRate:            0,
                     postingFrequency:      0,
+                    postingFrequency7d:    0,
+                    postingFrequency30d:   0,
                     topPerformingContentType: null,
                     demographics:          null,
                     recentMediaSummary:    [],
+                    postsAnalyzed:         0,
+                    influencerEfficiencyRate: 0,
                     fitScore:              0,
+                    qualityScore:          0,
+                    topPostScore:          0,
+                    topReelScore:          0,
                     scoreLabel:            null,
                     lastSyncAt:            null,
                     lastAnalyticsRefreshAt: null,

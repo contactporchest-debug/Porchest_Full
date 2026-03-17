@@ -39,7 +39,7 @@ function buildInfluencerCard(profile) {
         starRating:            (profile.fitScore >= 80) ? 5 : (profile.fitScore >= 60) ? 4 : (profile.fitScore >= 40) ? 3 : (profile.fitScore >= 20) ? 2 : 1,
         qualityLabel:          profile.scoreLabel || 'Low Fit',
 
-        instagramConnected:    profile.instagramConnectionStatus === 'connected',
+        instagramConnected:    profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
         profileCompletionStatus: profile.profileCompletionStatus,
         lastSyncedAt:          profile.lastSyncAt || null,
     };
@@ -62,7 +62,7 @@ exports.getDashboard = async (req, res, next) => {
                 profile: req.user,
                 brandProfile: brandProfile || null,
                 instagramConnection: {
-                    isConnected: brandProfile?.instagramConnected || false,
+                    isConnected: brandProfile?.instagramConnected || brandProfile?.instagramConnectionStatus === 'connected',
                     lastSyncedAt: brandProfile?.lastSyncedAt || null,
                     username: brandProfile?.instagramUsername,
                     profilePictureURL: brandProfile?.instagramDPURL,
@@ -91,7 +91,7 @@ exports.getBrandProfile = async (req, res, next) => {
             user, 
             brandProfile,
             instagramConnection: brandProfile ? {
-                isConnected: brandProfile.instagramConnected || false,
+                isConnected: brandProfile.instagramConnected || brandProfile.instagramConnectionStatus === 'connected',
                 lastSyncedAt: brandProfile.lastSyncedAt || null,
                 username: brandProfile.instagramUsername,
                 profilePictureURL: brandProfile.instagramDPURL,
@@ -157,7 +157,12 @@ exports.getMatchedInfluencers = async (req, res, next) => {
     try {
         const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
 
-        const filter = { instagramConnectionStatus: 'connected' };
+        const filter = { 
+            $or: [
+                { instagramConnectionStatus: 'connected' },
+                { instagramConnected: true }
+            ]
+        };
         if (niche && niche !== 'All') filter.niche = niche;
         if (country && country !== 'Any') filter.country = country;
         if (minFollowers || maxFollowers) {
@@ -201,7 +206,7 @@ exports.getInfluencerDetail = async (req, res, next) => {
             profile,
             // Keeping these legacy objects mapped for frontend compatibility immediately
             instagram: {
-                isConnected: profile.instagramConnectionStatus === 'connected',
+                isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
                 username: profile.instagramUsername
             },
             analytics: {

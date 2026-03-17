@@ -101,6 +101,7 @@ exports.runFullSync = async (userId, role, accessToken) => {
         instagramDPURL:        profile.profile_picture_url || null,
         instagramBiography:    profile.biography || null,
         instagramAccountType:  profile.account_type || null,
+        instagramConnected:    true,
         instagramConnectionStatus: 'connected',
         isActive:              true,
         

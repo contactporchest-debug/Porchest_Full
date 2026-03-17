@@ -26,6 +26,7 @@ const influencerProfileSchema = new mongoose.Schema(
         // ── B. Profile Status ────────────────────────────────────────────
         profileCompletionStatus: { type: Boolean, default: false },
         verificationStatus: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' }, // App verification
+        instagramConnected: { type: Boolean, default: false },
         instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
         lastConnectedAt: { type: Date },
         lastDisconnectedAt: { type: Date },

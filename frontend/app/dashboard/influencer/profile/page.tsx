@@ -219,9 +219,11 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
     );
 }
 
-function calcScore(form: Record<string, string>, igConn: boolean): number {
+function calcScore(form: Record<string, string>, isConnected: boolean): number {
     const fields = [form.fullName, form.contactEmail, form.country, form.niche, form.avgPostCostUSD, form.avgReelCostUSD, form.shortBio];
-    return Math.round(((fields.filter(Boolean).length + (igConn ? 1 : 0)) / (fields.length + 1)) * 100);
+    const filledCount = fields.filter(f => f && String(f).trim().length > 0).length;
+    const totalPossible = fields.length + 1;
+    return Math.round(((filledCount + (isConnected ? 1 : 0)) / totalPossible) * 100);
 }
 
 export default function InfluencerProfilePage() {

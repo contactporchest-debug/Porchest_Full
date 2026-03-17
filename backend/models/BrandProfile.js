@@ -29,6 +29,7 @@ const brandProfileSchema = new mongoose.Schema(
         verificationStatus: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
         isActive: { type: Boolean, default: true },
         instagramConnected: { type: Boolean, default: false },
+        instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
 
         // ── C. Brand Business Information ────────────────────────────────
         businessType: { type: String },
