@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,14 +10,13 @@ import { Menu, X, ChevronRight } from 'lucide-react';
 export function Logo() {
     return (
         <Link href="/" className="flex items-center gap-3" style={{ textDecoration: 'none' }}>
-            <div style={{
-                width: '38px', height: '38px', borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
-                boxShadow: '0 0 20px rgba(123,63,242,0.5), 0 0 40px rgba(123,63,242,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#fff',
-                flexShrink: 0,
-            }}>P</div>
+            <Image
+                src="/logo.png"
+                alt="Porchest"
+                width={38}
+                height={38}
+                style={{ borderRadius: '10px', objectFit: 'contain' }}
+            />
             <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '19px', color: '#fff', letterSpacing: '-0.02em' }}>
                 Por<span style={{ background: 'linear-gradient(90deg, #7B3FF2, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
             </span>
