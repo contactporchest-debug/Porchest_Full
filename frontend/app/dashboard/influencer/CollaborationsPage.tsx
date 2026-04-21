@@ -72,7 +72,7 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
     const respond = async (id: string, status: 'accepted' | 'rejected') => {
         setActing(id);
         try {
-            await influencerAPI.respondToRequest(id, status);
+            await influencerAPI.respondToRequest(id, { status });
             toast.success(status === 'accepted' ? '✅ Collaboration accepted!' : 'Request declined');
             load();
             onChanged();
