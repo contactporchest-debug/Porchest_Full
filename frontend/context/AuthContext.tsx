@@ -31,6 +31,10 @@ interface User {
     engagementRate?: number;
     avgLikes?: number;
     avgComments?: number;
+    avgLikesPerPost?: number;
+    avgCommentsPerPost?: number;
+    growthRate?: number;
+    lastAnalyticsRefreshAt?: string;
     instagramConnected?: boolean;
     lastSyncedAt?: string;
     avgPostCostUSD?: number;
