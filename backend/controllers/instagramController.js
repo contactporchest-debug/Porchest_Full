@@ -229,7 +229,14 @@ exports.refreshSync = async (req, res, next) => {
 exports.getProfile = async (req, res, next) => {
     try {
         const profile = await InfluencerProfile.findOne({ userId: req.user._id });
-        if (!profile) return res.json({ success: true, connection: null, account: null });
+        if (!profile) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Instagram profile not found. Connect your Instagram account first.',
+                connection: null, 
+                account: null 
+            });
+        }
 
         const connection = {
             isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',

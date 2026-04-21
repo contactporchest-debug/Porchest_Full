@@ -54,6 +54,8 @@ function SectionHeader({ title, count }: { title: string; count?: number }) {
 function PendingRequests({ onChanged }: { onChanged: () => void }) {
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [acting, setActing] = useState<string | null>(null);
     const [expanded, setExpanded] = useState<string | null>(null);
     const [submitOpen, setSubmitOpen] = useState<string | null>(null);
@@ -65,10 +67,19 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
 
     const load = () => {
         influencerAPI.getRequests({ status: 'pending' })
-            .then(res => setRequests(res.data.requests || []))
+            .then(res => {
+                if (!res.data || typeof res.data !== 'object') {
+                    throw new Error('Invalid API response format');
+                }
+                setRequests(res.data.requests || []);
+                setError(null);
+                setLastUpdated(new Date());
+            })
             .catch(err => {
+                const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load pending requests';
                 console.error('Failed to load pending requests:', err);
-                if (loading) toast.error('Failed to load requests');
+                setError(errorMsg);
+                if (loading) toast.error(errorMsg);
             })
             .finally(() => setLoading(false));
     };
@@ -106,9 +117,25 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
 
     return (
         <div style={{ marginBottom: '40px' }}>
-            <SectionHeader title="Pending Requests" count={requests.length} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <SectionHeader title="Pending Requests" count={requests.length} />
+                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+            </div>
+            {error && (
+                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                    <div>
+                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                    </div>
+                </div>
+            )}
             {requests.length === 0 ? (
-                <EmptyState icon={<Clock size={40} />} title="No Pending Requests" subtitle="Brands will send campaign requests here. Check back later." />
+                error ? (
+                    <EmptyState icon={<AlertCircle size={40} />} title="Unable to Load Requests" subtitle="Please check your connection and try again." />
+                ) : (
+                    <EmptyState icon={<Clock size={40} />} title="No Pending Requests" subtitle="Brands will send campaign requests here. Check back later." />
+                )
             ) : (
                 <AnimatePresence>
                     {requests.map((r, i) => {
@@ -229,6 +256,8 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
 function ActiveCollaborations({ refresh }: { refresh: number }) {
     const [collabs, setCollabs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [submitOpen, setSubmitOpen] = useState<string | null>(null);
     const [postUrl, setPostUrl] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -236,16 +265,25 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
     useEffect(() => {
         const load = () => {
             influencerAPI.getRequests({ status: 'accepted' })
-                .then(res => setCollabs(res.data.requests || []))
+                .then(res => {
+                    if (!res.data || typeof res.data !== 'object') {
+                        throw new Error('Invalid API response format');
+                    }
+                    setCollabs(res.data.requests || []);
+                    setError(null);
+                    setLastUpdated(new Date());
+                })
                 .catch(err => {
+                    const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load active collaborations';
                     console.error('Failed to load active collaborations:', err);
-                    if (loading) toast.error('Failed to load collaborations');
+                    setError(errorMsg);
+                    if (loading) toast.error(errorMsg);
                 })
                 .finally(() => setLoading(false));
         };
         
         load();
-        const intervalId = setInterval(load, 10000);
+        const intervalId = setInterval(load, 30000);
         return () => clearInterval(intervalId);
     }, [refresh]);
 
@@ -271,9 +309,25 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
 
     return (
         <div style={{ marginBottom: '40px' }}>
-            <SectionHeader title="Active Collaborations" count={collabs.length} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <SectionHeader title="Active Collaborations" count={collabs.length} />
+                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+            </div>
+            {error && (
+                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                    <div>
+                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                    </div>
+                </div>
+            )}
             {collabs.length === 0 ? (
-                <EmptyState icon={<Users size={38} />} title="No Active Collaborations" subtitle="Accept pending requests to start collaborating." />
+                error ? (
+                    <EmptyState icon={<AlertCircle size={38} />} title="Unable to Load Collaborations" subtitle="Please check your connection and try again." />
+                ) : (
+                    <EmptyState icon={<Users size={38} />} title="No Active Collaborations" subtitle="Accept pending requests to start collaborating." />
+                )
             ) : (
                 collabs.map((c, i) => {
                     const brand = c.brandId;
@@ -321,20 +375,31 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
 function CompletedHistory() {
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     useEffect(() => {
         const load = () => {
             influencerAPI.getVerifications()
-                .then(res => setHistory(res.data.verifications || []))
+                .then(res => {
+                    if (!res.data || typeof res.data !== 'object') {
+                        throw new Error('Invalid API response format');
+                    }
+                    setHistory(res.data.verifications || []);
+                    setError(null);
+                    setLastUpdated(new Date());
+                })
                 .catch(err => {
+                    const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load verification history';
                     console.error('Failed to load history:', err);
-                    if (loading) toast.error('Failed to load history');
+                    setError(errorMsg);
+                    if (loading) toast.error(errorMsg);
                 })
                 .finally(() => setLoading(false));
         };
         
         load();
-        const intervalId = setInterval(load, 10000);
+        const intervalId = setInterval(load, 30000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -342,9 +407,25 @@ function CompletedHistory() {
 
     return (
         <div>
-            <SectionHeader title="Completed History" count={history.length} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <SectionHeader title="Completed History" count={history.length} />
+                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+            </div>
+            {error && (
+                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                    <div>
+                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                    </div>
+                </div>
+            )}
             {history.length === 0 ? (
-                <EmptyState icon={<History size={38} />} title="No Completed Collaborations" subtitle="Verified and paid collaborations will appear here." />
+                error ? (
+                    <EmptyState icon={<AlertCircle size={38} />} title="Unable to Load History" subtitle="Please check your connection and try again." />
+                ) : (
+                    <EmptyState icon={<History size={38} />} title="No Completed Collaborations" subtitle="Verified and paid collaborations will appear here." />
+                )
             ) : (
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>

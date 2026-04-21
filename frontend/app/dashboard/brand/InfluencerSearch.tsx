@@ -29,9 +29,9 @@ export default function InfluencerSearch() {
     const [engagementRange, setEngagementRange] = useState('Any');
     const [costRange, setCostRange] = useState('Any');
     
-    // UI state for models
     const [selectedInfluencerProfile, setSelectedInfluencerProfile] = useState<any>(null); // Details Modal
     const [selectedForCollaboration, setSelectedForCollaboration] = useState<any>(null);   // Request Flow
+    const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set()); // Track broken image IDs
 
     // Fetch influencers wrapper
     const fetchInfluencers = useCallback(async () => {
@@ -210,7 +210,8 @@ export default function InfluencerSearch() {
                             // All fields are flat on the card object (built by brandController.buildInfluencerCard)
                             const nc = NICHE_COLORS[inf.niche || ''] || '#a78bfa';
 
-                            const dp       = inf.profileImageURL || null;
+                            // DP priority: profilePictureUrl (API) > profileImageURL (flat) > instagramDPURL > fallback to initials
+                            const dp       = inf.profilePictureUrl || inf.profileImageURL || inf.instagramDPURL || null;
                             const handle   = inf.username || null;
                             const initials = (inf.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
                             const followers = inf.followersCount || 0;
@@ -255,7 +256,7 @@ export default function InfluencerSearch() {
                                             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                                                 {/* DP */}
                                                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #7B3FF2, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
-                                                    {dp ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                                                    {(dp && !brokenImages.has(inf._id)) ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, inf._id]))} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
