@@ -81,6 +81,8 @@ export const brandAPI = {
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
+    updateRequest: (id: string, data: { status: string; rejectionReason?: string; agreedPrice?: number }) =>
+        api.patch(`/brand/requests/${id}`, data),
     // Notifications
     getNotifications: (params?: Record<string, unknown>) => api.get('/brand/notifications', { params }),
     getUnreadCount: () => api.get('/brand/notifications/count'),

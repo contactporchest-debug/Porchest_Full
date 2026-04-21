@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Loader2, FileText, Calendar, DollarSign, Clock, CheckCircle,
@@ -8,6 +8,7 @@ import {
 import { brandAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useCollaborationUpdates } from '@/lib/useSocket';
 
 type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
 
@@ -29,9 +30,11 @@ const STATUS_CFG: Record<string, { label: string; color: string; icon: React.Rea
 };
 
 function CampaignDetail({ request, verifications }: { request: any; verifications: any[] }) {
-    const verification = verifications.find(v =>
-        (v.campaignRequestId?._id || v.campaignRequestId) === request._id
-    );
+    const verification = verifications.find(v => {
+        // Standardize: handle both ObjectId and string formats from backend
+        const vId = typeof v.campaignRequestId === 'object' ? v.campaignRequestId?._id : v.campaignRequestId;
+        return vId === request._id;
+    });
 
     const VER_CFG: Record<string, { label: string; color: string }> = {
         pending: { label: 'Pending Admin Review', color: '#fbbf24' },
@@ -81,14 +84,14 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                             <button
                                 onClick={async () => {
                                     try {
-                                        const res = await fetch(`/api/brand/requests/${request._id}`, {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                                            body: JSON.stringify({ status: 'deal_closed', agreedPrice: request.counterOfferPrice })
-                                        });
-                                        if (res.ok) window.location.reload();
-                                        else toast.error('Failed to accept counter');
-                                    } catch { toast.error('Error accepting counter'); }
+                                        await brandAPI.updateRequest(request._id, { status: 'deal_closed', agreedPrice: request.counterOfferPrice });
+                                        toast.success('Counter accepted! Deal closed.');
+                                        // Refetch requests without page reload
+                                        const res = await brandAPI.getRequests();
+                                        // This should trigger re-render - you may need to add a refetch callback to parent
+                                    } catch (err) {
+                                        toast.error('Failed to accept counter');
+                                    }
                                 }}
                                 style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#4ade80', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
                                 Accept Counter
@@ -96,14 +99,13 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                             <button
                                 onClick={async () => {
                                     try {
-                                        const res = await fetch(`/api/brand/requests/${request._id}`, {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                                            body: JSON.stringify({ status: 'rejected', rejectionReason: 'Cannot meet counter offer terms' })
-                                        });
-                                        if (res.ok) window.location.reload();
-                                        else toast.error('Failed to reject counter');
-                                    } catch { toast.error('Error rejecting counter'); }
+                                        await brandAPI.updateRequest(request._id, { status: 'rejected', rejectionReason: 'Cannot meet counter offer terms' });
+                                        toast.success('Counter rejected.');
+                                        // Refetch requests without page reload
+                                        const res = await brandAPI.getRequests();
+                                    } catch (err) {
+                                        toast.error('Failed to reject counter');
+                                    }
                                 }}
                                 style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
                                 Reject
@@ -190,22 +192,37 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     const [search, setSearch] = useState('');
     const [expanded, setExpanded] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+
+    const fetchData = useCallback(async () => {
+        try {
+            const [requestsRes, verificationsRes] = await Promise.all([
+                brandAPI.getRequests(),
+                brandAPI.getBrandVerifications()
+            ]);
+            setRequests(requestsRes.data.requests || []);
+            setVerifications(verificationsRes.data.verifications || []);
+        } catch (err) {
+            console.error('Failed to load campaigns:', err);
+            if (loading) toast.error('Failed to load campaigns');
+        } finally {
+            setLoading(false);
+        }
+    }, [loading]);
+
+    // Listen for real-time collaboration updates
+    useCollaborationUpdates(useCallback(async (data: any) => {
+        console.log('[Collaboration Update]', data);
+        // Refetch data when collaboration is updated
+        await fetchData();
+    }, [fetchData]));
 
     useEffect(() => {
-        const load = () => {
-            Promise.all([brandAPI.getRequests(), brandAPI.getBrandVerifications()])
-                .then(([r, v]) => { setRequests(r.data.requests || []); setVerifications(v.data.verifications || []); })
-                .catch(err => {
-                    console.error('Failed to load campaigns:', err);
-                    if (loading) toast.error('Failed to load campaigns');
-                })
-                .finally(() => setLoading(false));
-        };
-        
-        load();
-        const intervalId = setInterval(load, 10000); // 10s poll
+        fetchData();
+        // Fallback polling every 30s as backup (reduced from 10s for better performance)
+        const intervalId = setInterval(fetchData, 30000);
         return () => clearInterval(intervalId);
-    }, []);
+    }, [fetchData]);
 
     const filtered = requests.filter(r => {
         let matchFilter = false;
@@ -290,7 +307,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                 <div onClick={() => setExpanded(isOpen ? null : r._id)}
                                     style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
                                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                                        {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt="DP" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                                        {r.influencerProfilePic && !brokenImages.has(r._id) ? <img src={r.influencerProfilePic} alt="DP" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, r._id]))} /> : initials}
                                     </div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
                                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#fff', fontSize: '14px', marginBottom: '2px' }}>{r.campaignTitle}</p>

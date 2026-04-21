@@ -147,7 +147,11 @@ export default function OverviewPage({ connected, onToggle, stats }: Props) {
                         {/* Locked API fields */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
                             <LockedField label="Total Followers" value={user?.followers ? user.followers.toLocaleString() : 'Syncing…'} />
-                            <LockedField label="Engagement Rate" value={user?.engagementRate ? `${user.engagementRate}%` : 'Syncing…'} />
+                            <LockedField label="Engagement Rate" value={user?.engagementRate ? `${user.engagementRate.toFixed(2)}%` : 'Syncing…'} />
+                            {user?.growthRate && <LockedField label="Monthly Growth Rate" value={`${user.growthRate.toFixed(2)}%`} />}
+                            {user?.avgLikesPerPost && <LockedField label="Avg Likes Per Post" value={user.avgLikesPerPost.toLocaleString()} />}
+                            {user?.avgCommentsPerPost && <LockedField label="Avg Comments Per Post" value={user.avgCommentsPerPost.toLocaleString()} />}
+                            {user?.lastAnalyticsRefreshAt && <LockedField label="Last Synced" value={new Date(user.lastAnalyticsRefreshAt).toLocaleString()} />}
                         </div>
 
                         {/* Actions */}

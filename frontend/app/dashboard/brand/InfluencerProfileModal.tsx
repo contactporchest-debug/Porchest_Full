@@ -101,12 +101,14 @@ function InsightChip({ icon, label, value, color, description }: { icon: React.R
 
 export default function InfluencerProfileModal({ influencer, onClose, onRequestCollaboration }: ProfileModalProps) {
     const [timeRange, setTimeRange] = useState<7 | 15 | 30 | 90>(30);
+    const [dpError, setDpError] = useState(false);
 
     if (!influencer) return null;
 
     const { profile, instagram, fitScore, starRating, qualityLabel, analytics, recentPosts } = influencer;
     
-    const dp       = profile?.instagramDPURL   || profile?.profileImageURL  || instagram?.profilePictureURL;
+    // Priority: backend profilePictureUrl (from Instagram API) > manual instagramDPURL > fallback
+    const dp       = profile?.profilePictureUrl || profile?.instagramDPURL   || profile?.profileImageURL  || instagram?.profilePictureURL;
     const handle   = profile?.instagramUsername || instagram?.username;
     const initials = (profile?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
     const followers = profile?.followersCount  || instagram?.followersCount || 0;
@@ -248,8 +250,8 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                         <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms ease' }}>
                             <X size={16} />
                         </button>
-                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #0A0914', background: dp ? '#000' : 'linear-gradient(135deg, #7B3FF2, #A855F7)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '800', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
-                            {dp ? <img src={dp} alt={profile?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #0A0914', background: (dp && !dpError) ? '#000' : 'linear-gradient(135deg, #7B3FF2, #A855F7)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '800', color: '#fff', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+                            {(dp && !dpError) ? <img src={dp} alt={profile?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setDpError(true)} /> : initials}
                         </div>
                     </div>
 

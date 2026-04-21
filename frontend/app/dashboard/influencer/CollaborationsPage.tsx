@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, DollarSign, Calendar, CheckCircle, X, FileText,
     Loader2, Clock, Shield, Link2, History, AlertCircle,
 } from 'lucide-react';
 import { influencerAPI } from '@/lib/api';
+import { useCollaborationUpdates } from '@/lib/useSocket';
 import toast from 'react-hot-toast';
 
 type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'verified' | 'paid';
@@ -74,7 +75,8 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
 
     useEffect(() => {
         load();
-        const intervalId = setInterval(load, 10000);
+        // Fallback polling every 30s (reduced from 10s)
+        const intervalId = setInterval(load, 30000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -392,6 +394,13 @@ function CompletedHistory() {
 /* ─── MAIN EXPORT ─── */
 export default function CollaborationsPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // Listen for real-time collaboration updates
+    useCollaborationUpdates(useCallback((data: any) => {
+        console.log('[Influencer Collaboration Update]', data);
+        // Trigger refresh of collaborations
+        setRefreshTrigger(p => p + 1);
+    }, []));
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
