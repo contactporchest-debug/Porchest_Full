@@ -148,8 +148,10 @@ exports.updateProfile = async (req, res, next) => {
         await User.findByIdAndUpdate(req.user._id, { profileCompletionStatus: completion.isComplete });
 
         const user = await User.findById(req.user._id).select('-password');
+        console.log(`[API Success] Influencer ${req.user._id} updated profile successfully`);
         res.json({ success: true, user, influencerProfile, profileCompletion: completion });
     } catch (error) {
+        console.error(`[API Error] Failed to update profile persistence for ${req.user._id}:`, error);
         next(error);
     }
 };

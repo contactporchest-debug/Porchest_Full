@@ -63,14 +63,20 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
     const [submitting, setSubmitting] = useState(false);
 
     const load = () => {
-        setLoading(true);
         influencerAPI.getRequests({ status: 'pending' })
             .then(res => setRequests(res.data.requests || []))
-            .catch(() => toast.error('Failed to load requests'))
+            .catch(err => {
+                console.error('Failed to load pending requests:', err);
+                if (loading) toast.error('Failed to load requests');
+            })
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        load();
+        const intervalId = setInterval(load, 10000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const respond = async (id: string, status: 'accepted' | 'rejected' | 'negotiation', additional: any = {}) => {
         if (status === 'accepted' && !agreedTerms[id]) {
@@ -226,11 +232,19 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
-        influencerAPI.getRequests({ status: 'accepted' })
-            .then(res => setCollabs(res.data.requests || []))
-            .catch(() => toast.error('Failed to load collaborations'))
-            .finally(() => setLoading(false));
+        const load = () => {
+            influencerAPI.getRequests({ status: 'accepted' })
+                .then(res => setCollabs(res.data.requests || []))
+                .catch(err => {
+                    console.error('Failed to load active collaborations:', err);
+                    if (loading) toast.error('Failed to load collaborations');
+                })
+                .finally(() => setLoading(false));
+        };
+        
+        load();
+        const intervalId = setInterval(load, 10000);
+        return () => clearInterval(intervalId);
     }, [refresh]);
 
     const submitVerification = async (campaignRequestId: string) => {
@@ -307,10 +321,19 @@ function CompletedHistory() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        influencerAPI.getVerifications()
-            .then(res => setHistory(res.data.verifications || []))
-            .catch(() => toast.error('Failed to load history'))
-            .finally(() => setLoading(false));
+        const load = () => {
+            influencerAPI.getVerifications()
+                .then(res => setHistory(res.data.verifications || []))
+                .catch(err => {
+                    console.error('Failed to load history:', err);
+                    if (loading) toast.error('Failed to load history');
+                })
+                .finally(() => setLoading(false));
+        };
+        
+        load();
+        const intervalId = setInterval(load, 10000);
+        return () => clearInterval(intervalId);
     }, []);
 
     if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: 'rgba(255,255,255,0.3)' }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;

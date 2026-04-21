@@ -19,8 +19,12 @@ exports.createRequest = async (req, res, next) => {
         } = req.body;
 
         if (!influencerId || !campaignTitle) {
+            console.error(`[API Error] Brand ${brandUserId} missing influencerId or campaignTitle`);
             return res.status(400).json({ success: false, message: 'Influencer and campaign title are required.' });
         }
+
+        console.log(`[API Init] Brand ${brandUserId} creating request for Influencer ${influencerId}`);
+        console.log(`[API Terms Agreed] Brand ${brandUserId} agreed to T&C and payment terms: ${paymentTerms}`);
 
         // Resolve profiles
         const [brandProfile, influencerProfile] = await Promise.all([
@@ -109,6 +113,8 @@ exports.getBrandRequests = async (req, res, next) => {
             .lean();
 
         const total = await CampaignRequest.countDocuments(filter);
+
+        console.log(`[API Fetch] Brand ${req.user._id} fetched ${requests.length} requests (status: ${status || 'all'})`);
 
         res.json({
             success: true,
@@ -271,8 +277,10 @@ exports.respondToRequest = async (req, res, next) => {
             },
         });
 
+        console.log(`[API Success] Influencer ${request.influencerUserId} responded ${status} to request ${id}`);
         res.json({ success: true, request });
     } catch (error) {
+        console.error(`[API Error] Error responding to request:`, error);
         next(error);
     }
 };
@@ -352,8 +360,10 @@ exports.brandRespondToRequest = async (req, res, next) => {
             },
         });
 
+        console.log(`[API Success] Brand ${request.brandUserId} responded ${status} to counter offer on request ${id}`);
         res.json({ success: true, request });
     } catch (error) {
+        console.error(`[API Error] Brand responding to counter offer:`, error);
         next(error);
     }
 };

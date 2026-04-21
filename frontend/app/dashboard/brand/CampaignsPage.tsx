@@ -192,10 +192,19 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        Promise.all([brandAPI.getRequests(), brandAPI.getBrandVerifications()])
-            .then(([r, v]) => { setRequests(r.data.requests || []); setVerifications(v.data.verifications || []); })
-            .catch(() => toast.error('Failed to load campaigns'))
-            .finally(() => setLoading(false));
+        const load = () => {
+            Promise.all([brandAPI.getRequests(), brandAPI.getBrandVerifications()])
+                .then(([r, v]) => { setRequests(r.data.requests || []); setVerifications(v.data.verifications || []); })
+                .catch(err => {
+                    console.error('Failed to load campaigns:', err);
+                    if (loading) toast.error('Failed to load campaigns');
+                })
+                .finally(() => setLoading(false));
+        };
+        
+        load();
+        const intervalId = setInterval(load, 10000); // 10s poll
+        return () => clearInterval(intervalId);
     }, []);
 
     const filtered = requests.filter(r => {
