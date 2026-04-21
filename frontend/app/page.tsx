@@ -84,7 +84,7 @@ function Hero() {
 
                 {/* CTAs */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '14px', marginBottom: '64px' }}>
-                    <a href="https://wa.me/923474376159" target="_blank" rel="noopener noreferrer"
+                    <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer"
                         style={{ padding: '15px 36px', borderRadius: '14px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: '700', fontSize: '15px', textDecoration: 'none', boxShadow: '0 0 28px rgba(123,63,242,0.4)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                         💬 Chat on WhatsApp
                     </a>
@@ -211,7 +211,7 @@ function Contact() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '20px' }}>
                         {[
-                            { icon: '💬', title: 'Chat on WhatsApp', desc: 'Quick response guaranteed', link: 'https://wa.me/923474376159', cta: 'Open WhatsApp →', external: true },
+                            { icon: '💬', title: 'Chat on WhatsApp', desc: 'Quick response guaranteed', link: 'https://wa.me/923477437615', cta: 'Open WhatsApp →', external: true },
                             { icon: '✉️', title: 'Send Email', desc: 'info@porchest.com', link: 'mailto:info@porchest.com', cta: 'Send Email →', external: false },
                         ].map(item => (
                             <a key={item.title} href={item.link} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}
