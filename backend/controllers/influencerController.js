@@ -3,6 +3,33 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const { validateInfluencerProfile } = require('../utils/validators');
 const { generateUniqueCode } = require('../utils/generateCode');
 
+/**
+ * Compute profile completion checklist and percentage.
+ * Returns { percentage, isComplete, checklist }
+ */
+function computeProfileCompletion(profile) {
+    if (!profile) return { percentage: 0, isComplete: false, checklist: [] };
+
+    const checks = [
+        { key: 'profilePhoto', label: 'Add profile photo', done: !!(profile.profilePictureUrl || profile.instagramDPURL) },
+        { key: 'displayName', label: 'Add display name', done: !!(profile.fullName || profile.displayName) },
+        { key: 'bio', label: 'Add bio', done: !!(profile.bio || profile.instagramBiography) },
+        { key: 'niche', label: 'Select niche/category', done: !!profile.niche },
+        { key: 'country', label: 'Set audience region / country', done: !!profile.country },
+        { key: 'followers', label: 'Sync follower count', done: (profile.followersCount || 0) > 0 },
+        { key: 'engagement', label: 'Sync engagement data', done: (profile.engagementRate || 0) > 0 },
+        { key: 'postPrice', label: 'Set average post price', done: (profile.avgPostPrice || 0) > 0 },
+        { key: 'reelPrice', label: 'Set average reel price', done: (profile.avgReelPrice || 0) > 0 },
+        { key: 'instagram', label: 'Connect Instagram account', done: !!(profile.instagramConnected || profile.instagramConnectionStatus === 'connected') },
+    ];
+
+    const doneCount = checks.filter(c => c.done).length;
+    const percentage = Math.round((doneCount / checks.length) * 100);
+    const isComplete = doneCount === checks.length;
+
+    return { percentage, isComplete, checklist: checks };
+}
+
 // @desc    Influencer dashboard overview
 // @route   GET /api/influencer/dashboard
 exports.getDashboard = async (req, res, next) => {
@@ -10,11 +37,14 @@ exports.getDashboard = async (req, res, next) => {
         const influencerId = req.user._id;
         const profile = await InfluencerProfile.findOne({ userId: influencerId });
 
+        const completion = computeProfileCompletion(profile);
+
         res.json({
             success: true,
             dashboard: {
                 profile: req.user,
                 influencerProfile: profile || null,
+                instagramConnection: profile ? {
                     isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
                     lastSyncedAt: profile.lastSyncAt || null,
                     username: profile.instagramUsername,
@@ -24,6 +54,7 @@ exports.getDashboard = async (req, res, next) => {
                     mediaCount: profile.mediaCount,
                     accountType: profile.instagramAccountType
                 } : null,
+                profileCompletion: completion,
             },
         });
     } catch (error) {
@@ -40,10 +71,13 @@ exports.getProfile = async (req, res, next) => {
             InfluencerProfile.findOne({ userId: req.user._id })
         ]);
 
+        const completion = computeProfileCompletion(influencerProfile);
+
         res.json({
             success: true,
             user,
             influencerProfile: influencerProfile || null,
+            profileCompletion: completion,
             instagramConnection: influencerProfile ? {
                 isConnected: influencerProfile.instagramConnected || influencerProfile.instagramConnectionStatus === 'connected',
                 lastSyncedAt: influencerProfile.lastSyncAt || null,
@@ -105,19 +139,18 @@ exports.updateProfile = async (req, res, next) => {
             await influencerProfile.save();
         }
 
-        const profileCompletionStatus = !!(
-            influencerProfile.fullName && influencerProfile.contactEmail && influencerProfile.country &&
-            influencerProfile.niche && (influencerProfile.avgPostPrice > 0 || influencerProfile.avgReelPrice > 0)
-        );
-        
-        influencerProfile.profileCompletionStatus = profileCompletionStatus;
+        // Compute strict profile completion based on all required fields
+        const completion = computeProfileCompletion(influencerProfile);
+        influencerProfile.profileCompletionStatus = completion.isComplete;
+        influencerProfile.isSearchable = completion.isComplete;
         await influencerProfile.save();
 
-        await User.findByIdAndUpdate(req.user._id, { profileCompletionStatus });
+        await User.findByIdAndUpdate(req.user._id, { profileCompletionStatus: completion.isComplete });
 
         const user = await User.findById(req.user._id).select('-password');
-        res.json({ success: true, user, influencerProfile });
+        res.json({ success: true, user, influencerProfile, profileCompletion: completion });
     } catch (error) {
         next(error);
     }
 };
+

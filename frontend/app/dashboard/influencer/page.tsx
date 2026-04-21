@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import OverviewPage from './OverviewPage';
+import ProfileCompletionBanner from './ProfileCompletionBanner';
 import { influencerAPI } from '@/lib/api';
 import {
     Instagram, CheckCircle, AlertCircle,
@@ -16,6 +17,7 @@ export default function InfluencerPortal() {
     const { user } = useAuth();
     const [igConnected, setIgConnected] = useState(false);
     const [dashStats, setDashStats] = useState<any>(null);
+    const [profileCompletion, setProfileCompletion] = useState<any>(null);
 
     const displayName = user?.fullName || user?.email?.split('@')[0] || 'Influencer';
 
@@ -36,7 +38,8 @@ export default function InfluencerPortal() {
         influencerAPI.getDashboard()
             .then(res => {
                 setDashStats(res.data.dashboard);
-                setIgConnected(!!res.data.dashboard?.profile?.instagramConnected);
+                setIgConnected(!!res.data.dashboard?.instagramConnection?.isConnected);
+                setProfileCompletion(res.data.dashboard?.profileCompletion || null);
             })
             .catch(() => { });
     }, []);
@@ -76,18 +79,21 @@ export default function InfluencerPortal() {
                                     </p>
                                 </div>
                             </div>
-                            <div style={{ padding: '12px 16px', borderRadius: '16px', background: 'rgba(123,63,242,0.07)', border: '1px solid rgba(123,63,242,0.18)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {igConnected ? <CheckCircle size={13} style={{ color: '#4ade80' }} /> : <AlertCircle size={13} style={{ color: '#fbbf24' }} />}
+                            <div style={{ padding: '12px 16px', borderRadius: '16px', background: profileCompletion?.isComplete ? 'rgba(74,222,128,0.07)' : 'rgba(251,191,36,0.07)', border: `1px solid ${profileCompletion?.isComplete ? 'rgba(74,222,128,0.18)' : 'rgba(251,191,36,0.18)'}`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {profileCompletion?.isComplete ? <CheckCircle size={13} style={{ color: '#4ade80' }} /> : <AlertCircle size={13} style={{ color: '#fbbf24' }} />}
                                 <div>
-                                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.28)', marginBottom: '1px' }}>Sync Status</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '12px', color: '#a78bfa' }}>
-                                        {igConnected ? 'Synced via Meta API' : 'Not synced'}
+                                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.28)', marginBottom: '1px' }}>Profile</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '12px', color: profileCompletion?.isComplete ? '#4ade80' : '#fbbf24' }}>
+                                        {profileCompletion?.isComplete ? 'Discoverable' : `${profileCompletion?.percentage || 0}% Complete`}
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </motion.div>
+
+                {/* ── PROFILE COMPLETION BANNER (only shown when incomplete) ── */}
+                <ProfileCompletionBanner completion={profileCompletion} />
 
                 {/* ── CONTENT ── */}
                 <OverviewPage connected={igConnected} onToggle={setIgConnected} stats={dashStats} />

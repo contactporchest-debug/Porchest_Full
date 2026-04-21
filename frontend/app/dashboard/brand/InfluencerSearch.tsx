@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, TrendingUp, BarChart3, Send, Loader2, UserX, DollarSign, MessageCircle, Heart, Film, Star, ExternalLink, Image, Instagram, Users } from 'lucide-react';
+import { Search, Globe, TrendingUp, BarChart3, Send, Loader2, UserX, DollarSign, MessageCircle, Heart, Film, Star, ExternalLink, Image, Instagram, Users, ShieldCheck } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import CreateRequestModal from './CreateRequestModal';
 import InfluencerProfileModal from './InfluencerProfileModal';
@@ -130,13 +130,20 @@ export default function InfluencerSearch() {
     return (
         <div>
             <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
                     Discover Influencers
                 </h2>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
-                    {loading ? 'Analyzing influencer network…' : `Showing ${filtered.length} curated matches`}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+                        {loading ? 'Analyzing influencer network…' : `Showing ${filtered.length} curated matches`}
+                    </p>
+                    <div style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <ShieldCheck size={10} style={{ color: '#4ade80' }} />
+                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Searchable Profiles Only</span>
+                    </div>
+                </div>
             </div>
+
 
             {/* Search Top Bar */}
             <div style={{ position: 'relative', marginBottom: '18px' }}>
@@ -251,9 +258,12 @@ export default function InfluencerSearch() {
                                                     {dp ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
-                                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: '2px' }}>
-                                                        {inf.fullName || 'Influencer'}
-                                                    </p>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                            {inf.fullName || 'Influencer'}
+                                                        </p>
+                                                        <ShieldCheck size={14} style={{ color: '#4ade80', flexShrink: 0 }} />
+                                                    </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                         {handle && (
                                                             <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#d8b4fe', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>

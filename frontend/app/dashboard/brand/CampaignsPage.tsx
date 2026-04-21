@@ -3,25 +3,29 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Loader2, FileText, Calendar, DollarSign, Clock, CheckCircle,
-    XCircle, Link2, ChevronDown, ChevronUp, Search, Plus,
+    XCircle, Link2, ChevronDown, ChevronUp, Search, Eye, AlertCircle, PlayCircle,
 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-type Filter = 'all' | 'pending' | 'accepted' | 'rejected';
+type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
 
 const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
     { key: 'all', label: 'All', color: '#a78bfa' },
-    { key: 'accepted', label: 'Running / In-Process', color: '#4ade80' },
-    { key: 'pending', label: 'Pending', color: '#fbbf24' },
-    { key: 'rejected', label: 'Canceled', color: '#f87171' },
+    { key: 'pending', label: 'Pending / Viewed', color: '#fbbf24' },
+    { key: 'negotiation', label: 'Negotiation', color: '#facc15' },
+    { key: 'accepted', label: 'Active', color: '#4ade80' },
+    { key: 'rejected', label: 'Rejected / Canceled', color: '#f87171' },
 ];
 
 const STATUS_CFG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    pending: { label: 'Pending', color: '#fbbf24', icon: <Clock size={11} /> },
-    accepted: { label: 'In-Process', color: '#60d5f8', icon: <CheckCircle size={11} /> },
-    rejected: { label: 'Canceled', color: '#f87171', icon: <XCircle size={11} /> },
+    sent: { label: 'Pending', color: '#fbbf24', icon: <Clock size={11} /> },
+    viewed: { label: 'Viewed', color: '#a78bfa', icon: <Eye size={11} /> },
+    negotiation: { label: 'Negotiation', color: '#facc15', icon: <AlertCircle size={11} /> },
+    accepted: { label: 'In-Process', color: '#60d5f8', icon: <PlayCircle size={11} /> },
+    deal_closed: { label: 'Closed ✓', color: '#4ade80', icon: <CheckCircle size={11} /> },
+    rejected: { label: 'Rejected', color: '#f87171', icon: <XCircle size={11} /> },
 };
 
 function CampaignDetail({ request, verifications }: { request: any; verifications: any[] }) {
@@ -50,6 +54,36 @@ function CampaignDetail({ request, verifications }: { request: any; verification
             transition={{ duration: 0.3 }} style={{ overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
+                {/* Response specific panels */}
+                {request.status === 'rejected' && request.rejectionReason && (
+                    <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
+                        <p style={{ fontSize: '11px', color: '#f87171', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Rejection Reason</p>
+                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6' }}>{request.rejectionReason}</p>
+                    </div>
+                )}
+                {request.status === 'negotiation' && (
+                    <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}>
+                        <p style={{ fontSize: '11px', color: '#facc15', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Counter Offer Received</p>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
+                            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(250,204,21,0.1)' }}>
+                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '2px' }}>Original Ask</p>
+                                <p style={{ fontSize: '13px', color: '#fff', fontWeight: '700', textDecoration: 'line-through' }}>${request.agreedPrice?.toLocaleString()}</p>
+                            </div>
+                            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
+                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '2px' }}>Counter Ask</p>
+                                <p style={{ fontSize: '16px', color: '#4ade80', fontWeight: '800' }}>${request.counterOfferPrice?.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        {request.counterOfferMessage && (
+                            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6' }}>"{request.counterOfferMessage}"</p>
+                        )}
+                        <div style={{ marginTop: '12px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                            To accept or reject this counter offer, you must reach out directly, as in-portal negotiation responses are coming in v2.
+                        </div>
+                    </div>
+                )}
+
+
                 {/* Request document */}
                 <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Campaign Request Document</p>
                 <div style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '4px' }}>
@@ -69,46 +103,50 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                 </div>
 
                 {/* Verification block */}
-                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Verification Status</p>
-                {!verification ? (
-                    <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.07)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
-                            {request.status === 'accepted' ? 'Waiting for influencer to submit post URL.' : 'No verification — request not accepted.'}
-                        </p>
-                    </div>
-                ) : (
-                    <div style={{ padding: '16px 18px', borderRadius: '14px', background: `${verSt?.color || '#888'}08`, border: `1px solid ${verSt?.color || '#888'}22` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: verSt?.color || '#888', boxShadow: `0 0 8px ${verSt?.color}` }} />
-                            <p style={{ fontSize: '12px', color: verSt?.color, fontWeight: '700' }}>{verSt?.label}</p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: verification.adminNote ? '8px' : 0 }}>
-                            <Link2 size={11} style={{ color: '#60d5f8', flexShrink: 0 }} />
-                            <a href={verification.postUrl} target="_blank" rel="noopener noreferrer"
-                                style={{ fontSize: '12px', color: '#60d5f8', textDecoration: 'none', wordBreak: 'break-all' }}>
-                                {verification.postUrl}
-                            </a>
-                        </div>
-                        {verification.adminNote && (
-                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginTop: '6px' }}>Admin note: {verification.adminNote}</p>
-                        )}
-                        {/* Performance (if verified) */}
-                        {verification.status === 'verified' && verification.performance && (
-                            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: '8px' }}>
-                                {[
-                                    { label: 'Views', val: verification.performance.views },
-                                    { label: 'Likes', val: verification.performance.likes },
-                                    { label: 'Comments', val: verification.performance.comments },
-                                    { label: 'Shares', val: verification.performance.shares },
-                                ].filter(m => m.val > 0).map(m => (
-                                    <div key={m.label} style={{ padding: '8px', borderRadius: '9px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.12)', textAlign: 'center' }}>
-                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>{m.val.toLocaleString()}</p>
-                                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{m.label}</p>
+                {(request.status === 'accepted' || request.status === 'deal_closed') && (
+                    <>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Verification Status</p>
+                        {!verification ? (
+                            <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.07)', textAlign: 'center' }}>
+                                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>
+                                    Waiting for influencer to submit post URL.
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '16px 18px', borderRadius: '14px', background: `${verSt?.color || '#888'}08`, border: `1px solid ${verSt?.color || '#888'}22` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: verSt?.color || '#888', boxShadow: `0 0 8px ${verSt?.color}` }} />
+                                    <p style={{ fontSize: '12px', color: verSt?.color, fontWeight: '700' }}>{verSt?.label}</p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: verification.adminNote ? '8px' : 0 }}>
+                                    <Link2 size={11} style={{ color: '#60d5f8', flexShrink: 0 }} />
+                                    <a href={verification.postUrl} target="_blank" rel="noopener noreferrer"
+                                        style={{ fontSize: '12px', color: '#60d5f8', textDecoration: 'none', wordBreak: 'break-all' }}>
+                                        {verification.postUrl}
+                                    </a>
+                                </div>
+                                {verification.adminNote && (
+                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', marginTop: '6px' }}>Admin note: {verification.adminNote}</p>
+                                )}
+                                {/* Performance (if verified) */}
+                                {verification.status === 'verified' && verification.performance && (
+                                    <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: '8px' }}>
+                                        {[
+                                            { label: 'Views', val: verification.performance.views },
+                                            { label: 'Likes', val: verification.performance.likes },
+                                            { label: 'Comments', val: verification.performance.comments },
+                                            { label: 'Shares', val: verification.performance.shares },
+                                        ].filter(m => m.val > 0).map(m => (
+                                            <div key={m.label} style={{ padding: '8px', borderRadius: '9px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.12)', textAlign: 'center' }}>
+                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>{m.val.toLocaleString()}</p>
+                                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>{m.label}</p>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
         </motion.div>
@@ -132,7 +170,13 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     }, []);
 
     const filtered = requests.filter(r => {
-        const matchFilter = filter === 'all' || r.status === filter;
+        let matchFilter = false;
+        if (filter === 'all') matchFilter = true;
+        else if (filter === 'pending') matchFilter = ['sent', 'viewed'].includes(r.status);
+        else if (filter === 'negotiation') matchFilter = r.status === 'negotiation';
+        else if (filter === 'accepted') matchFilter = ['accepted', 'deal_closed'].includes(r.status);
+        else if (filter === 'rejected') matchFilter = r.status === 'rejected';
+
         const q = search.toLowerCase();
         const matchSearch = !q || r.campaignTitle?.toLowerCase().includes(q) || r.influencerId?.fullName?.toLowerCase().includes(q);
         return matchFilter && matchSearch;
@@ -152,8 +196,8 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
             {!hideHeader && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
                     <div>
-                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns</h1>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>{filtered.length} campaign{filtered.length !== 1 ? 's' : ''}</p>
+                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns & Collaborations</h1>
+                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>{filtered.length} requests{filtered.length !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
             )}
@@ -170,7 +214,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                 </div>
                 <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
                     <Search size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
-                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search campaigns…"
+                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tracking…"
                         className="input-dark" style={{ paddingLeft: '36px', height: '38px', fontSize: '13px', borderRadius: '11px', width: '100%', boxSizing: 'border-box' }} />
                 </div>
             </div>
@@ -192,9 +236,9 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <AnimatePresence>
                     {filtered.map((r: any, i: number) => {
-                        const sc = STATUS_CFG[r.status] || STATUS_CFG.pending;
-                        const isRunning = r.status === 'accepted' && verifiedReqIds.has(r._id);
-                        const displayStatus = isRunning ? { label: 'Running', color: '#4ade80' } : sc;
+                        const sc = STATUS_CFG[r.status] || STATUS_CFG.sent;
+                        const isClosed = r.status === 'deal_closed' || verifiedReqIds.has(r._id);
+                        const displayStatus = isClosed ? STATUS_CFG.deal_closed : sc;
                         const inf = r.influencerId;
                         const initials = (inf?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
                         const isOpen = expanded === r._id;
@@ -203,7 +247,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                         return (
                             <motion.div key={r._id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05, duration: 0.3 }}
-                                className="glass-card" style={{ borderRadius: '22px', overflow: 'hidden', border: isRunning ? '1px solid rgba(74,222,128,0.15)' : undefined }}>
+                                className="glass-card" style={{ borderRadius: '22px', overflow: 'hidden', border: isClosed ? '1px solid rgba(74,222,128,0.15)' : r.status === 'negotiation' ? '1px solid rgba(250,204,21,0.2)' : undefined }}>
 
                                 {/* Card row */}
                                 <div onClick={() => setExpanded(isOpen ? null : r._id)}
@@ -214,7 +258,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                         <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{inf?.fullName || '—'} · {inf?.niche || '—'}</p>
                                     </div>
                                     <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Calendar size={11} style={{ color: '#60d5f8' }} />
+                                        <Calendar size={11} style={{ color: '#a78bfa' }} />
                                         {new Date(r.postingDeadline).toLocaleDateString()}
                                     </span>
                                     {ver && (
@@ -222,9 +266,9 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                             Post {ver.status === 'verified' ? 'Verified ✓' : ver.status === 'rejected' ? 'Rejected' : 'Pending Review'}
                                         </span>
                                     )}
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#a78bfa' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '99px', background: `${displayStatus.color}12`, border: `1px solid ${displayStatus.color}28`, color: displayStatus.color, fontSize: '11px', fontWeight: '700' }}>
-                                        {displayStatus.label}
+                                        {displayStatus.icon} {displayStatus.label}
                                     </span>
                                     {isOpen ? <ChevronUp size={14} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />}
                                 </div>

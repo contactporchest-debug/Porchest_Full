@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const influencerController = require('../controllers/influencerController');
 const instagramController = require('../controllers/instagramController');
+const campaignRequestController = require('../controllers/campaignRequestController');
+const notificationController = require('../controllers/notificationController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
@@ -25,5 +27,15 @@ router.get('/instagram/profile', instagramController.getProfile);
 router.get('/instagram/analytics', instagramController.getAnalytics);
 router.get('/instagram/media', instagramController.getMedia);
 router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
+
+// ── Campaign Requests (incoming) ──
+router.get('/requests', campaignRequestController.getInfluencerRequests);
+router.patch('/requests/:id', campaignRequestController.respondToRequest);
+
+// ── Notifications ──
+router.get('/notifications', notificationController.getNotifications);
+router.get('/notifications/count', notificationController.getUnreadCount);
+router.patch('/notifications/:id/read', notificationController.markAsRead);
+router.patch('/notifications/read-all', notificationController.markAllAsRead);
 
 module.exports = router;

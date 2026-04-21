@@ -81,6 +81,11 @@ export const brandAPI = {
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
+    // Notifications
+    getNotifications: (params?: Record<string, unknown>) => api.get('/brand/notifications', { params }),
+    getUnreadCount: () => api.get('/brand/notifications/count'),
+    markNotificationRead: (id: string) => api.patch(`/brand/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.patch('/brand/notifications/read-all'),
     // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
     // ── Brand Instagram OAuth (separate from influencer) ──
@@ -109,8 +114,13 @@ export const influencerAPI = {
     lookupPost: (postUrl: string) => api.post('/influencer/instagram/post-lookup', { postUrl }),
     // Incoming campaign requests
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
-    respondToRequest: (id: string, status: 'accepted' | 'rejected', rejectionReason?: string) =>
-        api.patch(`/influencer/requests/${id}`, { status, rejectionReason }),
+    respondToRequest: (id: string, data: { status: string; rejectionReason?: string; counterOfferPrice?: number; counterOfferMessage?: string }) =>
+        api.patch(`/influencer/requests/${id}`, data),
+    // Notifications
+    getNotifications: (params?: Record<string, unknown>) => api.get('/influencer/notifications', { params }),
+    getUnreadCount: () => api.get('/influencer/notifications/count'),
+    markNotificationRead: (id: string) => api.patch(`/influencer/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.patch('/influencer/notifications/read-all'),
     // Content verification
     submitVerification: (data: { campaignRequestId: string; postUrl: string }) =>
         api.post('/influencer/verify', data),
@@ -120,3 +130,4 @@ export const influencerAPI = {
     cashout: (amount: number) => api.post('/influencer/cashout', { amount }),
     getCashouts: () => api.get('/influencer/cashouts'),
 };
+

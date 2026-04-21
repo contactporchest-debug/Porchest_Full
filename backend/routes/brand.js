@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const brandController = require('../controllers/brandController');
 const brandInstagramController = require('../controllers/brandInstagramController');
+const campaignRequestController = require('../controllers/campaignRequestController');
+const notificationController = require('../controllers/notificationController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
@@ -19,8 +21,6 @@ router.put('/profile', brandController.updateProfile);
 // ── Brand Instagram OAuth ──────────────────────────────────────────
 // Step 1: Get Meta authorization URL
 router.get('/instagram/connect', brandInstagramController.initiateConnect);
-// Step 2 handled above as a public route
-// router.get('/instagram/callback', brandInstagramController.handleCallback);
 // Disconnect
 router.post('/instagram/disconnect', brandInstagramController.disconnect);
 // Refresh sync
@@ -32,10 +32,15 @@ router.get('/instagram/media', brandInstagramController.getMedia);
 router.post('/instagram/post-lookup', brandInstagramController.lookupPostByUrl);
 
 // ── Campaign Requests ──────────────────────────────────────────────
-// (Reserved for future implementation)
+router.post('/requests', campaignRequestController.createRequest);
+router.get('/requests', campaignRequestController.getBrandRequests);
+router.get('/requests/:id', campaignRequestController.getBrandRequestDetail);
 
-// ── Verification data ──────────────────────────────────────────────
-// (Reserved for future implementation)
+// ── Notifications ──────────────────────────────────────────────────
+router.get('/notifications', notificationController.getNotifications);
+router.get('/notifications/count', notificationController.getUnreadCount);
+router.patch('/notifications/:id/read', notificationController.markAsRead);
+router.patch('/notifications/read-all', notificationController.markAllAsRead);
 
 // ── Influencer Discovery ───────────────────────────────────────────
 router.get('/influencers', brandController.getMatchedInfluencers);

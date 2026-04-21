@@ -153,20 +153,30 @@ exports.updateProfile = async (req, res, next) => {
 };
 
 // @desc    AI Influencer Discovery — brand-facing search
+// STRICT: Only returns influencers with fully completed profiles
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
         const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
 
+        // Base filter: must have connected Instagram AND completed profile
         const filter = { 
             $or: [
                 { instagramConnectionStatus: 'connected' },
                 { instagramConnected: true }
-            ]
+            ],
+            // ── Profile Completion Gate ──
+            fullName: { $exists: true, $ne: null, $ne: '' },
+            niche: { $exists: true, $ne: null, $ne: '' },
+            country: { $exists: true, $ne: null, $ne: '' },
+            followersCount: { $gt: 0 },
+            engagementRate: { $gt: 0 },
         };
+
+        // Apply user filters on top
         if (niche && niche !== 'All') filter.niche = niche;
         if (country && country !== 'Any') filter.country = country;
         if (minFollowers || maxFollowers) {
-            filter.followersCount = {};
+            filter.followersCount = { $gt: 0 };
             if (minFollowers) filter.followersCount.$gte = Number(minFollowers);
             if (maxFollowers) filter.followersCount.$lte = Number(maxFollowers);
         }
@@ -178,7 +188,20 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             .limit(100)
             .lean();
 
-        const result = influencerProfiles.map(buildInfluencerCard);
+        // Second-pass filter: ensure critical display fields exist
+        const eligible = influencerProfiles.filter(p => {
+            const hasIdentity = !!(p.fullName || p.displayName) && !!(p.instagramUsername);
+            const hasBio = !!(p.bio || p.instagramBiography);
+            const hasNiche = !!p.niche;
+            const hasLocation = !!p.country;
+            const hasFollowers = (p.followersCount || 0) > 0;
+            const hasEngagement = (p.engagementRate || 0) > 0;
+            const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0;
+            const hasInstagram = p.instagramConnected || p.instagramConnectionStatus === 'connected';
+            return hasIdentity && hasBio && hasNiche && hasLocation && hasFollowers && hasEngagement && hasPricing && hasInstagram;
+        });
+
+        const result = eligible.map(buildInfluencerCard);
         res.json({ success: true, influencers: result });
     } catch (error) {
         next(error);
