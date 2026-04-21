@@ -116,10 +116,11 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const country  = profile?.countryOfResidence || null;
     const city     = profile?.city || null;
 
-    // Pricing
+    // Pricing — read flat card fields first, fall back to nested profile
     const postCost = profile?.avgPostCostUSD || profile?.avgPostPrice || 0;
     const reelCost = profile?.avgReelCostUSD || profile?.avgReelPrice || 0;
 
+    // Avatar: try DP URL with an img error fallback via state
     const safeRecentPosts: Media[] = Array.isArray(recentPosts) ? recentPosts : [];
 
     const filteredPosts = useMemo(() => {
@@ -161,19 +162,52 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const displayAvgLikes    = derived.postsCount > 0 ? derived.avgLikes    : (profile?.avgLikes    || analytics?.avgLikesPerPost    || 0);
     const displayAvgComments = derived.postsCount > 0 ? derived.avgComments : (profile?.avgComments || analytics?.avgCommentsPerPost || 0);
 
-    // Commercial metrics
-    const avgEngPerPost = derived.postsCount > 0 ? derived.totalEngagement / derived.postsCount : (displayAvgLikes + displayAvgComments);
-    const costPerEngagement = postCost > 0 && avgEngPerPost > 0 ? postCost / avgEngPerPost : 0;
-    const estimatedReach = followers * (displayEngagement / 100) * 3;
-    const cpm = postCost > 0 && estimatedReach > 0 ? (postCost / estimatedReach) * 1000 : 0;
+    // ─ Commercial Metrics (corrected formulas) ──────────────────────────────
+    // Engagement defined as: likes + comments per post (consistent across all screens)
+    const avgEngPerPost = derived.postsCount > 0
+        ? derived.totalEngagement / derived.postsCount
+        : (displayAvgLikes + displayAvgComments);
 
-    // AI Insights
+    // Cost Per Engagement: use post cost; fall back to reel cost if post cost missing
+    const activeCost = postCost > 0 ? postCost : reelCost;
+    const costPerEngagement = activeCost > 0 && avgEngPerPost > 0
+        ? activeCost / avgEngPerPost : 0;
+    // >$500 CPE is unrealistic — flag as out-of-range
+    const cpeIsValid = costPerEngagement > 0 && costPerEngagement < 500;
+
+    // CPM: Cost Per 1,000 estimated organic impressions.
+    // Instagram organic reach is ~15–30% of followers. Use 20% as conservative floor.
+    // This prevents near-zero engagement rates from inflating CPM to $15,000+.
+    const ORGANIC_REACH_RATE = 0.20;
+    const estimatedImpressions = Math.max(
+        followers * ORGANIC_REACH_RATE,
+        followers * (displayEngagement / 100) * 5
+    );
+    const rawCPM = activeCost > 0 && estimatedImpressions > 0
+        ? (activeCost / estimatedImpressions) * 1000 : 0;
+    const cpmIsValid = rawCPM > 0 && rawCPM <= 200;
+    const cpm = cpmIsValid ? rawCPM : 0;
+    const cpmLabel = rawCPM > 200 ? 'Insufficient reach data' : null;
+
+    // ─ AI Insights ───────────────────────────────────────────────────────────
     const bestFormat = derived.reelCount > derived.imageCount ? 'Reels / Video' : derived.imageCount > derived.reelCount ? 'Static Posts' : 'Mixed';
     const engagementHealth = displayEngagement >= 5 ? 'Excellent' : displayEngagement >= 3 ? 'Strong' : displayEngagement >= 1.5 ? 'Average' : displayEngagement > 0 ? 'Below Average' : 'Unknown';
     const engagementHealthColor = displayEngagement >= 5 ? '#4ade80' : displayEngagement >= 3 ? '#60d5f8' : displayEngagement >= 1.5 ? '#fbbf24' : '#f87171';
-    const audienceQuality = followers > 50000 && displayEngagement >= 2 ? 'High' : followers > 10000 && displayEngagement >= 1.5 ? 'Medium' : 'Standard';
-    const recommendationScore = (fitScore || 0) >= 70 ? 'Strongly Recommended' : (fitScore || 0) >= 50 ? 'Recommended' : (fitScore || 0) >= 30 ? 'Worth Considering' : 'Low Fit';
-    const recommendationColor = (fitScore || 0) >= 70 ? '#4ade80' : (fitScore || 0) >= 50 ? '#60d5f8' : (fitScore || 0) >= 30 ? '#fbbf24' : '#f87171';
+    const audienceQuality = followers >= 50000 && displayEngagement >= 2 ? 'High' : followers >= 10000 && displayEngagement >= 1.5 ? 'Medium' : 'Standard';
+    // Recommendation mirrors backend strict thresholds (35 / 50 / 65 / 80)
+    const currentFitScore = fitScore || 0;
+    const recommendationScore =
+        currentFitScore >= 80 ? 'Strongly Recommended' :
+        currentFitScore >= 65 ? 'Recommended' :
+        currentFitScore >= 50 ? 'Moderate Fit' :
+        currentFitScore >= 35 ? 'Worth Considering' : 'Low Fit';
+    const recommendationColor =
+        currentFitScore >= 80 ? '#4ade80' :
+        currentFitScore >= 65 ? '#60d5f8' :
+        currentFitScore >= 50 ? '#fbbf24' :
+        currentFitScore >= 35 ? '#f87171' : 'rgba(255,255,255,0.3)';
+    // Scoring reasons surfaced from backend card object
+    const scoringReasons: string[] = (influencer as any)?.scoringReasons || [];
 
     const TimeButton = ({ days, label }: { days: any, label: string }) => (
         <button onClick={() => setTimeRange(days)} style={{
@@ -469,34 +503,54 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                             </div>
                         </div>
 
-                        {/* ── COMMERCIAL INTELLIGENCE ── */}
+                            {/* ── COMMERCIAL INTELLIGENCE ── */}
                         <div style={{ background: 'rgba(20,18,34,0.4)', borderRadius: '24px', padding: '28px', border: '1px solid rgba(74,222,128,0.1)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
                                 <DollarSign size={16} color="#4ade80" />
                                 <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>Commercial Intelligence</h3>
                                 <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: '99px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', fontSize: '10px', color: '#4ade80', fontWeight: '700' }}>ROI Metrics</span>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                                 <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.12)' }}>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Post Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#4ade80' }}>{postCost > 0 ? `$${postCost.toLocaleString()}` : '—'}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#4ade80' }}>{postCost > 0 ? `$${postCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>Pricing not published</span>}</p>
                                 </div>
                                 <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(96,213,248,0.06)', border: '1px solid rgba(96,213,248,0.12)' }}>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reel Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#60d5f8' }}>{reelCost > 0 ? `$${reelCost.toLocaleString()}` : '—'}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#60d5f8' }}>{reelCost > 0 ? `$${reelCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>Pricing not published</span>}</p>
                                 </div>
                                 <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Cost Per Engagement</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#a78bfa' }}>{costPerEngagement > 0 ? `$${costPerEngagement.toFixed(2)}` : '—'}</p>
+                                    {cpeIsValid
+                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#a78bfa' }}>${costPerEngagement.toFixed(2)}</p>
+                                        : <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '6px' }}>Not enough engagement data</p>
+                                    }
+                                    {cpeIsValid && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', marginTop: '4px' }}>Post cost ÷ avg engagement (likes+comments)</p>}
                                 </div>
                                 <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.12)' }}>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Est. CPM</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>{cpm > 0 ? `$${cpm.toFixed(2)}` : '—'}</p>
+                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Est. CPM (by Reach)</p>
+                                    {cpm > 0
+                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>${cpm.toFixed(2)}</p>
+                                        : <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '6px' }}>{cpmLabel || 'Insufficient delivery data'}</p>
+                                    }
+                                    {cpm > 0 && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', marginTop: '4px' }}>Cost per 1,000 estimated impressions (20% reach baseline)</p>}
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
-                                <GaugeChart value={costPerEngagement} max={2} label="Cost per Engagement (lower is better)" color={costPerEngagement > 0 && costPerEngagement < 0.5 ? '#4ade80' : costPerEngagement < 1 ? '#fbbf24' : '#f87171'} />
-                            </div>
+                            {/* CPE Gauge — only show when valid data exists */}
+                            {cpeIsValid ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0' }}>
+                                    <GaugeChart
+                                        value={costPerEngagement}
+                                        max={5}
+                                        label="Cost per Engagement — lower is better"
+                                        color={costPerEngagement < 0.5 ? '#4ade80' : costPerEngagement < 1.5 ? '#fbbf24' : '#f87171'}
+                                    />
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.08)' }}>
+                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>Cost efficiency visualization requires both pricing and engagement data.</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* ── AI INSIGHTS ── */}
@@ -516,13 +570,21 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                 <InsightChip icon={<Target size={14} />} label="Avg. Eng. per Post" value={avgEngPerPost > 0 ? formatNum(Math.round(avgEngPerPost)) : '—'} color="#facc15"
                                     description="Combined likes + comments per content piece" />
                             </div>
-                            <div style={{ padding: '16px 20px', borderRadius: '16px', background: `${recommendationColor}0a`, border: `1px solid ${recommendationColor}25`, display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${recommendationColor}15`, border: `1px solid ${recommendationColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {/* Recommendation with scoring reasons */}
+                            <div style={{ padding: '16px 20px', borderRadius: '16px', background: `${recommendationColor}0a`, border: `1px solid ${recommendationColor}25`, display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${recommendationColor}15`, border: `1px solid ${recommendationColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
                                     <Award size={20} style={{ color: recommendationColor }} />
                                 </div>
-                                <div>
+                                <div style={{ flex: 1 }}>
                                     <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Collaboration Recommendation</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: recommendationColor }}>{recommendationScore}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: recommendationColor, marginBottom: scoringReasons.length > 0 ? '10px' : 0 }}>{recommendationScore}</p>
+                                    {scoringReasons.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {scoringReasons.map((r: string) => (
+                                                <span key={r} style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px' }}>{r}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

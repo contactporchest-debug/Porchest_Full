@@ -241,19 +241,26 @@ export default function InfluencerProfilePage() {
     const loadProfile = useCallback(async () => {
         try {
             const res = await influencerAPI.getProfile();
-            const { user: u, instagramConnection } = res.data;
+            const { user: u, instagramConnection, influencerProfile: ip } = res.data;
+
+            // DEBUG: log what we receive so mismatches are easy to spot
+            console.log('[ProfilePage] fetch user:', u);
+            console.log('[ProfilePage] fetch influencerProfile:', ip);
+
+            // Priority: InfluencerProfile (ip) > User (u) for all profile fields.
+            // avgPostCostUSD is saved as avgPostPrice in InfluencerProfile.
             setForm({
-                fullName: u.fullName || '',
-                age: u.age ? String(u.age) : '',
-                country: u.country || '',
-                city: u.city || '',
-                contactEmail: u.contactEmail || u.email || '',
-                niche: u.niche || '',
-                shortBio: u.shortBio || u.bio || '',
-                avgPostCostUSD: u.avgPostCostUSD ? String(u.avgPostCostUSD) : '',
-                avgReelCostUSD: u.avgReelCostUSD ? String(u.avgReelCostUSD) : '',
-                instagramUsername: u.instagramUsername || '',
-                instagramProfileURL: u.instagramProfileURL || '',
+                fullName:           ip?.fullName            || u?.fullName            || '',
+                age:                ip?.age                 ? String(ip.age)          : (u?.age ? String(u.age) : ''),
+                country:            ip?.country             || u?.country             || '',
+                city:               ip?.city                || u?.city                || '',
+                contactEmail:       ip?.contactEmail        || u?.contactEmail        || u?.email || '',
+                niche:              ip?.niche               || u?.niche               || '',
+                shortBio:           ip?.bio                 || ip?.shortBio           || u?.shortBio || u?.bio || '',
+                avgPostCostUSD:     ip?.avgPostPrice != null ? String(ip.avgPostPrice) : (u?.avgPostCostUSD != null ? String(u.avgPostCostUSD) : ''),
+                avgReelCostUSD:     ip?.avgReelPrice != null ? String(ip.avgReelPrice) : (u?.avgReelCostUSD != null ? String(u.avgReelCostUSD) : ''),
+                instagramUsername:  ip?.instagramUsername   || u?.instagramUsername   || '',
+                instagramProfileURL:ip?.instagramProfileURL || u?.instagramProfileURL || '',
             });
             if (updateUser) updateUser(u);
             setIgConn(instagramConnection);

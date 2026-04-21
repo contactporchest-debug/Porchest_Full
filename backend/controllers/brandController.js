@@ -5,10 +5,89 @@ const { validateBrandProfile, isValidObjectId } = require('../utils/validators')
 const { generateUniqueCode } = require('../utils/generateCode');
 
 /**
+ * Dynamically compute a weighted influence fit score (0–100).
+ * Uses a strict multi-signal scoring model so weak profiles are not inflated.
+ *
+ * SCORING BREAKDOWN (100 pts total):
+ *   Engagement Rate     — 40 pts  (main signal of quality)
+ *   Follower Tier       — 20 pts  (reach potential)
+ *   Data Completeness   — 25 pts  (identity + bio + niche + location + pricing)
+ *   Instagram Connected — 10 pts  (verified, live data)
+ *   Posting Activity    —  5 pts  (content consistency)
+ */
+function computeDynamicFitScore(profile) {
+    let score = 0;
+    const reasons = [];
+
+    // 1. Engagement Rate (max 40 pts)
+    const er = profile.engagementRate || 0;
+    let erPts = 0;
+    if (er >= 6)      { erPts = 40; reasons.push('Exceptional engagement rate'); }
+    else if (er >= 4) { erPts = 32; reasons.push('Strong engagement rate'); }
+    else if (er >= 2) { erPts = 22; reasons.push('Moderate engagement rate'); }
+    else if (er >= 1) { erPts = 12; reasons.push('Below-average engagement rate'); }
+    else if (er >  0) { erPts = 5;  reasons.push('Very low engagement rate'); }
+    else              { erPts = 0;  reasons.push('No engagement data'); }
+    score += erPts;
+
+    // 2. Follower Tier (max 20 pts)
+    const followers = profile.followersCount || 0;
+    let followerPts = 0;
+    if (followers >= 1000000)     { followerPts = 20; }
+    else if (followers >= 500000) { followerPts = 18; }
+    else if (followers >= 100000) { followerPts = 14; }
+    else if (followers >= 50000)  { followerPts = 10; }
+    else if (followers >= 10000)  { followerPts =  7; }
+    else if (followers >= 1000)   { followerPts =  4; }
+    score += followerPts;
+
+    // 3. Data Completeness (max 25 pts — 5 signals × 5 pts each)
+    let dataPts = 0;
+    if (profile.fullName && profile.fullName.trim())                  dataPts += 5;
+    if (profile.bio || profile.instagramBiography)                    dataPts += 5;
+    if (profile.niche && profile.niche.trim())                        dataPts += 5;
+    if (profile.country && profile.country.trim())                    dataPts += 5;
+    if ((profile.avgPostPrice || 0) > 0 || (profile.avgReelPrice || 0) > 0) {
+        dataPts += 5; reasons.push('Pricing published');
+    } else {
+        reasons.push('Pricing not set');
+    }
+    if (dataPts < 15) reasons.push('Profile data incomplete');
+    score += dataPts;
+
+    // 4. Instagram Connected (10 pts)
+    const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
+    if (igConnected) { score += 10; reasons.push('Instagram verified via OAuth'); }
+    else             { reasons.push('Instagram not connected'); }
+
+    // 5. Posting Activity (max 5 pts)
+    const freq = profile.postingFrequency7d || profile.postingFrequency || 0;
+    if (freq >= 3) score += 5;
+    else if (freq >= 1) score += 3;
+    else if (freq > 0)  score += 1;
+
+    const finalScore = Math.min(Math.max(Math.round(score), 0), 100);
+
+    // Quality label based on strict thresholds
+    let qualityLabel = 'Low Fit';
+    if (finalScore >= 80)      qualityLabel = 'Excellent Fit';
+    else if (finalScore >= 65) qualityLabel = 'Good Fit';
+    else if (finalScore >= 50) qualityLabel = 'Moderate Fit';
+    else if (finalScore >= 35) qualityLabel = 'Worth Considering';
+
+    // Stars: strictly tied to score thresholds
+    const starRating = finalScore >= 80 ? 5 : finalScore >= 65 ? 4 : finalScore >= 50 ? 3 : finalScore >= 35 ? 2 : 1;
+
+    return { finalScore, qualityLabel, starRating, reasons };
+}
+
+/**
  * Build a presentation-ready influencer card object from a flat InfluencerProfile doc.
  * All values come from InfluencerProfile — the single source of truth after write-through sync.
  */
 function buildInfluencerCard(profile) {
+    const { finalScore, qualityLabel, starRating, reasons } = computeDynamicFitScore(profile);
+
     return {
         _id:                   profile._id,
         influencerProfileId:   profile.influencerProfileId,
@@ -21,7 +100,7 @@ function buildInfluencerCard(profile) {
         niche:                 profile.niche || null,
         country:               profile.country || null,
         city:                  profile.city || null,
-        
+
         followersCount:        profile.followersCount || 0,
         followsCount:          profile.followingCount || 0,
         mediaCount:            profile.mediaCount     || 0,
@@ -30,14 +109,17 @@ function buildInfluencerCard(profile) {
         avgLikes:              profile.avgLikes       || 0,
         avgComments:           profile.avgComments    || 0,
 
+        // Canonical field names for frontend consumption
         avgPostCostUSD:        profile.avgPostPrice   || 0,
         avgReelCostUSD:        profile.avgReelPrice   || 0,
 
         audienceDemographics:  profile.demographics   || null,
 
-        fitScore:              profile.fitScore || 0,
-        starRating:            (profile.fitScore >= 80) ? 5 : (profile.fitScore >= 60) ? 4 : (profile.fitScore >= 40) ? 3 : (profile.fitScore >= 20) ? 2 : 1,
-        qualityLabel:          profile.scoreLabel || 'Low Fit',
+        // Dynamic score — not the stale stored fitScore
+        fitScore:              finalScore,
+        starRating,
+        qualityLabel,
+        scoringReasons:        reasons,
 
         instagramConnected:    profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
         profileCompletionStatus: profile.profileCompletionStatus,
