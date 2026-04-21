@@ -37,8 +37,8 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         hashtags: '',
         disclosureRequirements: '#Ad #Sponsored',
         agreedPrice: '',
-        paymentTerms: '',
     });
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
     const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
         setForm(f => ({ ...f, [k]: e.target.value }));
@@ -52,6 +52,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                 influencerId: influencer._id,
                 ...form,
                 agreedPrice: Number(form.agreedPrice),
+                paymentTerms: '50% advance before campaign starts, 50% after deliverables are verified',
                 postingDeadline: new Date(form.postingDeadline).toISOString(),
             });
             toast.success('Campaign request sent!');
@@ -152,29 +153,38 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                             </Field>
                         </div>
 
-                        {/* Price — highlighted */}
+                        {/* Price & Fixed Terms Block */}
                         <div style={{ padding: '18px', borderRadius: '18px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.25)' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <Field label="Agreed Price (USD)" required>
-                                    <div style={{ position: 'relative' }}>
-                                        <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#a78bfa', fontWeight: '700', fontSize: '14px', pointerEvents: 'none' }}>$</span>
-                                        <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
-                                            placeholder="0.00" style={{ ...inputStyle, paddingLeft: '28px', fontFamily: 'Space Grotesk', fontWeight: '700', color: '#a78bfa', fontSize: '16px' }} />
-                                    </div>
-                                </Field>
-                                <Field label="Payment Terms" required>
-                                    <select required value={form.paymentTerms} onChange={set('paymentTerms')} style={{ ...inputStyle, cursor: 'pointer' }}>
-                                        <option value="">Select terms</option>
-                                        {['50% upfront, 50% on delivery', '100% on delivery', '100% upfront', 'On verification'].map(v =>
-                                            <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </Field>
+                            <Field label="Agreed Price (USD)" required>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#a78bfa', fontWeight: '700', fontSize: '14px', pointerEvents: 'none' }}>$</span>
+                                    <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
+                                        placeholder="0.00" style={{ ...inputStyle, paddingLeft: '28px', fontFamily: 'Space Grotesk', fontWeight: '700', color: '#a78bfa', fontSize: '16px' }} />
+                                </div>
+                            </Field>
+                            <div style={{ marginTop: '16px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', marginBottom: '6px' }}>Standard Payment Terms</p>
+                                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.5' }}>
+                                    <li>50% advance before campaign starts</li>
+                                    <li>50% after deliverables are verified</li>
+                                </ul>
+                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '8px' }}>
+                                    By sending this request, you agree to Porchest standard payment terms.
+                                </p>
                             </div>
                         </div>
 
+                        {/* Terms checkbox */}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedToTerms ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.03)', border: `1px solid ${agreedToTerms ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 200ms ease' }}>
+                            <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#7B3FF2', cursor: 'pointer' }} />
+                            <span style={{ fontSize: '12px', color: agreedToTerms ? '#fff' : 'rgba(255,255,255,0.5)' }}>
+                                I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: '#a78bfa', textDecoration: 'none' }}>Porchest Terms & Conditions</a> and Payment Policy
+                            </span>
+                        </label>
+
                         {/* Submit */}
-                        <button type="submit" disabled={loading}
-                            style={{ padding: '14px', borderRadius: '16px', background: loading ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 0 30px rgba(123,63,242,0.4)', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', marginTop: '4px' }}>
+                        <button type="submit" disabled={loading || !agreedToTerms}
+                            style={{ padding: '14px', borderRadius: '16px', background: loading || !agreedToTerms ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '15px', fontWeight: '700', cursor: loading || !agreedToTerms ? 'not-allowed' : 'pointer', boxShadow: loading || !agreedToTerms ? 'none' : '0 0 30px rgba(123,63,242,0.4)', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', marginTop: '4px' }}>
                             <Send size={16} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
                         </button>
                     </form>

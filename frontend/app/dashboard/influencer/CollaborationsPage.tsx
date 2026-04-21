@@ -56,7 +56,10 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
     const [acting, setActing] = useState<string | null>(null);
     const [expanded, setExpanded] = useState<string | null>(null);
     const [submitOpen, setSubmitOpen] = useState<string | null>(null);
-    const [postUrl, setPostUrl] = useState('');
+    const [counterOpen, setCounterOpen] = useState<string | null>(null);
+    const [counterPrice, setCounterPrice] = useState('');
+    const [counterMsg, setCounterMsg] = useState('');
+    const [agreedTerms, setAgreedTerms] = useState<Record<string, boolean>>({});
     const [submitting, setSubmitting] = useState(false);
 
     const load = () => {
@@ -69,11 +72,19 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
 
     useEffect(() => { load(); }, []);
 
-    const respond = async (id: string, status: 'accepted' | 'rejected') => {
+    const respond = async (id: string, status: 'accepted' | 'rejected' | 'negotiation', additional: any = {}) => {
+        if (status === 'accepted' && !agreedTerms[id]) {
+            toast.error('You must agree to the Terms & Conditions and Payment Policy to accept.');
+            return;
+        }
+
         setActing(id);
         try {
-            await influencerAPI.respondToRequest(id, { status });
-            toast.success(status === 'accepted' ? '✅ Collaboration accepted!' : 'Request declined');
+            await influencerAPI.respondToRequest(id, { status, ...additional });
+            toast.success(status === 'accepted' ? '✅ Collaboration accepted!' : status === 'negotiation' ? 'Counter offer sent!' : 'Request declined');
+            setCounterOpen(null);
+            setCounterPrice('');
+            setCounterMsg('');
             load();
             onChanged();
         } catch (err: any) {
@@ -128,7 +139,7 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
                                                 { label: 'Required Elements', val: r.requiredElements },
                                                 { label: 'Video Length', val: r.videoLength },
                                                 { label: 'Hashtags', val: r.hashtags || '—' },
-                                                { label: 'Payment Terms', val: r.paymentTerms },
+                                                { label: 'Payment Terms', val: '50% advance before campaign starts, 50% after deliverables are verified' },
                                                 { label: 'Disclosure', val: r.disclosureRequirements },
                                             ].map(f => (
                                                 <div key={f.label} style={{ padding: '9px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -143,19 +154,60 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
                                                 <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.65' }}>{r.campaignDescription}</p>
                                             </div>
                                         )}
+
+                                        {/* T&C Checkbox for Acceptance */}
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedTerms[r._id] ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.03)', border: `1px solid ${agreedTerms[r._id] ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 200ms ease', marginBottom: '16px' }}>
+                                            <input type="checkbox" checked={!!agreedTerms[r._id]} onChange={e => setAgreedTerms(prev => ({ ...prev, [r._id]: e.target.checked }))} style={{ width: '16px', height: '16px', accentColor: '#7B3FF2', cursor: 'pointer' }} />
+                                            <span style={{ fontSize: '12px', color: agreedTerms[r._id] ? '#fff' : 'rgba(255,255,255,0.5)' }}>
+                                                I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: '#a78bfa', textDecoration: 'none' }}>Porchest Terms & Conditions</a> and standard Payment Policy
+                                            </span>
+                                        </label>
+
+                                        {/* Actions */}
+                                        <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
+                                            <button onClick={() => respond(r._id, 'accepted')} disabled={!!acting || !agreedTerms[r._id]}
+                                                style={{ flex: 1, padding: '11px', borderRadius: '13px', background: acting === r._id ? 'rgba(123,63,242,0.15)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: (acting || !agreedTerms[r._id]) ? 'not-allowed' : 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: (acting || !agreedTerms[r._id]) ? 'none' : '0 0 20px rgba(123,63,242,0.3)', opacity: (acting || !agreedTerms[r._id]) ? 0.6 : 1 }}>
+                                                <CheckCircle size={13} /> Accept
+                                            </button>
+                                            <button onClick={() => { setCounterOpen(counterOpen === r._id ? null : r._id); setCounterPrice(r.agreedPrice?.toString() || ''); }} disabled={!!acting}
+                                                style={{ flex: 1, padding: '11px', borderRadius: '13px', background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.3)', color: '#facc15', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: acting ? 'wait' : 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                Counter Offer
+                                            </button>
+                                            <button onClick={() => respond(r._id, 'rejected')} disabled={!!acting}
+                                                style={{ flex: 1, padding: '11px 18px', borderRadius: '13px', background: 'transparent', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171', fontFamily: 'inherit', fontSize: '13px', fontWeight: '600', cursor: acting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 200ms ease' }}>
+                                                <X size={13} /> Decline
+                                            </button>
+                                        </div>
+
+                                        {/* Counter Offer Form */}
+                                        <AnimatePresence>
+                                            {counterOpen === r._id && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                                                    style={{ overflow: 'hidden', marginTop: '12px' }}>
+                                                    <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(250,204,21,0.04)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                                                        <p style={{ fontSize: '12px', color: '#facc15', fontWeight: '700', marginBottom: '10px' }}>Propose New Terms</p>
+                                                        <div style={{ display: 'grid', gap: '10px' }}>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Counter Price (USD)</label>
+                                                                <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
+                                                                    placeholder="e.g. 500" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Message to Brand</label>
+                                                                <textarea value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
+                                                                    placeholder="Explain your counter offer..." rows={2} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+                                                            </div>
+                                                            <button onClick={() => respond(r._id, 'negotiation', { counterOfferPrice: Number(counterPrice), counterOfferMessage: counterMsg })} disabled={!!acting || !counterPrice}
+                                                                style={{ padding: '11px', borderRadius: '10px', background: '#facc15', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: (acting || !counterPrice) ? 'wait' : 'pointer' }}>
+                                                                Send Counter Offer
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 )}
-                                {/* Actions */}
-                                <div style={{ padding: '0 24px 20px', display: 'flex', gap: '9px' }}>
-                                    <button onClick={() => respond(r._id, 'accepted')} disabled={!!acting}
-                                        style={{ flex: 1, padding: '11px', borderRadius: '13px', background: acting === r._id ? 'rgba(123,63,242,0.15)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: acting ? 'wait' : 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 0 20px rgba(123,63,242,0.3)' }}>
-                                        <CheckCircle size={13} /> Accept
-                                    </button>
-                                    <button onClick={() => respond(r._id, 'rejected')} disabled={!!acting}
-                                        style={{ padding: '11px 18px', borderRadius: '13px', background: 'transparent', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171', fontFamily: 'inherit', fontSize: '13px', fontWeight: '600', cursor: acting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 200ms ease' }}>
-                                        <X size={13} /> Decline
-                                    </button>
-                                </div>
                             </motion.div>
                         );
                     })}

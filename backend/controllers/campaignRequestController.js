@@ -276,3 +276,84 @@ exports.respondToRequest = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Brand responds to a request (e.g. accept counter offer, counter again, or reject)
+// @route   PATCH /api/brand/requests/:id
+exports.brandRespondToRequest = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, agreedPrice, brandMessage, rejectionReason } = req.body;
+
+        if (!isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid request ID' });
+        }
+
+        const allowedStatuses = ['accepted', 'rejected', 'negotiation', 'deal_closed', 'cancelled'];
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const request = await CampaignRequest.findOne({
+            _id: id,
+            brandUserId: req.user._id,
+        });
+
+        if (!request) {
+            return res.status(404).json({ success: false, message: 'Request not found' });
+        }
+
+        request.status = status;
+        if (status === 'deal_closed' || status === 'accepted') {
+            request.status = 'deal_closed';
+            request.dealClosedAt = new Date();
+            if (agreedPrice) request.agreedPrice = agreedPrice;
+        } else if (status === 'rejected' || status === 'cancelled') {
+            request.status = 'cancelled';
+            request.cancelledAt = new Date();
+            request.rejectionReason = rejectionReason || '';
+        } else if (status === 'negotiation') {
+            request.negotiationStartedAt = new Date();
+            if (agreedPrice) request.agreedPrice = agreedPrice;
+            if (brandMessage) request.brandMessage = brandMessage;
+        }
+
+        await request.save();
+
+        const notifTypeMap = {
+            deal_closed: 'deal_closed',
+            cancelled: 'request_rejected',
+            negotiation: 'negotiation',
+        };
+        const notifTitleMap = {
+            deal_closed: 'Deal Confirmed! 🎉',
+            cancelled: 'Request Cancelled',
+            negotiation: 'New Counter Offer from Brand',
+        };
+        const notifMessageMap = {
+            deal_closed: `${request.brandName || 'The brand'} accepted the terms and confirmed the deal for "${request.campaignTitle}".`,
+            cancelled: `${request.brandName || 'The brand'} cancelled the request for "${request.campaignTitle}".`,
+            negotiation: `${request.brandName || 'The brand'} sent a new counter offer for "${request.campaignTitle}".`,
+        };
+
+        const targetStatus = (status === 'deal_closed' || status === 'accepted') ? 'deal_closed' : (status === 'rejected' || status === 'cancelled') ? 'cancelled' : 'negotiation';
+
+        await Notification.create({
+            recipientUserId: request.influencerUserId,
+            type: notifTypeMap[targetStatus],
+            title: notifTitleMap[targetStatus],
+            message: notifMessageMap[targetStatus],
+            campaignRequestId: request._id,
+            senderName: request.brandName,
+            senderAvatar: request.brandLogoUrl,
+            metadata: {
+                agreedPrice,
+                brandMessage,
+                rejectionReason,
+            },
+        });
+
+        res.json({ success: true, request });
+    } catch (error) {
+        next(error);
+    }
+};

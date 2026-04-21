@@ -35,6 +35,8 @@ router.post('/instagram/post-lookup', brandInstagramController.lookupPostByUrl);
 router.post('/requests', campaignRequestController.createRequest);
 router.get('/requests', campaignRequestController.getBrandRequests);
 router.get('/requests/:id', campaignRequestController.getBrandRequestDetail);
+router.patch('/requests/:id', campaignRequestController.brandRespondToRequest);
+
 
 // ── Notifications ──────────────────────────────────────────────────
 router.get('/notifications', notificationController.getNotifications);

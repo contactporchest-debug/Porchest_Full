@@ -77,8 +77,37 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                         {request.counterOfferMessage && (
                             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6' }}>"{request.counterOfferMessage}"</p>
                         )}
-                        <div style={{ marginTop: '12px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
-                            To accept or reject this counter offer, you must reach out directly, as in-portal negotiation responses are coming in v2.
+                        <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(`/api/brand/requests/${request._id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                                            body: JSON.stringify({ status: 'deal_closed', agreedPrice: request.counterOfferPrice })
+                                        });
+                                        if (res.ok) window.location.reload();
+                                        else toast.error('Failed to accept counter');
+                                    } catch { toast.error('Error accepting counter'); }
+                                }}
+                                style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#4ade80', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                                Accept Counter
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(`/api/brand/requests/${request._id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                                            body: JSON.stringify({ status: 'rejected', rejectionReason: 'Cannot meet counter offer terms' })
+                                        });
+                                        if (res.ok) window.location.reload();
+                                        else toast.error('Failed to reject counter');
+                                    } catch { toast.error('Error rejecting counter'); }
+                                }}
+                                style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                                Reject
+                            </button>
                         </div>
                     </div>
                 )}
@@ -178,7 +207,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         else if (filter === 'rejected') matchFilter = r.status === 'rejected';
 
         const q = search.toLowerCase();
-        const matchSearch = !q || r.campaignTitle?.toLowerCase().includes(q) || r.influencerId?.fullName?.toLowerCase().includes(q);
+        const matchSearch = !q || r.campaignTitle?.toLowerCase().includes(q) || r.influencerName?.toLowerCase().includes(q);
         return matchFilter && matchSearch;
     });
 
@@ -239,8 +268,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                         const sc = STATUS_CFG[r.status] || STATUS_CFG.sent;
                         const isClosed = r.status === 'deal_closed' || verifiedReqIds.has(r._id);
                         const displayStatus = isClosed ? STATUS_CFG.deal_closed : sc;
-                        const inf = r.influencerId;
-                        const initials = (inf?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+                        const initials = (r.influencerName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
                         const isOpen = expanded === r._id;
                         const ver = verifications.find(v => (v.campaignRequestId?._id || v.campaignRequestId) === r._id);
 
@@ -252,10 +280,12 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                 {/* Card row */}
                                 <div onClick={() => setExpanded(isOpen ? null : r._id)}
                                     style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0 }}>{initials}</div>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                        {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt="DP" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                                    </div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
                                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#fff', fontSize: '14px', marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{inf?.fullName || '—'} · {inf?.niche || '—'}</p>
+                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{r.influencerName || '—'} · {r.influencerNiche || '—'}</p>
                                     </div>
                                     <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <Calendar size={11} style={{ color: '#a78bfa' }} />
