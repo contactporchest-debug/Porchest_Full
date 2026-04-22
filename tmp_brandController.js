@@ -146,8 +146,6 @@ exports.getDashboard = async (req, res, next) => {
                 companyWebsite: formattedBrandProfile.website,
                 brandNiche: formattedBrandProfile.category,
                 brandGoal: formattedBrandProfile.description,
-                contactPersonName: formattedBrandProfile.contactDetails?.contactPersonName,
-                officialEmail: formattedBrandProfile.contactDetails?.officialEmail,
             };
         }
 
@@ -190,8 +188,6 @@ exports.getBrandProfile = async (req, res, next) => {
                 companyWebsite: formattedBrandProfile.website,
                 brandNiche: formattedBrandProfile.category,
                 brandGoal: formattedBrandProfile.description,
-                contactPersonName: formattedBrandProfile.contactDetails?.contactPersonName,
-                officialEmail: formattedBrandProfile.contactDetails?.officialEmail,
             };
         }
 
@@ -250,125 +246,5 @@ exports.updateProfile = async (req, res, next) => {
 
         const profileCompletionStatus = !!(brandProfile.brandName && brandProfile.contactDetails?.officialEmail && brandProfile.contactDetails?.contactPersonName && brandProfile.country && brandProfile.description && brandProfile.category);
         brandProfile.profileCompletionStatus = profileCompletionStatus;
-        
-        if (profileCompletionStatus && brandProfile.verificationStatus !== 'verified') {
-            brandProfile.verificationStatus = 'verified';
-            brandProfile.isVerified = true;
-        }
         await brandProfile.save();
 
-        await User.findByIdAndUpdate(req.user._id, { 
-            profileCompletionStatus,
-            ...(profileCompletionStatus && { isVerified: true })
-        });
-
-        const user = await User.findById(req.user._id).select('-password');
-        console.log(`[API Success] Brand ${req.user._id} updated profile successfully`);
-        
-        const bpObj = brandProfile.toObject();
-        bpObj.companyCountry = bpObj.country;
-        bpObj.companyWebsite = bpObj.website;
-        bpObj.brandNiche = bpObj.category;
-        bpObj.brandGoal = bpObj.description;
-        bpObj.contactPersonName = bpObj.contactDetails?.contactPersonName;
-        bpObj.officialEmail = bpObj.contactDetails?.officialEmail;
-
-        res.json({ success: true, user, brandProfile: bpObj });
-    } catch (error) {
-        console.error(`[API Error] Failed to update profile persistence for Brand ${req.user._id}:`, error);
-        next(error);
-    }
-};
-
-// @desc    AI Influencer Discovery — brand-facing search
-// STRICT: Only returns influencers with fully completed profiles
-exports.getMatchedInfluencers = async (req, res, next) => {
-    try {
-        const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
-
-        // Base filter: must have connected Instagram AND completed profile
-        const filter = { 
-            profileCompletionStatus: true,
-            $or: [
-                { instagramConnectionStatus: 'connected' },
-                { instagramConnected: true }
-            ],
-            // ── Profile Completion Gate ──
-            followersCount: { $gt: 0 },
-            engagementRate: { $gt: 0 },
-        };
-
-        // Apply user filters on top
-        if (niche && niche !== 'All') filter.niche = niche;
-        if (country && country !== 'Any') filter.country = country;
-        if (minFollowers || maxFollowers) {
-            filter.followersCount = { $gt: 0 };
-            if (minFollowers) filter.followersCount.$gte = Number(minFollowers);
-            if (maxFollowers) filter.followersCount.$lte = Number(maxFollowers);
-        }
-        if (minEngagement) filter.engagementRate = { $gte: Number(minEngagement) };
-        if (maxPostCost) filter.avgPostPrice = { $lte: Number(maxPostCost), $gt: 0 };
-
-        const influencerProfiles = await InfluencerProfile.find(filter)
-            .sort({ fitScore: -1, followersCount: -1 })
-            .limit(100)
-            .lean();
-
-        // Second-pass filter: ensure critical display fields exist
-        const eligible = influencerProfiles.filter(p => {
-            const hasIdentity = !!(p.fullName || p.displayName) && !!(p.instagramUsername);
-            const hasBio = !!(p.bio || p.instagramBiography);
-            const hasNiche = !!p.niche;
-            const hasLocation = !!p.country;
-            const hasFollowers = (p.followersCount || 0) > 0;
-            const hasEngagement = (p.engagementRate || 0) > 0;
-            const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0;
-            const hasInstagram = p.instagramConnected || p.instagramConnectionStatus === 'connected';
-            return hasIdentity && hasBio && hasNiche && hasLocation && hasFollowers && hasEngagement && hasPricing && hasInstagram;
-        });
-
-        const result = eligible.map(buildInfluencerCard);
-        res.json({ success: true, influencers: result });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// @desc    Get full influencer details
-exports.getInfluencerDetail = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        if (!isValidObjectId(id)) {
-            return res.status(400).json({ success: false, message: 'Invalid influencer ID' });
-        }
-
-        const profile = await InfluencerProfile.findOne({ userId: id }).lean();
-        if (!profile) {
-            return res.status(404).json({ success: false, message: 'Influencer not found' });
-        }
-
-        const card = buildInfluencerCard(profile);
-
-        res.json({
-            success: true,
-            // Full native A-Z document returned 
-            profile,
-            // Keeping these legacy objects mapped for frontend compatibility immediately
-            instagram: {
-                isConnected: profile.instagramConnected || profile.instagramConnectionStatus === 'connected',
-                username: profile.instagramUsername
-            },
-            analytics: {
-                engagementRate:       profile.engagementRate,
-                avgLikesPerPost:      profile.avgLikes,
-                avgCommentsPerPost:   profile.avgComments,
-                postingFrequency7d:   profile.postingFrequency,
-                audienceDemographics: profile.demographics
-            },
-            recentPosts: profile.recentMediaSummary || [],
-            ...{ fitScore: card.fitScore, starRating: card.starRating, qualityLabel: card.qualityLabel },
-        });
-    } catch (error) {
-        next(error);
-    }
-};

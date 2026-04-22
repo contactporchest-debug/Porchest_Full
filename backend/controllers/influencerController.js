@@ -11,7 +11,6 @@ function computeProfileCompletion(profile) {
     if (!profile) return { percentage: 0, isComplete: false, checklist: [] };
 
     const checks = [
-        { key: 'profilePhoto', label: 'Add profile photo', done: !!(profile.profilePictureUrl || profile.instagramDPURL) },
         { key: 'displayName', label: 'Add display name', done: !!(profile.fullName || profile.displayName) },
         { key: 'bio', label: 'Add bio', done: !!(profile.bio || profile.instagramBiography) },
         { key: 'niche', label: 'Select niche/category', done: !!profile.niche },
@@ -143,9 +142,18 @@ exports.updateProfile = async (req, res, next) => {
         const completion = computeProfileCompletion(influencerProfile);
         influencerProfile.profileCompletionStatus = completion.isComplete;
         influencerProfile.isSearchable = completion.isComplete;
+        
+        if (completion.isComplete && influencerProfile.verificationStatus !== 'verified') {
+            influencerProfile.verificationStatus = 'verified';
+            influencerProfile.isVerified = true;
+        }
+
         await influencerProfile.save();
 
-        await User.findByIdAndUpdate(req.user._id, { profileCompletionStatus: completion.isComplete });
+        await User.findByIdAndUpdate(req.user._id, { 
+            profileCompletionStatus: completion.isComplete,
+            ...(completion.isComplete && { isVerified: true })
+        });
 
         const user = await User.findById(req.user._id).select('-password');
         console.log(`[API Success] Influencer ${req.user._id} updated profile successfully`);
