@@ -1,6 +1,23 @@
 {
   "version": 2,
-  "installCommand": "npm install && npm install --prefix backend",
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/.next"
+  "builds": [
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/next.config.js",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/backend/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ]
 }
