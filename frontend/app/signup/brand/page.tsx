@@ -213,8 +213,6 @@ export default function BrandSignupPage() {
                                     />
                                 </div>
                             </form>
-                                </GlowButton>
-                            </form>
                         </div>
 
                         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>
