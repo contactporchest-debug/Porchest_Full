@@ -59,6 +59,7 @@ export const adminAPI = {
     getStats: () => api.get('/admin/stats'),
     getUsers: (params?: Record<string, unknown>) => api.get('/admin/users', { params }),
     updateUserStatus: (id: string, status: string) => api.patch(`/admin/users/${id}/status`, { status }),
+    updateUserRole: (id: string, role: string) => api.patch(`/admin/users/${id}/role`, { role }),
     deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
     // Campaign requests overview
     getRequests: (params?: Record<string, unknown>) => api.get('/admin/requests', { params }),
@@ -67,6 +68,7 @@ export const adminAPI = {
     reviewVerification: (id: string, status: string, adminNote?: string) =>
         api.patch(`/admin/verifications/${id}`, { status, adminNote }),
 };
+
 
 // ─── Brand ───────────────────────────────────────────
 export const brandAPI = {
