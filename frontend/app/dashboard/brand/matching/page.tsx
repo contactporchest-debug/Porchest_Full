@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { motion } from 'framer-motion';
 import { Bot, UserX, ArrowRight, Loader2 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
-import InfluencerSearch from '../InfluencerSearch';
+import AIMatchingComponent from './AIMatchingComponent';
 import Link from 'next/link';
 
 export default function AiMatchingPage() {
@@ -30,7 +30,7 @@ export default function AiMatchingPage() {
                         <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
                     </div>
                 ) : profileComplete ? (
-                    <InfluencerSearch />
+                    <AIMatchingComponent />
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>

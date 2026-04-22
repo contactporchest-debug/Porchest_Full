@@ -3,6 +3,7 @@ const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 const { generateUniqueCode } = require('../utils/generateCode');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
  * Dynamically compute a weighted influence fit score (0–100).
@@ -370,5 +371,119 @@ exports.getInfluencerDetail = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+// @desc    AI Matching for brand to discover influencers
+exports.aiMatching = async (req, res, next) => {
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({ success: false, message: 'Message is required' });
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ success: false, message: 'GEMINI_API_KEY is not configured in the backend.' });
+        }
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+        const prompt = `You are an AI assistant for an influencer discovery platform. A brand user is chatting with you to find influencers.
+The user message is: "${message}"
+
+Figure out what the user is looking for and output a JSON object of filters and a conversational response.
+Output JSON MUST match this structure:
+{
+    "filters": {
+        "niche": "string or null (e.g. 'Tech', 'Fashion', 'Food')",
+        "country": "string or null",
+        "minFollowers": "number or null",
+        "maxFollowers": "number or null",
+        "minEngagement": "number or null (e.g., if > 50%, 50)",
+        "maxPostCost": "number or null",
+        "keywords": ["array of at most 3 context keywords"]
+    },
+    "reply": "Conversational, natural language reply affirming the search criteria and saying you're pulling up matches."
+}
+Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`json).`;
+
+        const response = await model.generateContent(prompt);
+        let textResult = response.response.text().trim();
+        if (textResult.startsWith('\`\`\`json')) {
+            textResult = textResult.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+        } else if (textResult.startsWith('\`\`\`')) {
+            textResult = textResult.replace(/\`\`\`/g, '').trim();
+        }
+
+        const aiData = JSON.parse(textResult);
+
+        // Build database query
+        const filter = {
+            profileCompletionStatus: true,
+            $or: [
+                { instagramConnectionStatus: 'connected' },
+                { instagramConnected: true }
+            ],
+            followersCount: { $gt: 0 },
+            engagementRate: { $gt: 0 }
+        };
+
+        if (aiData.filters.niche) {
+            filter.niche = { $regex: new RegExp(aiData.filters.niche, 'i') };
+        }
+        if (aiData.filters.country) {
+            filter.country = { $regex: new RegExp(aiData.filters.country, 'i') };
+        }
+        if (aiData.filters.minFollowers || aiData.filters.maxFollowers) {
+            filter.followersCount = { $gt: 0 };
+            if (aiData.filters.minFollowers) filter.followersCount.$gte = aiData.filters.minFollowers;
+            if (aiData.filters.maxFollowers) filter.followersCount.$lte = aiData.filters.maxFollowers;
+        }
+        if (aiData.filters.minEngagement) {
+            filter.engagementRate = { $gte: aiData.filters.minEngagement };
+        }
+        if (aiData.filters.maxPostCost) {
+            filter.avgPostPrice = { $lte: aiData.filters.maxPostCost, $gt: 0 };
+        }
+
+        if (aiData.filters.keywords && Array.isArray(aiData.filters.keywords) && aiData.filters.keywords.length > 0) {
+           const keywordRegex = aiData.filters.keywords.join('|');
+           // the $or has to be careful since we already have an $or.
+           filter.$and = [
+               {
+                   $or: [
+                       { bio: { $regex: new RegExp(keywordRegex, 'i') } },
+                       { fullName: { $regex: new RegExp(keywordRegex, 'i') } },
+                       { categories: { $regex: new RegExp(keywordRegex, 'i') } }
+                   ]
+               }
+           ];
+        }
+
+        const influencerProfiles = await InfluencerProfile.find(filter)
+            .sort({ fitScore: -1, followersCount: -1 })
+            .limit(20)
+            .lean();
+
+        // Pass through existing card builder to maintain consistency with Discover UI
+        const eligible = influencerProfiles.filter(p => {
+            const hasIdentity = !!(p.fullName || p.displayName) && !!(p.instagramUsername);
+            const hasBio = !!(p.bio || p.instagramBiography);
+            return hasIdentity && hasBio;
+        });
+
+        const result = eligible.map(buildInfluencerCard);
+
+        res.json({
+            success: true,
+            aiReply: aiData.reply,
+            filters: aiData.filters,
+            influencers: result
+        });
+
+    } catch (error) {
+        console.error('[AI Matching Error]', error);
+        res.status(500).json({ success: false, message: 'AI Matching failed. Try reformatting your request.' });
     }
 };
