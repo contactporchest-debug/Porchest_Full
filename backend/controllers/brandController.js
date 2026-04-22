@@ -387,7 +387,7 @@ exports.aiMatching = async (req, res, next) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
         const prompt = `You are an AI assistant for an influencer discovery platform. A brand user is chatting with you to find influencers.
 The user message is: "${message}"
@@ -503,6 +503,15 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
 
     } catch (error) {
         console.error('[AI Matching Error]', error);
-        res.status(500).json({ success: false, message: 'AI Matching failed. Try reformatting your request.' });
+        
+        // Handle Gemini AI capacity issues specifically due to free-tier constraints
+        if (error?.status === 503) {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'Our AI model is currently experiencing high demand. Spikes are temporary, so please try asking again in a few moments!' 
+            });
+        }
+        
+        res.status(500).json({ success: false, message: 'AI Matching failed. Please try reformatting your request.' });
     }
 };
