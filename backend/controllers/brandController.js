@@ -387,24 +387,29 @@ exports.aiMatching = async (req, res, next) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
         const prompt = `You are an AI assistant for an influencer discovery platform. A brand user is chatting with you to find influencers.
 The user message is: "${message}"
 
-Figure out what the user is looking for and output a JSON object of filters and a conversational response.
-Output JSON MUST match this structure:
+Your task is to:
+1. Understand the user's intent. If they are just greeting you, reply politely and ask about their influencer search requirements (e.g., niche, location, follower count, or budget).
+2. If their message lacks any valid context or is completely off-topic, politely steer the conversation back to influencer discovery.
+3. If they describe specifics for an influencer search, extract the appropriate search filters.
+4. Output a JSON object and NOTHING else.
+
+Output JSON MUST match this exact structure:
 {
     "filters": {
         "niche": "string or null (e.g. 'Tech', 'Fashion', 'Food')",
         "country": "string or null",
         "minFollowers": "number or null",
         "maxFollowers": "number or null",
-        "minEngagement": "number or null (e.g., if > 50%, 50)",
+        "minEngagement": "number or null (e.g., if > 5%, 5)",
         "maxPostCost": "number or null",
-        "keywords": ["array of at most 3 context keywords"]
+        "keywords": ["array of at most 3 context keywords or empty array if none"]
     },
-    "reply": "Conversational, natural language reply affirming the search criteria and saying you're pulling up matches."
+    "reply": "Conversational, natural language reply. If they greeted, greet back and ask how you can help find influencers. If they lacked context, remind them what you can do. If they searched, affirm the criteria you are querying."
 }
 Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`json).`;
 
@@ -418,6 +423,20 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
 
         const aiData = JSON.parse(textResult);
 
+        // Check if AI generated any actual filters
+        const f = aiData.filters || {};
+        const hasFilters = f.niche || f.country || f.minFollowers || f.maxFollowers || f.minEngagement || f.maxPostCost || (f.keywords && f.keywords.length > 0);
+
+        if (!hasFilters) {
+            // No specifics identified (e.g. general greeting or off-topic)
+            return res.json({
+                success: true,
+                aiReply: aiData.reply,
+                filters: {},
+                influencers: []
+            });
+        }
+
         // Build database query
         const filter = {
             profileCompletionStatus: true,
@@ -429,26 +448,26 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
             engagementRate: { $gt: 0 }
         };
 
-        if (aiData.filters.niche) {
-            filter.niche = { $regex: new RegExp(aiData.filters.niche, 'i') };
+        if (f.niche) {
+            filter.niche = { $regex: new RegExp(f.niche, 'i') };
         }
-        if (aiData.filters.country) {
-            filter.country = { $regex: new RegExp(aiData.filters.country, 'i') };
+        if (f.country) {
+            filter.country = { $regex: new RegExp(f.country, 'i') };
         }
-        if (aiData.filters.minFollowers || aiData.filters.maxFollowers) {
+        if (f.minFollowers || f.maxFollowers) {
             filter.followersCount = { $gt: 0 };
-            if (aiData.filters.minFollowers) filter.followersCount.$gte = aiData.filters.minFollowers;
-            if (aiData.filters.maxFollowers) filter.followersCount.$lte = aiData.filters.maxFollowers;
+            if (f.minFollowers) filter.followersCount.$gte = f.minFollowers;
+            if (f.maxFollowers) filter.followersCount.$lte = f.maxFollowers;
         }
-        if (aiData.filters.minEngagement) {
-            filter.engagementRate = { $gte: aiData.filters.minEngagement };
+        if (f.minEngagement) {
+            filter.engagementRate = { $gte: f.minEngagement };
         }
-        if (aiData.filters.maxPostCost) {
-            filter.avgPostPrice = { $lte: aiData.filters.maxPostCost, $gt: 0 };
+        if (f.maxPostCost) {
+            filter.avgPostPrice = { $lte: f.maxPostCost, $gt: 0 };
         }
 
-        if (aiData.filters.keywords && Array.isArray(aiData.filters.keywords) && aiData.filters.keywords.length > 0) {
-           const keywordRegex = aiData.filters.keywords.join('|');
+        if (f.keywords && Array.isArray(f.keywords) && f.keywords.length > 0) {
+           const keywordRegex = f.keywords.join('|');
            // the $or has to be careful since we already have an $or.
            filter.$and = [
                {
