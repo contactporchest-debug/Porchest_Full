@@ -326,9 +326,9 @@ export default function AIMatchingComponent() {
             <AnimatePresence>
                 {selectedInfluencerProfile && (
                     <InfluencerProfileModal
-                        profile={selectedInfluencerProfile}
+                        influencer={selectedInfluencerProfile}
                         onClose={() => setSelectedInfluencerProfile(null)}
-                        onRequest={handleRequestCollaboration}
+                        onRequestCollaboration={() => handleRequestCollaboration(selectedInfluencerProfile)}
                     />
                 )}
                 {selectedForCollaboration && (
