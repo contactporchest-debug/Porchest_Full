@@ -10,6 +10,7 @@ import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Building2, Mail, Lock, Eye, EyeOff, ChevronDown, DollarSign, FileText } from 'lucide-react';
 import OTPVerify from '@/components/auth/OTPVerify';
+import { GoogleLogin } from '@react-oauth/google';
 
 const NICHES = ['Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gaming', 'Lifestyle', 'Education', 'Entertainment', 'Finance', 'Other'];
 
@@ -59,6 +60,30 @@ export default function BrandSignupPage() {
             toast.success('Account created! Please verify your email.');
         } catch (err: unknown) {
             toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        const idToken = credentialResponse.credential;
+        try {
+            setLoading(true);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken, role: 'brand' })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                localStorage.setItem('token', data.token);
+                window.location.href = '/dashboard/brand';
+            } else {
+                toast.error(data.message || 'Google Auth failed');
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Google auth error');
         } finally {
             setLoading(false);
         }
@@ -173,6 +198,21 @@ export default function BrandSignupPage() {
 
                                 <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '4px' } as React.CSSProperties}>
                                     Create Brand Account
+                                </GlowButton>
+
+                                <div style={{ position: 'relative', margin: '20px 0', textAlign: 'center' }}>
+                                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                                    <span style={{ position: 'relative', background: '#050505', padding: '0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>or sign up with</span>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <GoogleLogin 
+                                        onSuccess={handleGoogleSuccess}
+                                        onError={() => toast.error('Google registration failed')}
+                                        useOneTap
+                                    />
+                                </div>
+                            </form>
                                 </GlowButton>
                             </form>
                         </div>

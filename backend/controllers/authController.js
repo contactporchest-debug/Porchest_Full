@@ -2,6 +2,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const { generateUniqueCode } = require('../utils/generateCode');
+const { OAuth2Client } = require('google-auth-library');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -128,7 +131,11 @@ exports.verifyOTP = async (req, res, next) => {
         user.otpExpires = undefined;
         await user.save();
 
-        const token = generateToken(user);
+        const token = jwt.sign(
+            { id: user._id, role: user.role, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
 
         res.json({
             success: true,
@@ -138,6 +145,92 @@ exports.verifyOTP = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+// @desc    Google Login/Signup
+// @route   POST /api/auth/google
+exports.googleAuth = async (req, res, next) => {
+    try {
+        const { idToken, role } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({ success: false, message: 'Google ID token is required' });
+        }
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const { email, name, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // New user Signup (only requires email for Google, no password needed)
+            if (!role || !['brand', 'influencer'].includes(role)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Role is required for new user registration (brand or influencer).' 
+                });
+            }
+
+            const userCode = await generateUniqueCode('USR', User, 'userCode');
+            user = await User.create({
+                userCode,
+                role,
+                email,
+                loginProvider: 'google',
+                isVerified: true,
+                status: 'active'
+            });
+
+            // Native Profile Auto-Provision
+            const InfluencerProfile = require('../models/InfluencerProfile');
+            const BrandProfile = require('../models/BrandProfile');
+            const { generateUniqueCode: generateProfileCode } = require('../utils/generateCode');
+
+            if (role === 'influencer') {
+                const influencerProfileId = await generateProfileCode('INF', InfluencerProfile, 'influencerProfileId');
+                const profileObj = await InfluencerProfile.create({ 
+                    userId: user._id, 
+                    influencerProfileId,
+                    fullName: name,
+                    profilePictureUrl: picture 
+                });
+                user.influencerProfileId = profileObj._id;
+            } else if (role === 'brand') {
+                const brandProfileId = await generateProfileCode('BRD', BrandProfile, 'brandProfileId');
+                const profileObj = await BrandProfile.create({ 
+                    userId: user._id, 
+                    brandProfileId,
+                    brandName: name
+                });
+                user.brandProfileId = profileObj._id;
+            }
+            await user.save();
+        }
+
+        // Return token/login
+        const token = jwt.sign(
+            { id: user._id, role: user.role, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN }
+        );
+
+        user.lastLoginAt = Date.now();
+        await user.save();
+
+        res.json({
+            success: true,
+            token,
+            user: user.toJSON()
+        });
+
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(400).json({ success: false, message: 'Google authentication failed' });
     }
 };
 

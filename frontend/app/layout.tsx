@@ -3,6 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import { SocketProvider } from '@/context/SocketContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export const metadata: Metadata = {
     title: 'Porchest – AI-Powered Influencer & Brand Platform',
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 />
             </head>
             <body className="antialiased">
+                <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
                 <AuthProvider>
                     <SocketProvider>
                         {children}
@@ -58,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         />
                     </SocketProvider>
                 </AuthProvider>
+                </GoogleOAuthProvider>
             </body>
         </html>
     );

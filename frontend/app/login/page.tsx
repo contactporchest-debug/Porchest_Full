@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -29,6 +30,38 @@ export default function LoginPage() {
             }
         } catch (err: unknown) {
             toast.error((err as Error).message || 'Login failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        const idToken = credentialResponse.credential;
+        try {
+            setLoading(true);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken, role: null }) // login doesn't need to pass a role, user will be prompted if new
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                // Manually log the user in via context or token save
+                localStorage.setItem('token', data.token);
+                // Trigger a full reload to let AuthContext pick up token and redirect,
+                // or you can add a `loginWithToken` context method. Here we reload to trigger standard flow
+                window.location.href = '/dashboard';
+            } else {
+                toast.error(data.message || 'Google Auth failed');
+                // if message indicates user is new, we redirect them to signup with token
+                if(data.message && data.message.includes('Role is required')) {
+                    toast.error('You do not have an account. Please sign up to choose a role.');
+                    router.push('/signup');
+                }
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Google auth error');
         } finally {
             setLoading(false);
         }
@@ -88,6 +121,19 @@ export default function LoginPage() {
                         <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '4px' }}>
                             {!loading && <Zap size={15} />} Sign In
                         </GlowButton>
+
+                        <div style={{ position: 'relative', margin: '20px 0', textAlign: 'center' }}>
+                            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                            <span style={{ position: 'relative', background: '#110c1f', padding: '0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>or</span>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <GoogleLogin 
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error('Google login failed')}
+                                useOneTap
+                            />
+                        </div>
                     </form>
                 </div>
 
