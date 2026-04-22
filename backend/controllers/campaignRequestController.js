@@ -36,7 +36,7 @@ exports.createRequest = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Brand or Influencer profile not found.' });
         }
 
-        if (!brandProfile.brandName || !influencerProfile.displayName) {
+        if (!brandProfile.profileCompletionStatus || !influencerProfile.profileCompletionStatus) {
             return res.status(400).json({
                 success: false,
                 message: 'Brand and Influencer profiles must be complete before creating a campaign request.',
@@ -74,7 +74,7 @@ exports.createRequest = async (req, res, next) => {
             brandName: brandProfile.brandName,
             brandLogoUrl: brandProfile.logoUrl || brandProfile.instagramDPURL,
             brandCategory: brandProfile.category,
-            influencerName: influencerProfile.displayName,
+            influencerName: influencerProfile.displayName || influencerProfile.fullName,
             influencerUsername: influencerProfile.instagramUsername,
             influencerProfilePic: influencerProfile.profilePictureUrl || influencerProfile.instagramDPURL,
             influencerNiche: influencerProfile.niche,

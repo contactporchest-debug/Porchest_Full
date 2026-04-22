@@ -119,8 +119,8 @@ exports.updateProfile = async (req, res, next) => {
             city: updates.city,
             niche: updates.niche,
             bio: updates.shortBio || updates.bio,
-            avgPostPrice: updates.avgPostCostUSD || updates.avgPostPrice,
-            avgReelPrice: updates.avgReelCostUSD || updates.avgReelPrice,
+            avgPostPrice: updates.avgPostCostUSD !== undefined ? updates.avgPostCostUSD : updates.avgPostPrice,
+            avgReelPrice: updates.avgReelCostUSD !== undefined ? updates.avgReelCostUSD : updates.avgReelPrice,
             profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl
         };
 

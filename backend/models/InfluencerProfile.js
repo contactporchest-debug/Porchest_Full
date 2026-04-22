@@ -8,6 +8,8 @@ const influencerProfileSchema = new mongoose.Schema(
         username: { type: String }, // App username
         displayName: { type: String },
         fullName: { type: String },
+        contactEmail: { type: String },
+        age: { type: Number },
         bio: { type: String },
         profilePictureUrl: { type: String },
         platform: { type: String, default: 'Instagram' },

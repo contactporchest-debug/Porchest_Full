@@ -131,18 +131,29 @@ function buildInfluencerCard(profile) {
 exports.getDashboard = async (req, res, next) => {
     try {
         const brandId = req.user._id;
-        const brandProfile = await BrandProfile.findOne({ userId: brandId });
+        const brandProfile = await BrandProfile.findOne({ userId: brandId }).lean();
 
         const profileComplete = !!(
             brandProfile?.brandName && brandProfile?.contactDetails?.officialEmail &&
-            brandProfile?.contactDetails?.contactPersonName && brandProfile?.companyCountry
+            brandProfile?.contactDetails?.contactPersonName && brandProfile?.country
         );
+
+        let formattedBrandProfile = brandProfile;
+        if (formattedBrandProfile) {
+            formattedBrandProfile = {
+                ...formattedBrandProfile,
+                companyCountry: formattedBrandProfile.country,
+                companyWebsite: formattedBrandProfile.website,
+                brandNiche: formattedBrandProfile.category,
+                brandGoal: formattedBrandProfile.description,
+            };
+        }
 
         res.json({
             success: true,
             dashboard: {
                 profile: req.user,
-                brandProfile: brandProfile || null,
+                brandProfile: formattedBrandProfile || null,
                 instagramConnection: {
                     isConnected: brandProfile?.instagramConnected || brandProfile?.instagramConnectionStatus === 'connected',
                     lastSyncedAt: brandProfile?.lastSyncedAt || null,
@@ -166,12 +177,24 @@ exports.getBrandProfile = async (req, res, next) => {
     try {
         const [user, brandProfile] = await Promise.all([
             User.findById(req.user._id).select('-password'),
-            BrandProfile.findOne({ userId: req.user._id }),
+            BrandProfile.findOne({ userId: req.user._id }).lean(),
         ]);
+        
+        let formattedBrandProfile = brandProfile;
+        if (formattedBrandProfile) {
+            formattedBrandProfile = {
+                ...formattedBrandProfile,
+                companyCountry: formattedBrandProfile.country,
+                companyWebsite: formattedBrandProfile.website,
+                brandNiche: formattedBrandProfile.category,
+                brandGoal: formattedBrandProfile.description,
+            };
+        }
+
         res.json({ 
             success: true, 
             user, 
-            brandProfile,
+            brandProfile: formattedBrandProfile,
             instagramConnection: brandProfile ? {
                 isConnected: brandProfile.instagramConnected || brandProfile.instagramConnectionStatus === 'connected',
                 lastSyncedAt: brandProfile.lastSyncedAt || null,
@@ -221,7 +244,7 @@ exports.updateProfile = async (req, res, next) => {
             await brandProfile.save();
         }
 
-        const profileCompletionStatus = !!(brandProfile.brandName && brandProfile.contactDetails?.officialEmail);
+        const profileCompletionStatus = !!(brandProfile.brandName && brandProfile.contactDetails?.officialEmail && brandProfile.contactDetails?.contactPersonName && brandProfile.country && brandProfile.description && brandProfile.category);
         brandProfile.profileCompletionStatus = profileCompletionStatus;
         await brandProfile.save();
 
@@ -229,7 +252,14 @@ exports.updateProfile = async (req, res, next) => {
 
         const user = await User.findById(req.user._id).select('-password');
         console.log(`[API Success] Brand ${req.user._id} updated profile successfully`);
-        res.json({ success: true, user, brandProfile });
+        
+        const bpObj = brandProfile.toObject();
+        bpObj.companyCountry = bpObj.country;
+        bpObj.companyWebsite = bpObj.website;
+        bpObj.brandNiche = bpObj.category;
+        bpObj.brandGoal = bpObj.description;
+
+        res.json({ success: true, user, brandProfile: bpObj });
     } catch (error) {
         console.error(`[API Error] Failed to update profile persistence for Brand ${req.user._id}:`, error);
         next(error);
@@ -244,14 +274,12 @@ exports.getMatchedInfluencers = async (req, res, next) => {
 
         // Base filter: must have connected Instagram AND completed profile
         const filter = { 
+            profileCompletionStatus: true,
             $or: [
                 { instagramConnectionStatus: 'connected' },
                 { instagramConnected: true }
             ],
             // ── Profile Completion Gate ──
-            fullName: { $exists: true, $ne: null, $ne: '' },
-            niche: { $exists: true, $ne: null, $ne: '' },
-            country: { $exists: true, $ne: null, $ne: '' },
             followersCount: { $gt: 0 },
             engagementRate: { $gt: 0 },
         };
