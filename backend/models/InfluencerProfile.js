@@ -21,7 +21,6 @@ const influencerProfileSchema = new mongoose.Schema(
         languages: [{ type: String }],
         niche: { type: String },
         categories: [{ type: String }],
-        tags: [{ type: String }],
 
         // ── B. Profile Status ────────────────────────────────────────────
         profileCompletionStatus: { type: Boolean, default: false },
@@ -29,7 +28,6 @@ const influencerProfileSchema = new mongoose.Schema(
         instagramConnected: { type: Boolean, default: false },
         instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
         lastConnectedAt: { type: Date },
-        lastDisconnectedAt: { type: Date },
         isActive: { type: Boolean, default: true },
         isSearchable: { type: Boolean, default: false },
         lastSyncAt: { type: Date },
@@ -57,7 +55,6 @@ const influencerProfileSchema = new mongoose.Schema(
         likeToCommentRatio: { type: Number, default: 0 },
         postsAnalyzed: { type: Number, default: 0 },
         influencerEfficiencyRate: { type: Number, default: 0 },
-        growthRate: { type: Number, default: 0 }, // MoM Growth
         postingFrequency: { type: Number, default: 0 }, // legacy
         postingFrequency7d: { type: Number, default: 0 },
         postingFrequency30d: { type: Number, default: 0 },
@@ -76,7 +73,6 @@ const influencerProfileSchema = new mongoose.Schema(
         // ── F. Pricing / Cost Information ────────────────────────────────
         avgPostPrice: { type: Number, default: 0 },
         avgReelPrice: { type: Number, default: 0 },
-        pricingNotes: { type: String },
         currency: { type: String, default: 'USD' },
 
         // ── G. Score / Rating Section ────────────────────────────────────

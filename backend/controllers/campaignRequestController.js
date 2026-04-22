@@ -32,8 +32,15 @@ exports.createRequest = async (req, res, next) => {
             InfluencerProfile.findOne({ userId: influencerId }).lean(),
         ]);
 
-        if (!influencerProfile) {
-            return res.status(404).json({ success: false, message: 'Influencer not found.' });
+        if (!brandProfile || !influencerProfile) {
+            return res.status(404).json({ success: false, message: 'Brand or Influencer profile not found.' });
+        }
+
+        if (!brandProfile.brandName || !influencerProfile.displayName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Brand and Influencer profiles must be complete before creating a campaign request.',
+            });
         }
 
         const requestCode = await generateUniqueCode('REQ', CampaignRequest, 'requestCode');
@@ -42,7 +49,7 @@ exports.createRequest = async (req, res, next) => {
             requestCode,
             brandUserId,
             influencerUserId: influencerId,
-            brandProfileId: brandProfile?._id,
+            brandProfileId: brandProfile._id,
             influencerProfileId: influencerProfile._id,
             campaignTitle,
             campaignDescription,
@@ -64,13 +71,13 @@ exports.createRequest = async (req, res, next) => {
             status: 'sent',
             sentAt: new Date(),
             // Denormalized snapshots
-            brandName: brandProfile?.brandName || 'Brand',
-            brandLogoUrl: brandProfile?.logoUrl || brandProfile?.instagramDPURL || null,
-            brandCategory: brandProfile?.category || null,
-            influencerName: influencerProfile.fullName || influencerProfile.displayName || 'Influencer',
-            influencerUsername: influencerProfile.instagramUsername || null,
-            influencerProfilePic: influencerProfile.profilePictureUrl || influencerProfile.instagramDPURL || null,
-            influencerNiche: influencerProfile.niche || null,
+            brandName: brandProfile.brandName,
+            brandLogoUrl: brandProfile.logoUrl || brandProfile.instagramDPURL,
+            brandCategory: brandProfile.category,
+            influencerName: influencerProfile.displayName,
+            influencerUsername: influencerProfile.instagramUsername,
+            influencerProfilePic: influencerProfile.profilePictureUrl || influencerProfile.instagramDPURL,
+            influencerNiche: influencerProfile.niche,
         });
 
         // Create notification for the influencer
@@ -78,10 +85,10 @@ exports.createRequest = async (req, res, next) => {
             recipientUserId: influencerId,
             type: 'collaboration_request',
             title: 'New Collaboration Request',
-            message: `${brandProfile?.brandName || 'A brand'} wants to collaborate on "${campaignTitle}"`,
+            message: `${brandProfile.brandName} wants to collaborate on "${campaignTitle}"`,
             campaignRequestId: request._id,
-            senderName: brandProfile?.brandName || 'Brand',
-            senderAvatar: brandProfile?.logoUrl || brandProfile?.instagramDPURL || null,
+            senderName: brandProfile.brandName,
+            senderAvatar: brandProfile.logoUrl || brandProfile.instagramDPURL,
             metadata: {
                 campaignTitle,
                 agreedPrice,

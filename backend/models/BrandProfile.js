@@ -8,17 +8,11 @@ const brandProfileSchema = new mongoose.Schema(
         brandName: { type: String },
         companyName: { type: String },
         category: { type: String },
-        subcategory: { type: String },
         country: { type: String },
         city: { type: String },
         description: { type: String },
         logoUrl: { type: String },
         website: { type: String },
-        socialLinks: {
-            instagram: { type: String },
-            twitter: { type: String },
-            tiktok: { type: String }
-        },
         contactDetails: {
             officialEmail: { type: String },
             contactPersonName: { type: String }
@@ -32,24 +26,10 @@ const brandProfileSchema = new mongoose.Schema(
         instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
 
         // ── C. Brand Business Information ────────────────────────────────
-        businessType: { type: String },
-        targetIndustries: [{ type: String }],
-        preferredCollaborationType: [{ type: String }], // 'sponsored_post', 'ugc', 'affiliate'
-        targetAudiencePreferences: [{ type: String }],
-        preferredInfluencerCategories: [{ type: String }],
-        preferredAudienceCountries: [{ type: String }],
-        preferredAudienceAgeGroups: [{ type: String }],
-        preferredAudienceGender: { type: String },
         budgetRange: { type: String }, // '0-500', '500-1000'
         approxBudgetUSD: { type: Number },
-        campaignGoals: [{ type: String }],
-        communicationPreferences: { type: String },
 
         // ── D. Internal Brand Metadata & Tracking ────────────────────────
-        visibilityStatus: { type: String, enum: ['public', 'private'], default: 'public' },
-        onboardingState: { type: String, default: 'pending' },
-        accountNotes: { type: String },
-
         // ── E. Instagram Raw Integration Data ────────────────────────────
         // Brand's connected Instagram identity/metrics for validation
         instagramUserId: { type: String },
