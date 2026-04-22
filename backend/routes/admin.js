@@ -12,6 +12,7 @@ const {
     getVerificationQueue,
     reviewVerification,
 } = require('../controllers/adminController');
+const adminCampaignController = require('../controllers/adminCampaignController');
 
 // All admin routes require authentication + admin role
 router.use(authMiddleware, roleMiddleware('admin'));
@@ -27,6 +28,11 @@ router.delete('/users/:id',            deleteUser);
 
 // ── Campaign Requests ──────────────────────────────────
 router.get('/requests',                getRequests);
+
+// ── Campaigns ──────────────────────────────────────────
+router.get('/campaigns',               adminCampaignController.getCampaigns);
+router.get('/campaigns/:id',           adminCampaignController.getCampaignById);
+router.patch('/campaigns/:id/status',  adminCampaignController.updateCampaignStatus);
 
 // ── Verification Queue ─────────────────────────────────
 router.get('/verifications',           getVerificationQueue);

@@ -96,6 +96,14 @@ exports.updateUserStatus = async (req, res) => {
             { new: true, select: '-password -otp -otpExpires' }
         );
         if (!user) return err(res, 'User not found', 404);
+
+        // Notify user via Socket.IO
+        const io = req.app.locals.io;
+        io.to(`user-${user._id}`).emit('status-update', {
+            message: `Your account status has been updated to: ${status}.`,
+            status: user.status,
+        });
+
         return ok(res, { user });
     } catch (e) {
         console.error('[Admin] updateUserStatus error:', e);
@@ -124,6 +132,14 @@ exports.updateUserRole = async (req, res) => {
             { new: true, select: '-password -otp -otpExpires' }
         );
         if (!user) return err(res, 'User not found', 404);
+
+        // Notify user via Socket.IO
+        const io = req.app.locals.io;
+        io.to(`user-${user._id}`).emit('role-update', {
+            message: `Your account role has been updated to: ${role}.`,
+            role: user.role,
+        });
+
         return ok(res, { user });
     } catch (e) {
         console.error('[Admin] updateUserRole error:', e);

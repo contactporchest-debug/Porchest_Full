@@ -17,7 +17,6 @@ const adminNav = [
     { label: 'Overview', href: '/dashboard/admin', icon: <LayoutDashboard size={17} /> },
     { label: 'Users', href: '/dashboard/admin/users', icon: <Users size={17} /> },
     { label: 'Campaigns', href: '/dashboard/admin/campaigns', icon: <Megaphone size={17} /> },
-    { label: 'Analytics', href: '/dashboard/admin/analytics', icon: <BarChart3 size={17} /> },
 ];
 const brandNav = [
     { label: 'Overview', href: '/dashboard/brand', icon: <LayoutDashboard size={17} /> },

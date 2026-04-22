@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { adminAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useSocket } from '@/context/SocketContext';
 import {
     Users, Shield, CheckCircle, XCircle, Trash2, Loader2,
     Search, RefreshCw, ChevronDown, Megaphone, LayoutDashboard,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 
 /* ─── Types ────────────────────────────────────────────── */
-type Tab = 'overview' | 'users' | 'campaigns';
+type Tab = 'users' | 'campaigns';
 type UserRole = 'admin' | 'brand' | 'influencer';
 type UserStatus = 'active' | 'pending' | 'suspended';
 
@@ -28,19 +29,19 @@ interface AdminUser {
     createdAt: string;
     isVerified?: boolean;
     profileCompletionStatus?: boolean;
+    instagramProfilePicture?: string;
+    instagramHandle?: string;
 }
 
 interface Campaign {
     _id: string;
-    campaignTitle: string;
-    brandName: string;
-    influencerName: string;
-    status: string;
-    agreedPrice?: number;
-    createdAt: string;
-    campaignStartDate?: string;
-    campaignEndDate?: string;
-    requestCode: string;
+    name: string;
+    brand: { _id: string; companyName: string; };
+    influencers: { influencer: { _id: string; fullName: string; }; status: string; }[];
+    status: 'running' | 'paused' | 'completed' | 'pending';
+    startDate: string;
+    endDate: string;
+    budget: number;
 }
 
 interface Stats {
@@ -126,11 +127,12 @@ const TabBtn = ({ label, active, onClick, badge }: { label: string; active: bool
 
 /* ─── Main Component ────────────────────────────────────── */
 export default function AdminDashboard() {
+    const { socket } = useSocket();
     const [stats,   setStats]   = useState<Stats | null>(null);
     const [users,   setUsers]   = useState<AdminUser[]>([]);
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<Tab>('overview');
+    const [activeTab, setActiveTab] = useState<Tab>('users');
 
     // Users tab state
     const [userSearch,     setUserSearch]     = useState('');
@@ -138,11 +140,14 @@ export default function AdminDashboard() {
     const [statusFilter,   setStatusFilter]   = useState('');
     const [actioningUser,  setActioningUser]  = useState<string | null>(null);
     const [editRoleId,     setEditRoleId]     = useState<string | null>(null);
+    const [selectedUser,   setSelectedUser]   = useState<AdminUser | null>(null);
 
     // Campaigns tab state
     const [campSearch,  setCampSearch]  = useState('');
     const [campStatus,  setCampStatus]  = useState('');
     const [campLoading, setCampLoading] = useState(false);
+
+    const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
     /* ── Data Loading ──────────────────────────────────── */
     const loadStats = useCallback(async () => {
@@ -167,8 +172,8 @@ export default function AdminDashboard() {
             const params: Record<string, unknown> = {};
             if (campStatus) params.status = campStatus;
             if (campSearch) params.search = campSearch;
-            const r = await adminAPI.getRequests(params);
-            setCampaigns(r.data.requests || []);
+            const r = await adminAPI.getCampaigns(params);
+            setCampaigns(r.data.campaigns || []);
         } catch { toast.error('Failed to load campaigns'); }
         finally { setCampLoading(false); }
     }, [campStatus, campSearch]);
@@ -176,6 +181,28 @@ export default function AdminDashboard() {
     useEffect(() => {
         Promise.all([loadStats(), loadUsers(), loadCampaigns()]).finally(() => setLoading(false));
     }, [loadStats, loadUsers, loadCampaigns]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleUserUpdate = (updatedUser: AdminUser) => {
+            setUsers(prev => prev.map(u => u._id === updatedUser._id ? { ...u, ...updatedUser } : u));
+            toast.success(`User ${updatedUser.fullName || updatedUser.email} was updated.`);
+        };
+
+        const handleCampaignUpdate = ({ campaignId, status }: { campaignId: string, status: Campaign['status'] }) => {
+            setCampaigns(prev => prev.map(c => c._id === campaignId ? { ...c, status } : c));
+            toast.success(`A campaign status was updated to ${status}.`);
+        };
+
+        socket.on('user-updated', handleUserUpdate);
+        socket.on('campaign-status-update', handleCampaignUpdate);
+
+        return () => {
+            socket.off('user-updated', handleUserUpdate);
+            socket.off('campaign-status-update', handleCampaignUpdate);
+        };
+    }, [socket]);
 
     /* ── User Actions ──────────────────────────────────── */
     const handleStatus = async (id: string, status: UserStatus) => {
@@ -210,10 +237,20 @@ export default function AdminDashboard() {
         } catch { toast.error('Delete failed'); }
     };
 
+    const handleCampaignStatus = async (id: string, status: 'running' | 'paused' | 'completed') => {
+        try {
+            await adminAPI.updateCampaignStatus(id, status);
+            toast.success(`Campaign status updated to ${status}`);
+            setCampaigns(prev => prev.map(c => c._id === id ? { ...c, status } : c));
+        } catch {
+            toast.error('Failed to update campaign status');
+        }
+    };
+
     /* ── Derived ────────────────────────────────────────── */
     const filteredCampaigns = campaigns.filter(c => {
         const q = campSearch.toLowerCase();
-        return (!q || c.campaignTitle?.toLowerCase().includes(q) || c.brandName?.toLowerCase().includes(q) || c.influencerName?.toLowerCase().includes(q))
+        return (!q || c.name?.toLowerCase().includes(q) || c.brand?.companyName?.toLowerCase().includes(q))
             && (!campStatus || c.status === campStatus);
     });
 
@@ -237,87 +274,11 @@ export default function AdminDashboard() {
 
                     {/* ── Tabs ── */}
                     <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 4, width: 'fit-content', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <TabBtn label="Overview"  active={activeTab === 'overview'}  onClick={() => setActiveTab('overview')} />
                         <TabBtn label="Users"     active={activeTab === 'users'}     onClick={() => setActiveTab('users')}    badge={stats?.pendingUsers} />
                         <TabBtn label="Campaigns" active={activeTab === 'campaigns'} onClick={() => setActiveTab('campaigns')} badge={stats?.activeRequests} />
                     </div>
 
                     <AnimatePresence mode="wait">
-
-                        {/* ══════════════════════════════════════════
-                            TAB 1 — OVERVIEW
-                        ══════════════════════════════════════════ */}
-                        {activeTab === 'overview' && (
-                            <motion.div key="overview" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-
-                                {/* Stats grid */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14, marginBottom: 24 }}>
-                                    <StatCard
-                                        label="Total Users" icon={<Users size={16} />}
-                                        value={loading ? '—' : (stats?.totalUsers ?? 0)} color="#7B3FF2"
-                                        sub={`${stats?.totalBrands ?? 0} brands · ${stats?.totalInfluencers ?? 0} influencers`}
-                                    />
-                                    <StatCard
-                                        label="Total Requests" icon={<Megaphone size={16} />}
-                                        value={loading ? '—' : (stats?.totalRequests ?? 0)} color="#A855F7"
-                                        sub={`${stats?.activeRequests ?? 0} active collaborations`}
-                                    />
-                                    <StatCard
-                                        label="Pending Verifications" icon={<AlertTriangle size={16} />}
-                                        value={loading ? '—' : (stats?.pendingVerifications ?? 0)} color="#fbbf24"
-                                        sub="Profiles awaiting admin review"
-                                        progress={stats ? (stats.pendingVerifications / Math.max(1, stats.totalUsers)) * 100 : 0}
-                                    />
-                                    <StatCard
-                                        label="Pending Users" icon={<Clock size={16} />}
-                                        value={loading ? '—' : (stats?.pendingUsers ?? 0)} color="#60a5fa"
-                                        sub="Awaiting account approval"
-                                        progress={stats ? (stats.pendingUsers / Math.max(1, stats.totalUsers)) * 100 : 0}
-                                    />
-                                </div>
-
-                                {/* Platform composition */}
-                                <div style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: '28px 32px', marginBottom: 20 }}>
-                                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 20 }}>Platform Composition</h2>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
-                                        {[
-                                            { label: 'Admins',      count: stats?.totalAdmins ?? 0,      color: '#ff8c42', icon: <Shield size={18} /> },
-                                            { label: 'Brands',      count: stats?.totalBrands ?? 0,      color: '#7B3FF2', icon: <Megaphone size={18} /> },
-                                            { label: 'Influencers', count: stats?.totalInfluencers ?? 0, color: '#A855F7', icon: <Users size={18} /> },
-                                        ].map(r => (
-                                            <div key={r.label} style={{ padding: '20px 22px', borderRadius: 18, background: `${r.color}08`, border: `1px solid ${r.color}20`, textAlign: 'center' }}>
-                                                <div style={{ color: r.color, marginBottom: 10, display: 'flex', justifyContent: 'center' }}>{r.icon}</div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: r.color }}>{r.count}</p>
-                                                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{r.label}</p>
-                                                {stats && (
-                                                    <p style={{ fontSize: 11, color: r.color, marginTop: 4, opacity: 0.7 }}>
-                                                        {((r.count / Math.max(1, stats.totalUsers)) * 100).toFixed(1)}%
-                                                    </p>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Campaign status breakdown */}
-                                <div style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: '28px 32px' }}>
-                                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 20 }}>Campaign Request Overview</h2>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12 }}>
-                                        {[
-                                            { label: 'Total Sent',    val: stats?.totalRequests ?? 0,  color: '#60a5fa' },
-                                            { label: 'Accepted',      val: stats?.acceptedRequests ?? 0, color: '#4ade80' },
-                                            { label: 'Pending Reply', val: stats?.pendingRequests ?? 0, color: '#fbbf24' },
-                                            { label: 'Active',        val: stats?.activeRequests ?? 0,  color: '#a78bfa' },
-                                        ].map(s => (
-                                            <div key={s.label} style={{ padding: '14px 16px', borderRadius: 14, background: `${s.color}08`, border: `1px solid ${s.color}18`, textAlign: 'center' }}>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.6rem', color: s.color }}>{loading ? '—' : s.val}</p>
-                                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{s.label}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
 
                         {/* ══════════════════════════════════════════
                             TAB 2 — USERS
@@ -373,19 +334,24 @@ export default function AdminDashboard() {
                                                 </thead>
                                                 <tbody>
                                                     {users.map((u) => (
-                                                        <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
+                                                        <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms', cursor: 'pointer' }}
+                                                            onClick={() => setSelectedUser(u)}
                                                             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'}
                                                             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
 
                                                             {/* User */}
                                                             <td style={{ padding: '14px 16px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                                                                        {(u.companyName || u.fullName || u.email || '?')[0]?.toUpperCase()}
-                                                                    </div>
+                                                                    {u.instagramProfilePicture ? (
+                                                                        <img src={u.instagramProfilePicture} alt={u.companyName || u.fullName || ''} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+                                                                    ) : (
+                                                                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                                                                            {(u.companyName || u.fullName || u.email || '?')[0]?.toUpperCase()}
+                                                                        </div>
+                                                                    )}
                                                                     <div>
-                                                                        <p style={{ fontWeight: 600, color: '#fff', fontSize: 13 }}>{u.companyName || u.fullName || '—'}</p>
-                                                                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{u.email}</p>
+                                                                        <p style={{ fontWeight: 600, color: '#fff', fontSize: 13 }}>{u.role === 'brand' ? u.companyName : u.fullName || '—'}</p>
+                                                                        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{u.instagramHandle ? `@${u.instagramHandle}` : u.email}</p>
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -407,7 +373,7 @@ export default function AdminDashboard() {
                                                                 ) : (
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                                         <Badge label={u.role} map={roleColors} />
-                                                                        <button onClick={() => setEditRoleId(u._id)} title="Change role"
+                                                                        <button onClick={(e) => { e.stopPropagation(); setEditRoleId(u._id); }} title="Change role"
                                                                             style={{ padding: 3, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.2)', lineHeight: 1 }}>
                                                                             <Edit3 size={11} />
                                                                         </button>
@@ -434,17 +400,17 @@ export default function AdminDashboard() {
                                                             <td style={{ padding: '14px 16px' }}>
                                                                 {u.role !== 'admin' && (
                                                                     <div style={{ display: 'flex', gap: 6 }}>
-                                                                        <button onClick={() => handleStatus(u._id, 'active')} title="Approve / Activate"
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleStatus(u._id, 'active'); }} title="Approve / Activate"
                                                                             disabled={actioningUser === u._id}
                                                                             style={{ padding: '6px', borderRadius: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}>
                                                                             <UserCheck size={13} />
                                                                         </button>
-                                                                        <button onClick={() => handleStatus(u._id, 'suspended')} title="Suspend"
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleStatus(u._id, 'suspended'); }} title="Suspend"
                                                                             disabled={actioningUser === u._id}
                                                                             style={{ padding: '6px', borderRadius: 8, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer' }}>
                                                                             <UserX size={13} />
                                                                         </button>
-                                                                        <button onClick={() => handleDelete(u._id)} title="Delete user"
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(u._id); }} title="Delete user"
                                                                             style={{ padding: '6px', borderRadius: 8, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}>
                                                                             <Trash2 size={13} />
                                                                         </button>
@@ -458,6 +424,32 @@ export default function AdminDashboard() {
                                         </div>
                                     )}
                                 </div>
+                                {selectedUser && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
+                                        onClick={() => setSelectedUser(null)}
+                                    >
+                                        <motion.div
+                                            initial={{ y: 20, scale: 0.95 }}
+                                            animate={{ y: 0, scale: 1 }}
+                                            exit={{ y: 20, scale: 0.95 }}
+                                            style={{ background: '#12101d', padding: 30, borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', width: '90%', maxWidth: 500 }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 20 }}>User Details</h2>
+                                            {selectedUser.instagramProfilePicture && <img src={selectedUser.instagramProfilePicture} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 20px' }} />}
+                                            <p><strong>Name:</strong> {selectedUser.role === 'brand' ? selectedUser.companyName : selectedUser.fullName}</p>
+                                            <p><strong>Email:</strong> {selectedUser.email}</p>
+                                            <p><strong>Role:</strong> {selectedUser.role}</p>
+                                            <p><strong>Status:</strong> {selectedUser.status}</p>
+                                            <p><strong>Instagram:</strong> {selectedUser.instagramHandle ? `@${selectedUser.instagramHandle}` : 'Not linked'}</p>
+                                            <button onClick={() => setSelectedUser(null)} style={{ marginTop: 20, padding: '10px 20px', borderRadius: 10, background: '#ff8c42', color: '#fff', border: 'none', cursor: 'pointer' }}>Close</button>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
                             </motion.div>
                         )}
 
@@ -477,13 +469,10 @@ export default function AdminDashboard() {
                                     <select value={campStatus} onChange={e => setCampStatus(e.target.value)}
                                         style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
                                         <option value="">All Statuses</option>
-                                        <option value="sent">Sent</option>
-                                        <option value="accepted">Accepted</option>
-                                        <option value="negotiation">Negotiation</option>
-                                        <option value="deal_closed">Deal Closed</option>
-                                        <option value="rejected">Rejected</option>
-                                        <option value="cancelled">Cancelled</option>
-                                        <option value="expired">Expired</option>
+                                        <option value="running">Running</option>
+                                        <option value="paused">Paused</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="pending">Pending</option>
                                     </select>
                                     <button onClick={loadCampaigns} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, background: 'rgba(255,140,66,0.1)', border: '1px solid rgba(255,140,66,0.2)', color: '#ff8c42', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                                         <RefreshCw size={12} /> Refresh
@@ -493,7 +482,7 @@ export default function AdminDashboard() {
                                 {/* Campaigns table */}
                                 <div style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, overflow: 'hidden' }}>
                                     <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: '#fff' }}>Campaign Requests ({filteredCampaigns.length})</h2>
+                                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: '#fff' }}>Campaigns ({filteredCampaigns.length})</h2>
                                     </div>
 
                                     {campLoading ? (
@@ -505,7 +494,7 @@ export default function AdminDashboard() {
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        {['Campaign', 'Brand → Influencer', 'Status', 'Budget', 'Date', 'Code'].map(h => (
+                                                        {['Campaign', 'Brand', 'Status', 'Dates', 'Progress', 'Budget', 'Actions'].map(h => (
                                                             <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
                                                         ))}
                                                     </tr>
@@ -514,35 +503,46 @@ export default function AdminDashboard() {
                                                     {filteredCampaigns.map((c) => (
                                                         <tr key={c._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms' }}
                                                             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'}
-                                                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                                                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                                                            onClick={() => setSelectedCampaign(c)}>
 
                                                             {/* Campaign title */}
                                                             <td style={{ padding: '14px 16px', maxWidth: 220 }}>
-                                                                <p style={{ fontWeight: 600, color: '#fff', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.campaignTitle || '—'}</p>
+                                                                <p style={{ fontWeight: 600, color: '#fff', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || '—'}</p>
                                                             </td>
 
-                                                            {/* Brand → Influencer */}
+                                                            {/* Brand */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                <p style={{ fontSize: 12, color: '#a78bfa' }}>{c.brandName || '—'}</p>
-                                                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>→ {c.influencerName || '—'}</p>
+                                                                <p style={{ fontSize: 12, color: '#a78bfa' }}>{c.brand?.companyName || '—'}</p>
                                                             </td>
 
                                                             {/* Status */}
                                                             <td style={{ padding: '14px 16px' }}><Badge label={c.status} map={statusColors} /></td>
 
-                                                            {/* Budget */}
-                                                            <td style={{ padding: '14px 16px', color: c.agreedPrice ? '#4ade80' : 'rgba(255,255,255,0.3)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                                                {c.agreedPrice ? `$${c.agreedPrice.toLocaleString()}` : '—'}
-                                                            </td>
-
-                                                            {/* Date */}
+                                                            {/* Dates */}
                                                             <td style={{ padding: '14px 16px', color: 'rgba(255,255,255,0.35)', fontSize: 12, whiteSpace: 'nowrap' }}>
-                                                                {new Date(c.createdAt).toLocaleDateString()}
+                                                                {new Date(c.startDate).toLocaleDateString()} - {new Date(c.endDate).toLocaleDateString()}
                                                             </td>
 
-                                                            {/* Request code */}
+                                                            {/* Progress */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', background: 'rgba(255,255,255,0.04)', padding: '3px 7px', borderRadius: 6 }}>{c.requestCode}</span>
+                                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                                                                    {c.influencers.filter(i => i.status === 'accepted').length} / {c.influencers.length} influencers
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Budget */}
+                                                            <td style={{ padding: '14px 16px', color: c.budget ? '#4ade80' : 'rgba(255,255,255,0.3)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                                                {c.budget ? `$${c.budget.toLocaleString()}` : '—'}
+                                                            </td>
+
+                                                            {/* Actions */}
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'paused'); }} title="Pause" style={{ padding: '6px', borderRadius: 8, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer' }}><UserX size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'running'); }} title="Resume" style={{ padding: '6px', borderRadius: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}><UserCheck size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'completed'); }} title="End" style={{ padding: '6px', borderRadius: 8, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}><Trash2 size={13} /></button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -551,6 +551,37 @@ export default function AdminDashboard() {
                                         </div>
                                     )}
                                 </div>
+                                {selectedCampaign && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
+                                        onClick={() => setSelectedCampaign(null)}
+                                    >
+                                        <motion.div
+                                            initial={{ y: 20, scale: 0.95 }}
+                                            animate={{ y: 0, scale: 1 }}
+                                            exit={{ y: 20, scale: 0.95 }}
+                                            style={{ background: '#12101d', padding: 30, borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', width: '90%', maxWidth: 600 }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 20 }}>Campaign Details</h2>
+                                            <p><strong>Name:</strong> {selectedCampaign.name}</p>
+                                            <p><strong>Brand:</strong> {selectedCampaign.brand.companyName}</p>
+                                            <p><strong>Status:</strong> {selectedCampaign.status}</p>
+                                            <p><strong>Budget:</strong> ${selectedCampaign.budget.toLocaleString()}</p>
+                                            <p><strong>Dates:</strong> {new Date(selectedCampaign.startDate).toLocaleDateString()} - {new Date(selectedCampaign.endDate).toLocaleDateString()}</p>
+                                            <h3 style={{ marginTop: 20, marginBottom: 10 }}>Influencers</h3>
+                                            <ul>
+                                                {selectedCampaign.influencers.map(inf => (
+                                                    <li key={inf.influencer._id}>{inf.influencer.fullName} - {inf.status}</li>
+                                                ))}
+                                            </ul>
+                                            <button onClick={() => setSelectedCampaign(null)} style={{ marginTop: 20, padding: '10px 20px', borderRadius: 10, background: '#ff8c42', color: '#fff', border: 'none', cursor: 'pointer' }}>Close</button>
+                                        </motion.div>
+                                    </motion.div>
+                                )}
                             </motion.div>
                         )}
 

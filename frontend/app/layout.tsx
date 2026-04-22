@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import { SocketProvider } from '@/context/SocketContext';
 
 export const metadata: Metadata = {
     title: 'Porchest – AI-Powered Influencer & Brand Platform',
@@ -35,25 +36,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </head>
             <body className="antialiased">
                 <AuthProvider>
-                    {children}
-                    <Toaster
-                        position="top-right"
-                        toastOptions={{
-                            style: {
-                                background: '#0d0118',
-                                color: '#fff',
-                                border: '1px solid rgba(123,47,247,0.3)',
-                                borderRadius: '12px',
-                                fontSize: '14px',
-                            },
-                            success: {
-                                iconTheme: { primary: '#7B2FF7', secondary: '#fff' },
-                            },
-                            error: {
-                                iconTheme: { primary: '#ff3c3c', secondary: '#fff' },
-                            },
-                        }}
-                    />
+                    <SocketProvider>
+                        {children}
+                        <Toaster
+                            position="top-right"
+                            toastOptions={{
+                                style: {
+                                    background: '#0d0118',
+                                    color: '#fff',
+                                    border: '1px solid rgba(123,47,247,0.3)',
+                                    borderRadius: '12px',
+                                    fontSize: '14px',
+                                },
+                                success: {
+                                    iconTheme: { primary: '#7B2FF7', secondary: '#fff' },
+                                },
+                                error: {
+                                    iconTheme: { primary: '#ff3c3c', secondary: '#fff' },
+                                },
+                            }}
+                        />
+                    </SocketProvider>
                 </AuthProvider>
             </body>
         </html>

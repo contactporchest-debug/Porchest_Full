@@ -61,6 +61,9 @@ export const adminAPI = {
     updateUserStatus: (id: string, status: string) => api.patch(`/admin/users/${id}/status`, { status }),
     updateUserRole: (id: string, role: string) => api.patch(`/admin/users/${id}/role`, { role }),
     deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+    getCampaigns: (params?: Record<string, unknown>) => api.get('/admin/campaigns', { params }),
+    getCampaignById: (id: string) => api.get(`/admin/campaigns/${id}`),
+    updateCampaignStatus: (id: string, status: string) => api.patch(`/admin/campaigns/${id}/status`, { status }),
     // Campaign requests overview
     getRequests: (params?: Record<string, unknown>) => api.get('/admin/requests', { params }),
     // Verification queue
