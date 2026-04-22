@@ -277,6 +277,25 @@ exports.respondToRequest = async (req, res, next) => {
             },
         });
 
+        // ✅ EMIT REAL-TIME SOCKET.IO EVENTS
+        const io = req.app.locals.io;
+        if (io) {
+            // Notify brand
+            io.to(`user-${request.brandUserId}`).emit('collaboration:responded', {
+                requestId: request._id,
+                status: status,
+                campaignTitle: request.campaignTitle,
+                influencerName: request.influencerName,
+                timestamp: new Date(),
+            });
+
+            // Notify influencer's own session
+            io.to(`user-${request.influencerUserId}`).emit('collaboration:updated', {
+                requestId: request._id,
+                status: status,
+            });
+        }
+
         console.log(`[API Success] Influencer ${request.influencerUserId} responded ${status} to request ${id}`);
         res.json({ success: true, request });
     } catch (error) {
@@ -360,10 +379,117 @@ exports.brandRespondToRequest = async (req, res, next) => {
             },
         });
 
+        // ✅ EMIT REAL-TIME SOCKET.IO EVENTS
+        const io = req.app.locals.io;
+        if (io) {
+            // Notify influencer
+            io.to(`user-${request.influencerUserId}`).emit('collaboration:responded', {
+                requestId: request._id,
+                status: request.status,
+                campaignTitle: request.campaignTitle,
+                brandName: request.brandName,
+                timestamp: new Date(),
+            });
+
+            // Notify brand's own session
+            io.to(`user-${request.brandUserId}`).emit('collaboration:updated', {
+                requestId: request._id,
+                status: request.status,
+            });
+        }
+
         console.log(`[API Success] Brand ${request.brandUserId} responded ${status} to counter offer on request ${id}`);
         res.json({ success: true, request });
     } catch (error) {
         console.error(`[API Error] Brand responding to counter offer:`, error);
+        next(error);
+    }
+};
+
+// @desc    Brand gets completed/verified collaborations
+// @route   GET /api/brand/verifications
+exports.getBrandVerifications = async (req, res, next) => {
+    try {
+        const { page = 1, limit = 50 } = req.query;
+        const filter = { 
+            brandUserId: req.user._id,
+            $or: [
+                { status: 'deal_closed' },
+                { status: 'accepted' }
+            ]
+        };
+
+        const verifications = await CampaignRequest.find(filter)
+            .sort({ dealClosedAt: -1, acceptedAt: -1, createdAt: -1 })
+            .skip((Number(page) - 1) * Number(limit))
+            .limit(Number(limit))
+            .lean();
+
+        const total = await CampaignRequest.countDocuments(filter);
+
+        // Transform to verification format (with status field for UI)
+        const formatted = verifications.map(v => ({
+            ...v,
+            _id: v._id,
+            campaignRequestId: v._id,
+            status: v.status === 'deal_closed' ? 'verified' : 'verified'
+        }));
+
+        console.log(`[API Fetch] Brand ${req.user._id} fetched ${formatted.length} verifications`);
+
+        res.json({
+            success: true,
+            verifications: formatted,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / Number(limit)),
+        });
+    } catch (error) {
+        console.error(`[API Error] Fetching brand verifications:`, error);
+        next(error);
+    }
+};
+
+// @desc    Influencer gets completed/verified collaborations
+// @route   GET /api/influencer/verifications
+exports.getInfluencerVerifications = async (req, res, next) => {
+    try {
+        const { page = 1, limit = 50 } = req.query;
+        const filter = { 
+            influencerUserId: req.user._id,
+            $or: [
+                { status: 'deal_closed' },
+                { status: 'accepted' }
+            ]
+        };
+
+        const verifications = await CampaignRequest.find(filter)
+            .sort({ dealClosedAt: -1, acceptedAt: -1, createdAt: -1 })
+            .skip((Number(page) - 1) * Number(limit))
+            .limit(Number(limit))
+            .lean();
+
+        const total = await CampaignRequest.countDocuments(filter);
+
+        // Transform to verification format (with status field for UI)
+        const formatted = verifications.map(v => ({
+            ...v,
+            _id: v._id,
+            campaignRequestId: v._id,
+            status: v.status === 'deal_closed' ? 'verified' : 'verified'
+        }));
+
+        console.log(`[API Fetch] Influencer ${req.user._id} fetched ${formatted.length} verifications`);
+
+        res.json({
+            success: true,
+            verifications: formatted,
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total / Number(limit)),
+        });
+    } catch (error) {
+        console.error(`[API Error] Fetching influencer verifications:`, error);
         next(error);
     }
 };

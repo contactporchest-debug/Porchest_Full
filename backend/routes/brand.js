@@ -37,6 +37,9 @@ router.get('/requests', campaignRequestController.getBrandRequests);
 router.get('/requests/:id', campaignRequestController.getBrandRequestDetail);
 router.patch('/requests/:id', campaignRequestController.brandRespondToRequest);
 
+// ── Verifications (Completed Collaborations) ───────────────────────
+router.get('/verifications', campaignRequestController.getBrandVerifications);
+
 
 // ── Notifications ──────────────────────────────────────────────────
 router.get('/notifications', notificationController.getNotifications);

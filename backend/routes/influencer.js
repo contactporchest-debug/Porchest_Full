@@ -32,6 +32,9 @@ router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
 router.get('/requests', campaignRequestController.getInfluencerRequests);
 router.patch('/requests/:id', campaignRequestController.respondToRequest);
 
+// ── Verifications (Completed Collaborations) ───────────────────────
+router.get('/verifications', campaignRequestController.getInfluencerVerifications);
+
 // ── Notifications ──
 router.get('/notifications', notificationController.getNotifications);
 router.get('/notifications/count', notificationController.getUnreadCount);

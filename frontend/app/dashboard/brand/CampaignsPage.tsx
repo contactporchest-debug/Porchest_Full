@@ -192,6 +192,8 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     const [search, setSearch] = useState('');
     const [expanded, setExpanded] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
 
     const fetchData = useCallback(async () => {
@@ -200,11 +202,23 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                 brandAPI.getRequests(),
                 brandAPI.getBrandVerifications()
             ]);
+            
+            if (!requestsRes.data || typeof requestsRes.data !== 'object') {
+                throw new Error('Invalid requests API response');
+            }
+            if (!verificationsRes.data || typeof verificationsRes.data !== 'object') {
+                throw new Error('Invalid verifications API response');
+            }
+            
             setRequests(requestsRes.data.requests || []);
             setVerifications(verificationsRes.data.verifications || []);
-        } catch (err) {
+            setError(null);
+            setLastUpdated(new Date());
+        } catch (err: any) {
+            const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load campaigns';
             console.error('Failed to load campaigns:', err);
-            if (loading) toast.error('Failed to load campaigns');
+            setError(errorMsg);
+            if (loading) toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -254,6 +268,18 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                         <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns & Collaborations</h1>
                         <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>{filtered.length} requests{filtered.length !== 1 ? 's' : ''}</p>
                     </div>
+                    {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+                </div>
+            )}
+
+            {/* Error banner */}
+            {error && (
+                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                    <div>
+                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                    </div>
                 </div>
             )}
 
@@ -279,10 +305,10 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
                     <FileText size={44} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff', marginBottom: '6px' }}>
-                        {requests.length === 0 ? 'No campaigns yet' : 'No results'}
+                        {error ? 'Unable to Load Campaigns' : requests.length === 0 ? 'No campaigns yet' : 'No results'}
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>
-                        {requests.length === 0 ? 'Go to the Brand Overview, find an influencer, and send your first campaign request.' : 'Try adjusting filters or search.'}
+                        {error ? 'Please check your connection and try again.' : requests.length === 0 ? 'Go to the Brand Overview, find an influencer, and send your first campaign request.' : 'Try adjusting filters or search.'}
                     </p>
                 </div>
             )}
