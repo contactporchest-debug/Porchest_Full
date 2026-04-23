@@ -96,7 +96,7 @@ export default function InfluencerPortal() {
                 <ProfileCompletionBanner completion={profileCompletion} />
 
                 {/* ── CONTENT ── */}
-                <OverviewPage connected={igConnected} onToggle={setIgConnected} stats={dashStats} />
+                <OverviewPage stats={dashStats} />
             </DashboardLayout>
         </ProtectedRoute>
     );

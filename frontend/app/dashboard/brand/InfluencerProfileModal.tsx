@@ -555,41 +555,6 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                             )}
                         </div>
 
-                        {/* ── AI INSIGHTS ── */}
-                        <div style={{ background: 'linear-gradient(135deg, rgba(123,63,242,0.08) 0%, rgba(20,18,34,0.5) 100%)', borderRadius: '24px', padding: '28px', border: '1px solid rgba(123,63,242,0.15)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-                                <Zap size={16} color="#c084fc" />
-                                <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#fff' }}>AI Insights</h3>
-                                <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: '99px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.25)', fontSize: '10px', color: '#c084fc', fontWeight: '700' }}>Intelligence</span>
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-                                <InsightChip icon={<Film size={14} />} label="Best Content Format" value={bestFormat} color="#A855F7"
-                                    description={`${derived.reelCount} reels vs ${derived.imageCount} static posts in the last ${timeRange} days`} />
-                                <InsightChip icon={<Shield size={14} />} label="Audience Quality" value={audienceQuality} color="#60d5f8"
-                                    description={`${formatNum(followers)} followers with ${displayEngagement}% engagement`} />
-                                <InsightChip icon={<TrendingUp size={14} />} label="Engagement Health" value={engagementHealth} color={engagementHealthColor}
-                                    description={displayEngagement >= 3 ? 'Above industry average — strong organic reach' : 'Consider boosted content for stronger ROI'} />
-                                <InsightChip icon={<Target size={14} />} label="Avg. Eng. per Post" value={avgEngPerPost > 0 ? formatNum(Math.round(avgEngPerPost)) : '—'} color="#facc15"
-                                    description="Combined likes + comments per content piece" />
-                            </div>
-                            {/* Recommendation with scoring reasons */}
-                            <div style={{ padding: '16px 20px', borderRadius: '16px', background: `${recommendationColor}0a`, border: `1px solid ${recommendationColor}25`, display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${recommendationColor}15`, border: `1px solid ${recommendationColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                                    <Award size={20} style={{ color: recommendationColor }} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Collaboration Recommendation</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: recommendationColor, marginBottom: scoringReasons.length > 0 ? '10px' : 0 }}>{recommendationScore}</p>
-                                    {scoringReasons.length > 0 && (
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                            {scoringReasons.map((r: string) => (
-                                                <span key={r} style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', padding: '2px 8px', borderRadius: '6px' }}>{r}</span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Recent Posts Grid */}
