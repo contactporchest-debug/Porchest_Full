@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { brandAPI, influencerAPI } from '@/lib/api';
 import {
     LayoutDashboard, Users, Megaphone, BarChart3,
-    UserCircle, Briefcase, DollarSign, LogOut,
+    UserCircle, Briefcase, LogOut,
     ChevronLeft, ChevronRight, Bell, Search, Bot, Shield,
     Inbox, Mail, CheckCheck, ExternalLink,
 } from 'lucide-react';
@@ -23,7 +23,6 @@ const brandNav = [
     { label: 'My Profile', href: '/dashboard/brand/profile', icon: <UserCircle size={17} /> },
     { label: 'Influencers', href: '/dashboard/brand/influencers', icon: <Users size={17} /> },
     { label: 'Collaborations', href: '/dashboard/brand/collaborations', icon: <Briefcase size={17} /> },
-    { label: 'Analytics', href: '/dashboard/brand/analytics', icon: <BarChart3 size={17} /> },
     { label: 'AI Matching', href: '/dashboard/brand/matching', icon: <Bot size={17} /> },
 ];
 const influencerNav = [
@@ -32,7 +31,6 @@ const influencerNav = [
     { label: 'Requests', href: '/dashboard/influencer/requests', icon: <Inbox size={17} /> },
     { label: 'Analytics', href: '/dashboard/influencer/analytics', icon: <BarChart3 size={17} /> },
     { label: 'Collaborations', href: '/dashboard/influencer/collaborations', icon: <Briefcase size={17} /> },
-    { label: 'Earnings', href: '/dashboard/influencer/earnings', icon: <DollarSign size={17} /> },
 ];
 
 const roleNav: Record<string, typeof adminNav> = { admin: adminNav, brand: brandNav, influencer: influencerNav };
