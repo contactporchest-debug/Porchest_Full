@@ -47,11 +47,16 @@ export default function LoginPage() {
             const data = await res.json();
             
             if (data.success) {
-                // Manually log the user in via context or token save
-                localStorage.setItem('token', data.token);
-                // Trigger a full reload to let AuthContext pick up token and redirect,
-                // or you can add a `loginWithToken` context method. Here we reload to trigger standard flow
-                window.location.href = '/dashboard';
+                // Manually log the user in
+                localStorage.setItem('porchest_token', data.token);
+                localStorage.setItem('porchest_user', JSON.stringify(data.user));
+                
+                if (data.user && data.user.role) {
+                    window.location.href = `/dashboard/${data.user.role}`;
+                } else {
+                    window.location.href = '/dashboard/brand'; // Default fallback
+                }
+
             } else {
                 toast.error(data.message || 'Google Auth failed');
                 // if message indicates user is new, we redirect them to signup with token

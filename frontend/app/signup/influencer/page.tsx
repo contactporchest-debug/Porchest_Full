@@ -91,7 +91,8 @@ export default function InfluencerSignupPage() {
             const data = await res.json();
             
             if (data.success) {
-                localStorage.setItem('token', data.token);
+                localStorage.setItem('porchest_token', data.token);
+                localStorage.setItem('porchest_user', JSON.stringify(data.user));
                 window.location.href = '/dashboard/influencer';
             } else {
                 toast.error(data.message || 'Google Auth failed');
