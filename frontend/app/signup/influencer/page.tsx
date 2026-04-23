@@ -12,13 +12,6 @@ import { Star, Mail, Lock, Eye, EyeOff, ChevronDown, Globe, Calendar } from 'luc
 import OTPVerify from '@/components/auth/OTPVerify';
 import { GoogleLogin } from '@react-oauth/google';
 
-const NICHES = ['Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gaming', 'Lifestyle', 'Education', 'Entertainment', 'Finance', 'Other'];
-const COUNTRIES = [
-    'Pakistan', 'United States', 'United Kingdom', 'Canada', 'Australia', 'India',
-    'United Arab Emirates', 'Saudi Arabia', 'Germany', 'France', 'Netherlands',
-    'Singapore', 'Malaysia', 'Turkey', 'South Africa', 'Nigeria', 'Kenya', 'Other',
-];
-
 const TERMS_TEXT = `Welcome to Porchest — the AI-powered influencer-brand collaboration platform.
 
 By creating an account, you agree to the following:
@@ -46,7 +39,7 @@ export default function InfluencerSignupPage() {
     const [showPass, setShowPass] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [form, setForm] = useState({
-        fullName: '', email: '', password: '', niche: '', country: '', age: '', bio: '', termsAccepted: false,
+        email: '', password: '', termsAccepted: false,
     });
     const [showOTP, setShowOTP] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
@@ -60,7 +53,7 @@ export default function InfluencerSignupPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.fullName || !form.email || !form.password || !form.niche || !form.country) {
+        if (!form.email || !form.password) {
             return toast.error('Please fill all required fields');
         }
         if (!form.termsAccepted) {
@@ -70,13 +63,8 @@ export default function InfluencerSignupPage() {
         setLoading(true);
         try {
             await authAPI.register({
-                fullName: form.fullName,
                 email: form.email,
                 password: form.password,
-                niche: form.niche,
-                country: form.country,
-                age: form.age ? Number(form.age) : undefined,
-                bio: form.bio,
                 role: 'influencer',
                 termsAccepted: true,
             });
@@ -152,13 +140,6 @@ export default function InfluencerSignupPage() {
                         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '32px' }}>
                             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-                                {/* Full Name */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Full Name *</label>
-                                    <input style={inputStyle} placeholder="Your full name" value={form.fullName} onChange={(e) => set('fullName', e.target.value)}
-                                        onFocus={e => (e.target.style.borderColor = 'rgba(168,85,247,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
-                                </div>
-
                                 {/* Email */}
                                 <div>
                                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email *</label>
@@ -180,50 +161,6 @@ export default function InfluencerSignupPage() {
                                             {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                                         </button>
                                     </div>
-                                </div>
-
-                                {/* Niche + Age */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Niche *</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <select style={{ ...inputStyle, appearance: 'none', paddingRight: '36px', color: form.niche ? '#fff' : 'rgba(255,255,255,0.3)' }}
-                                                value={form.niche} onChange={(e) => set('niche', e.target.value)}>
-                                                <option value="" disabled>Select niche</option>
-                                                {NICHES.map((n) => <option key={n} value={n} style={{ background: '#0d0118' }}>{n}</option>)}
-                                            </select>
-                                            <ChevronDown size={13} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        </div>
-                                    </div>
-                                    <div style={{ width: '90px' }}>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Age</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <Calendar size={13} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                            <input type="number" min={13} max={100} style={{ ...inputStyle, paddingLeft: '34px' }} placeholder="25" value={form.age} onChange={(e) => set('age', e.target.value)} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Country */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Country of Residence *</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Globe size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <select style={{ ...inputStyle, paddingLeft: '42px', appearance: 'none', paddingRight: '36px', color: form.country ? '#fff' : 'rgba(255,255,255,0.3)' }}
-                                            value={form.country} onChange={(e) => set('country', e.target.value)}>
-                                            <option value="" disabled>Select country</option>
-                                            {COUNTRIES.map((c) => <option key={c} value={c} style={{ background: '#0d0118' }}>{c}</option>)}
-                                        </select>
-                                        <ChevronDown size={13} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    </div>
-                                </div>
-
-                                {/* Bio (optional) */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bio <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: '400', textTransform: 'none' }}>(optional)</span></label>
-                                    <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '75px', lineHeight: '1.6' }}
-                                        placeholder="Tell brands about yourself and your audience…"
-                                        value={form.bio} onChange={(e) => set('bio', e.target.value)} />
                                 </div>
 
                                 {/* Terms & Conditions */}

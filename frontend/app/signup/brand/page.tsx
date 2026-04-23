@@ -8,11 +8,9 @@ import { authAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
-import { Building2, Mail, Lock, Eye, EyeOff, ChevronDown, DollarSign, FileText } from 'lucide-react';
+import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import OTPVerify from '@/components/auth/OTPVerify';
 import { GoogleLogin } from '@react-oauth/google';
-
-const NICHES = ['Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gaming', 'Lifestyle', 'Education', 'Entertainment', 'Finance', 'Other'];
 
 export default function BrandSignupPage() {
     const router = useRouter();
@@ -20,15 +18,12 @@ export default function BrandSignupPage() {
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [form, setForm] = useState({
-        companyName: '', email: '', password: '', brandNiche: '',
-        brandGoal: '', approxBudgetUSD: '', website: '',
+        email: '', password: ''
     });
     const [showOTP, setShowOTP] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
 
     const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-    const wordCount = form.brandGoal.trim() ? form.brandGoal.trim().split(/\s+/).length : 0;
-    const wordsLeft = 150 - wordCount;
 
     const onVerifySuccess = async (token: string, user: any) => {
         toast.success('Welcome to Porchest! 🎉');
@@ -37,21 +32,15 @@ export default function BrandSignupPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.companyName || !form.email || !form.password || !form.brandNiche) {
+        if (!form.email || !form.password) {
             return toast.error('Please fill all required fields');
         }
-        if (wordCount > 150) return toast.error('Brand Goal must be 150 words or less');
         if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
         setLoading(true);
         try {
             await authAPI.register({
-                companyName: form.companyName,
                 email: form.email,
                 password: form.password,
-                brandNiche: form.brandNiche,
-                brandGoal: form.brandGoal,
-                website: form.website,
-                approxBudgetUSD: form.approxBudgetUSD ? Number(form.approxBudgetUSD) : undefined,
                 role: 'brand',
             });
 
@@ -125,22 +114,12 @@ export default function BrandSignupPage() {
                         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '32px' }}>
                             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-                                {/* Company Name */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Company Name *</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Building2 size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <input style={{ ...inputStyle, paddingLeft: '42px' }} placeholder="Your company name" value={form.companyName} onChange={(e) => set('companyName', e.target.value)}
-                                            onFocus={e => (e.target.style.borderColor = 'rgba(123,63,242,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
-                                    </div>
-                                </div>
-
                                 {/* Email */}
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Official Email *</label>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email *</label>
                                     <div style={{ position: 'relative' }}>
                                         <Mail size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <input type="email" style={{ ...inputStyle, paddingLeft: '42px' }} placeholder="company@email.com" value={form.email} onChange={(e) => set('email', e.target.value)}
+                                        <input type="email" style={{ ...inputStyle, paddingLeft: '42px' }} placeholder="you@email.com" value={form.email} onChange={(e) => set('email', e.target.value)}
                                             onFocus={e => (e.target.style.borderColor = 'rgba(123,63,242,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
                                     </div>
                                 </div>
@@ -156,44 +135,6 @@ export default function BrandSignupPage() {
                                             {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                                         </button>
                                     </div>
-                                </div>
-
-                                {/* Brand Niche + Budget */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Brand Niche *</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <select style={{ ...inputStyle, appearance: 'none', paddingRight: '36px', color: form.brandNiche ? '#fff' : 'rgba(255,255,255,0.3)' }}
-                                                value={form.brandNiche} onChange={(e) => set('brandNiche', e.target.value)}>
-                                                <option value="" disabled>Select niche</option>
-                                                {NICHES.map((n) => <option key={n} value={n} style={{ background: '#0d0118' }}>{n}</option>)}
-                                            </select>
-                                            <ChevronDown size={13} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Approx. Budget (USD)</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <DollarSign size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                            <input type="number" min={0} style={{ ...inputStyle, paddingLeft: '42px' }} placeholder="e.g. 5000" value={form.approxBudgetUSD} onChange={(e) => set('approxBudgetUSD', e.target.value)}
-                                                onFocus={e => (e.target.style.borderColor = 'rgba(123,63,242,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Brand Goal */}
-                                <div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                            <FileText size={12} /> Brand Goal
-                                        </label>
-                                        <span style={{ fontSize: '11px', color: wordsLeft < 0 ? '#f87171' : wordsLeft < 20 ? '#fbbf24' : 'rgba(255,255,255,0.25)', fontWeight: '600' }}>
-                                            {wordCount}/150 words
-                                        </span>
-                                    </div>
-                                    <textarea style={{ ...inputStyle, resize: 'vertical', minHeight: '100px', lineHeight: '1.6' }}
-                                        placeholder="Describe what your brand does, your marketing intent, and target audience (max 150 words)…"
-                                        value={form.brandGoal} onChange={(e) => set('brandGoal', e.target.value)} />
                                 </div>
 
                                 <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '4px' } as React.CSSProperties}>
