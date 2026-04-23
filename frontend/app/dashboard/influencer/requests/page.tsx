@@ -8,7 +8,7 @@ import { influencerAPI } from '@/lib/api';
 import {
     Loader2, Inbox, Calendar, DollarSign, Clock, CheckCircle, XCircle,
     MessageSquare, Send, ChevronDown, ChevronUp, Eye, AlertCircle,
-    Handshake, X, ArrowRight,
+    Handshake, X, ArrowRight, Download,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -22,6 +22,232 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
     expired: { label: 'Expired', color: 'rgba(255,255,255,0.3)', bg: 'rgba(255,255,255,0.04)', icon: <Clock size={11} /> },
     cancelled: { label: 'Cancelled', color: 'rgba(255,255,255,0.3)', bg: 'rgba(255,255,255,0.04)', icon: <XCircle size={11} /> },
 };
+
+const escapeHtml = (value: unknown) =>
+    String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString() : '—';
+
+function downloadRequestPdf(request: any) {
+    const popup = window.open('', '_blank', 'width=900,height=1200');
+    if (!popup) {
+        toast.error('Please allow popups to download the PDF.');
+        return;
+    }
+
+    const logoUrl = `${window.location.origin}/logo.png`;
+    const priceText = request.agreedPrice
+        ? `$${request.agreedPrice.toLocaleString()}`
+        : `$${request.budgetRangeMin?.toLocaleString() || '—'} – $${request.budgetRangeMax?.toLocaleString() || '—'}`;
+
+    const detailRows = [
+        ['Request Code', request.requestCode || '—'],
+        ['Campaign Title', request.campaignTitle || '—'],
+        ['Brand', request.brandName || '—'],
+        ['Campaign Type', request.campaignType?.replace(/_/g, ' ') || '—'],
+        ['Deliverables', request.deliverables || '—'],
+        ['Required Elements', request.requiredElements || '—'],
+        ['Video Length', request.videoLength || '—'],
+        ['Agreed Price', priceText],
+        ['Payment Terms', request.paymentTerms || '—'],
+        ['Posting Deadline', formatDate(request.postingDeadline)],
+        ['Campaign Start Date', formatDate(request.campaignStartDate)],
+        ['Campaign End Date', formatDate(request.campaignEndDate)],
+        ['Hashtags', request.hashtags || '—'],
+        ['Disclosure Requirements', request.disclosureRequirements || '#Ad #Sponsored'],
+        ['Status', STATUS_CFG[request.status]?.label || request.status || '—'],
+    ];
+
+    const optionalSections = [
+        request.brandMessage ? `
+            <section class="section">
+                <h3>Message from Brand</h3>
+                <p>${escapeHtml(request.brandMessage)}</p>
+            </section>
+        ` : '',
+        request.campaignDescription ? `
+            <section class="section">
+                <h3>Campaign Description</h3>
+                <p>${escapeHtml(request.campaignDescription)}</p>
+            </section>
+        ` : '',
+        request.contentGuidelines ? `
+            <section class="section">
+                <h3>Content Guidelines</h3>
+                <p>${escapeHtml(request.contentGuidelines)}</p>
+            </section>
+        ` : '',
+        request.counterOfferPrice ? `
+            <section class="section">
+                <h3>Counter Offer</h3>
+                <p><strong>Price:</strong> $${escapeHtml(request.counterOfferPrice.toLocaleString())}</p>
+                ${request.counterOfferMessage ? `<p><strong>Message:</strong> ${escapeHtml(request.counterOfferMessage)}</p>` : ''}
+            </section>
+        ` : '',
+    ].join('');
+
+    popup.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Porchest Collaboration Request - ${escapeHtml(request.campaignTitle || 'Request')}</title>
+            <meta charset="utf-8" />
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    color: #111827;
+                    background: #ffffff;
+                }
+                .page {
+                    max-width: 900px;
+                    margin: 0 auto;
+                    padding: 32px 40px 48px;
+                }
+                .header {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    border-bottom: 2px solid #6d28d9;
+                    padding-bottom: 18px;
+                    margin-bottom: 28px;
+                }
+                .header img {
+                    width: 44px;
+                    height: 44px;
+                    object-fit: contain;
+                }
+                .brand h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #111827;
+                }
+                .brand p {
+                    margin: 4px 0 0;
+                    color: #6b7280;
+                    font-size: 13px;
+                }
+                .title {
+                    margin-bottom: 22px;
+                }
+                .title h2 {
+                    margin: 0 0 6px;
+                    font-size: 22px;
+                    color: #111827;
+                }
+                .title p {
+                    margin: 0;
+                    color: #4b5563;
+                    font-size: 14px;
+                }
+                .grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                    margin-bottom: 24px;
+                }
+                .item {
+                    border: 1px solid #e5e7eb;
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    break-inside: avoid;
+                }
+                .label {
+                    font-size: 11px;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    color: #6b7280;
+                    margin-bottom: 6px;
+                }
+                .value {
+                    font-size: 14px;
+                    color: #111827;
+                    font-weight: 600;
+                    line-height: 1.5;
+                    word-break: break-word;
+                }
+                .section {
+                    margin-top: 18px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    break-inside: avoid;
+                }
+                .section h3 {
+                    margin: 0 0 10px;
+                    font-size: 15px;
+                    color: #6d28d9;
+                }
+                .section p {
+                    margin: 0;
+                    font-size: 14px;
+                    color: #374151;
+                    line-height: 1.7;
+                    white-space: pre-wrap;
+                }
+                .footer {
+                    margin-top: 28px;
+                    padding-top: 14px;
+                    border-top: 1px solid #e5e7eb;
+                    font-size: 12px;
+                    color: #6b7280;
+                }
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .page {
+                        padding: 24px 28px 32px;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="page">
+                <div class="header">
+                    <img src="${logoUrl}" alt="Porchest logo" />
+                    <div class="brand">
+                        <h1>Porchest</h1>
+                        <p>Collaboration Request Summary</p>
+                    </div>
+                </div>
+
+                <div class="title">
+                    <h2>${escapeHtml(request.campaignTitle || 'Collaboration Request')}</h2>
+                    <p>Prepared for the influencer from the details provided by ${escapeHtml(request.brandName || 'the brand')}.</p>
+                </div>
+
+                <div class="grid">
+                    ${detailRows.map(([label, value]) => `
+                        <div class="item">
+                            <div class="label">${escapeHtml(label)}</div>
+                            <div class="value">${escapeHtml(value)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                ${optionalSections}
+
+                <div class="footer">
+                    Generated from Porchest on ${escapeHtml(new Date().toLocaleString())}.
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    popup.document.close();
+
+    popup.onload = () => {
+        popup.focus();
+        popup.print();
+    };
+}
 
 function RequestDetailPanel({ request, onRespond, responding }: { request: any; onRespond: (id: string, action: string, data?: any) => void; responding: boolean }) {
     const [counterPrice, setCounterPrice] = useState('');
@@ -120,6 +346,28 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                             <p style={{ fontSize: '13px', color: '#fff', fontWeight: '600', textTransform: 'capitalize' }}>{f.val}</p>
                         </div>
                     ))}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                        onClick={() => downloadRequestPdf(request)}
+                        style={{
+                            padding: '11px 16px',
+                            borderRadius: '12px',
+                            background: 'rgba(123,63,242,0.1)',
+                            border: '1px solid rgba(123,63,242,0.22)',
+                            color: '#a78bfa',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '7px',
+                            fontFamily: 'inherit',
+                        }}
+                    >
+                        <Download size={13} /> Download PDF
+                    </button>
                 </div>
 
                 {/* Content Guidelines */}
