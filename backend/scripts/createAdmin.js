@@ -6,7 +6,7 @@ const ensureAdminUser = require('../utils/ensureAdminUser');
 async function main() {
     await connectDB();
     await ensureAdminUser();
-    console.log('Admin login ensured: admin@porchest.com / porchest_admin');
+    console.log('Admin login ensured: admin@porchest.com / Porchest_Admin');
     process.exit(0);
 }
 

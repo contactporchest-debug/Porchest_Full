@@ -32,7 +32,7 @@ npm run dev            # Starts on http://localhost:3000
 ## Default Admin Login
 | Role | Email | Password |
 |---|---|---|
-| 👑 Admin | `admin@porchest.com` | `porchest_admin` |
+| 👑 Admin | `admin@porchest.com` | `Porchest_Admin` |
 
 ## Environment Variables
 **.env** (backend):

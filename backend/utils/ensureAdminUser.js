@@ -3,6 +3,7 @@ const { generateUniqueCode } = require('./generateCode');
 
 async function ensureAdminUser() {
     const adminEmail = 'admin@porchest.com';
+    const adminPassword = 'Porchest_Admin';
     const existing = await User.findOne({ email: adminEmail });
 
     if (existing) {
@@ -28,10 +29,8 @@ async function ensureAdminUser() {
             changed = true;
         }
 
-        if (!existing.password) {
-            existing.password = 'porchest_admin';
-            changed = true;
-        }
+        existing.password = adminPassword;
+        changed = true;
 
         if (existing.isVerified !== undefined) {
             existing.set('isVerified', undefined);
@@ -71,7 +70,7 @@ async function ensureAdminUser() {
         userCode,
         role: 'admin',
         email: adminEmail,
-        password: 'porchest_admin',
+        password: adminPassword,
         status: 'active',
     });
 
