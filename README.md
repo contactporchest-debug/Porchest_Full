@@ -18,7 +18,7 @@ A futuristic SaaS platform connecting brands with influencers via AI matching, r
 cd backend
 cp .env.example .env   # Fill in your MongoDB Atlas URI
 npm install
-npm run seed           # Creates demo accounts
+npm run create-admin   # Ensures the default admin login exists
 npm run dev            # Starts on http://localhost:5000
 ```
 
@@ -29,14 +29,10 @@ npm install
 npm run dev            # Starts on http://localhost:3000
 ```
 
-## Demo Accounts
+## Default Admin Login
 | Role | Email | Password |
 |---|---|---|
-| 👑 Admin | `admin@porchest.com` | `Admin123!` |
-| 🏢 Brand | `brand@demo.com` | `Brand123!` |
-| ⭐ Influencer | `influencer@demo.com` | `Influencer123!` |
-
-Use the **Demo Login** buttons on `/login` to log in instantly.
+| 👑 Admin | `admin@porchest.com` | `porchest_admin` |
 
 ## Environment Variables
 **.env** (backend):

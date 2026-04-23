@@ -56,56 +56,58 @@ const ChartTooltip = ({ active, payload, label }: any) => {
     );
 };
 
-/* ─── Data generators (anchor to real values) ────────────────── */
-const makeFollowerTrend = (currentFollowers: number, days: number) => {
-    const data = [];
-    const base = currentFollowers * 0.88;
-    for (let i = days; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const prog = (days - i) / days;
-        const noise = (Math.random() - 0.45) * currentFollowers * 0.006;
-        data.push({
-            date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            followers: Math.max(0, Math.round(base + prog * (currentFollowers - base) + noise)),
-        });
-    }
-    return data;
-};
+/* ─── Data builders (real data only) ──────────────────────────── */
+const formatDay = (value: string | Date) =>
+    new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-const makeEngagementTrend = (currentRate: number, days: number) => {
-    const data = [];
-    for (let i = days; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        const noise = (Math.random() - 0.5) * 1.2;
-        data.push({
-            date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            rate: Math.max(0, +((currentRate || 4.5) + noise).toFixed(2)),
-        });
-    }
-    return data;
-};
+const makeEngagementTrend = (mediaArr: any[], followersCount: number, days: number) =>
+    mediaArr
+        .filter((m) => m?.timestamp)
+        .map((m) => {
+            const likes = m.likeCount || 0;
+            const comments = m.commentsCount || 0;
+            const base = followersCount > 0 ? ((likes + comments) / followersCount) * 100 : 0;
+            return {
+                ts: new Date(m.timestamp).getTime(),
+                date: formatDay(m.timestamp),
+                rate: +base.toFixed(2),
+            };
+        })
+        .filter((m) => m.ts >= Date.now() - days * 86400000)
+        .sort((a, b) => a.ts - b.ts)
+        .slice(-12);
 
-const makeLikesCommentsTrend = (avgLikes: number, avgComments: number, days: number) => {
-    const data = [];
-    const step = Math.ceil(days / 8);
-    for (let i = days; i >= 0; i -= step) {
-        const d = new Date(); d.setDate(d.getDate() - i);
-        data.push({
-            date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            likes: Math.max(0, Math.round((avgLikes || 500) * (0.8 + Math.random() * 0.4))),
-            comments: Math.max(0, Math.round((avgComments || 30) * (0.8 + Math.random() * 0.4))),
-        });
-    }
-    return data;
-};
+const makeLikesCommentsTrend = (mediaArr: any[], days: number) =>
+    mediaArr
+        .filter((m) => m?.timestamp)
+        .map((m) => ({
+            ts: new Date(m.timestamp).getTime(),
+            date: formatDay(m.timestamp),
+            likes: m.likeCount || 0,
+            comments: m.commentsCount || 0,
+        }))
+        .filter((m) => m.ts >= Date.now() - days * 86400000)
+        .sort((a, b) => a.ts - b.ts)
+        .slice(-12);
 
-const makePostingCadence = (days: number) => {
+const makePostingCadence = (mediaArr: any[], days: number) => {
+    const dailyCounts = new Map();
+
+    mediaArr
+        .filter((m) => m?.timestamp)
+        .forEach((m) => {
+            const key = new Date(m.timestamp).toISOString().slice(0, 10);
+            dailyCounts.set(key, (dailyCounts.get(key) || 0) + 1);
+        });
+
     const data = [];
-    for (let i = days; i >= 0; i--) {
-        const d = new Date(); d.setDate(d.getDate() - i);
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
         data.push({
-            date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            posts: Math.floor(Math.random() * 3.5),
+            date: formatDay(d),
+            posts: dailyCounts.get(key) || 0,
         });
     }
     return data;
@@ -195,6 +197,12 @@ const InsightCard = ({ text, icon }: { text: string; icon?: React.ReactNode }) =
     </div>
 );
 
+const EmptyChartState = ({ text }: { text: string }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.6 }}>
+        <div>{text}</div>
+    </div>
+);
+
 /* ─── Main Component ─────────────────────────────────────────── */
 export default function AnalyticsPage() {
     const [analytics, setAnalytics] = useState<DerivedMetrics | null>(null);
@@ -236,19 +244,17 @@ export default function AnalyticsPage() {
     };
 
     /* Memoized chart data — regenerates when timeRange or analytics changes */
-    const followerData = useMemo(() =>
-        makeFollowerTrend(analytics?.followersCount ?? connection?.followersCount ?? 10000, timeRange),
-        [timeRange, analytics?.followersCount, connection?.followersCount]);
+    const followerData: any[] = [];
 
     const engagementData = useMemo(() =>
-        makeEngagementTrend(analytics?.engagementRate ?? 4.5, timeRange),
-        [timeRange, analytics?.engagementRate]);
+        makeEngagementTrend(media, analytics?.followersCount ?? connection?.followersCount ?? 0, timeRange),
+        [timeRange, media, analytics?.followersCount, connection?.followersCount]);
 
     const likesCommentsData = useMemo(() =>
-        makeLikesCommentsTrend(analytics?.avgLikes ?? 500, analytics?.avgComments ?? 30, timeRange),
-        [timeRange, analytics?.avgLikes, analytics?.avgComments]);
+        makeLikesCommentsTrend(media, timeRange),
+        [timeRange, media]);
 
-    const cadenceData = useMemo(() => makePostingCadence(timeRange), [timeRange]);
+    const cadenceData = useMemo(() => makePostingCadence(media, timeRange), [timeRange, media]);
 
     const mediaScatter = useMemo(() => makeMediaScatter(media), [media]);
 
@@ -340,7 +346,7 @@ export default function AnalyticsPage() {
 
                     {/* Verified data banner */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)', marginBottom: 28, fontSize: 12, color: 'rgba(74,222,128,0.85)' }}>
-                        <Zap size={13} /> <strong>Verified Data</strong> — Metrics calculated using official Instagram Graph API with industry-standard normalization. Trend lines use historical interpolation.
+                        <Zap size={13} /> <strong>Verified Data</strong> — Metrics shown here come from your synced Instagram account and recent fetched media only.
                     </div>
 
                     {/* ════════════════════════════════════════════════════════
@@ -360,21 +366,7 @@ export default function AnalyticsPage() {
                     {/* Follower Growth — Area Chart */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <ChartCard title="Follower Growth" subtitle={`Trend over last ${timeRange} days`}>
-                            <ResponsiveContainer width="100%" height={220}>
-                                <AreaChart data={followerData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                    <defs>
-                                        <linearGradient id="gFollowers" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={C.violet} stopOpacity={0.35} />
-                                            <stop offset="95%" stopColor={C.violet} stopOpacity={0.02} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(timeRange / 6)} />
-                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={fmtK} width={44} />
-                                    <Tooltip content={<ChartTooltip />} />
-                                    <Area type="monotone" dataKey="followers" name="Followers" stroke={C.violet} strokeWidth={2.5} fill="url(#gFollowers)" dot={false} activeDot={{ r: 5, fill: C.violet, stroke: '#fff', strokeWidth: 2 }} />
-                                </AreaChart>
-                            </ResponsiveContainer>
+                            <EmptyChartState text="Historical follower snapshots are not stored yet. Current follower count is shown above from live synced account data." />
                         </ChartCard>
 
                         {/* Posts Analyzed — Donut */}
@@ -420,39 +412,41 @@ export default function AnalyticsPage() {
                     <SectionTitle icon={<Zap size={14} />}>Engagement Metrics</SectionTitle>
 
                     {/* Engagement rate trend — Line chart */}
-                    <ChartCard title="Engagement Rate Trend" subtitle={`Weekly engagement (%) — last ${timeRange} days`} style={{ marginBottom: 16 }}>
-                        <ResponsiveContainer width="100%" height={230}>
-                            <LineChart data={engagementData} margin={{ top: 4, right: 20, bottom: 0, left: 0 }}>
-                                <defs>
-                                    <linearGradient id="gEngagement" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={C.amber} stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor={C.amber} stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(timeRange / 6)} />
-                                <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} width={40} />
-                                <Tooltip content={<ChartTooltip />} />
-                                <ReferenceLine y={er} stroke={C.amber} strokeDasharray="4 2" strokeOpacity={0.5} label={{ value: 'Current', fill: C.amber, fontSize: 10 }} />
-                                <Line type="monotone" dataKey="rate" name="Engagement Rate" unit="%" stroke={C.amber} strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: C.amber, stroke: '#fff', strokeWidth: 2 }} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <ChartCard title="Engagement Rate Trend" subtitle={`Weekly engagement (%) — last ${timeRange} days`} style={{ marginBottom: 16 }}>
+                        {engagementData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={230}>
+                                <LineChart data={engagementData} margin={{ top: 4, right: 20, bottom: 0, left: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} width={40} />
+                                    <Tooltip content={<ChartTooltip />} />
+                                    <ReferenceLine y={er} stroke={C.amber} strokeDasharray="4 2" strokeOpacity={0.5} label={{ value: 'Current', fill: C.amber, fontSize: 10 }} />
+                                    <Line type="monotone" dataKey="rate" name="Engagement Rate" unit="%" stroke={C.amber} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5, fill: C.amber, stroke: '#fff', strokeWidth: 2 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <EmptyChartState text="Not enough synced media with timestamps is available yet to plot engagement over time." />
+                        )}
                     </ChartCard>
 
                     {/* Avg Likes vs Comments — Bar chart + Efficiency Radial */}
                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
                         <ChartCard title="Avg Likes vs Comments per Post" subtitle={`Comparison over last ${timeRange} days`}>
-                            <ResponsiveContainer width="100%" height={220}>
-                                <ComposedChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(likesCommentsData.length / 5)} />
-                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
-                                    <Tooltip content={<ChartTooltip />} />
-                                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
-                                    <Bar dataKey="likes" name="Avg Likes" fill={C.pink} radius={[4, 4, 0, 0]} opacity={0.85} />
-                                    <Bar dataKey="comments" name="Avg Comments" fill={C.blue} radius={[4, 4, 0, 0]} opacity={0.85} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
+                            {likesCommentsData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={220}>
+                                    <ComposedChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                        <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                        <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
+                                        <Tooltip content={<ChartTooltip />} />
+                                        <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
+                                        <Bar dataKey="likes" name="Likes" fill={C.pink} radius={[4, 4, 0, 0]} opacity={0.85} />
+                                        <Bar dataKey="comments" name="Comments" fill={C.blue} radius={[4, 4, 0, 0]} opacity={0.85} />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <EmptyChartState text="No recent synced posts are available to compare likes and comments yet." />
+                            )}
                         </ChartCard>
 
                         {/* Efficiency Radial Bar */}
@@ -473,27 +467,31 @@ export default function AnalyticsPage() {
 
                     {/* Like:Comment Ratio — Stacked Area */}
                     <ChartCard title="Like : Comment Ratio" subtitle="Ratio of likes to comments per post over time" style={{ marginBottom: 0 }}>
-                        <ResponsiveContainer width="100%" height={190}>
-                            <AreaChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                <defs>
-                                    <linearGradient id="gLikes" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={C.pink} stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor={C.pink} stopOpacity={0.02} />
-                                    </linearGradient>
-                                    <linearGradient id="gComments" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={C.blue} stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(likesCommentsData.length / 5)} />
-                                <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
-                                <Tooltip content={<ChartTooltip />} />
-                                <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
-                                <Area type="monotone" dataKey="likes" name="Likes" stroke={C.pink} strokeWidth={2} fill="url(#gLikes)" dot={false} />
-                                <Area type="monotone" dataKey="comments" name="Comments" stroke={C.blue} strokeWidth={2} fill="url(#gComments)" dot={false} />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        {likesCommentsData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={190}>
+                                <AreaChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                                    <defs>
+                                        <linearGradient id="gLikes" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={C.pink} stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor={C.pink} stopOpacity={0.02} />
+                                        </linearGradient>
+                                        <linearGradient id="gComments" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor={C.blue} stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
+                                    <Tooltip content={<ChartTooltip />} />
+                                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
+                                    <Area type="monotone" dataKey="likes" name="Likes" stroke={C.pink} strokeWidth={2} fill="url(#gLikes)" dot={false} />
+                                    <Area type="monotone" dataKey="comments" name="Comments" stroke={C.blue} strokeWidth={2} fill="url(#gComments)" dot={false} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <EmptyChartState text="Like and comment trend data will appear after synced posts are available." />
+                        )}
                     </ChartCard>
 
                     {/* ════════════════════════════════════════════════════════
@@ -503,15 +501,19 @@ export default function AnalyticsPage() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <ChartCard title={`Daily Posts — Last ${timeRange} Days`} subtitle="How often you posted each day">
-                            <ResponsiveContainer width="100%" height={200}>
-                                <BarChart data={cadenceData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(cadenceData.length / 6)} />
-                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} width={24} />
-                                    <Tooltip content={<ChartTooltip />} />
-                                    <Bar dataKey="posts" name="Posts" fill={C.purple} radius={[4, 4, 0, 0]} opacity={0.85} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {media.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={cadenceData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                                        <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(cadenceData.length / 6)} />
+                                        <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} width={24} />
+                                        <Tooltip content={<ChartTooltip />} />
+                                        <Bar dataKey="posts" name="Posts" fill={C.purple} radius={[4, 4, 0, 0]} opacity={0.85} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <EmptyChartState text="Posting cadence will appear after your synced media history is available." />
+                            )}
                         </ChartCard>
 
                         {/* Cadence summary */}

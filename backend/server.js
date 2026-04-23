@@ -3,6 +3,7 @@ const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { initScheduler } = require('./utils/scheduler');
+const ensureAdminUser = require('./utils/ensureAdminUser');
 const socketIO = require('socket.io');
 
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,8 @@ io.on('connection', (socket) => {
 });
 
 connectDB().then(() => {
+    return ensureAdminUser();
+}).then(() => {
     // Initialize scheduled cron jobs
     initScheduler();
 
