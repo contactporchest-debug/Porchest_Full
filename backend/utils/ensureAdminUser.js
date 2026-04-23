@@ -32,11 +32,6 @@ async function ensureAdminUser() {
         existing.password = adminPassword;
         changed = true;
 
-        if (existing.isVerified !== undefined) {
-            existing.set('isVerified', undefined);
-            changed = true;
-        }
-
         if (existing.profileCompletionStatus !== undefined) {
             existing.set('profileCompletionStatus', undefined);
             changed = true;
