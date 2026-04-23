@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 /* ─── Types ────────────────────────────────────────────── */
-type Tab = 'users' | 'campaigns';
+export type Tab = 'users' | 'campaigns';
 type UserRole = 'admin' | 'brand' | 'influencer';
 type UserStatus = 'active' | 'pending' | 'suspended';
 
@@ -109,30 +109,14 @@ const StatCard = ({ label, value, sub, color, icon, progress }: {
     </motion.div>
 );
 
-const TabBtn = ({ label, active, onClick, badge }: { label: string; active: boolean; onClick: () => void; badge?: number }) => (
-    <button onClick={onClick} style={{
-        display: 'flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 12, border: 'none',
-        cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 180ms ease',
-        background: active ? 'rgba(255,140,66,0.15)' : 'transparent',
-        color: active ? '#ff8c42' : 'rgba(255,255,255,0.4)',
-    }}>
-        {label}
-        {badge != null && badge > 0 && (
-            <span style={{ padding: '1px 7px', borderRadius: 99, background: active ? '#ff8c42' : 'rgba(255,255,255,0.1)', color: active ? '#000' : 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700 }}>
-                {badge}
-            </span>
-        )}
-    </button>
-);
-
 /* ─── Main Component ────────────────────────────────────── */
-export default function AdminDashboard() {
+export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab }) {
     const { socket } = useSocket();
     const [stats,   setStats]   = useState<Stats | null>(null);
     const [users,   setUsers]   = useState<AdminUser[]>([]);
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<Tab>('users');
+    const activeTab = initialTab;
 
     // Users tab state
     const [userSearch,     setUserSearch]     = useState('');
@@ -272,17 +256,8 @@ export default function AdminDashboard() {
                         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Manage users, monitor campaigns, and maintain platform health.</p>
                     </motion.div>
 
-                    {/* ── Tabs ── */}
-                    <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'rgba(255,255,255,0.03)', borderRadius: 16, padding: 4, width: 'fit-content', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <TabBtn label="Users"     active={activeTab === 'users'}     onClick={() => setActiveTab('users')}    badge={stats?.pendingUsers} />
-                        <TabBtn label="Campaigns" active={activeTab === 'campaigns'} onClick={() => setActiveTab('campaigns')} badge={stats?.activeRequests} />
-                    </div>
-
                     <AnimatePresence mode="wait">
 
-                        {/* ══════════════════════════════════════════
-                            TAB 2 — USERS
-                        ══════════════════════════════════════════ */}
                         {activeTab === 'users' && (
                             <motion.div key="users" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
 
@@ -453,9 +428,6 @@ export default function AdminDashboard() {
                             </motion.div>
                         )}
 
-                        {/* ══════════════════════════════════════════
-                            TAB 3 — CAMPAIGNS
-                        ══════════════════════════════════════════ */}
                         {activeTab === 'campaigns' && (
                             <motion.div key="campaigns" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
 
@@ -590,4 +562,8 @@ export default function AdminDashboard() {
             </DashboardLayout>
         </ProtectedRoute>
     );
+}
+
+export default function AdminDashboardPage() {
+    return <AdminDashboardView initialTab="users" />;
 }

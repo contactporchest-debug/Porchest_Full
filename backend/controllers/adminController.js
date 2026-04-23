@@ -1,9 +1,46 @@
 const User = require('../models/User');
 const CampaignRequest = require('../models/CampaignRequest');
+const BrandProfile = require('../models/BrandProfile');
+const InfluencerProfile = require('../models/InfluencerProfile');
+const { generateUniqueCode } = require('../utils/generateCode');
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 const ok  = (res, data = {}) => res.status(200).json({ success: true, ...data });
 const err = (res, msg, code = 500) => res.status(code).json({ success: false, message: msg });
+
+async function removeRoleSpecificProfiles(user) {
+    const ops = [];
+
+    if (user.brandProfileId) {
+        ops.push(BrandProfile.findByIdAndDelete(user.brandProfileId));
+    }
+
+    if (user.influencerProfileId) {
+        ops.push(InfluencerProfile.findByIdAndDelete(user.influencerProfileId));
+    }
+
+    await Promise.all(ops);
+}
+
+async function ensureProfileForRole(user, role) {
+    if (role === 'brand' && !user.brandProfileId) {
+        const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
+        const profile = await BrandProfile.create({
+            userId: user._id,
+            brandProfileId,
+        });
+        user.brandProfileId = profile._id;
+    }
+
+    if (role === 'influencer' && !user.influencerProfileId) {
+        const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+        const profile = await InfluencerProfile.create({
+            userId: user._id,
+            influencerProfileId,
+        });
+        user.influencerProfileId = profile._id;
+    }
+}
 
 /* ─── GET /api/admin/stats ────────────────────────────────── */
 exports.getStats = async (req, res) => {
@@ -126,12 +163,28 @@ exports.updateUserRole = async (req, res) => {
                 return err(res, 'Cannot demote the last admin', 400);
         }
 
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { role },
-            { new: true, select: '-password -otp -otpExpires' }
-        );
+        const user = await User.findById(req.params.id).select('-password -otp -otpExpires');
         if (!user) return err(res, 'User not found', 404);
+
+        if (role === 'admin') {
+            await removeRoleSpecificProfiles(user);
+            user.brandProfileId = undefined;
+            user.influencerProfileId = undefined;
+            user.profileCompletionStatus = false;
+            user.instagramConnected = false;
+        } else {
+            if (user.role === 'admin') {
+                user.profileCompletionStatus = false;
+                user.instagramConnected = false;
+            }
+
+            user.brandProfileId = role === 'brand' ? user.brandProfileId : undefined;
+            user.influencerProfileId = role === 'influencer' ? user.influencerProfileId : undefined;
+            await ensureProfileForRole(user, role);
+        }
+
+        user.role = role;
+        await user.save();
 
         // Notify user via Socket.IO
         const io = req.app.locals.io;
