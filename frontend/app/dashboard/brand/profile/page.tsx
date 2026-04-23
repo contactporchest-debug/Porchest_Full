@@ -267,7 +267,7 @@ export default function BrandProfilePage() {
             const u = profileRes.data.user;
             const bp = profileRes.data.brandProfile;
 
-            setForm({
+            const newForm = {
                 brandName: bp?.brandName || u.brandName || u.companyName || '',
                 officialEmail: bp?.officialEmail || u.officialEmail || u.email || '',
                 contactPersonName: bp?.contactPersonName || u.contactPersonName || '',
@@ -330,17 +330,11 @@ export default function BrandProfilePage() {
         if (form.companyWebsite) {
             try { new URL(form.companyWebsite); } catch { e.companyWebsite = 'Must be a valid URL (include https://)'; }
         }
-        if (form.trackingWebsiteURL) {
-            try { new URL(form.trackingWebsiteURL); } catch { e.trackingWebsiteURL = 'Must be a valid URL (include https://)'; }
-        }
-        if (form.landingPageURL) {
-            try { new URL(form.landingPageURL); } catch { e.landingPageURL = 'Must be a valid URL (include https://)'; }
-        }
         setErrs(e);
         return Object.keys(e).length === 0;
     };
 
-    const handleSave = async () => खुले
+    const handleSave = async () => {
         if (!validate()) { toast.error('Please fix the highlighted fields'); return; }
         setSaving(true);
         try {
@@ -529,8 +523,6 @@ export default function BrandProfilePage() {
                                 </div>
                             </div>
                         </div>
-                    </SectionCard>
-
                     </SectionCard>
 
                     {/* ── Save Button ── */}

@@ -250,7 +250,7 @@ export default function InfluencerProfilePage() {
 
             // Priority: InfluencerProfile (ip) > User (u) for all profile fields.
             // avgPostCostUSD is saved as avgPostPrice in InfluencerProfile.
-            setForm({
+            const newForm = {
                 fullName:           ip?.fullName            || u?.fullName            || '',
                 age:                ip?.age                 ? String(ip.age)          : (u?.age ? String(u.age) : ''),
                 country:            ip?.country             || u?.country             || '',
