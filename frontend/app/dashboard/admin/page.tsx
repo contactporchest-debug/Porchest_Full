@@ -361,9 +361,13 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Profile completion */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                <span style={{ fontSize: 11, color: u.profileCompletionStatus ? '#4ade80' : '#fbbf24' }}>
-                                                                    {u.profileCompletionStatus ? '✓ Complete' : '○ Incomplete'}
-                                                                </span>
+                                                                {u.role === 'admin' ? (
+                                                                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>—</span>
+                                                                ) : (
+                                                                    <span style={{ fontSize: 11, color: u.profileCompletionStatus ? '#4ade80' : '#fbbf24' }}>
+                                                                        {u.profileCompletionStatus ? '✓ Complete' : '○ Incomplete'}
+                                                                    </span>
+                                                                )}
                                                             </td>
 
                                                             {/* Joined */}

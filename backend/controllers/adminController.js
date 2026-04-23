@@ -8,6 +8,16 @@ const { generateUniqueCode } = require('../utils/generateCode');
 const ok  = (res, data = {}) => res.status(200).json({ success: true, ...data });
 const err = (res, msg, code = 500) => res.status(code).json({ success: false, message: msg });
 
+function sanitizeAdminUserFields(user) {
+    if (!user || user.role !== 'admin') return user;
+    delete user.isVerified;
+    delete user.profileCompletionStatus;
+    delete user.instagramConnected;
+    delete user.brandProfileId;
+    delete user.influencerProfileId;
+    return user;
+}
+
 async function removeRoleSpecificProfiles(user) {
     const ops = [];
 
@@ -113,7 +123,12 @@ exports.getUsers = async (req, res) => {
             User.countDocuments(query),
         ]);
 
-        return ok(res, { users, total, page: Number(page), limit: Number(limit) });
+        return ok(res, {
+            users: users.map((user) => sanitizeAdminUserFields(user)),
+            total,
+            page: Number(page),
+            limit: Number(limit),
+        });
     } catch (e) {
         console.error('[Admin] getUsers error:', e);
         return err(res, 'Failed to fetch users');
@@ -141,7 +156,7 @@ exports.updateUserStatus = async (req, res) => {
             status: user.status,
         });
 
-        return ok(res, { user });
+        return ok(res, { user: sanitizeAdminUserFields(user.toObject()) });
     } catch (e) {
         console.error('[Admin] updateUserStatus error:', e);
         return err(res, 'Failed to update status');
@@ -168,18 +183,20 @@ exports.updateUserRole = async (req, res) => {
 
         if (role === 'admin') {
             await removeRoleSpecificProfiles(user);
-            user.brandProfileId = undefined;
-            user.influencerProfileId = undefined;
-            user.profileCompletionStatus = false;
-            user.instagramConnected = false;
+            user.set('brandProfileId', undefined);
+            user.set('influencerProfileId', undefined);
+            user.set('profileCompletionStatus', undefined);
+            user.set('instagramConnected', undefined);
+            user.set('isVerified', undefined);
         } else {
             if (user.role === 'admin') {
-                user.profileCompletionStatus = false;
-                user.instagramConnected = false;
+                user.set('profileCompletionStatus', undefined);
+                user.set('instagramConnected', undefined);
+                user.set('isVerified', undefined);
             }
 
-            user.brandProfileId = role === 'brand' ? user.brandProfileId : undefined;
-            user.influencerProfileId = role === 'influencer' ? user.influencerProfileId : undefined;
+            if (role !== 'brand') user.set('brandProfileId', undefined);
+            if (role !== 'influencer') user.set('influencerProfileId', undefined);
             await ensureProfileForRole(user, role);
         }
 
@@ -193,7 +210,7 @@ exports.updateUserRole = async (req, res) => {
             role: user.role,
         });
 
-        return ok(res, { user });
+        return ok(res, { user: sanitizeAdminUserFields(user.toObject()) });
     } catch (e) {
         console.error('[Admin] updateUserRole error:', e);
         return err(res, 'Failed to update role');
@@ -270,7 +287,7 @@ exports.reviewVerification = async (req, res) => {
             { new: true, select: '-password -otp -otpExpires' }
         );
         if (!user) return err(res, 'User not found', 404);
-        return ok(res, { user, adminNote });
+        return ok(res, { user: sanitizeAdminUserFields(user.toObject()), adminNote });
     } catch (e) {
         console.error('[Admin] reviewVerification error:', e);
         return err(res, 'Failed to review verification');

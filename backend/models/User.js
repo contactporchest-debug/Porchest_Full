@@ -57,6 +57,13 @@ userSchema.methods.toJSON = function () {
     delete obj.password;
     delete obj.otp;
     delete obj.otpExpires;
+    if (obj.role === 'admin') {
+        delete obj.isVerified;
+        delete obj.profileCompletionStatus;
+        delete obj.instagramConnected;
+        delete obj.brandProfileId;
+        delete obj.influencerProfileId;
+    }
     return obj;
 };
 
