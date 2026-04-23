@@ -246,6 +246,7 @@ export default function BrandProfilePage() {
     const { user, updateUser } = useAuth();
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(true);
     const [igConn, setIgConn] = useState<IGConn | null>(null);
     const [errs, setErrs] = useState<Record<string, string>>({});
 
@@ -253,7 +254,6 @@ export default function BrandProfilePage() {
         brandName: '', officialEmail: '', contactPersonName: '',
         brandGoal: '', brandNiche: '', approxBudgetUSD: '',
         companyCountry: '', companyWebsite: '', brandInstagramHandle: '',
-        trackingWebsiteURL: '', landingPageURL: '', trackingNotes: '',
     });
 
     const loadProfile = useCallback(async () => {
@@ -277,10 +277,9 @@ export default function BrandProfilePage() {
                 companyCountry: bp?.companyCountry || u.companyCountry || '',
                 companyWebsite: bp?.companyWebsite || u.companyWebsite || u.website || '',
                 brandInstagramHandle: bp?.brandInstagramHandle || u.brandInstagramHandle || '',
-                trackingWebsiteURL: bp?.trackingWebsiteURL || '',
-                landingPageURL: bp?.landingPageURL || '',
-                trackingNotes: bp?.trackingNotes || '',
-            });
+            };
+            setForm(newForm);
+            setIsEditing(calcScore(newForm) < 100);
 
             if (updateUser) updateUser(u);
 
@@ -341,7 +340,7 @@ export default function BrandProfilePage() {
         return Object.keys(e).length === 0;
     };
 
-    const handleSave = async () => {
+    const handleSave = async () => खुले
         if (!validate()) { toast.error('Please fix the highlighted fields'); return; }
         setSaving(true);
         try {
@@ -357,11 +356,9 @@ export default function BrandProfilePage() {
                 companyWebsite: form.companyWebsite.trim() || undefined,
                 website: form.companyWebsite.trim() || undefined,
                 brandInstagramHandle: form.brandInstagramHandle.replace('@', '').trim() || undefined,
-                trackingWebsiteURL: form.trackingWebsiteURL.trim() || undefined,
-                landingPageURL: form.landingPageURL.trim() || undefined,
-                trackingNotes: form.trackingNotes.trim() || undefined,
             });
             toast.success('Brand profile saved! ✅');
+            setIsEditing(false);
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to save brand profile');
         } finally { setSaving(false); }
@@ -391,9 +388,16 @@ export default function BrandProfilePage() {
                             <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>Brand Profile</h1>
                             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Complete your brand identity to unlock influencer matching</p>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '99px', background: score === 100 ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', border: `1px solid ${score === 100 ? 'rgba(74,222,128,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
-                            {score === 100 ? <CheckCircle2 size={14} style={{ color: '#4ade80' }} /> : <AlertCircle size={14} style={{ color: '#fbbf24' }} />}
-                            <span style={{ fontSize: '13px', fontWeight: '700', color: score === 100 ? '#4ade80' : '#fbbf24' }}>{score}% complete</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {!isEditing && score === 100 && (
+                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.3)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                    Edit Profile
+                                </button>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '99px', background: score === 100 ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', border: `1px solid ${score === 100 ? 'rgba(74,222,128,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
+                                {score === 100 ? <CheckCircle2 size={14} style={{ color: '#4ade80' }} /> : <AlertCircle size={14} style={{ color: '#fbbf24' }} />}
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: score === 100 ? '#4ade80' : '#fbbf24' }}>{score}% complete</span>
+                            </div>
                         </div>
                     </div>
 
@@ -423,8 +427,8 @@ export default function BrandProfilePage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <Label req>Brand / Company Name</Label>
-                                <input style={{ ...iStyle, borderColor: errs.brandName ? 'rgba(248,113,113,0.5)' : undefined }}
-                                    placeholder="e.g. Acme Corp" value={form.brandName}
+                                <input style={{ ...iStyle, borderColor: errs.brandName ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                    placeholder="e.g. Acme Corp" value={form.brandName} disabled={!isEditing}
                                     onChange={e => set('brandName', e.target.value)} {...fh} />
                                 <FieldErr msg={errs.brandName} />
                             </div>
@@ -432,8 +436,8 @@ export default function BrandProfilePage() {
                                 <Label req>Official Email</Label>
                                 <div style={{ position: 'relative' }}>
                                     <Mail size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input type="email" style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.officialEmail ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="brand@company.com" value={form.officialEmail}
+                                    <input type="email" style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.officialEmail ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                        placeholder="brand@company.com" value={form.officialEmail} disabled={!isEditing}
                                         onChange={e => set('officialEmail', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.officialEmail} />
@@ -442,8 +446,8 @@ export default function BrandProfilePage() {
                                 <Label req>Contact Person Name</Label>
                                 <div style={{ position: 'relative' }}>
                                     <User size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.contactPersonName ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="Your full name" value={form.contactPersonName}
+                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.contactPersonName ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                        placeholder="Your full name" value={form.contactPersonName} disabled={!isEditing}
                                         onChange={e => set('contactPersonName', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.contactPersonName} />
@@ -451,8 +455,8 @@ export default function BrandProfilePage() {
                             <div>
                                 <Label req>Brand Niche</Label>
                                 <div style={{ position: 'relative' }}>
-                                    <select style={{ ...iStyle, appearance: 'none', paddingRight: '32px', borderColor: errs.brandNiche ? 'rgba(248,113,113,0.5)' : undefined, color: form.brandNiche ? '#fff' : 'rgba(255,255,255,0.3)' }}
-                                        value={form.brandNiche} onChange={e => set('brandNiche', e.target.value)} {...fh}>
+                                    <select style={{ ...iStyle, appearance: 'none', paddingRight: '32px', borderColor: errs.brandNiche ? 'rgba(248,113,113,0.5)' : undefined, color: form.brandNiche ? '#fff' : 'rgba(255,255,255,0.3)', opacity: !isEditing ? 0.6 : 1 }}
+                                        value={form.brandNiche} onChange={e => set('brandNiche', e.target.value)} disabled={!isEditing} {...fh}>
                                         <option value="">Select niche</option>
                                         {BRAND_NICHES.map(n => <option key={n} value={n} style={{ background: '#0d0118' }}>{n}</option>)}
                                     </select>
@@ -464,8 +468,8 @@ export default function BrandProfilePage() {
                                 <Label req>Company Country</Label>
                                 <div style={{ position: 'relative' }}>
                                     <Globe size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <select style={{ ...iStyle, paddingLeft: '36px', appearance: 'none', borderColor: errs.companyCountry ? 'rgba(248,113,113,0.5)' : undefined, color: form.companyCountry ? '#fff' : 'rgba(255,255,255,0.3)' }}
-                                        value={form.companyCountry} onChange={e => set('companyCountry', e.target.value)} {...fh}>
+                                    <select style={{ ...iStyle, paddingLeft: '36px', appearance: 'none', borderColor: errs.companyCountry ? 'rgba(248,113,113,0.5)' : undefined, color: form.companyCountry ? '#fff' : 'rgba(255,255,255,0.3)', opacity: !isEditing ? 0.6 : 1 }}
+                                        value={form.companyCountry} onChange={e => set('companyCountry', e.target.value)} disabled={!isEditing} {...fh}>
                                         <option value="">Select country</option>
                                         {COUNTRIES.map(c => <option key={c} value={c} style={{ background: '#0d0118' }}>{c}</option>)}
                                     </select>
@@ -477,8 +481,8 @@ export default function BrandProfilePage() {
                                 <Label optional>Approx. Budget (USD)</Label>
                                 <div style={{ position: 'relative' }}>
                                     <DollarSign size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.approxBudgetUSD ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="e.g. 10000" value={form.approxBudgetUSD}
+                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.approxBudgetUSD ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                        placeholder="e.g. 10000" value={form.approxBudgetUSD} disabled={!isEditing}
                                         onChange={e => set('approxBudgetUSD', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.approxBudgetUSD} />
@@ -490,9 +494,9 @@ export default function BrandProfilePage() {
                     <SectionCard title="Campaign Goal" icon={<FileText size={16} />}>
                         <Label req>What is your typical campaign goal? <span style={{ color: 'rgba(255,255,255,0.2)', textTransform: 'none', fontWeight: '400', fontSize: '10px' }}>(max 150 words)</span></Label>
                         <textarea
-                            style={{ ...iStyle, resize: 'vertical', minHeight: '100px', lineHeight: '1.6', borderColor: errs.brandGoal ? 'rgba(248,113,113,0.5)' : undefined }}
+                            style={{ ...iStyle, resize: 'vertical', minHeight: '100px', lineHeight: '1.6', borderColor: errs.brandGoal ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
                             placeholder="Describe your brand's marketing goal, target audience, and what you want to achieve through influencer collaborations…"
-                            value={form.brandGoal}
+                            value={form.brandGoal} disabled={!isEditing}
                             onChange={e => set('brandGoal', e.target.value)}
                             {...fh}
                         />
@@ -509,8 +513,8 @@ export default function BrandProfilePage() {
                                 <Label optional>Company Website</Label>
                                 <div style={{ position: 'relative' }}>
                                     <Link2 size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.companyWebsite ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="https://yourcompany.com" value={form.companyWebsite}
+                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.companyWebsite ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                        placeholder="https://yourcompany.com" value={form.companyWebsite} disabled={!isEditing}
                                         onChange={e => set('companyWebsite', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.companyWebsite} />
@@ -519,64 +523,23 @@ export default function BrandProfilePage() {
                                 <Label optional>Brand Instagram Handle</Label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>@</span>
-                                    <input style={{ ...iStyle, paddingLeft: '28px' }}
-                                        placeholder="yourbrand" value={form.brandInstagramHandle}
+                                    <input style={{ ...iStyle, paddingLeft: '28px', opacity: !isEditing ? 0.6 : 1 }}
+                                        placeholder="yourbrand" value={form.brandInstagramHandle} disabled={!isEditing}
                                         onChange={e => set('brandInstagramHandle', e.target.value)} {...fh} />
                                 </div>
                             </div>
                         </div>
                     </SectionCard>
 
-                    {/* ── Website / Link Tracking ── */}
-                    <SectionCard title="Website & Link Tracking" icon={<Target size={16} />}>
-                        <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(96,213,248,0.05)', border: '1px solid rgba(96,213,248,0.15)', marginBottom: '18px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <BarChart2 size={13} style={{ color: '#60d5f8' }} />
-                                <p style={{ fontSize: '12px', color: '#60d5f8', fontWeight: '600' }}>Attribution & Tracking</p>
-                            </div>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', lineHeight: '1.6' }}>
-                                Store your brand's primary tracking URL and landing page here. These links will be used for future click-through, UTM, and conversion attribution analysis when influencer campaigns go live.
-                            </p>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                            <div>
-                                <Label optional>Primary Tracking URL</Label>
-                                <div style={{ position: 'relative' }}>
-                                    <Link2 size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.trackingWebsiteURL ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="https://yoursite.com/?utm_source=porchest" value={form.trackingWebsiteURL}
-                                        onChange={e => set('trackingWebsiteURL', e.target.value)} {...fh} />
-                                </div>
-                                <FieldErr msg={errs.trackingWebsiteURL} />
-                            </div>
-                            <div>
-                                <Label optional>Landing Page URL</Label>
-                                <div style={{ position: 'relative' }}>
-                                    <ExternalLink size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.landingPageURL ? 'rgba(248,113,113,0.5)' : undefined }}
-                                        placeholder="https://yoursite.com/offer" value={form.landingPageURL}
-                                        onChange={e => set('landingPageURL', e.target.value)} {...fh} />
-                                </div>
-                                <FieldErr msg={errs.landingPageURL} />
-                            </div>
-                            <div style={{ gridColumn: '1 / -1' }}>
-                                <Label optional>Tracking Notes</Label>
-                                <textarea
-                                    style={{ ...iStyle, resize: 'vertical', minHeight: '70px', lineHeight: '1.6' }}
-                                    placeholder="e.g. Use UTM parameters: utm_campaign=porchest_q1_2025, target CPL = $5…"
-                                    value={form.trackingNotes}
-                                    onChange={e => set('trackingNotes', e.target.value)}
-                                    {...fh}
-                                />
-                            </div>
-                        </div>
                     </SectionCard>
 
                     {/* ── Save Button ── */}
-                    <button onClick={handleSave} disabled={saving}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
-                        {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Brand Profile</>}
-                    </button>
+                    {isEditing && (
+                        <button onClick={handleSave} disabled={saving}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
+                            {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Brand Profile</>}
+                        </button>
+                    )}
                     <div style={{ height: '40px' }} />
                 </motion.div>
             </DashboardLayout>

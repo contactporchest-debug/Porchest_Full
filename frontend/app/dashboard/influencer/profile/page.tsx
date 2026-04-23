@@ -230,6 +230,7 @@ export default function InfluencerProfilePage() {
     const { user, updateUser } = useAuth();
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(true);
     const [igConn, setIgConn] = useState<IGConn | null>(null);
     const [errs, setErrs] = useState<Record<string, string>>({});
     const [form, setForm] = useState({
@@ -261,7 +262,9 @@ export default function InfluencerProfilePage() {
                 avgReelCostUSD:     ip?.avgReelPrice != null ? String(ip.avgReelPrice) : (u?.avgReelCostUSD != null ? String(u.avgReelCostUSD) : ''),
                 instagramUsername:  ip?.instagramUsername   || u?.instagramUsername   || '',
                 instagramProfileURL:ip?.instagramProfileURL || u?.instagramProfileURL || '',
-            });
+            };
+            setForm(newForm);
+            setIsEditing(calcScore(newForm, !!instagramConnection?.isConnected) < 100);
             if (updateUser) updateUser(u);
             setIgConn(instagramConnection);
         } catch { toast.error('Failed to load profile'); }
@@ -326,6 +329,7 @@ export default function InfluencerProfilePage() {
             });
             if (updateUser) updateUser(res.data.user);
             toast.success('Profile saved! ✅');
+            setIsEditing(false);
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to save profile');
         } finally { setSaving(false); }
@@ -354,9 +358,16 @@ export default function InfluencerProfilePage() {
                             <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>My Profile</h1>
                             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Your profile is shown to brands searching for influencers</p>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '99px', background: score === 100 ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', border: `1px solid ${score === 100 ? 'rgba(74,222,128,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
-                            {score === 100 ? <CheckCircle2 size={14} style={{ color: '#4ade80' }} /> : <AlertCircle size={14} style={{ color: '#fbbf24' }} />}
-                            <span style={{ fontSize: '13px', fontWeight: '700', color: score === 100 ? '#4ade80' : '#fbbf24' }}>{score}% complete</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {!isEditing && score === 100 && (
+                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.3)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                    Edit Profile
+                                </button>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '99px', background: score === 100 ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', border: `1px solid ${score === 100 ? 'rgba(74,222,128,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
+                                {score === 100 ? <CheckCircle2 size={14} style={{ color: '#4ade80' }} /> : <AlertCircle size={14} style={{ color: '#fbbf24' }} />}
+                                <span style={{ fontSize: '13px', fontWeight: '700', color: score === 100 ? '#4ade80' : '#fbbf24' }}>{score}% complete</span>
+                            </div>
                         </div>
                     </div>
 
@@ -374,19 +385,19 @@ export default function InfluencerProfilePage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <Label req>Full Name</Label>
-                                <input style={{ ...iStyle, borderColor: errs.fullName ? 'rgba(248,113,113,0.5)' : undefined }} placeholder="Your full name" value={form.fullName} onChange={e => set('fullName', e.target.value)} {...fh} />
+                                <input style={{ ...iStyle, borderColor: errs.fullName ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }} placeholder="Your full name" value={form.fullName} disabled={!isEditing} onChange={e => set('fullName', e.target.value)} {...fh} />
                                 <FieldErr msg={errs.fullName} />
                             </div>
                             <div>
                                 <Label>Age</Label>
-                                <input type="number" min={13} max={100} style={{ ...iStyle, borderColor: errs.age ? 'rgba(248,113,113,0.5)' : undefined }} placeholder="e.g. 25" value={form.age} onChange={e => set('age', e.target.value)} {...fh} />
+                                <input type="number" min={13} max={100} style={{ ...iStyle, borderColor: errs.age ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }} placeholder="e.g. 25" value={form.age} disabled={!isEditing} onChange={e => set('age', e.target.value)} {...fh} />
                                 <FieldErr msg={errs.age} />
                             </div>
                             <div>
                                 <Label req>Contact Email</Label>
                                 <div style={{ position: 'relative' }}>
                                     <Mail size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input type="email" style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.contactEmail ? 'rgba(248,113,113,0.5)' : undefined }} placeholder="contact@you.com" value={form.contactEmail} onChange={e => set('contactEmail', e.target.value)} {...fh} />
+                                    <input type="email" style={{ ...iStyle, paddingLeft: '36px', borderColor: errs.contactEmail ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }} placeholder="contact@you.com" value={form.contactEmail} disabled={!isEditing} onChange={e => set('contactEmail', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.contactEmail} />
                             </div>
@@ -394,7 +405,7 @@ export default function InfluencerProfilePage() {
                                 <Label req>Country of Residence</Label>
                                 <div style={{ position: 'relative' }}>
                                     <Globe size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <select style={{ ...iStyle, paddingLeft: '36px', appearance: 'none', borderColor: errs.country ? 'rgba(248,113,113,0.5)' : undefined, color: form.country ? '#fff' : 'rgba(255,255,255,0.3)' }} value={form.country} onChange={e => set('country', e.target.value)} {...fh}>
+                                    <select style={{ ...iStyle, paddingLeft: '36px', appearance: 'none', borderColor: errs.country ? 'rgba(248,113,113,0.5)' : undefined, color: form.country ? '#fff' : 'rgba(255,255,255,0.3)', opacity: !isEditing ? 0.6 : 1 }} value={form.country} disabled={!isEditing} onChange={e => set('country', e.target.value)} {...fh}>
                                         <option value="">Select country</option>
                                         {COUNTRIES.map(c => <option key={c} value={c} style={{ background: '#0d0118' }}>{c}</option>)}
                                     </select>
@@ -406,13 +417,13 @@ export default function InfluencerProfilePage() {
                                 <Label>City <span style={{ color: 'rgba(255,255,255,0.2)', textTransform: 'none', fontWeight: '400', fontSize: '10px' }}>(optional)</span></Label>
                                 <div style={{ position: 'relative' }}>
                                     <MapPin size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                    <input style={{ ...iStyle, paddingLeft: '36px' }} placeholder="e.g. Karachi" value={form.city} onChange={e => set('city', e.target.value)} {...fh} />
+                                    <input style={{ ...iStyle, paddingLeft: '36px', opacity: !isEditing ? 0.6 : 1 }} placeholder="e.g. Karachi" value={form.city} disabled={!isEditing} onChange={e => set('city', e.target.value)} {...fh} />
                                 </div>
                             </div>
                             <div>
                                 <Label req>Niche / Category</Label>
                                 <div style={{ position: 'relative' }}>
-                                    <select style={{ ...iStyle, appearance: 'none', paddingRight: '32px', borderColor: errs.niche ? 'rgba(248,113,113,0.5)' : undefined, color: form.niche ? '#fff' : 'rgba(255,255,255,0.3)' }} value={form.niche} onChange={e => set('niche', e.target.value)} {...fh}>
+                                    <select style={{ ...iStyle, appearance: 'none', paddingRight: '32px', borderColor: errs.niche ? 'rgba(248,113,113,0.5)' : undefined, color: form.niche ? '#fff' : 'rgba(255,255,255,0.3)', opacity: !isEditing ? 0.6 : 1 }} value={form.niche} disabled={!isEditing} onChange={e => set('niche', e.target.value)} {...fh}>
                                         <option value="">Select niche</option>
                                         {NICHES.map(n => <option key={n} value={n} style={{ background: '#0d0118' }}>{n}</option>)}
                                     </select>
@@ -422,8 +433,8 @@ export default function InfluencerProfilePage() {
                             </div>
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <Label>Short Bio <span style={{ color: 'rgba(255,255,255,0.2)', textTransform: 'none', fontWeight: '400', fontSize: '10px' }}>(max 100 words)</span></Label>
-                                <textarea style={{ ...iStyle, resize: 'vertical', minHeight: '88px', lineHeight: '1.6', borderColor: errs.shortBio ? 'rgba(248,113,113,0.5)' : undefined }}
-                                    placeholder="Describe yourself and your audience…" value={form.shortBio} onChange={e => set('shortBio', e.target.value)} {...fh} />
+                                <textarea style={{ ...iStyle, resize: 'vertical', minHeight: '88px', lineHeight: '1.6', borderColor: errs.shortBio ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }}
+                                    placeholder="Describe yourself and your audience…" value={form.shortBio} disabled={!isEditing} onChange={e => set('shortBio', e.target.value)} {...fh} />
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                                     <FieldErr msg={errs.shortBio} />
                                     <span style={{ fontSize: '11px', color: bioWords > 100 ? '#f87171' : 'rgba(255,255,255,0.2)', marginLeft: 'auto' }}>{bioWords}/100 words</span>
@@ -443,14 +454,14 @@ export default function InfluencerProfilePage() {
                                     <Label>Instagram Username</Label>
                                     <div style={{ position: 'relative' }}>
                                         <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>@</span>
-                                        <input style={{ ...iStyle, paddingLeft: '28px' }} placeholder="yourhandle" value={form.instagramUsername} onChange={e => set('instagramUsername', e.target.value)} {...fh} />
+                                        <input style={{ ...iStyle, paddingLeft: '28px', opacity: !isEditing ? 0.6 : 1 }} placeholder="yourhandle" value={form.instagramUsername} disabled={!isEditing} onChange={e => set('instagramUsername', e.target.value)} {...fh} />
                                     </div>
                                 </div>
                                 <div>
                                     <Label>Instagram Profile URL</Label>
                                     <div style={{ position: 'relative' }}>
                                         <Link2 size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <input style={{ ...iStyle, paddingLeft: '36px' }} placeholder="https://instagram.com/yourhandle" value={form.instagramProfileURL} onChange={e => set('instagramProfileURL', e.target.value)} {...fh} />
+                                        <input style={{ ...iStyle, paddingLeft: '36px', opacity: !isEditing ? 0.6 : 1 }} placeholder="https://instagram.com/yourhandle" value={form.instagramProfileURL} disabled={!isEditing} onChange={e => set('instagramProfileURL', e.target.value)} {...fh} />
                                     </div>
                                 </div>
                             </div>
@@ -482,7 +493,7 @@ export default function InfluencerProfilePage() {
                                 <Label req>Avg. Post Rate (USD)</Label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>$</span>
-                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '26px', borderColor: errs.avgPostCostUSD ? 'rgba(248,113,113,0.5)' : undefined }} placeholder="e.g. 200" value={form.avgPostCostUSD} onChange={e => set('avgPostCostUSD', e.target.value)} {...fh} />
+                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '26px', borderColor: errs.avgPostCostUSD ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }} placeholder="e.g. 200" value={form.avgPostCostUSD} disabled={!isEditing} onChange={e => set('avgPostCostUSD', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.avgPostCostUSD} />
                             </div>
@@ -490,7 +501,7 @@ export default function InfluencerProfilePage() {
                                 <Label req>Avg. Reel Rate (USD)</Label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>$</span>
-                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '26px', borderColor: errs.avgReelCostUSD ? 'rgba(248,113,113,0.5)' : undefined }} placeholder="e.g. 350" value={form.avgReelCostUSD} onChange={e => set('avgReelCostUSD', e.target.value)} {...fh} />
+                                    <input type="number" min={0} style={{ ...iStyle, paddingLeft: '26px', borderColor: errs.avgReelCostUSD ? 'rgba(248,113,113,0.5)' : undefined, opacity: !isEditing ? 0.6 : 1 }} placeholder="e.g. 350" value={form.avgReelCostUSD} disabled={!isEditing} onChange={e => set('avgReelCostUSD', e.target.value)} {...fh} />
                                 </div>
                                 <FieldErr msg={errs.avgReelCostUSD} />
                             </div>
@@ -507,10 +518,13 @@ export default function InfluencerProfilePage() {
                     </SectionCard>
 
                     {/* Save Button */}
-                    <button onClick={handleSave} disabled={saving}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
-                        {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Profile</>}
-                    </button>
+                    {isEditing && (
+                        <button onClick={handleSave} disabled={saving}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
+                            {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Profile</>}
+                        </button>
+                    )}
+                    <div style={{ height: '40px' }} />
                 </motion.div>
             </DashboardLayout>
         </ProtectedRoute>
