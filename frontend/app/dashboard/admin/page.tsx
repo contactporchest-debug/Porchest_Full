@@ -244,17 +244,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
             <DashboardLayout>
                 <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
-                    {/* ── Header ── */}
-                    <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 14px', borderRadius: 99, background: 'rgba(255,140,66,0.1)', border: '1px solid rgba(255,140,66,0.25)', marginBottom: 12 }}>
-                            <Shield size={11} style={{ color: '#ff8c42' }} />
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#ff8c42', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Admin Portal</span>
-                        </div>
-                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#172033', letterSpacing: '-0.03em', marginBottom: 5 }}>
-                            Platform <span style={{ background: 'linear-gradient(90deg,#ff8c42,#ff5f1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Control Center</span>
-                        </h1>
-                        <p style={{ fontSize: 13, color: '#667085' }}>Manage users, monitor campaigns, and maintain platform health.</p>
-                    </motion.div>
+
 
                     <AnimatePresence mode="wait">
 
