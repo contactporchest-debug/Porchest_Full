@@ -79,14 +79,13 @@ export default function InfluencerSignupPage() {
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
         const idToken = credentialResponse.credential;
+        if (!idToken) {
+            toast.error('Google signup did not return a valid credential.');
+            return;
+        }
         try {
             setLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken, role: 'influencer' }),
-            });
-            const data = await res.json();
+            const { data } = await authAPI.googleAuth({ idToken, role: 'influencer' });
 
             if (data.success) {
                 localStorage.setItem('porchest_token', data.token);
@@ -96,7 +95,12 @@ export default function InfluencerSignupPage() {
                 toast.error(data.message || 'Google Auth failed');
             }
         } catch (err: any) {
-            toast.error(err.message || 'Google auth error');
+            const message =
+                err?.response?.data?.message ||
+                (typeof err?.response?.data === 'string' ? err.response.data : null) ||
+                err?.message ||
+                'Google auth error';
+            toast.error(message);
         } finally {
             setLoading(false);
         }

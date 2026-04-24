@@ -49,6 +49,7 @@ export default api;
 export const authAPI = {
     login: (data: { email: string; password: string }) => api.post('/auth/login', data),
     register: (data: Record<string, unknown>) => api.post('/auth/register', data),
+    googleAuth: (data: { idToken: string; role: 'brand' | 'influencer' | null }) => api.post('/auth/google', data),
     getMe: () => api.get('/auth/me'),
     verifyOTP: (data: { email: string; otp: string }) => api.post('/auth/verify-otp', data),
     resendOTP: (data: { email: string }) => api.post('/auth/resend-otp', data),
@@ -138,4 +139,3 @@ export const influencerAPI = {
     cashout: (amount: number) => api.post('/influencer/cashout', { amount }),
     getCashouts: () => api.get('/influencer/cashouts'),
 };
-

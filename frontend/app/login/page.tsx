@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { authAPI } from '@/lib/api';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
@@ -67,14 +68,13 @@ export default function LoginPage() {
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
         const idToken = credentialResponse.credential;
+        if (!idToken) {
+            toast.error('Google login did not return a valid credential.');
+            return;
+        }
         try {
             setLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken, role: null }),
-            });
-            const data = await res.json();
+            const { data } = await authAPI.googleAuth({ idToken, role: null });
 
             if (data.success) {
                 localStorage.setItem('porchest_token', data.token);
@@ -88,7 +88,12 @@ export default function LoginPage() {
                 }
             }
         } catch (err: any) {
-            toast.error(err.message || 'Google auth error');
+            const message =
+                err?.response?.data?.message ||
+                (typeof err?.response?.data === 'string' ? err.response.data : null) ||
+                err?.message ||
+                'Google auth error';
+            toast.error(message);
         } finally {
             setLoading(false);
         }

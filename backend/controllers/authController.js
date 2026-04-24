@@ -158,6 +158,13 @@ exports.googleAuth = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Google ID token is required' });
         }
 
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            return res.status(500).json({
+                success: false,
+                message: 'Google login is not configured on the server.',
+            });
+        }
+
         const ticket = await googleClient.verifyIdToken({
             idToken,
             audience: process.env.GOOGLE_CLIENT_ID,
