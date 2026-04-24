@@ -56,7 +56,7 @@ export default function InfluencerSignupPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.email || !form.password) return toast.error('Please fill all required fields');
+        if (!form.email || !form.password) return toast.error('Please fill all required fields ');
         if (!form.termsAccepted) return toast.error('You must accept the Terms & Conditions');
         if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
         setLoading(true);
