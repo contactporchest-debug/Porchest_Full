@@ -32,6 +32,12 @@ const ICON_MAP: Record<string, React.ReactNode> = {
     instagram: <Instagram size={14} />,
 };
 
+const SURFACE = '#ffffff';
+const SURFACE_ALT = '#f8fafc';
+const BORDER = 'rgba(148, 163, 184, 0.22)';
+const TEXT = '#0f172a';
+const MUTED = '#64748b';
+
 export default function ProfileCompletionBanner({ completion }: { completion: ProfileCompletionData | null }) {
     const router = useRouter();
 
@@ -56,10 +62,11 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                 marginBottom: '24px',
                 padding: '28px 32px',
                 borderRadius: '28px',
-                background: 'linear-gradient(135deg, rgba(251,191,36,0.06) 0%, rgba(14,12,26,0.85) 40%, rgba(123,63,242,0.06) 100%)',
-                border: '1px solid rgba(251,191,36,0.2)',
+                background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 42%, #f5f3ff 100%)',
+                border: '1px solid rgba(251,191,36,0.18)',
                 backdropFilter: 'blur(20px)',
                 overflow: 'hidden',
+                boxShadow: '0 20px 40px rgba(15,23,42,0.06)',
             }}
         >
             {/* Subtle glow */}
@@ -73,7 +80,7 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                 {/* Progress Ring */}
                 <div style={{ flexShrink: 0, position: 'relative', width: '96px', height: '96px' }}>
                     <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="48" cy="48" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                        <circle cx="48" cy="48" r={radius} fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="6" />
                         <motion.circle
                             cx="48" cy="48" r={radius} fill="none"
                             stroke={percentage >= 80 ? '#4ade80' : percentage >= 50 ? '#fbbf24' : '#f87171'}
@@ -90,11 +97,11 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                     }}>
                         <span style={{
                             fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px',
-                            color: '#fff', lineHeight: '1',
+                            color: TEXT, lineHeight: '1',
                         }}>
                             {percentage}%
                         </span>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', marginTop: '2px' }}>
+                        <span style={{ fontSize: '10px', color: MUTED, marginTop: '2px' }}>
                             complete
                         </span>
                     </div>
@@ -106,12 +113,12 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                         <AlertTriangle size={16} style={{ color: '#fbbf24' }} />
                         <h3 style={{
                             fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px',
-                            color: '#fff', letterSpacing: '-0.02em',
+                            color: TEXT, letterSpacing: '-0.02em',
                         }}>
                             Complete Your Profile to Get Discovered
                         </h3>
                     </div>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.6', marginBottom: '18px' }}>
+                    <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.6', marginBottom: '18px' }}>
                         Your profile will only appear in the Brand Portal after all required information is completed.
                         Add your profile photo, bio, pricing, and connect your Instagram to start receiving brand requests.
                     </p>
@@ -147,8 +154,8 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                             <div key={item.key} style={{
                                 display: 'flex', alignItems: 'center', gap: '8px',
                                 padding: '8px 12px', borderRadius: '10px',
-                                background: 'rgba(74,222,128,0.04)',
-                                border: '1px solid rgba(74,222,128,0.08)',
+                                background: SURFACE_ALT,
+                                border: `1px solid ${BORDER}`,
                             }}>
                                 <div style={{
                                     width: '22px', height: '22px', borderRadius: '6px',
@@ -159,7 +166,7 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                                     <CheckCircle2 size={12} />
                                 </div>
                                 <span style={{
-                                    fontSize: '12px', color: 'rgba(255,255,255,0.35)', fontWeight: '500',
+                                    fontSize: '12px', color: MUTED, fontWeight: '500',
                                     textDecoration: 'line-through',
                                 }}>
                                     {item.label}

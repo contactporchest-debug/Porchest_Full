@@ -78,8 +78,8 @@ export default function OverviewPage() {
                             <AlertCircle size={18} />
                         </div>
                         <div>
-                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff', marginBottom: '2px' }}>Action Required: Complete Your Profile</p>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>You need to complete your brand profile to start using AI Matching.</p>
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033', marginBottom: '2px' }}>Action Required: Complete Your Profile</p>
+                            <p style={{ fontSize: '12px', color: '#667085' }}>You need to complete your brand profile to start using AI Matching.</p>
                         </div>
                     </div>
                     <Link href="/dashboard/brand/profile" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', fontSize: '12px', fontWeight: '700', textDecoration: 'none', transition: 'all 200ms ease' }}>
@@ -99,7 +99,7 @@ export default function OverviewPage() {
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '2.4rem', color: c.color, letterSpacing: '-0.05em', lineHeight: '1', filter: `drop-shadow(0 0 12px ${c.color}50)` }}>
                             {c.val}
                         </p>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '7px', fontWeight: '500' }}>{c.label} Campaigns</p>
+                        <p style={{ fontSize: '12px', color: '#667085', marginTop: '7px', fontWeight: '500' }}>{c.label} Campaigns</p>
                     </motion.div>
                 ))}
             </div>
@@ -107,28 +107,28 @@ export default function OverviewPage() {
             {/* ── Budget summary ── */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.35 }}
                 className="glass-card" style={{ padding: '26px 30px', borderRadius: '28px' }}>
-                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Budget Summary</p>
+                <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px' }}>Budget Summary</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '16px' }}>
                     <div>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Total Committed (Lifetime)</p>
+                        <p style={{ fontSize: '11px', color: '#7a8798', marginBottom: '4px' }}>Total Committed (Lifetime)</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.8rem', color: '#a78bfa', filter: 'drop-shadow(0 0 10px rgba(167,139,250,0.4))' }}>
                             {totalAllocated > 0 ? `$${totalAllocated.toLocaleString()}` : '—'}
                         </p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '3px' }}>Sum of agreed deal prices</p>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>Sum of agreed deal prices</p>
                     </div>
                     <div>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Active Collaborations</p>
+                        <p style={{ fontSize: '11px', color: '#7a8798', marginBottom: '4px' }}>Active Collaborations</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.8rem', color: '#60d5f8', filter: 'drop-shadow(0 0 10px rgba(96,213,248,0.4))' }}>
                             {accepted.length}
                         </p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '3px' }}>Accepted requests</p>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>Accepted requests</p>
                     </div>
                     <div>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '4px' }}>Pending Decisions</p>
+                        <p style={{ fontSize: '11px', color: '#7a8798', marginBottom: '4px' }}>Pending Decisions</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.8rem', color: '#fbbf24', filter: 'drop-shadow(0 0 10px rgba(251,191,36,0.4))' }}>
                             {pending.length}
                         </p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', marginTop: '3px' }}>Awaiting influencer response</p>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>Awaiting influencer response</p>
                     </div>
                 </div>
             </motion.div>
@@ -137,7 +137,7 @@ export default function OverviewPage() {
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36, duration: 0.35 }}
                 className="glass-card" style={{ padding: '26px 30px', borderRadius: '28px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Campaigns</p>
+                    <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Campaigns</p>
                     <button onClick={() => router.push('/dashboard/brand/collaborations')}
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                         View All <ArrowRight size={12} />
@@ -145,10 +145,10 @@ export default function OverviewPage() {
                 </div>
 
                 {runningPreview.length === 0 ? (
-                    <div style={{ padding: '36px', textAlign: 'center', borderRadius: '18px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)' }}>
+                    <div style={{ padding: '36px', textAlign: 'center', borderRadius: '18px', background: 'rgba(255,255,255,0.84)', border: '1px dashed rgba(148,163,184,0.24)' }}>
                         <FileText size={36} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 12px' }} />
-                        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', fontWeight: '500', marginBottom: '4px' }}>No campaigns yet</p>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>
+                        <p style={{ fontSize: '14px', color: '#667085', fontWeight: '500', marginBottom: '4px' }}>No campaigns yet</p>
+                        <p style={{ fontSize: '12px', color: '#94a3b8' }}>
                             Create your first campaign request from{' '}
                             <button onClick={() => router.push('/dashboard/brand/influencers')} style={{ color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>Influencers →</button>
                         </p>
@@ -162,11 +162,11 @@ export default function OverviewPage() {
                             const statusLabel = isRunning ? 'Running' : 'In-Process';
                             const statusColor = isRunning ? '#4ade80' : '#60d5f8';
                             return (
-                                <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+                                <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.84)', border: '1px solid rgba(148,163,184,0.16)', flexWrap: 'wrap' }}>
                                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: '#fff', flexShrink: 0 }}>{initials}</div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
-                                        <p style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{inf?.fullName || '—'}</p>
+                                        <p style={{ fontSize: '13px', fontWeight: '700', color: '#172033' }}>{r.campaignTitle}</p>
+                                        <p style={{ fontSize: '11px', color: '#667085' }}>{inf?.fullName || '—'}</p>
                                     </div>
                                     <span style={{ padding: '3px 11px', borderRadius: '99px', background: `${statusColor}12`, border: `1px solid ${statusColor}28`, color: statusColor, fontSize: '11px', fontWeight: '700' }}>{statusLabel}</span>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>

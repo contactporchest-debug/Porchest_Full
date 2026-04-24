@@ -2,51 +2,44 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
 
-/* ─── NAV ─── */
 function LandingNav() {
     const scrollTo = (id: string) => {
         const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     };
+
     return (
-        <header style={{
-            position: 'sticky', top: 0, zIndex: 50, width: '100%',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)',
-        }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', height: '64px', alignItems: 'center', justifyContent: 'space-between' }}>
-                {/* Logo */}
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', borderBottom: '1px solid rgba(148,163,184,0.16)', background: 'rgba(252,250,244,0.88)', backdropFilter: 'blur(18px)' }}>
+            <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'flex', height: '72px', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-                    <Image src="/logo.png" alt="Porchest" width={36} height={36} style={{ borderRadius: '8px' }} />
-                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#fff' }}>Porchest</span>
+                    <Image src="/logo.png" alt="Porchest" width={40} height={40} style={{ borderRadius: '12px', boxShadow: '0 10px 24px rgba(123,63,242,0.14)' }} />
+                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em' }}>
+                        Porchest
+                    </span>
                 </Link>
 
-                {/* Nav links */}
-                <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                <nav style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
                     {[
                         { label: 'Features', id: 'features' },
                         { label: 'How It Works', id: 'how-it-works' },
                         { label: 'Contact', id: 'contact' },
-                    ].map(item => (
-                        <button key={item.id} onClick={() => scrollTo(item.id)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: 'rgba(255,255,255,0.55)', fontFamily: 'inherit', transition: 'color 200ms ease' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                    ].map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => scrollTo(item.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', color: '#667085', fontFamily: 'inherit', fontWeight: 600 }}
+                        >
                             {item.label}
                         </button>
                     ))}
                 </nav>
 
-                {/* Auth */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Link href="/login" style={{ padding: '8px 20px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '14px', fontWeight: '600', textDecoration: 'none', transition: 'background 200ms ease' }}
-                        onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)')}
-                        onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}>
+                    <Link href="/login" style={{ padding: '10px 18px', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.20)', color: '#172033', fontSize: '14px', fontWeight: 700, textDecoration: 'none', background: 'rgba(255,255,255,0.7)' }}>
                         Sign In
                     </Link>
-                    <Link href="/signup" style={{ padding: '8px 20px', borderRadius: '10px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 0 20px rgba(123,63,242,0.35)' }}>
+                    <Link href="/signup" style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontSize: '14px', fontWeight: 700, textDecoration: 'none', boxShadow: '0 14px 30px rgba(123,63,242,0.20)' }}>
                         Sign Up
                     </Link>
                 </div>
@@ -55,101 +48,108 @@ function LandingNav() {
     );
 }
 
-/* ─── HERO ─── */
 function Hero() {
     return (
-        <section style={{ position: 'relative', display: 'flex', minHeight: '92vh', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#000', paddingTop: '60px' }}>
-            {/* Orbs */}
-            <div style={{ position: 'absolute', top: '-160px', right: '-160px', width: '520px', height: '520px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.22) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: '-160px', left: '-160px', width: '480px', height: '480px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <section style={{ position: 'relative', padding: '88px 24px 72px', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '-120px', right: '-120px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.14) 0%, transparent 72%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', left: '-140px', bottom: '-160px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 72%)', pointerEvents: 'none' }} />
 
-            <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', textAlign: 'center', padding: '0 24px' }}>
-                {/* Badge */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 18px', borderRadius: '99px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.3)', marginBottom: '36px', boxShadow: '0 0 30px rgba(123,63,242,0.15)' }}>
-                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 10px #7B3FF2', display: 'inline-block' }} />
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#a78bfa', letterSpacing: '0.04em' }}>AI-Powered Influencer Marketing Platform</span>
+            <div style={{ maxWidth: '1180px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(320px,0.9fr)', gap: '32px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+                <div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '999px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.14)', marginBottom: '26px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7B3FF2', display: 'inline-block' }} />
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#7B3FF2', letterSpacing: '0.04em' }}>AI-Powered Influencer Marketing Platform</span>
+                    </div>
+
+                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(3rem, 7vw, 5.6rem)', lineHeight: 1.02, letterSpacing: '-0.06em', color: '#172033', marginBottom: '20px' }}>
+                        Unlock influencer <span className="gradient-text">intelligence</span> without the guesswork
+                    </h1>
+
+                    <p style={{ fontSize: '18px', color: '#667085', lineHeight: 1.8, maxWidth: '620px', marginBottom: '34px' }}>
+                        Discover authentic creators, review profile quality, and run brand collaborations from one balanced workspace built for clarity.
+                    </p>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '40px' }}>
+                        <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer" style={{ padding: '15px 24px', borderRadius: '14px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: 700, fontSize: '15px', textDecoration: 'none', boxShadow: '0 16px 30px rgba(123,63,242,0.18)' }}>
+                            Chat on WhatsApp
+                        </a>
+                        <a href="mailto:info@porchest.com" style={{ padding: '15px 24px', borderRadius: '14px', border: '1px solid rgba(148,163,184,0.22)', background: 'rgba(255,255,255,0.78)', color: '#172033', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
+                            Send Email
+                        </a>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px', maxWidth: '620px' }}>
+                        {[
+                            { val: '10K+', label: 'Influencers tracked' },
+                            { val: '50M+', label: 'Audience signals analyzed' },
+                            { val: '95%', label: 'Matching confidence rate' },
+                        ].map((item) => (
+                            <div key={item.label} className="glass-card" style={{ padding: '20px', borderRadius: '22px' }}>
+                                <div style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '30px', letterSpacing: '-0.04em' }} className="gradient-text">{item.val}</div>
+                                <p style={{ marginTop: '8px', fontSize: '13px', color: '#667085', lineHeight: 1.5 }}>{item.label}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Headline */}
-                <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: 'clamp(2.8rem, 7vw, 5.5rem)', letterSpacing: '-0.04em', lineHeight: '1.02', color: '#fff', marginBottom: '24px' }}>
-                    Unlock Influencer{' '}
-                    <span style={{ background: 'linear-gradient(90deg,#7B3FF2,#A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                        Intelligence
-                    </span>
-                </h1>
-
-                <p style={{ fontSize: 'clamp(1rem,2.2vw,1.2rem)', color: 'rgba(255,255,255,0.5)', maxWidth: '560px', margin: '0 auto 44px', lineHeight: '1.65' }}>
-                    Discover authentic influencers, analyze audience demographics, and measure campaign ROI with precision.
-                </p>
-
-                {/* CTAs */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '14px', marginBottom: '64px' }}>
-                    <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer"
-                        style={{ padding: '15px 36px', borderRadius: '14px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: '700', fontSize: '15px', textDecoration: 'none', boxShadow: '0 0 28px rgba(123,63,242,0.4)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                        💬 Chat on WhatsApp
-                    </a>
-                    <a href="mailto:info@porchest.com"
-                        style={{ padding: '15px 36px', borderRadius: '14px', border: '1px solid rgba(123,63,242,0.45)', color: '#fff', fontWeight: '700', fontSize: '15px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                        ✉️ Send Email
-                    </a>
-                </div>
-
-                {/* Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '24px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '48px', maxWidth: '600px', margin: '0 auto' }}>
-                    {[
-                        { val: '10K+', label: 'Influencers Tracked' },
-                        { val: '50M+', label: 'Audience Analyzed' },
-                        { val: '95%', label: 'Accuracy Rate' },
-                    ].map(s => (
-                        <div key={s.label} style={{ textAlign: 'center' }}>
-                            <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '2.2rem', background: 'linear-gradient(90deg,#7B3FF2,#A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</div>
-                            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: '6px' }}>{s.label}</p>
+                <div className="glass-card" style={{ padding: '28px', borderRadius: '34px' }}>
+                    <div style={{ display: 'grid', gap: '16px' }}>
+                        <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.12)' }}>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FF2', marginBottom: '8px' }}>Audience analytics</p>
+                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', marginBottom: '6px' }}>See who actually matters</h3>
+                            <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.7 }}>Review follower quality, engagement health, and collaboration fit before outreach begins.</p>
                         </div>
-                    ))}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: '16px' }}>
+                            {[
+                                ['Verified creators', '8.4K'],
+                                ['Active requests', '1.2K'],
+                                ['Brand workspaces', '940'],
+                                ['Avg. response time', '< 3h'],
+                            ].map(([label, value]) => (
+                                <div key={label} style={{ padding: '18px', borderRadius: '20px', background: 'rgba(255,255,255,0.74)', border: '1px solid rgba(148,163,184,0.18)' }}>
+                                    <p style={{ fontSize: '12px', color: '#667085', marginBottom: '8px' }}>{label}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '28px', color: '#172033', letterSpacing: '-0.04em' }}>{value}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
     );
 }
-
-/* ─── FEATURES ─── */
-const FEATURES = [
-    { icon: '📊', title: 'Audience Analytics', description: 'Deep insights into follower demographics, engagement patterns, and audience growth trends.' },
-    { icon: '🎯', title: 'Influencer Discovery', description: 'Find perfectly matched influencers based on niche, audience size, and engagement rates.' },
-    { icon: '💰', title: 'ROI Measurement', description: 'Track campaign performance and calculate exact return on investment for every collaboration.' },
-    { icon: '🔍', title: 'Authenticity Check', description: 'Identify fake followers and bots to ensure authentic brand partnerships.' },
-    { icon: '📈', title: 'Growth Tracking', description: 'Monitor influencer growth metrics and historical performance data over time.' },
-    { icon: '🤝', title: 'Campaign Management', description: 'Manage multiple influencer campaigns with detailed collaboration and payment tracking.' },
-];
 
 function Features() {
+    const features = [
+        { title: 'Audience Analytics', desc: 'Understand demographics, engagement patterns, and quality signals before reaching out.' },
+        { title: 'Influencer Discovery', desc: 'Filter creators by niche, location, pricing, and credibility without messy spreadsheets.' },
+        { title: 'Request Workflows', desc: 'Send structured collaboration requests and keep negotiations in one clean inbox.' },
+        { title: 'Campaign Monitoring', desc: 'Track statuses, approvals, verification, and deliverables with less back and forth.' },
+        { title: 'Profile Completion', desc: 'Help users finish the right details so profiles are useful, readable, and consistent.' },
+        { title: 'Admin Oversight', desc: 'Manage users and campaign activity from a central control panel built for operations.' },
+    ];
+
     return (
-        <section id="features" style={{ background: '#000', padding: '100px 24px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', color: '#fff', marginBottom: '16px' }}>
-                        Everything you need for{' '}
-                        <span style={{ background: 'linear-gradient(90deg,#7B3FF2,#A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                            Influencer Marketing
-                        </span>
+        <section id="features" style={{ padding: '54px 24px 80px' }}>
+            <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(2rem,5vw,3.2rem)', lineHeight: 1.08, letterSpacing: '-0.05em', color: '#172033', marginBottom: '14px' }}>
+                        Built for organized <span className="gradient-text">brand-creator collaboration</span>
                     </h2>
-                    <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.45)', maxWidth: '560px', margin: '0 auto', lineHeight: '1.65' }}>
-                        Comprehensive tools to discover, analyze, and collaborate with influencers that drive real results.
+                    <p style={{ maxWidth: '620px', margin: '0 auto', fontSize: '16px', color: '#667085', lineHeight: 1.8 }}>
+                        Porchest keeps the workflow simple: discover, review, invite, negotiate, verify, and track.
                     </p>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '20px' }}>
-                    {FEATURES.map((f) => (
-                        <div key={f.title} style={{
-                            padding: '32px', borderRadius: '24px',
-                            background: 'rgba(255,255,255,0.02)',
-                            border: '1px solid rgba(255,255,255,0.07)',
-                            transition: 'border-color 260ms ease, box-shadow 260ms ease',
-                        }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(123,63,242,0.4)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 40px rgba(123,63,242,0.1)'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                            <div style={{ fontSize: '36px', marginBottom: '16px' }}>{f.icon}</div>
-                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '18px', color: '#fff', marginBottom: '10px' }}>{f.title}</h3>
-                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.65' }}>{f.description}</p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
+                    {features.map((feature) => (
+                        <div key={feature.title} className="glass-card" style={{ padding: '28px', borderRadius: '28px' }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '16px' }}>
+                                {feature.title.charAt(0)}
+                            </div>
+                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '10px' }}>{feature.title}</h3>
+                            <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.7 }}>{feature.desc}</p>
                         </div>
                     ))}
                 </div>
@@ -157,73 +157,69 @@ function Features() {
         </section>
     );
 }
-
-/* ─── HOW IT WORKS ─── */
-const STEPS = [
-    { number: '01', title: 'Define Your Goals', description: 'Specify your campaign objectives, budget, and target audience demographics.' },
-    { number: '02', title: 'Discover Influencers', description: 'Browse our database of 10,000+ verified influencers filtered by niche and metrics.' },
-    { number: '03', title: 'Analyze Performance', description: 'Review detailed analytics on audience quality, engagement rates, and past collaborations.' },
-    { number: '04', title: 'Launch Campaign', description: 'Collaborate with influencers and track real-time campaign performance and ROI.' },
-];
 
 function HowItWorks() {
+    const steps = [
+        { number: '01', title: 'Set your goal', desc: 'Define campaign objectives, audience fit, and collaboration scope.' },
+        { number: '02', title: 'Review profiles', desc: 'Check profile strength, pricing, and audience quality in one place.' },
+        { number: '03', title: 'Send requests', desc: 'Share terms clearly so brands and influencers see the same details.' },
+        { number: '04', title: 'Track outcomes', desc: 'Follow collaboration progress, verification, and platform activity.' },
+    ];
+
     return (
-        <section id="how-it-works" style={{ background: '#000', padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', color: '#fff', marginBottom: '16px' }}>
-                        How It Works
-                    </h2>
-                    <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.45)', maxWidth: '460px', margin: '0 auto' }}>
-                        Get started with influencer marketing in four simple steps.
-                    </p>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '32px' }}>
-                    {STEPS.map((step, i) => (
-                        <div key={step.number} style={{ position: 'relative' }}>
-                            <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '4rem', color: '#7B3FF2', opacity: 0.2, lineHeight: 1, marginBottom: '12px' }}>{step.number}</div>
-                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '18px', color: '#fff', marginBottom: '10px' }}>{step.title}</h3>
-                            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.65' }}>{step.description}</p>
-                            {i < STEPS.length - 1 && (
-                                <div style={{ position: 'absolute', right: 0, top: '32px', width: '40px', height: '2px', background: 'linear-gradient(90deg,#7B3FF2,transparent)' }} />
-                            )}
-                        </div>
-                    ))}
+        <section id="how-it-works" style={{ padding: '18px 24px 86px' }}>
+            <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
+                <div className="glass-card" style={{ padding: '38px', borderRadius: '34px' }}>
+                    <div style={{ marginBottom: '30px' }}>
+                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.9rem,4vw,3rem)', lineHeight: 1.08, letterSpacing: '-0.05em', color: '#172033', marginBottom: '12px' }}>
+                            A simple workflow that stays balanced
+                        </h2>
+                        <p style={{ fontSize: '16px', color: '#667085', maxWidth: '620px', lineHeight: 1.8 }}>
+                            Every step is structured so the platform feels manageable for both brands and creators.
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
+                        {steps.map((step) => (
+                            <div key={step.number} style={{ padding: '22px', borderRadius: '22px', background: 'rgba(255,255,255,0.68)', border: '1px solid rgba(148,163,184,0.18)' }}>
+                                <div className="gradient-text" style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '38px', letterSpacing: '-0.05em', marginBottom: '10px' }}>{step.number}</div>
+                                <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '20px', color: '#172033', marginBottom: '10px' }}>{step.title}</h3>
+                                <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.7 }}>{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>
     );
 }
 
-/* ─── CONTACT ─── */
 function Contact() {
     return (
-        <section id="contact" style={{ background: '#000', padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-                <div style={{ padding: '56px', borderRadius: '32px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '44px' }}>
-                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: 'clamp(1.8rem,4vw,2.8rem)', letterSpacing: '-0.03em', color: '#fff', marginBottom: '14px' }}>
-                            Ready to Start?
-                        </h2>
-                        <p style={{ fontSize: '17px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.6' }}>
-                            Get in touch with our team to discuss your influencer marketing goals.
-                        </p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: '20px' }}>
-                        {[
-                            { icon: '💬', title: 'Chat on WhatsApp', desc: 'Quick response guaranteed', link: 'https://wa.me/923477437615', cta: 'Open WhatsApp →', external: true },
-                            { icon: '✉️', title: 'Send Email', desc: 'info@porchest.com', link: 'mailto:info@porchest.com', cta: 'Send Email →', external: false },
-                        ].map(item => (
-                            <a key={item.title} href={item.link} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}
-                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '36px 24px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', textDecoration: 'none', transition: 'border-color 220ms ease, box-shadow 220ms ease' }}
-                                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(123,63,242,0.4)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 0 30px rgba(123,63,242,0.1)'; }}
-                                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                                <div style={{ fontSize: '40px', marginBottom: '14px' }}>{item.icon}</div>
-                                <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '17px', color: '#fff', marginBottom: '6px' }}>{item.title}</h3>
-                                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: '16px' }}>{item.desc}</p>
-                                <span style={{ fontSize: '14px', color: '#a78bfa', fontWeight: '600' }}>{item.cta}</span>
-                            </a>
-                        ))}
+        <section id="contact" style={{ padding: '0 24px 88px' }}>
+            <div style={{ maxWidth: '980px', margin: '0 auto' }}>
+                <div className="glass-card" style={{ padding: '40px', borderRadius: '34px', textAlign: 'center' }}>
+                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.9rem,4vw,2.8rem)', lineHeight: 1.08, letterSpacing: '-0.05em', color: '#172033', marginBottom: '14px' }}>
+                        Ready to talk about your workflow?
+                    </h2>
+                    <p style={{ maxWidth: '560px', margin: '0 auto 28px', fontSize: '16px', color: '#667085', lineHeight: 1.8 }}>
+                        Reach the Porchest team for onboarding, product questions, or help planning your creator operations.
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '18px' }}>
+                        <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer" className="glass-card" style={{ padding: '28px', borderRadius: '24px', textDecoration: 'none' }}>
+                            <div style={{ fontSize: '36px', marginBottom: '12px' }}>💬</div>
+                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '20px', color: '#172033', marginBottom: '8px' }}>Chat on WhatsApp</h3>
+                            <p style={{ fontSize: '14px', color: '#667085', marginBottom: '14px' }}>Fast replies for quick questions.</p>
+                            <span style={{ color: '#7B3FF2', fontWeight: 700, fontSize: '14px' }}>Open WhatsApp</span>
+                        </a>
+
+                        <a href="mailto:info@porchest.com" className="glass-card" style={{ padding: '28px', borderRadius: '24px', textDecoration: 'none' }}>
+                            <div style={{ fontSize: '36px', marginBottom: '12px' }}>✉️</div>
+                            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '20px', color: '#172033', marginBottom: '8px' }}>Send an email</h3>
+                            <p style={{ fontSize: '14px', color: '#667085', marginBottom: '14px' }}>info@porchest.com</p>
+                            <span style={{ color: '#7B3FF2', fontWeight: 700, fontSize: '14px' }}>Write to us</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -231,67 +227,25 @@ function Contact() {
     );
 }
 
-/* ─── FOOTER ─── */
 function Footer() {
     const year = new Date().getFullYear();
+
     return (
-        <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', background: '#000', padding: '56px 24px 32px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: '40px', marginBottom: '48px' }}>
-                    {/* Brand */}
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                            <Image src="/logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '6px' }} />
-                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#fff' }}>Porchest</span>
-                        </div>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)', lineHeight: '1.6' }}>
-                            Unlock influencer intelligence for smarter marketing decisions.
-                        </p>
-                    </div>
-
-                    {/* Product */}
-                    <div>
-                        <h4 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '13px', color: '#fff', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Product</h4>
-                        {['Features', 'How It Works', 'Pricing', 'API'].map(l => (
-                            <p key={l} style={{ marginBottom: '10px' }}><a href="#" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', transition: 'color 180ms' }}
-                                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = '#fff')}
-                                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)')}>{l}</a></p>
-                        ))}
-                    </div>
-
-                    {/* Company */}
-                    <div>
-                        <h4 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '13px', color: '#fff', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Company</h4>
-                        {['About', 'Blog', 'Careers', 'Press'].map(l => (
-                            <p key={l} style={{ marginBottom: '10px' }}><a href="#" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
-                                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = '#fff')}
-                                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)')}>{l}</a></p>
-                        ))}
-                    </div>
-
-                    {/* Legal */}
-                    <div>
-                        <h4 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '13px', color: '#fff', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Legal</h4>
-                        {['Privacy', 'Terms', 'Cookies', 'Contact'].map(l => (
-                            <p key={l} style={{ marginBottom: '10px' }}><a href="#" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
-                                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = '#fff')}
-                                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)')}>{l}</a></p>
-                        ))}
-                    </div>
+        <footer style={{ borderTop: '1px solid rgba(148,163,184,0.16)', padding: '28px 24px 36px' }}>
+            <div style={{ maxWidth: '1180px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Image src="/logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '8px' }} />
+                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '16px', color: '#172033' }}>Porchest</span>
                 </div>
-
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '28px', textAlign: 'center' }}>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© {year} Porchest. All rights reserved.</p>
-                </div>
+                <p style={{ fontSize: '13px', color: '#667085' }}>© {year} Porchest. Built for smarter creator collaboration.</p>
             </div>
         </footer>
     );
 }
 
-/* ─── PAGE ─── */
-export default function Home() {
+export default function LandingPage() {
     return (
-        <main style={{ background: '#000', minHeight: '100vh' }}>
+        <main style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)' }}>
             <LandingNav />
             <Hero />
             <Features />

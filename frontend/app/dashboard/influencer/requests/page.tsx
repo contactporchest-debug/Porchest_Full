@@ -19,9 +19,16 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
     rejected: { label: 'Declined', color: '#f87171', bg: 'rgba(248,113,113,0.08)', icon: <XCircle size={11} /> },
     negotiation: { label: 'Negotiation', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', icon: <MessageSquare size={11} /> },
     deal_closed: { label: 'Deal Closed', color: '#4ade80', bg: 'rgba(74,222,128,0.12)', icon: <Handshake size={11} /> },
-    expired: { label: 'Expired', color: 'rgba(255,255,255,0.3)', bg: 'rgba(255,255,255,0.04)', icon: <Clock size={11} /> },
-    cancelled: { label: 'Cancelled', color: 'rgba(255,255,255,0.3)', bg: 'rgba(255,255,255,0.04)', icon: <XCircle size={11} /> },
+    expired: { label: 'Expired', color: '#667085', bg: 'rgba(148,163,184,0.12)', icon: <Clock size={11} /> },
+    cancelled: { label: 'Cancelled', color: '#667085', bg: 'rgba(148,163,184,0.12)', icon: <XCircle size={11} /> },
 };
+
+const SURFACE = '#ffffff';
+const SURFACE_ALT = '#f8fafc';
+const BORDER = 'rgba(148, 163, 184, 0.22)';
+const BORDER_STRONG = 'rgba(148, 163, 184, 0.34)';
+const TEXT = '#0f172a';
+const MUTED = '#64748b';
 
 const escapeHtml = (value: unknown) =>
     String(value ?? '')
@@ -295,7 +302,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
 
     return (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.35 }} style={{ overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            transition={{ duration: 0.35 }} style={{ overflow: 'hidden', borderTop: `1px solid ${BORDER}` }}>
             <div style={{ padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                 {/* Verification Submission (only if accepted) */}
@@ -306,14 +313,14 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                                 <CheckCircle size={16} style={{ color: '#4ade80' }} />
                             </div>
                             <div>
-                                <p style={{ fontSize: '14px', fontWeight: '800', color: '#fff', fontFamily: 'Space Grotesk' }}>Submit for Verification</p>
-                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)' }}>Post the content on Instagram and paste the URL below to get paid.</p>
+                                <p style={{ fontSize: '14px', fontWeight: '800', color: '#172033', fontFamily: 'Space Grotesk' }}>Submit for Verification</p>
+                                <p style={{ fontSize: '11px', color: '#667085' }}>Post the content on Instagram and paste the URL below to get paid.</p>
                             </div>
                         </div>
                         <form onSubmit={handleVerifySubmit} style={{ display: 'flex', gap: '10px' }}>
                             <input required value={postUrl} onChange={e => setPostUrl(e.target.value)}
                                 placeholder="https://www.instagram.com/p/..." className="input-dark" 
-                                style={{ flex: 1, height: '44px', background: 'rgba(0,0,0,0.2)', fontSize: '13px' }} />
+                                style={{ flex: 1, height: '44px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px' }} />
                             <button type="submit" disabled={submittingVer}
                                 style={{ padding: '0 20px', borderRadius: '12px', background: '#22c55e', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px' }}>
                                 {submittingVer ? <Loader2 size={14} className="spin" /> : <Send size={14} />} Submit
@@ -325,25 +332,25 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                 {/* Brand message */}
                 {request.brandMessage && (
                     <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Message from Brand</p>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.7' }}>{request.brandMessage}</p>
+                        <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Message from Brand</p>
+                        <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7' }}>{request.brandMessage}</p>
                     </div>
                 )}
 
                 {/* Campaign description */}
                 {request.campaignDescription && (
                     <div>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Campaign Description</p>
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7' }}>{request.campaignDescription}</p>
+                        <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Campaign Description</p>
+                        <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7' }}>{request.campaignDescription}</p>
                     </div>
                 )}
 
                 {/* Campaign details grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px' }}>
                     {fields.map(f => (
-                        <div key={f.label} style={{ padding: '10px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{f.label}</p>
-                            <p style={{ fontSize: '13px', color: '#fff', fontWeight: '600', textTransform: 'capitalize' }}>{f.val}</p>
+                        <div key={f.label} style={{ padding: '10px 14px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+                            <p style={{ fontSize: '10px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{f.label}</p>
+                            <p style={{ fontSize: '13px', color: '#172033', fontWeight: '600', textTransform: 'capitalize' }}>{f.val}</p>
                         </div>
                     ))}
                 </div>
@@ -373,8 +380,8 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                 {/* Content Guidelines */}
                 {request.contentGuidelines && (
                     <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(96,213,248,0.05)', border: '1px solid rgba(96,213,248,0.12)' }}>
-                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Content Guidelines</p>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', lineHeight: '1.6' }}>{request.contentGuidelines}</p>
+                        <p style={{ fontSize: '10px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Content Guidelines</p>
+                        <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>{request.contentGuidelines}</p>
                     </div>
                 )}
 
@@ -383,7 +390,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                     <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
                         <p style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '700', marginBottom: '6px' }}>Your Counter Offer</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>${request.counterOfferPrice.toLocaleString()}</p>
-                        {request.counterOfferMessage && <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>{request.counterOfferMessage}</p>}
+                        {request.counterOfferMessage && <p style={{ fontSize: '12px', color: '#667085', marginTop: '4px' }}>{request.counterOfferMessage}</p>}
                     </div>
                 )}
 
@@ -413,21 +420,21 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
 
                         {/* Negotiate form */}
                         <AnimatePresence>
-                            {showNegotiate && (
+                        {showNegotiate && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                     style={{ overflow: 'hidden' }}>
-                                    <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)' }}>
+                                    <div style={{ padding: '18px', borderRadius: '16px', background: '#fffbeb', border: '1px solid rgba(251,191,36,0.18)' }}>
                                         <p style={{ fontSize: '12px', color: '#fbbf24', fontWeight: '700', marginBottom: '12px' }}>Send a Counter Offer</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px', marginBottom: '12px' }}>
                                             <div>
-                                                <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Your Price (USD)</label>
+                                                <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Your Price (USD)</label>
                                                 <input type="number" min={0} value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
-                                                    placeholder="e.g. 500" className="input-dark" style={{ fontSize: '14px', height: '42px' }} />
+                                                    placeholder="e.g. 500" className="input-dark" style={{ fontSize: '14px', height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
                                             </div>
                                             <div>
-                                                <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Message (optional)</label>
+                                                <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Message (optional)</label>
                                                 <input value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
-                                                    placeholder="Explain your offer…" className="input-dark" style={{ fontSize: '13px', height: '42px' }} />
+                                                    placeholder="Explain your offer…" className="input-dark" style={{ fontSize: '13px', height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
                                             </div>
                                         </div>
                                         <button onClick={() => {
@@ -447,11 +454,11 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                             {showReject && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                     style={{ overflow: 'hidden' }}>
-                                    <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(248,113,113,0.05)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                                    <div style={{ padding: '18px', borderRadius: '16px', background: '#fff1f2', border: '1px solid rgba(248,113,113,0.18)' }}>
                                         <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '700', marginBottom: '12px' }}>Decline Request</p>
-                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Reason (optional)</label>
+                                        <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Reason (optional)</label>
                                         <input value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
-                                            placeholder="e.g. Not aligned with my content…" className="input-dark" style={{ fontSize: '13px', height: '42px', marginBottom: '12px' }} />
+                                            placeholder="e.g. Not aligned with my content…" className="input-dark" style={{ fontSize: '13px', height: '42px', marginBottom: '12px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
                                         <button onClick={() => onRespond(request._id, 'rejected', { rejectionReason })} disabled={responding}
                                             style={{ padding: '10px 24px', borderRadius: '12px', background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}>
                                             <XCircle size={13} /> Confirm Decline
@@ -528,19 +535,19 @@ export default function InfluencerRequestsPage() {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                     style={{ marginBottom: '24px' }}>
-                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>
+                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: TEXT, letterSpacing: '-0.03em', marginBottom: '4px' }}>
                         Collaboration Requests
                     </h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+                    <p style={{ fontSize: '13px', color: MUTED }}>
                         {requests.length} incoming request{requests.length !== 1 ? 's' : ''} from brands
                     </p>
                 </motion.div>
 
                 {/* Filter tabs */}
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: SURFACE_ALT, borderRadius: '12px', padding: '4px', border: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
                     {FILTERS.map(f => (
                         <button key={f.key} onClick={() => setFilter(f.key)}
-                            style={{ padding: '7px 16px', borderRadius: '9px', border: 'none', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 180ms ease', whiteSpace: 'nowrap', background: filter === f.key ? `${f.color}18` : 'transparent', color: filter === f.key ? f.color : 'rgba(255,255,255,0.35)' }}>
+                            style={{ padding: '7px 16px', borderRadius: '9px', border: 'none', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 180ms ease', whiteSpace: 'nowrap', background: filter === f.key ? `${f.color}18` : 'transparent', color: filter === f.key ? f.color : MUTED }}>
                             {f.label}
                         </button>
                     ))}
@@ -550,10 +557,10 @@ export default function InfluencerRequestsPage() {
                 {filtered.length === 0 && (
                     <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
                         <Inbox size={48} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
-                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '6px' }}>
+                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '6px' }}>
                             {requests.length === 0 ? 'No requests yet' : 'No matching requests'}
                         </p>
-                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>
+                        <p style={{ color: MUTED, fontSize: '13px' }}>
                             {requests.length === 0
                                 ? 'Complete your profile to start receiving collaboration requests from brands.'
                                 : 'Try adjusting the filter above.'}
@@ -574,7 +581,7 @@ export default function InfluencerRequestsPage() {
                                     transition={{ delay: i * 0.04, duration: 0.3 }}
                                     className="glass-card" style={{
                                         borderRadius: '22px', overflow: 'hidden',
-                                        border: isNew ? '1px solid rgba(96,213,248,0.2)' : undefined,
+                                        border: isNew ? '1px solid rgba(96,213,248,0.2)' : `1px solid ${BORDER}`,
                                         boxShadow: isNew ? '0 0 30px rgba(96,213,248,0.08)' : undefined,
                                     }}>
 
@@ -596,10 +603,10 @@ export default function InfluencerRequestsPage() {
                                         </div>
 
                                         <div style={{ flex: 1, minWidth: '120px' }}>
-                                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#fff', fontSize: '14px', marginBottom: '2px' }}>
+                                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: TEXT, fontSize: '14px', marginBottom: '2px' }}>
                                                 {r.campaignTitle}
                                             </p>
-                                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                                            <p style={{ fontSize: '12px', color: MUTED }}>
                                                 {r.brandName || 'Brand'} • {r.campaignType?.replace(/_/g, ' ') || 'Campaign'}
                                             </p>
                                         </div>
@@ -610,7 +617,7 @@ export default function InfluencerRequestsPage() {
                                         </p>
 
                                         {/* Date */}
-                                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '11px', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             <Calendar size={10} /> {new Date(r.createdAt).toLocaleDateString()}
                                         </span>
 
@@ -625,8 +632,8 @@ export default function InfluencerRequestsPage() {
                                         </span>
 
                                         {isOpen
-                                            ? <ChevronUp size={14} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />
-                                            : <ChevronDown size={14} style={{ color: 'rgba(255,255,255,0.25)', flexShrink: 0 }} />}
+                                            ? <ChevronUp size={14} style={{ color: MUTED, flexShrink: 0 }} />
+                                            : <ChevronDown size={14} style={{ color: MUTED, flexShrink: 0 }} />}
                                     </div>
 
                                     <AnimatePresence>

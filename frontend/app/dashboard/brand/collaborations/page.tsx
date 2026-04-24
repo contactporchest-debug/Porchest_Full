@@ -8,10 +8,10 @@ export default function BrandCollaborationsRoute() {
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
                 <div style={{ marginBottom: '24px' }}>
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#0f172a', letterSpacing: '-0.02em', marginBottom: '4px' }}>
                         Collaborations
                     </h2>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+                    <p style={{ fontSize: '13px', color: '#64748b' }}>
                         Manage your active campaigns, pending requests, and track influencer posts.
                     </p>
                 </div>

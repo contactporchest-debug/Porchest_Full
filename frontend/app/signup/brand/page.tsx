@@ -5,45 +5,48 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { authAPI } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import OTPVerify from '@/components/auth/OTPVerify';
 import { GoogleLogin } from '@react-oauth/google';
 
+const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '13px 16px',
+    borderRadius: '14px',
+    background: 'rgba(255,255,255,0.94)',
+    border: '1px solid rgba(148,163,184,0.24)',
+    color: '#172033',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 200ms ease, box-shadow 200ms ease',
+};
+
 export default function BrandSignupPage() {
     const router = useRouter();
-    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [showPass, setShowPass] = useState(false);
-    const [form, setForm] = useState({
-        email: '', password: ''
-    });
+    const [form, setForm] = useState({ email: '', password: '' });
     const [showOTP, setShowOTP] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
 
     const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-    const onVerifySuccess = async (token: string, user: any) => {
-        toast.success('Welcome to Porchest! 🎉');
+    const onVerifySuccess = async () => {
+        toast.success('Welcome to Porchest!');
         router.push('/dashboard/brand');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.email || !form.password) {
-            return toast.error('Please fill all required fields');
-        }
+        if (!form.email || !form.password) return toast.error('Please fill all required fields');
         if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
         setLoading(true);
         try {
-            await authAPI.register({
-                email: form.email,
-                password: form.password,
-                role: 'brand',
-            });
-
+            await authAPI.register({ email: form.email, password: form.password, role: 'brand' });
             setRegisteredEmail(form.email);
             setShowOTP(true);
             toast.success('Account created! Please verify your email.');
@@ -61,10 +64,10 @@ export default function BrandSignupPage() {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken, role: 'brand' })
+                body: JSON.stringify({ idToken, role: 'brand' }),
             });
             const data = await res.json();
-            
+
             if (data.success) {
                 localStorage.setItem('porchest_token', data.token);
                 localStorage.setItem('porchest_user', JSON.stringify(data.user));
@@ -79,88 +82,88 @@ export default function BrandSignupPage() {
         }
     };
 
-    const inputStyle: React.CSSProperties = {
-        width: '100%', padding: '12px 16px', borderRadius: '12px',
-        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-        color: '#fff', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
-        boxSizing: 'border-box', transition: 'border-color 200ms ease',
-    };
-
     return (
-        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', background: '#000' }}>
-            <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 0%, rgba(123,47,247,0.12) 0%, transparent 60%)' }} />
+        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)', position: 'relative', overflow: 'hidden' }}>
+            <div className="neon-grid" />
+            <div className="edge-glow" />
+            <div style={{ position: 'absolute', top: '-140px', right: '-120px', width: '340px', height: '340px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.14) 0%, transparent 70%)' }} />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '520px', position: 'relative', zIndex: 10 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '520px', position: 'relative', zIndex: 1 }}>
                 {showOTP ? (
                     <OTPVerify email={registeredEmail} onSuccess={onVerifySuccess} />
                 ) : (
                     <>
-                        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', textDecoration: 'none' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', background: 'linear-gradient(135deg, #7B2FF7, #9d4dff)', boxShadow: '0 0 20px rgba(123,47,247,0.5)', color: '#fff' }}>P</div>
-                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px' }}>
-                                    <span style={{ color: '#fff' }}>Por</span>
-                                    <span style={{ background: 'linear-gradient(135deg, #7B2FF7, #be8bff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '18px', textDecoration: 'none' }}>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, background: 'linear-gradient(135deg, #7B2FF7, #9d4dff)', boxShadow: '0 14px 28px rgba(123,47,247,0.24)', color: '#fff' }}>P</div>
+                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', letterSpacing: '-0.03em' }}>
+                                    Por<span className="gradient-text">chest</span>
                                 </span>
                             </Link>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,47,247,0.15)', color: '#9d4dff' }}>
-                                    <Building2 size={15} />
-                                </div>
-                                <span style={{ fontSize: '13px', color: '#9d4dff', fontWeight: '600' }}>Brand Account</span>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2' }}>
+                                <Building2 size={14} />
+                                <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Brand Account</span>
                             </div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '24px', color: '#fff' }}>Create Brand Account</h1>
+                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '30px', color: '#172033', letterSpacing: '-0.04em', marginBottom: '8px' }}>Create your brand account</h1>
+                            <p style={{ fontSize: '15px', color: '#667085', lineHeight: 1.7 }}>Start with secure login details. You can finish your brand profile after signup.</p>
                         </div>
 
-                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '32px' }}>
+                        <div className="glass-card" style={{ borderRadius: '30px', padding: '34px' }}>
                             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-
-                                {/* Email */}
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email *</label>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#667085', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Email</label>
                                     <div style={{ position: 'relative' }}>
-                                        <Mail size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <input type="email" style={{ ...inputStyle, paddingLeft: '42px' }} placeholder="you@email.com" value={form.email} onChange={(e) => set('email', e.target.value)}
-                                            onFocus={e => (e.target.style.borderColor = 'rgba(123,63,242,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
+                                        <Mail size={15} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                                        <input
+                                            type="email"
+                                            style={{ ...inputStyle, paddingLeft: '42px' }}
+                                            placeholder="you@email.com"
+                                            value={form.email}
+                                            onChange={(e) => set('email', e.target.value)}
+                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(123,63,242,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(123,63,242,0.08)'; }}
+                                            onBlur={(e) => { e.target.style.borderColor = 'rgba(148,163,184,0.24)'; e.target.style.boxShadow = 'none'; }}
+                                        />
                                     </div>
                                 </div>
 
-                                {/* Password */}
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Password *</label>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#667085', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Password</label>
                                     <div style={{ position: 'relative' }}>
-                                        <Lock size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                                        <input type={showPass ? 'text' : 'password'} style={{ ...inputStyle, paddingLeft: '42px', paddingRight: '42px' }} placeholder="Min. 6 characters" value={form.password} onChange={(e) => set('password', e.target.value)}
-                                            onFocus={e => (e.target.style.borderColor = 'rgba(123,63,242,0.5)')} onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')} />
-                                        <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}>
-                                            {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                                        <Lock size={15} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                                        <input
+                                            type={showPass ? 'text' : 'password'}
+                                            style={{ ...inputStyle, paddingLeft: '42px', paddingRight: '42px' }}
+                                            placeholder="Minimum 6 characters"
+                                            value={form.password}
+                                            onChange={(e) => set('password', e.target.value)}
+                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(123,63,242,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(123,63,242,0.08)'; }}
+                                            onBlur={(e) => { e.target.style.borderColor = 'rgba(148,163,184,0.24)'; e.target.style.boxShadow = 'none'; }}
+                                        />
+                                        <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                                            {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                                         </button>
                                     </div>
                                 </div>
 
-                                <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '4px' } as React.CSSProperties}>
+                                <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '4px' }}>
                                     Create Brand Account
                                 </GlowButton>
 
-                                <div style={{ position: 'relative', margin: '20px 0', textAlign: 'center' }}>
-                                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                                    <span style={{ position: 'relative', background: '#050505', padding: '0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>or sign up with</span>
+                                <div style={{ position: 'relative', margin: '8px 0 2px', textAlign: 'center' }}>
+                                    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'rgba(148,163,184,0.22)' }} />
+                                    <span style={{ position: 'relative', background: '#fffdf8', padding: '0 10px', fontSize: '12px', color: '#7a8798' }}>or sign up with</span>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <GoogleLogin 
-                                        onSuccess={handleGoogleSuccess}
-                                        onError={() => toast.error('Google registration failed')}
-                                        useOneTap
-                                    />
+                                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error('Google registration failed')} useOneTap />
                                 </div>
                             </form>
                         </div>
 
-                        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>
-                            <Link href="/signup" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>← Choose role</Link>
+                        <p style={{ textAlign: 'center', marginTop: '18px', fontSize: '14px', color: '#667085' }}>
+                            <Link href="/signup" style={{ color: '#667085', textDecoration: 'none' }}>Choose another role</Link>
                             {' · '}
-                            <Link href="/login" style={{ color: '#9d4dff', textDecoration: 'none' }}>Already have an account?</Link>
+                            <Link href="/login" style={{ color: '#7B3FF2', textDecoration: 'none', fontWeight: 700 }}>Already have an account?</Link>
                         </p>
                     </>
                 )}

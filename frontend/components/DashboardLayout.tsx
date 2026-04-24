@@ -97,15 +97,15 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
             transition={{ duration: 0.2 }}
             style={{
                 position: 'absolute', top: '48px', right: '0', width: '380px', maxHeight: '480px',
-                background: 'rgba(14,12,26,0.95)', border: '1px solid rgba(123,63,242,0.2)',
-                borderRadius: '20px', backdropFilter: 'blur(30px)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(123,63,242,0.08)',
+                background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(123,63,242,0.16)',
+                borderRadius: '20px', backdropFilter: 'blur(30px)', boxShadow: '0 24px 60px rgba(15,23,42,0.12), 0 12px 24px rgba(123,63,242,0.08)',
                 overflow: 'hidden', zIndex: 100,
             }}>
             {/* Header */}
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Bell size={14} style={{ color: '#a78bfa' }} />
-                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#fff' }}>Notifications</span>
+                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#172033' }}>Notifications</span>
                     {unreadCount > 0 && (
                         <span style={{ padding: '2px 8px', borderRadius: '99px', background: 'rgba(123,63,242,0.2)', border: '1px solid rgba(123,63,242,0.3)', fontSize: '10px', color: '#a78bfa', fontWeight: '700' }}>
                             {unreadCount} new
@@ -113,7 +113,7 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                     )}
                 </div>
                 {unreadCount > 0 && (
-                    <button onClick={onMarkAllRead} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button onClick={onMarkAllRead} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '8px', background: 'transparent', border: '1px solid rgba(148,163,184,0.2)', color: '#5f6b7d', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                         <CheckCheck size={11} /> Mark all read
                     </button>
                 )}
@@ -124,7 +124,7 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                 {notifications.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                         <Mail size={32} style={{ color: 'rgba(123,63,242,0.2)', margin: '0 auto 12px' }} />
-                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>No notifications yet</p>
+                        <p style={{ fontSize: '13px', color: '#7a8798' }}>No notifications yet</p>
                     </div>
                 ) : (
                     notifications.map(n => (
@@ -137,25 +137,25 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                             }}
                             style={{
                                 padding: '14px 20px', cursor: 'pointer', transition: 'all 150ms ease',
-                                borderBottom: '1px solid rgba(255,255,255,0.03)',
-                                background: n.isRead ? 'transparent' : 'rgba(123,63,242,0.04)',
+                                borderBottom: '1px solid rgba(148,163,184,0.12)',
+                                background: n.isRead ? 'transparent' : 'rgba(123,63,242,0.05)',
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(123,63,242,0.08)')}
-                            onMouseLeave={e => (e.currentTarget.style.background = n.isRead ? 'transparent' : 'rgba(123,63,242,0.04)')}>
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(123,63,242,0.10)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = n.isRead ? 'transparent' : 'rgba(123,63,242,0.05)')}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                 {/* Unread dot */}
                                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: n.isRead ? 'transparent' : '#7B3FF2', marginTop: '5px', flexShrink: 0, boxShadow: n.isRead ? 'none' : '0 0 8px rgba(123,63,242,0.5)' }} />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                                        <span style={{ fontSize: '13px', fontWeight: '700', color: n.isRead ? 'rgba(255,255,255,0.6)' : '#fff' }}>{n.title}</span>
+                                        <span style={{ fontSize: '13px', fontWeight: '700', color: n.isRead ? '#5f6b7d' : '#172033' }}>{n.title}</span>
                                     </div>
-                                    {n.message && <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', lineHeight: '1.5', marginBottom: '4px' }}>{n.message}</p>}
+                                    {n.message && <p style={{ fontSize: '12px', color: '#6b7688', lineHeight: '1.5', marginBottom: '4px' }}>{n.message}</p>}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <span style={{ fontSize: '10px', color: typeColor[n.type] || 'rgba(255,255,255,0.25)', fontWeight: '600', textTransform: 'capitalize' }}>
                                             {n.type.replace(/_/g, ' ')}
                                         </span>
-                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>•</span>
-                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)' }}>{getTimeAgo(n.createdAt)}</span>
+                                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>•</span>
+                                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{getTimeAgo(n.createdAt)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -223,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const handleLogout = () => { logout(); router.push('/'); };
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: '#050505' }}>
+        <div className="light-dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7f4ec' }}>
             {/* Neon grid */}
             <div className="neon-grid" />
             <div className="edge-glow" />
@@ -236,20 +236,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     position: 'sticky', top: 0, height: '100vh',
                     flexShrink: 0, zIndex: 40, overflow: 'hidden',
                     display: 'flex', flexDirection: 'column',
-                    background: 'rgba(10,9,18,0.85)',
+                    background: 'rgba(255,255,255,0.88)',
                     backdropFilter: 'blur(30px)',
-                    borderRight: '1px solid rgba(255,255,255,0.06)',
-                    boxShadow: '4px 0 40px rgba(0,0,0,0.4)',
+                    borderRight: '1px solid rgba(148,163,184,0.18)',
+                    boxShadow: '8px 0 32px rgba(15,23,42,0.06)',
                 }}
             >
                 {/* Logo area */}
-                <div style={{ height: '64px', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                <div style={{ height: '64px', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
                     {collapsed ? (
                         <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', boxShadow: '0 0 20px rgba(123,63,242,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#fff', margin: '0 auto' }}>P</div>
                     ) : (
                         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                             <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', boxShadow: '0 0 16px rgba(123,63,242,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#fff', flexShrink: 0 }}>P</div>
-                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '17px', color: '#fff', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '17px', color: '#172033', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
                                 Por<span style={{ background: 'linear-gradient(90deg, #7B3FF2, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
                             </span>
                         </Link>
@@ -277,7 +277,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 className={`sidebar-link ${isActive ? 'active' : ''}`}
                                 title={collapsed ? item.label : undefined}
                                 style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '11px 0' : '', position: 'relative' }}>
-                                <span style={{ flexShrink: 0, color: isActive ? '#a78bfa' : 'rgba(255,255,255,0.4)' }}>{item.icon}</span>
+                                <span style={{ flexShrink: 0, color: isActive ? '#7B3FF2' : '#738196' }}>{item.icon}</span>
                                  {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
                                 {/* Show unread count on primary action items */}
                                 {(item.label === 'Requests' || item.label === 'Collaborations') && unreadCount > 0 && (
@@ -302,15 +302,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
 
                 {/* User + logout */}
-                <div style={{ padding: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                <div style={{ padding: '8px', borderTop: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
                     {!collapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px 10px' }}>
                             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>
                                 {displayName.charAt(0).toUpperCase()}
                             </div>
                             <div style={{ overflow: 'hidden' }}>
-                                <p style={{ fontSize: '13px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</p>
-                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</p>
+                                <p style={{ fontSize: '13px', fontWeight: '600', color: '#172033', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</p>
+                                <p style={{ fontSize: '11px', color: '#7a8798', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</p>
                             </div>
                         </div>
                     )}
@@ -323,7 +323,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 {/* Collapse toggle */}
                 <button onClick={() => setCollapsed(!collapsed)}
-                    style={{ position: 'absolute', top: '20px', right: '-12px', width: '24px', height: '24px', borderRadius: '50%', background: '#0d0c1a', border: '1px solid rgba(123,63,242,0.3)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 0 12px rgba(123,63,242,0.15)' }}>
+                    style={{ position: 'absolute', top: '20px', right: '-12px', width: '24px', height: '24px', borderRadius: '50%', background: '#fffdf8', border: '1px solid rgba(123,63,242,0.24)', color: '#5f6b7d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 8px 18px rgba(123,63,242,0.14)' }}>
                     {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
                 </button>
             </motion.aside>
@@ -334,14 +334,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <header style={{
                     height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '0 28px', position: 'sticky', top: 0, zIndex: 30,
-                    background: 'rgba(5,5,10,0.8)', backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    background: 'rgba(247,244,236,0.86)', backdropFilter: 'blur(20px)',
+                    borderBottom: '1px solid rgba(148,163,184,0.16)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                            <Search size={14} style={{ position: 'absolute', left: '14px', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
+                            <Search size={14} style={{ position: 'absolute', left: '14px', color: '#94a3b8', pointerEvents: 'none' }} />
                             <input type="text" placeholder="Search..." className="input-dark"
-                                style={{ paddingLeft: '38px', height: '36px', fontSize: '13px', borderRadius: '10px', width: '216px', background: 'rgba(255,255,255,0.04)' }} />
+                                style={{ paddingLeft: '38px', height: '36px', fontSize: '13px', borderRadius: '10px', width: '216px', background: 'rgba(255,255,255,0.96)' }} />
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
@@ -350,10 +350,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={() => setShowNotifs(!showNotifs)}
                             style={{
                                 position: 'relative', width: '36px', height: '36px', borderRadius: '10px',
-                                background: showNotifs ? 'rgba(123,63,242,0.12)' : 'rgba(255,255,255,0.04)',
-                                border: showNotifs ? '1px solid rgba(123,63,242,0.3)' : '1px solid rgba(255,255,255,0.07)',
+                                background: showNotifs ? 'rgba(123,63,242,0.12)' : 'rgba(255,255,255,0.78)',
+                                border: showNotifs ? '1px solid rgba(123,63,242,0.3)' : '1px solid rgba(148,163,184,0.2)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: showNotifs ? '#a78bfa' : 'rgba(255,255,255,0.45)', cursor: 'pointer',
+                                color: showNotifs ? '#7B3FF2' : '#5f6b7d', cursor: 'pointer',
                                 transition: 'all 150ms ease',
                             }}>
                             <Bell size={15} />
@@ -364,7 +364,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
                                     fontSize: '9px', fontWeight: '800', color: '#fff',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    padding: '0 4px', border: '2px solid #050505',
+                                    padding: '0 4px', border: '2px solid #f7f4ec',
                                     boxShadow: '0 0 8px rgba(123,63,242,0.4)',
                                 }}>
                                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -393,7 +393,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </header>
 
                 {/* Page content */}
-                <main style={{ flex: 1, padding: '32px 28px', overflowY: 'auto' }}>
+                <main className="light-dashboard-content" style={{ flex: 1, padding: '32px 28px', overflowY: 'auto' }}>
                     <AnimatePresence mode="wait">
                         <motion.div key={pathname}
                             initial={{ opacity: 0, y: 12 }}

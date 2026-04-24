@@ -20,8 +20,15 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
     paid: { color: '#a78bfa', label: 'Paid' },
 };
 
+const SURFACE = '#ffffff';
+const SURFACE_ALT = '#f8fafc';
+const BORDER = 'rgba(148, 163, 184, 0.22)';
+const BORDER_STRONG = 'rgba(148, 163, 184, 0.34)';
+const TEXT = '#0f172a';
+const MUTED = '#64748b';
+
 function StatusBadge({ status }: { status: string }) {
-    const cfg = STATUS_CONFIG[status] || { color: '#fff', label: status };
+    const cfg = STATUS_CONFIG[status] || { color: '#475569', label: status };
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 13px', borderRadius: '99px', background: `${cfg.color}18`, border: `1px solid ${cfg.color}35`, color: cfg.color, fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>
             {cfg.label}
@@ -33,8 +40,8 @@ function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: s
     return (
         <div className="glass-card" style={{ padding: '50px', borderRadius: '26px', textAlign: 'center' }}>
             <div style={{ color: 'rgba(123,63,242,0.3)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>{icon}</div>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff', marginBottom: '5px' }}>{title}</p>
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>{subtitle}</p>
+            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '5px' }}>{title}</p>
+            <p style={{ color: MUTED, fontSize: '13px' }}>{subtitle}</p>
         </div>
     );
 }
@@ -42,9 +49,9 @@ function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: s
 function SectionHeader({ title, count }: { title: string; count?: number }) {
     return (
         <div style={{ marginBottom: '16px' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#fff', marginBottom: '3px' }}>{title}</h2>
+            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT, marginBottom: '3px' }}>{title}</h2>
             {count !== undefined && (
-                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{count} item{count !== 1 ? 's' : ''}</p>
+                <p style={{ fontSize: '12px', color: MUTED }}>{count} item{count !== 1 ? 's' : ''}</p>
             )}
         </div>
     );
@@ -113,20 +120,20 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.3)' }}><Loader2 size={28} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '40px', color: MUTED }}><Loader2 size={28} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
 
     return (
         <div style={{ marginBottom: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <SectionHeader title="Pending Requests" count={requests.length} />
-                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+                {lastUpdated && <p style={{ fontSize: '11px', color: MUTED }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
             </div>
             {error && (
                 <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
                     <div>
                         <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                        <p style={{ fontSize: '11px', color: MUTED, marginTop: '2px' }}>{error}</p>
                     </div>
                 </div>
             )}
@@ -145,29 +152,29 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
                         return (
                             <motion.div key={r._id} layout initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }}
                                 transition={{ delay: i * 0.06, duration: 0.32 }}
-                                className="glass-card" style={{ borderRadius: '26px', marginBottom: '12px', overflow: 'hidden' }}>
+                                className="glass-card" style={{ borderRadius: '26px', marginBottom: '12px', overflow: 'hidden', border: `1px solid ${BORDER}` }}>
                                 {/* Header row */}
                                 <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}
                                     onClick={() => setExpanded(isOpen ? null : r._id)}>
                                     <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', flexShrink: 0 }}>{initials}</div>
                                     <div style={{ flex: 1, minWidth: '130px' }}>
-                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: '#fff', marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{brand?.companyName || 'Brand'} · {brand?.industry || ''}</p>
+                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: TEXT, marginBottom: '2px' }}>{r.campaignTitle}</p>
+                                        <p style={{ fontSize: '12px', color: MUTED }}>{brand?.companyName || 'Brand'} · {brand?.industry || ''}</p>
                                     </div>
                                     <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#a78bfa', filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.45))' }}>
                                         ${r.agreedPrice?.toLocaleString()}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
                                         <Calendar size={11} style={{ color: '#60d5f8' }} />
                                         Due {new Date(r.postingDeadline).toLocaleDateString()}
                                     </div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.25)', padding: '3px 9px', borderRadius: '7px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                    <div style={{ fontSize: '11px', color: MUTED, padding: '3px 9px', borderRadius: '7px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
                                         <FileText size={10} style={{ display: 'inline', marginRight: '4px' }} />{isOpen ? 'Hide ▲' : 'Brief ▼'}
                                     </div>
                                 </div>
                                 {/* Brief */}
                                 {isOpen && (
-                                    <div style={{ padding: '0 24px 18px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ padding: '0 24px 18px', borderTop: `1px solid ${BORDER}` }}>
                                         <div style={{ paddingTop: '14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '9px', marginBottom: '12px' }}>
                                             {[
                                                 { label: 'Deliverables', val: r.deliverables },
@@ -177,23 +184,23 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
                                                 { label: 'Payment Terms', val: '50% advance before campaign starts, 50% after deliverables are verified' },
                                                 { label: 'Disclosure', val: r.disclosureRequirements },
                                             ].map(f => (
-                                                <div key={f.label} style={{ padding: '9px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                                                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>{f.label}</p>
-                                                    <p style={{ fontSize: '13px', color: '#fff' }}>{f.val}</p>
+                                                <div key={f.label} style={{ padding: '9px 12px', borderRadius: '10px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+                                                    <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>{f.label}</p>
+                                                    <p style={{ fontSize: '13px', color: TEXT }}>{f.val}</p>
                                                 </div>
                                             ))}
                                         </div>
                                         {r.campaignDescription && (
-                                            <div style={{ padding: '10px 13px', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', marginBottom: '10px' }}>
-                                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Description</p>
-                                                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.65' }}>{r.campaignDescription}</p>
+                                            <div style={{ padding: '10px 13px', borderRadius: '10px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, marginBottom: '10px' }}>
+                                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Description</p>
+                                                <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.65' }}>{r.campaignDescription}</p>
                                             </div>
                                         )}
 
                                         {/* T&C Checkbox for Acceptance */}
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedTerms[r._id] ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.03)', border: `1px solid ${agreedTerms[r._id] ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 200ms ease', marginBottom: '16px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedTerms[r._id] ? 'rgba(74,222,128,0.05)' : SURFACE_ALT, border: `1px solid ${agreedTerms[r._id] ? 'rgba(74,222,128,0.3)' : BORDER}`, cursor: 'pointer', transition: 'all 200ms ease', marginBottom: '16px' }}>
                                             <input type="checkbox" checked={!!agreedTerms[r._id]} onChange={e => setAgreedTerms(prev => ({ ...prev, [r._id]: e.target.checked }))} style={{ width: '16px', height: '16px', accentColor: '#7B3FF2', cursor: 'pointer' }} />
-                                            <span style={{ fontSize: '12px', color: agreedTerms[r._id] ? '#fff' : 'rgba(255,255,255,0.5)' }}>
+                                            <span style={{ fontSize: '12px', color: agreedTerms[r._id] ? TEXT : MUTED }}>
                                                 I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: '#a78bfa', textDecoration: 'none' }}>Porchest Terms & Conditions</a> and standard Payment Policy
                                             </span>
                                         </label>
@@ -219,18 +226,18 @@ function PendingRequests({ onChanged }: { onChanged: () => void }) {
                                             {counterOpen === r._id && (
                                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                                                     style={{ overflow: 'hidden', marginTop: '12px' }}>
-                                                    <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(250,204,21,0.04)', border: '1px solid rgba(250,204,21,0.15)' }}>
+                                                    <div style={{ padding: '16px', borderRadius: '14px', background: '#fffbeb', border: '1px solid rgba(250,204,21,0.2)' }}>
                                                         <p style={{ fontSize: '12px', color: '#facc15', fontWeight: '700', marginBottom: '10px' }}>Propose New Terms</p>
                                                         <div style={{ display: 'grid', gap: '10px' }}>
                                                             <div>
-                                                                <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Counter Price (USD)</label>
+                                                                <label style={{ display: 'block', fontSize: '11px', color: MUTED, marginBottom: '4px' }}>Counter Price (USD)</label>
                                                                 <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
-                                                                    placeholder="e.g. 500" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                                                                    placeholder="e.g. 500" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                                                             </div>
                                                             <div>
-                                                                <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Message to Brand</label>
+                                                                <label style={{ display: 'block', fontSize: '11px', color: MUTED, marginBottom: '4px' }}>Message to Brand</label>
                                                                 <textarea value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
-                                                                    placeholder="Explain your counter offer..." rows={2} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+                                                                    placeholder="Explain your counter offer..." rows={2} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
                                                             </div>
                                                             <button onClick={() => respond(r._id, 'negotiation', { counterOfferPrice: Number(counterPrice), counterOfferMessage: counterMsg })} disabled={!!acting || !counterPrice}
                                                                 style={{ padding: '11px', borderRadius: '10px', background: '#facc15', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: (acting || !counterPrice) ? 'wait' : 'pointer' }}>
@@ -305,20 +312,20 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: 'rgba(255,255,255,0.3)' }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
 
     return (
         <div style={{ marginBottom: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <SectionHeader title="Active Collaborations" count={collabs.length} />
-                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+                {lastUpdated && <p style={{ fontSize: '11px', color: MUTED }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
             </div>
             {error && (
                 <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
                     <div>
                         <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                        <p style={{ fontSize: '11px', color: MUTED, marginTop: '2px' }}>{error}</p>
                     </div>
                 </div>
             )}
@@ -334,15 +341,15 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                     const initials = (brand?.companyName || '?')[0].toUpperCase();
                     return (
                         <motion.div key={c._id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.32 }}
-                            className="glass-card" style={{ borderRadius: '24px', marginBottom: '12px', padding: '20px 24px' }}>
+                            className="glass-card" style={{ borderRadius: '24px', marginBottom: '12px', padding: '20px 24px', border: `1px solid ${BORDER}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: submitOpen === c._id ? '16px' : '0' }}>
                                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '17px', color: '#fff', flexShrink: 0 }}>{initials}</div>
                                 <div style={{ flex: 1, minWidth: '120px' }}>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: '#fff', marginBottom: '2px' }}>{c.campaignTitle}</p>
-                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{brand?.companyName || 'Brand'}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: TEXT, marginBottom: '2px' }}>{c.campaignTitle}</p>
+                                    <p style={{ fontSize: '12px', color: MUTED }}>{brand?.companyName || 'Brand'}</p>
                                 </div>
                                 <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#a78bfa' }}>${c.agreedPrice?.toLocaleString()}</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
                                     <Calendar size={11} style={{ color: '#60d5f8' }} />
                                     {new Date(c.postingDeadline).toLocaleDateString()}
                                 </div>
@@ -356,7 +363,7 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                                 <div style={{ display: 'flex', gap: '10px', marginTop: '14px', alignItems: 'center' }}>
                                     <input value={postUrl} onChange={e => setPostUrl(e.target.value)}
                                         placeholder="https://instagram.com/p/..."
-                                        style={{ flex: 1, padding: '10px 14px', borderRadius: '11px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
+                                        style={{ flex: 1, padding: '10px 14px', borderRadius: '11px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
                                     <button onClick={() => submitVerification(c._id)} disabled={submitting}
                                         style={{ padding: '10px 18px', borderRadius: '11px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: submitting ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: submitting ? 0.7 : 1 }}>
                                         {submitting ? 'Submitting…' : 'Submit'}
@@ -403,20 +410,20 @@ function CompletedHistory() {
         return () => clearInterval(intervalId);
     }, []);
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: 'rgba(255,255,255,0.3)' }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
 
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <SectionHeader title="Completed History" count={history.length} />
-                {lastUpdated && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+                {lastUpdated && <p style={{ fontSize: '11px', color: MUTED }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
             </div>
             {error && (
                 <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
                     <div>
                         <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>{error}</p>
+                        <p style={{ fontSize: '11px', color: MUTED, marginTop: '2px' }}>{error}</p>
                     </div>
                 </div>
             )}
@@ -432,7 +439,7 @@ function CompletedHistory() {
                         <thead>
                             <tr>
                                 {['Brand', 'Campaign', 'Amount', 'Verification', 'Payment', 'Completed'].map(h => (
-                                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{h}</th>
+                                    <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontSize: '11px', color: MUTED, fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -442,23 +449,23 @@ function CompletedHistory() {
                                 const brand = v.brandId;
                                 return (
                                     <motion.tr key={v._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-                                        style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '14px' }}>
-                                        <td style={{ padding: '14px 14px', borderRadius: '14px 0 0 14px', border: '1px solid rgba(255,255,255,0.05)', borderRight: 'none' }}>
-                                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '13px', color: '#fff' }}>{brand?.companyName || '—'}</span>
+                                        style={{ background: SURFACE_ALT, borderRadius: '14px' }}>
+                                        <td style={{ padding: '14px 14px', borderRadius: '14px 0 0 14px', border: `1px solid ${BORDER}`, borderRight: 'none' }}>
+                                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '13px', color: TEXT }}>{brand?.companyName || '—'}</span>
                                         </td>
-                                        <td style={{ padding: '14px 14px', border: '1px solid rgba(255,255,255,0.05)', borderLeft: 'none', borderRight: 'none', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                                        <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none', fontSize: '13px', color: MUTED }}>
                                             {req?.campaignTitle || '—'}
                                         </td>
-                                        <td style={{ padding: '14px 14px', border: '1px solid rgba(255,255,255,0.05)', borderLeft: 'none', borderRight: 'none' }}>
+                                        <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none' }}>
                                             <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#a78bfa', fontSize: '13px' }}>${req?.agreedPrice?.toLocaleString() || '—'}</span>
                                         </td>
-                                        <td style={{ padding: '14px 14px', border: '1px solid rgba(255,255,255,0.05)', borderLeft: 'none', borderRight: 'none' }}>
+                                        <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none' }}>
                                             <StatusBadge status={v.status === 'verified' ? 'verified' : v.status === 'pending_admin' ? 'pending' : v.status} />
                                         </td>
-                                        <td style={{ padding: '14px 14px', border: '1px solid rgba(255,255,255,0.05)', borderLeft: 'none', borderRight: 'none' }}>
+                                        <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none' }}>
                                             <StatusBadge status={v.paymentStatus || 'pending'} />
                                         </td>
-                                        <td style={{ padding: '14px 14px', borderRadius: '0 14px 14px 0', border: '1px solid rgba(255,255,255,0.05)', borderLeft: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>
+                                        <td style={{ padding: '14px 14px', borderRadius: '0 14px 14px 0', border: `1px solid ${BORDER}`, borderLeft: 'none', fontSize: '12px', color: MUTED }}>
                                             {v.verifiedAt ? new Date(v.verifiedAt).toLocaleDateString() : new Date(v.createdAt).toLocaleDateString()}
                                         </td>
                                     </motion.tr>

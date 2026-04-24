@@ -78,7 +78,7 @@ const roleColors: Record<string, { bg: string; color: string }> = {
 
 /* ─── Shared tiny components ───────────────────────────── */
 const Badge = ({ label, map }: { label: string; map: Record<string, { bg: string; color: string }> }) => {
-    const s = map[label] || { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' };
+    const s = map[label] || { bg: 'rgba(148,163,184,0.12)', color: '#667085' };
     return (
         <span style={{ padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700, background: s.bg, color: s.color, whiteSpace: 'nowrap' }}>
             {label}
@@ -91,7 +91,7 @@ const StatCard = ({ label, value, sub, color, icon, progress }: {
     color: string; icon: React.ReactNode; progress?: number;
 }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 22, padding: '22px 24px', position: 'relative', overflow: 'hidden' }}>
+        style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid rgba(148,163,184,0.18)', borderRadius: 22, padding: '22px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 18px 40px rgba(15,23,42,0.06)' }}>
         <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, borderRadius: '0 22px 0 80px', background: `${color}08` }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>
@@ -99,10 +99,10 @@ const StatCard = ({ label, value, sub, color, icon, progress }: {
             </div>
         </div>
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.04em', filter: `drop-shadow(0 0 8px ${color}50)` }}>{value}</p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{label}</p>
+        <p style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>{label}</p>
         {sub && <p style={{ fontSize: 11, color, opacity: 0.65, marginTop: 3 }}>{sub}</p>}
         {progress != null && (
-            <div style={{ marginTop: 12, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.05)' }}>
+            <div style={{ marginTop: 12, height: 4, borderRadius: 99, background: 'rgba(148,163,184,0.18)' }}>
                 <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(100, progress)}%`, background: color, transition: 'width 700ms ease' }} />
             </div>
         )}
@@ -250,10 +250,10 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                             <Shield size={11} style={{ color: '#ff8c42' }} />
                             <span style={{ fontSize: 11, fontWeight: 700, color: '#ff8c42', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Admin Portal</span>
                         </div>
-                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#fff', letterSpacing: '-0.03em', marginBottom: 5 }}>
+                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.6rem,3vw,2.2rem)', color: '#172033', letterSpacing: '-0.03em', marginBottom: 5 }}>
                             Platform <span style={{ background: 'linear-gradient(90deg,#ff8c42,#ff5f1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Control Center</span>
                         </h1>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Manage users, monitor campaigns, and maintain platform health.</p>
+                        <p style={{ fontSize: 13, color: '#667085' }}>Manage users, monitor campaigns, and maintain platform health.</p>
                     </motion.div>
 
                     <AnimatePresence mode="wait">
@@ -264,19 +264,19 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                 {/* Filters */}
                                 <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
                                     <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-                                        <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                        <Search size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                                         <input value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="Search by name or email..."
-                                            style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                                            style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.22)', color: '#172033', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
                                     </div>
                                     <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
-                                        style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
+                                        style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.22)', color: '#475467', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
                                         <option value="">All Roles</option>
                                         <option value="brand">Brand</option>
                                         <option value="influencer">Influencer</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                                        style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
+                                        style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.22)', color: '#475467', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
                                         <option value="">All Status</option>
                                         <option value="active">Active</option>
                                         <option value="pending">Pending</option>
@@ -288,30 +288,30 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                 </div>
 
                                 {/* Users table */}
-                                <div style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, overflow: 'hidden' }}>
-                                    <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: '#fff' }}>All Users ({users.length})</h2>
+                                <div style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.18)', borderRadius: 24, overflow: 'hidden', boxShadow: '0 18px 40px rgba(15,23,42,0.05)' }}>
+                                    <div style={{ padding: '16px 24px', borderBottom: '1px solid rgba(148,163,184,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: '#172033' }}>All Users ({users.length})</h2>
                                     </div>
 
                                     {loading ? (
                                         <div style={{ padding: 48, textAlign: 'center' }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#ff8c42' }} /></div>
                                     ) : users.length === 0 ? (
-                                        <div style={{ padding: 60, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No users found</div>
+                                        <div style={{ padding: 60, textAlign: 'center', color: '#667085', fontSize: 14 }}>No users found</div>
                                     ) : (
                                         <div style={{ overflowX: 'auto' }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <thead>
-                                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <tr style={{ borderBottom: '1px solid rgba(148,163,184,0.16)' }}>
                                                         {['User', 'Role', 'Status', 'Profile', 'Joined', 'Actions'].map(h => (
-                                                            <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
+                                                            <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
                                                         ))}
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {users.map((u) => (
-                                                        <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 150ms', cursor: 'pointer' }}
+                                                        <tr key={u._id} style={{ borderBottom: '1px solid rgba(148,163,184,0.12)', transition: 'background 150ms', cursor: 'pointer' }}
                                                             onClick={() => setSelectedUser(u)}
-                                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'}
+                                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(123,63,242,0.04)'}
                                                             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
 
                                                             {/* User */}

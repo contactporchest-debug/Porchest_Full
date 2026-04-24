@@ -12,16 +12,17 @@ import toast from 'react-hot-toast';
 const CHART_STYLE = {
     background: 'transparent',
     fontSize: '11px',
-    color: 'rgba(255,255,255,0.4)',
+    color: '#667085',
 };
 
 const CustomTooltipStyle: React.CSSProperties = {
-    background: 'rgba(10,9,20,0.95)',
-    border: '1px solid rgba(123,63,242,0.25)',
+    background: 'rgba(255,255,255,0.98)',
+    border: '1px solid rgba(123,63,242,0.18)',
     borderRadius: '12px',
     fontSize: '12px',
-    color: '#fff',
+    color: '#172033',
     padding: '10px 14px',
+    boxShadow: '0 12px 26px rgba(15,23,42,0.10)',
 };
 
 export default function AnalyticsPage() {
@@ -56,13 +57,13 @@ export default function AnalyticsPage() {
     if (!hasData) return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
-                <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Analytics</h1>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Live performance from running campaigns</p>
+                <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '4px' }}>Analytics</h1>
+                <p style={{ fontSize: '13px', color: '#667085' }}>Live performance from running campaigns</p>
             </div>
             <div className="glass-card" style={{ padding: '80px 40px', borderRadius: '32px', textAlign: 'center' }}>
                 <BarChart3 size={52} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 20px' }} />
-                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '18px', color: '#fff', marginBottom: '8px' }}>No Analytics Yet</p>
-                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', maxWidth: '360px', margin: '0 auto' }}>
+                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '18px', color: '#172033', marginBottom: '8px' }}>No Analytics Yet</p>
+                <p style={{ color: '#667085', fontSize: '14px', maxWidth: '360px', margin: '0 auto' }}>
                     Analytics will appear once campaigns are running and influencer posts have been verified by admin.
                 </p>
             </div>
@@ -115,11 +116,11 @@ export default function AnalyticsPage() {
             {/* Header + campaign selector */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#fff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Analytics</h1>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>Live performance from verified running campaigns</p>
+                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '4px' }}>Analytics</h1>
+                    <p style={{ fontSize: '13px', color: '#667085' }}>Live performance from verified running campaigns</p>
                 </div>
                 <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
-                    style={{ padding: '9px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '13px', fontFamily: 'inherit', outline: 'none', cursor: 'pointer', minWidth: '200px' }}>
+                    style={{ padding: '9px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(148,163,184,0.22)', color: '#172033', fontSize: '13px', fontFamily: 'inherit', outline: 'none', cursor: 'pointer', minWidth: '200px' }}>
                     {selectorOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </select>
             </div>
@@ -130,7 +131,7 @@ export default function AnalyticsPage() {
                     <motion.div key={s.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                         className="glass-card" style={{ padding: '20px', borderRadius: '20px' }}>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.7rem', color: s.color, letterSpacing: '-0.04em', filter: `drop-shadow(0 0 10px ${s.color}50)` }}>{s.val}</p>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '5px' }}>{s.label}</p>
+                        <p style={{ fontSize: '12px', color: '#667085', marginTop: '5px' }}>{s.label}</p>
                     </motion.div>
                 ))}
             </div>
@@ -138,13 +139,13 @@ export default function AnalyticsPage() {
             {/* Engagement breakdown bar chart */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
                 className="glass-card" style={{ padding: '26px', borderRadius: '26px' }}>
-                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: '18px' }}>Engagement Breakdown</p>
+                <p style={{ fontSize: '13px', color: '#667085', fontWeight: '600', marginBottom: '18px' }}>Engagement Breakdown</p>
                 <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={engagementData} barSize={36}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={CustomTooltipStyle} cursor={{ fill: 'rgba(123,63,242,0.07)' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fill: '#667085', fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={CustomTooltipStyle} cursor={{ fill: 'rgba(123,63,242,0.05)' }} />
                         <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                             {engagementData.map((_, i) => <Cell key={i} fill={engagementColors[i % engagementColors.length]} />)}
                         </Bar>
@@ -156,21 +157,21 @@ export default function AnalyticsPage() {
             {selectedId === 'all' && runningRequests.length > 0 && (
                 <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }}
                     className="glass-card" style={{ padding: '26px', borderRadius: '26px' }}>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '600', marginBottom: '18px' }}>Top Performing Campaigns</p>
+                    <p style={{ fontSize: '13px', color: '#667085', fontWeight: '600', marginBottom: '18px' }}>Top Performing Campaigns</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {runningRequests.map((r: any) => {
                             const ver = verifiedRows.find(v => (v.campaignRequestId?._id || v.campaignRequestId) === r._id);
                             const views = ver?.performance?.views || 0;
                             const engagement = (ver?.performance?.likes || 0) + (ver?.performance?.comments || 0);
                             return (
-                                <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap' }}>
+                                <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.84)', border: '1px solid rgba(148,163,184,0.16)', flexWrap: 'wrap' }}>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
-                                        <p style={{ fontSize: '13px', fontWeight: '700', color: '#fff', marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{r.influencerId?.fullName || '—'}</p>
+                                        <p style={{ fontSize: '13px', fontWeight: '700', color: '#172033', marginBottom: '2px' }}>{r.campaignTitle}</p>
+                                        <p style={{ fontSize: '11px', color: '#667085' }}>{r.influencerId?.fullName || '—'}</p>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <p style={{ fontSize: '12px', color: '#60d5f8', fontWeight: '600' }}>{views.toLocaleString()} views</p>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{engagement.toLocaleString()} engagements</p>
+                                        <p style={{ fontSize: '11px', color: '#667085' }}>{engagement.toLocaleString()} engagements</p>
                                     </div>
                                 </div>
                             );

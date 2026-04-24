@@ -31,12 +31,12 @@ const COUNTRIES = [
 
 const SectionCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: 'rgba(14,12,26,0.75)', border: '1px solid rgba(123,63,242,0.15)', borderRadius: '28px', padding: '28px', marginBottom: '18px' }}>
+        style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.18)', borderRadius: '28px', padding: '28px', marginBottom: '18px', boxShadow: '0 18px 40px rgba(15,23,42,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
                 {icon}
             </div>
-            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff' }}>{title}</h3>
+            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033' }}>{title}</h3>
         </div>
         {children}
     </motion.div>
@@ -44,27 +44,27 @@ const SectionCard = ({ title, icon, children }: { title: string; icon: React.Rea
 
 const iStyle: React.CSSProperties = {
     width: '100%', padding: '11px 15px', borderRadius: '12px',
-    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
-    color: '#fff', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
+    background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(148,163,184,0.24)',
+    color: '#172033', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
     boxSizing: 'border-box', transition: 'border-color 200ms ease',
 };
 
 const fh = {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         e.target.style.borderColor = 'rgba(168,85,247,0.5)';
-        (e.target as HTMLElement).style.background = 'rgba(123,63,242,0.06)';
+        (e.target as HTMLElement).style.background = 'rgba(123,63,242,0.04)';
     },
     onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        e.target.style.borderColor = 'rgba(255,255,255,0.09)';
-        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+        e.target.style.borderColor = 'rgba(148,163,184,0.24)';
+        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.95)';
     },
 };
 
 const Label = ({ children, req, optional }: { children: React.ReactNode; req?: boolean; optional?: boolean }) => (
-    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#667085', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
         {children}
         {req && <span style={{ color: '#f87171', marginLeft: '3px' }}>*</span>}
-        {optional && <span style={{ color: 'rgba(255,255,255,0.2)', textTransform: 'none', fontWeight: '400', fontSize: '10px', marginLeft: '4px' }}>(optional)</span>}
+        {optional && <span style={{ color: '#94a3b8', textTransform: 'none', fontWeight: '400', fontSize: '10px', marginLeft: '4px' }}>(optional)</span>}
     </label>
 );
 
@@ -73,15 +73,15 @@ const FieldErr = ({ msg }: { msg?: string }) => msg
     : null;
 
 const SyncField = ({ label, value }: { label: string; value?: string | number }) => (
-    <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(74,222,128,0.04)', border: '1px solid rgba(74,222,128,0.12)' }}>
+    <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(236,253,245,0.95)', border: '1px solid rgba(74,222,128,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+            <p style={{ fontSize: '10px', color: '#667085', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.18)' }}>
                 <Lock size={8} style={{ color: '#4ade80' }} />
                 <span style={{ fontSize: '9px', color: '#4ade80', fontWeight: '700' }}>API</span>
             </div>
         </div>
-        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff' }}>{value ?? '—'}</p>
+        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033' }}>{value ?? '—'}</p>
     </div>
 );
 

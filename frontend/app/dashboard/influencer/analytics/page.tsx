@@ -32,21 +32,28 @@ const C = {
     lavender: '#a78bfa',
 };
 
+const SURFACE = '#ffffff';
+const SURFACE_ALT = '#f8fafc';
+const BORDER = 'rgba(148, 163, 184, 0.22)';
+const BORDER_STRONG = 'rgba(148, 163, 184, 0.34)';
+const TEXT = '#0f172a';
+const MUTED = '#64748b';
+
 /* ─── Recharts custom tooltip ────────────────────────────────── */
 const ChartTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={{
-            background: 'rgba(8,7,18,0.97)', border: '1px solid rgba(123,63,242,0.35)',
-            borderRadius: 14, padding: '12px 16px', fontSize: 12, color: '#fff',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(123,63,242,0.18)',
+            borderRadius: 14, padding: '12px 16px', fontSize: 12, color: TEXT,
+            boxShadow: '0 20px 40px rgba(15,23,42,0.14)',
         }}>
-            {label && <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontSize: 11 }}>{label}</p>}
+            {label && <p style={{ color: MUTED, marginBottom: 6, fontSize: 11 }}>{label}</p>}
             {payload.map((e: any, i: number) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <div style={{ width: 8, height: 8, borderRadius: 2, background: e.color || C.purple }} />
-                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{e.name}:</span>
-                    <span style={{ fontWeight: 700, color: '#fff' }}>
+                    <span style={{ color: MUTED, fontSize: 11 }}>{e.name}:</span>
+                    <span style={{ fontWeight: 700, color: TEXT }}>
                         {typeof e.value === 'number' ? e.value.toLocaleString() : e.value}
                         {e.unit || ''}
                     </span>
@@ -123,7 +130,7 @@ const makeMediaScatter = (mediaArr: any[]) =>
 
 const makeQualityGauge = (score: number) => [
     { name: 'Score', value: score, fill: score >= 75 ? C.green : score >= 50 ? C.violet : score >= 25 ? C.amber : C.red },
-    { name: 'Remaining', value: 100 - score, fill: 'rgba(255,255,255,0.05)' },
+    { name: 'Remaining', value: 100 - score, fill: 'rgba(148, 163, 184, 0.18)' },
 ];
 
 /* ─── Types ─────────────────────────────────────────────────── */
@@ -156,49 +163,49 @@ const fmtK = (v: number | null | undefined) => {
 
 /* ─── Shared small components ────────────────────────────────── */
 const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, marginTop: 36 }}>
-        <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#A855F7,#7B3FF2)' }} />
-        <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{children}</h3>
-        {icon && <div style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.25)' }}>{icon}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, marginTop: 36 }}>
+            <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#A855F7,#7B3FF2)' }} />
+        <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{children}</h3>
+        {icon && <div style={{ marginLeft: 'auto', color: MUTED }}>{icon}</div>}
     </div>
 );
 
 const ChartCard = ({ children, title, subtitle, style }: { children: React.ReactNode; title?: string; subtitle?: string; style?: React.CSSProperties }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: 'rgba(14,12,26,0.85)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: 24, ...style }}>
-        {title && <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: '#fff', marginBottom: 2 }}>{title}</p>}
-        {subtitle && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 16 }}>{subtitle}</p>}
+        style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 24, padding: 24, boxShadow: '0 18px 34px rgba(15,23,42,0.05)', ...style }}>
+        {title && <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 2 }}>{title}</p>}
+        {subtitle && <p style={{ fontSize: 11, color: MUTED, marginBottom: 16 }}>{subtitle}</p>}
         {children}
     </motion.div>
 );
 
 const StatChip = ({ label, value, color = C.lavender }: { label: string; value: string; color?: string }) => (
-    <div style={{ textAlign: 'center', padding: '10px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ textAlign: 'center', padding: '10px 16px', borderRadius: 12, background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.1rem', color }}>{value}</p>
-        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+        <p style={{ fontSize: 10, color: MUTED, marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
     </div>
 );
 
 const TimePill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
     <button onClick={onClick} style={{
         padding: '6px 16px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-        background: active ? 'linear-gradient(135deg,#7B3FF2,#A855F7)' : 'rgba(255,255,255,0.04)',
-        border: active ? 'none' : '1px solid rgba(255,255,255,0.08)',
-        color: active ? '#fff' : 'rgba(255,255,255,0.45)',
+        background: active ? 'linear-gradient(135deg,#7B3FF2,#A855F7)' : SURFACE_ALT,
+        border: active ? 'none' : `1px solid ${BORDER}`,
+        color: active ? '#fff' : MUTED,
         fontFamily: 'inherit', transition: 'all 200ms ease',
-        boxShadow: active ? '0 0 16px rgba(123,63,242,0.35)' : 'none',
+        boxShadow: active ? '0 14px 26px rgba(123,63,242,0.18)' : 'none',
     }}>{label}</button>
 );
 
 const InsightCard = ({ text, icon }: { text: string; icon?: React.ReactNode }) => (
     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
         <div style={{ color: C.lavender, flexShrink: 0, marginTop: 1 }}>{icon || <Lightbulb size={14} />}</div>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{text}</p>
+        <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.6 }}>{text}</p>
     </div>
 );
 
 const EmptyChartState = ({ text }: { text: string }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.6 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 220, textAlign: 'center', color: MUTED, fontSize: 13, lineHeight: 1.6 }}>
         <div>{text}</div>
     </div>
 );
@@ -287,7 +294,7 @@ export default function AnalyticsPage() {
     if (loading) return (
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 400, color: 'rgba(255,255,255,0.3)', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 400, color: MUTED, flexDirection: 'column', gap: 14 }}>
                     <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: C.violet }} />
                     <p style={{ fontSize: 14 }}>Loading your analytics...</p>
                 </div>
@@ -298,10 +305,10 @@ export default function AnalyticsPage() {
     if (!isConnected) return (
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '80px 20px', background: 'rgba(14,12,26,0.8)', borderRadius: 28, border: '1px solid rgba(168,85,247,0.15)' }}>
+                <div style={{ textAlign: 'center', padding: '80px 20px', background: SURFACE, borderRadius: 28, border: '1px solid rgba(168,85,247,0.15)', boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
                     <Instagram size={48} style={{ color: C.lavender, margin: '0 auto 16px' }} />
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '1.4rem', color: '#fff', marginBottom: 8 }}>Instagram Not Connected</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, marginBottom: 24 }}>Connect your Instagram account to unlock all analytics and charts.</p>
+                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '1.4rem', color: TEXT, marginBottom: 8 }}>Instagram Not Connected</h2>
+                    <p style={{ color: MUTED, fontSize: 14, marginBottom: 24 }}>Connect your Instagram account to unlock all analytics and charts.</p>
                     <a href="/dashboard/influencer/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 99, background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                         <Instagram size={14} /> Go to Profile → Connect
                     </a>
@@ -326,14 +333,14 @@ export default function AnalyticsPage() {
                                 <Instagram size={10} style={{ color: C.lavender }} />
                                 <span style={{ fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Instagram Analytics</span>
                             </div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.3rem,3vw,2rem)', color: '#fff', letterSpacing: '-0.03em' }}>
+                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(1.3rem,3vw,2rem)', color: TEXT, letterSpacing: '-0.03em' }}>
                                 @{connection?.username || '—'} Analytics
                             </h1>
-                            {connection?.lastSyncedAt && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Last synced: {new Date(connection.lastSyncedAt).toLocaleString()}</p>}
+                            {connection?.lastSyncedAt && <p style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>Last synced: {new Date(connection.lastSyncedAt).toLocaleString()}</p>}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             {/* Time range filter */}
-                            <div style={{ display: 'flex', gap: 6, padding: '4px', borderRadius: 99, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <div style={{ display: 'flex', gap: 6, padding: '4px', borderRadius: 99, background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
                                 {([7, 30, 60] as const).map(d => (
                                     <TimePill key={d} label={`${d}D`} active={timeRange === d} onClick={() => setTimeRange(d)} />
                                 ))}
@@ -383,7 +390,7 @@ export default function AnalyticsPage() {
                                             paddingAngle={3} dataKey="value" startAngle={90} endAngle={-270}
                                         >
                                             <Cell fill={C.purple} />
-                                            <Cell fill="rgba(255,255,255,0.06)" />
+                                    <Cell fill="rgba(148,163,184,0.18)" />
                                         </Pie>
                                         <Tooltip content={<ChartTooltip />} />
                                     </PieChart>
@@ -391,13 +398,13 @@ export default function AnalyticsPage() {
                                 <div style={{ flex: 1 }}>
                                     {[
                                         { label: 'Analyzed', value: analytics?.postsAnalyzed ?? 0, color: C.purple },
-                                        { label: 'Pending', value: Math.max(0, (connection?.mediaCount ?? 0) - (analytics?.postsAnalyzed ?? 0)), color: 'rgba(255,255,255,0.15)' },
+                                        { label: 'Pending', value: Math.max(0, (connection?.mediaCount ?? 0) - (analytics?.postsAnalyzed ?? 0)), color: 'rgba(148,163,184,0.28)' },
                                     ].map(item => (
                                         <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                             <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, flexShrink: 0 }} />
                                             <div>
-                                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{item.label}</p>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16, color: '#fff' }}>{item.value}</p>
+                                                <p style={{ fontSize: 11, color: MUTED }}>{item.label}</p>
+                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 16, color: TEXT }}>{item.value}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -416,9 +423,9 @@ export default function AnalyticsPage() {
                         {engagementData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={230}>
                                 <LineChart data={engagementData} margin={{ top: 4, right: 20, bottom: 0, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} width={40} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                    <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} width={40} />
                                     <Tooltip content={<ChartTooltip />} />
                                     <ReferenceLine y={er} stroke={C.amber} strokeDasharray="4 2" strokeOpacity={0.5} label={{ value: 'Current', fill: C.amber, fontSize: 10 }} />
                                     <Line type="monotone" dataKey="rate" name="Engagement Rate" unit="%" stroke={C.amber} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5, fill: C.amber, stroke: '#fff', strokeWidth: 2 }} />
@@ -435,11 +442,11 @@ export default function AnalyticsPage() {
                             {likesCommentsData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <ComposedChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                        <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                                        <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                        <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                        <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
                                         <Tooltip content={<ChartTooltip />} />
-                                        <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
+                                        <Legend wrapperStyle={{ fontSize: 11, color: MUTED }} />
                                         <Bar dataKey="likes" name="Likes" fill={C.pink} radius={[4, 4, 0, 0]} opacity={0.85} />
                                         <Bar dataKey="comments" name="Comments" fill={C.blue} radius={[4, 4, 0, 0]} opacity={0.85} />
                                     </ComposedChart>
@@ -455,12 +462,12 @@ export default function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={160}>
                                     <RadialBarChart cx="50%" cy="50%" innerRadius="55%" outerRadius="85%"
                                         data={radialData} startAngle={180} endAngle={0}>
-                                        <RadialBar dataKey="value" background={{ fill: 'rgba(255,255,255,0.04)' }} cornerRadius={8} />
+                                        <RadialBar dataKey="value" background={{ fill: 'rgba(148,163,184,0.14)' }} cornerRadius={8} />
                                         <Tooltip content={<ChartTooltip />} />
                                     </RadialBarChart>
                                 </ResponsiveContainer>
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.6rem', color: C.teal, marginTop: -12 }}>{fmtK(analytics?.efficiencyRate)}</p>
-                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>interactions per 1,000 followers</p>
+                                <p style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>interactions per 1,000 followers</p>
                             </div>
                         </ChartCard>
                     </div>
@@ -480,11 +487,11 @@ export default function AnalyticsPage() {
                                             <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                                    <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                    <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                                    <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
                                     <Tooltip content={<ChartTooltip />} />
-                                    <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }} />
+                                    <Legend wrapperStyle={{ fontSize: 11, color: MUTED }} />
                                     <Area type="monotone" dataKey="likes" name="Likes" stroke={C.pink} strokeWidth={2} fill="url(#gLikes)" dot={false} />
                                     <Area type="monotone" dataKey="comments" name="Comments" stroke={C.blue} strokeWidth={2} fill="url(#gComments)" dot={false} />
                                 </AreaChart>
@@ -504,9 +511,9 @@ export default function AnalyticsPage() {
                             {media.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={200}>
                                     <BarChart data={cadenceData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                        <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(cadenceData.length / 6)} />
-                                        <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} width={24} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                        <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(cadenceData.length / 6)} />
+                                        <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} width={24} />
                                         <Tooltip content={<ChartTooltip />} />
                                         <Bar dataKey="posts" name="Posts" fill={C.purple} radius={[4, 4, 0, 0]} opacity={0.85} />
                                     </BarChart>
@@ -525,18 +532,18 @@ export default function AnalyticsPage() {
                                 ].map(item => (
                                     <div key={item.label}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{item.icon} {item.label}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: MUTED, fontSize: 12 }}>{item.icon} {item.label}</div>
                                             <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 16, color: item.color }}>{item.value}</span>
                                         </div>
-                                        <div style={{ height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.05)' }}>
+                                        <div style={{ height: 8, borderRadius: 99, background: 'rgba(148,163,184,0.18)' }}>
                                             <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(100, (item.value / item.max) * 100)}%`, background: `linear-gradient(90deg,${item.color},${item.color}99)`, transition: 'width 700ms ease' }} />
                                         </div>
                                     </div>
                                 ))}
-                                <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.55 }}>
-                                        💡 Optimal posting: <strong style={{ color: 'rgba(255,255,255,0.7)' }}>3–5× per week</strong> for sustained growth.
-                                        Post during peak hours: <strong style={{ color: 'rgba(255,255,255,0.7)' }}>8–10PM</strong> local time.
+                                <div style={{ padding: '12px 14px', borderRadius: 12, background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+                                    <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>
+                                        Optimal posting: <strong style={{ color: TEXT }}>3–5× per week</strong> for sustained growth.
+                                        Post during peak hours: <strong style={{ color: TEXT }}>8–10PM</strong> local time.
                                     </p>
                                 </div>
                             </div>
@@ -563,7 +570,7 @@ export default function AnalyticsPage() {
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: qualityGauge[0].fill, marginTop: -24 }}>
                                     {analytics?.qualityScore?.toFixed(0) ?? '—'}
                                 </p>
-                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>out of 100</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>out of 100</p>
                                 <div style={{ display: 'inline-block', marginTop: 8, padding: '3px 12px', borderRadius: 99, background: `${qualityGauge[0].fill}20`, fontSize: 11, fontWeight: 700, color: qualityGauge[0].fill }}>
                                     {analytics?.scoreLabel || (analytics?.qualityScore != null ? (analytics.qualityScore >= 75 ? 'Excellent' : analytics.qualityScore >= 50 ? 'Good' : analytics.qualityScore >= 25 ? 'Fair' : 'Low') : 'N/A')}
                                 </div>
@@ -575,17 +582,17 @@ export default function AnalyticsPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: 160, gap: 8 }}>
                                 <div style={{ position: 'relative', width: 110, height: 110 }}>
                                     <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="10" />
                                         <circle cx="50" cy="50" r="40" fill="none" stroke={C.green} strokeWidth="10"
                                             strokeDasharray={`${(analytics?.topPostScore ?? 0) * 2.51} 251`}
                                             strokeLinecap="round" />
                                     </svg>
                                     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.3rem', color: C.green }}>{analytics?.topPostScore?.toFixed(1) ?? '—'}</p>
-                                        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>score</p>
+                                        <p style={{ fontSize: 9, color: MUTED, textTransform: 'uppercase' }}>score</p>
                                     </div>
                                 </div>
-                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Top post vs follower ratio</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>Top post vs follower ratio</p>
                             </div>
                         </ChartCard>
 
@@ -594,17 +601,17 @@ export default function AnalyticsPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: 160, gap: 8 }}>
                                 <div style={{ position: 'relative', width: 110, height: 110 }}>
                                     <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="10" />
                                         <circle cx="50" cy="50" r="40" fill="none" stroke={C.blue} strokeWidth="10"
                                             strokeDasharray={`${(analytics?.topReelScore ?? 0) * 2.51} 251`}
                                             strokeLinecap="round" />
                                     </svg>
                                     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.3rem', color: C.blue }}>{analytics?.topReelScore?.toFixed(1) ?? '—'}</p>
-                                        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>score</p>
+                                        <p style={{ fontSize: 9, color: MUTED, textTransform: 'uppercase' }}>score</p>
                                     </div>
                                 </div>
-                                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Top reel vs follower ratio</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>Top reel vs follower ratio</p>
                             </div>
                         </ChartCard>
                     </div>
@@ -621,10 +628,10 @@ export default function AnalyticsPage() {
                                 <ChartCard title="Likes vs Comments Scatter" subtitle="Each bubble = one post. Size = total engagement.">
                                     <ResponsiveContainer width="100%" height={250}>
                                         <ScatterChart margin={{ top: 4, right: 20, bottom: 20, left: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                                            <XAxis dataKey="likes" name="Likes" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={fmtK} label={{ value: 'Likes', position: 'insideBottom', offset: -10, fill: 'rgba(255,255,255,0.25)', fontSize: 10 }} />
-                                            <YAxis dataKey="comments" name="Comments" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} tickLine={false} axisLine={false} width={36} tickFormatter={fmtK} label={{ value: 'Comments', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.25)', fontSize: 10 }} />
-                                            <Tooltip cursor={{ strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.1)' }} content={<ChartTooltip />} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                            <XAxis dataKey="likes" name="Likes" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={fmtK} label={{ value: 'Likes', position: 'insideBottom', offset: -10, fill: '#94a3b8', fontSize: 10 }} />
+                                            <YAxis dataKey="comments" name="Comments" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={36} tickFormatter={fmtK} label={{ value: 'Comments', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
+                                            <Tooltip cursor={{ strokeDasharray: '3 3', stroke: 'rgba(148,163,184,0.3)' }} content={<ChartTooltip />} />
                                             <Scatter data={mediaScatter} fill={C.violet} opacity={0.75} />
                                         </ScatterChart>
                                     </ResponsiveContainer>
@@ -635,16 +642,16 @@ export default function AnalyticsPage() {
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
                                         {media.slice(0, 6).map((m: any, i) => (
                                             <a key={m.mediaId || i} href={m.permalink} target="_blank" rel="noreferrer"
-                                                style={{ display: 'block', borderRadius: 12, overflow: 'hidden', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.06)', transition: 'border-color 200ms' }}
+                                                style={{ display: 'block', borderRadius: 12, overflow: 'hidden', textDecoration: 'none', border: `1px solid ${BORDER}`, transition: 'border-color 200ms' }}
                                                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.4)'}
-                                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'}>
+                                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = BORDER}>
                                                 {(m.thumbnailUrl || m.mediaUrl) && (
                                                     <img src={m.thumbnailUrl || m.mediaUrl} alt="" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
                                                 )}
-                                                <div style={{ padding: '6px 8px', background: 'rgba(14,12,26,0.9)' }}>
+                                                <div style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.96)' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'rgba(255,255,255,0.5)' }}><Heart size={9} style={{ color: C.pink }} />{fmtK(m.likeCount)}</span>
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'rgba(255,255,255,0.5)' }}><MessageCircle size={9} style={{ color: C.blue }} />{fmtK(m.commentsCount)}</span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: MUTED }}><Heart size={9} style={{ color: C.pink }} />{fmtK(m.likeCount)}</span>
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: MUTED }}><MessageCircle size={9} style={{ color: C.blue }} />{fmtK(m.commentsCount)}</span>
                                                     </div>
                                                 </div>
                                             </a>
@@ -671,14 +678,14 @@ export default function AnalyticsPage() {
                         SECTION 7 — POST ANALYTICS LOOKUP
                     ════════════════════════════════════════════════════════ */}
                     <SectionTitle icon={<Search size={14} />}>Post Analytics Lookup</SectionTitle>
-                    <div style={{ background: 'rgba(14,12,26,0.8)', border: '1px solid rgba(123,63,242,0.2)', borderRadius: 24, padding: 28, marginBottom: 40 }}>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>Paste any Instagram post URL from your account to view its detailed analytics.</p>
+                    <div style={{ background: SURFACE, border: '1px solid rgba(123,63,242,0.16)', borderRadius: 24, padding: 28, marginBottom: 40, boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
+                        <p style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>Paste any Instagram post URL from your account to view its detailed analytics.</p>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             <input
                                 value={postUrl} onChange={e => setPostUrl(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleLookup()}
                                 placeholder="https://www.instagram.com/p/ABC123..."
-                                style={{ flex: 1, minWidth: 280, padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', color: '#fff', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
+                                style={{ flex: 1, minWidth: 280, padding: '12px 16px', borderRadius: 12, background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
                             />
                             <button onClick={handleLookup} disabled={lookupLoading}
                                 style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: lookupLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', opacity: lookupLoading ? 0.7 : 1 }}>
@@ -703,9 +710,9 @@ export default function AnalyticsPage() {
                                         <div style={{ flex: 1 }}>
                                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                                                 <span style={{ padding: '2px 9px', borderRadius: 8, background: 'rgba(168,85,247,0.15)', fontSize: 10, fontWeight: 700, color: '#c084fc' }}>{lookupResult.media.mediaType}</span>
-                                                {lookupResult.media.timestamp && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{new Date(lookupResult.media.timestamp).toLocaleDateString()}</span>}
+                                                {lookupResult.media.timestamp && <span style={{ fontSize: 11, color: MUTED }}>{new Date(lookupResult.media.timestamp).toLocaleDateString()}</span>}
                                             </div>
-                                            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 10, maxWidth: 400 }}>
+                                            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.5, marginBottom: 10, maxWidth: 400 }}>
                                                 {lookupResult.media.caption ? lookupResult.media.caption.slice(0, 180) + (lookupResult.media.caption.length > 180 ? '...' : '') : 'No caption'}
                                             </p>
                                             {lookupResult.media.permalink && (
@@ -724,9 +731,9 @@ export default function AnalyticsPage() {
                                             { label: 'Saves', value: fmtK(lookupResult.insight?.saved), icon: <Bookmark size={13} />, color: C.amber },
                                             { label: 'Views', value: fmtK(lookupResult.insight?.videoViews), icon: <Eye size={13} />, color: C.pink },
                                         ].map(({ label, value, icon, color }) => (
-                                            <div key={label} style={{ padding: 14, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color }}>{icon}<span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span></div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.2rem', color: '#fff' }}>{value}</p>
+                                            <div key={label} style={{ padding: 14, borderRadius: 14, background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color }}>{icon}<span style={{ fontSize: 10, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span></div>
+                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.2rem', color: TEXT }}>{value}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -742,8 +749,8 @@ export default function AnalyticsPage() {
                                                 { label: 'Saves per Reach', value: fmt(lookupResult.postMetrics.savesPerReach, '%') },
                                                 { label: 'Comment Rate', value: fmt(lookupResult.postMetrics.commentRate, '%', 3) },
                                             ].map(({ label, value }) => (
-                                                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.03)' }}>
-                                                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{label}</span>
+                                                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: SURFACE }}>
+                                                    <span style={{ fontSize: 12, color: MUTED }}>{label}</span>
                                                     <span style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: '#c084fc' }}>{value}</span>
                                                 </div>
                                             ))}

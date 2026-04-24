@@ -27,10 +27,10 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)' }}>
                 <div className="flex flex-col items-center gap-4">
                     <div className="spinner" />
-                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Loading Porchest...</p>
+                    <p style={{ color: '#667085', fontSize: '14px' }}>Loading Porchest...</p>
                 </div>
             </div>
         );
