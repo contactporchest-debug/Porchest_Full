@@ -4,6 +4,7 @@ const authRoutes = require('./routes/auth');
 const brandRoutes = require('./routes/brand');
 const influencerRoutes = require('./routes/influencer');
 const adminRoutes = require('./routes/admin');
+const analyticsRoutes = require('./routes/analytics');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/brand', brandRoutes);
 app.use('/api/influencer', influencerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404
 app.use('*', (req, res) => {

@@ -73,6 +73,12 @@ export const adminAPI = {
         api.patch(`/admin/verifications/${id}`, { status, adminNote }),
 };
 
+export const analyticsAPI = {
+    getInfluencers: (params?: Record<string, unknown>) => api.get('/analytics/influencers', { params }),
+    getInfluencer: (id: string) => api.get(`/analytics/influencers/${id}`),
+    recalculateInfluencer: (id: string) => api.post(`/analytics/influencers/${id}/recalculate`),
+};
+
 
 // ─── Brand ───────────────────────────────────────────
 export const brandAPI = {
