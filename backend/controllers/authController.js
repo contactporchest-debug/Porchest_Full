@@ -5,6 +5,60 @@ const { generateUniqueCode } = require('../utils/generateCode');
 const { OAuth2Client } = require('google-auth-library');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const InfluencerProfile = require('../models/InfluencerProfile');
+const BrandProfile = require('../models/BrandProfile');
+
+const ensureGoogleRoleProfile = async (user, role, payload = {}) => {
+    if (role === 'influencer') {
+        let profile = null;
+
+        if (user.influencerProfileId) {
+            profile = await InfluencerProfile.findById(user.influencerProfileId);
+        }
+        if (!profile) {
+            profile = await InfluencerProfile.findOne({ userId: user._id });
+        }
+        if (!profile) {
+            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            profile = await InfluencerProfile.create({
+                userId: user._id,
+                influencerProfileId,
+                fullName: payload.name,
+                profilePictureUrl: payload.picture,
+                contactEmail: user.email,
+            });
+        }
+
+        user.influencerProfileId = profile._id;
+        user.brandProfileId = undefined;
+        return;
+    }
+
+    if (role === 'brand') {
+        let profile = null;
+
+        if (user.brandProfileId) {
+            profile = await BrandProfile.findById(user.brandProfileId);
+        }
+        if (!profile) {
+            profile = await BrandProfile.findOne({ userId: user._id });
+        }
+        if (!profile) {
+            const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
+            profile = await BrandProfile.create({
+                userId: user._id,
+                brandProfileId,
+                brandName: payload.name,
+                contactDetails: {
+                    officialEmail: user.email,
+                },
+            });
+        }
+
+        user.brandProfileId = profile._id;
+        user.influencerProfileId = undefined;
+    }
+};
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -192,31 +246,13 @@ exports.googleAuth = async (req, res, next) => {
                 isVerified: true,
                 status: 'active'
             });
-
-            // Native Profile Auto-Provision
-            const InfluencerProfile = require('../models/InfluencerProfile');
-            const BrandProfile = require('../models/BrandProfile');
-            const { generateUniqueCode: generateProfileCode } = require('../utils/generateCode');
-
-            if (role === 'influencer') {
-                const influencerProfileId = await generateProfileCode('INF', InfluencerProfile, 'influencerProfileId');
-                const profileObj = await InfluencerProfile.create({ 
-                    userId: user._id, 
-                    influencerProfileId,
-                    fullName: name,
-                    profilePictureUrl: picture 
-                });
-                user.influencerProfileId = profileObj._id;
-            } else if (role === 'brand') {
-                const brandProfileId = await generateProfileCode('BRD', BrandProfile, 'brandProfileId');
-                const profileObj = await BrandProfile.create({ 
-                    userId: user._id, 
-                    brandProfileId,
-                    brandName: name
-                });
-                user.brandProfileId = profileObj._id;
-            }
+            await ensureGoogleRoleProfile(user, role, { name, picture });
             await user.save();
+        } else if (user.role !== 'admin') {
+            // Existing non-admin users signing in with Google should keep a valid linked profile.
+            await ensureGoogleRoleProfile(user, user.role, { name, picture });
+            user.loginProvider = user.loginProvider || 'google';
+            user.isVerified = true;
         }
 
         // Return token/login
@@ -237,7 +273,16 @@ exports.googleAuth = async (req, res, next) => {
 
     } catch (error) {
         console.error('Google Auth Error:', error);
-        res.status(400).json({ success: false, message: 'Google authentication failed' });
+        const statusCode =
+            error?.statusCode ||
+            (error?.code === 11000 ? 409 : 500);
+
+        const message =
+            error?.code === 11000
+                ? 'Google account creation conflicted with an existing record. Please try signing in again.'
+                : error?.message || 'Google authentication failed';
+
+        res.status(statusCode).json({ success: false, message });
     }
 };
 
