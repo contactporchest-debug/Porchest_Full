@@ -59,7 +59,7 @@ export default function LoginPage() {
         try {
             const result = await login(email, password);
             if (result.success) {
-                toast.success('Welcome back!');
+                toast.success('Signed in');
                 router.push(`/dashboard/${result.role}`);
             }
         } catch (err: unknown) {
@@ -156,7 +156,7 @@ export default function LoginPage() {
                         </span>
                     </Link>
                     <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '32px', color: '#172033', letterSpacing: '-0.04em', marginBottom: '8px' }}>
-                        Welcome back
+                        Sign in
                     </h1>
                     <p style={{ fontSize: '15px', color: '#6b7688', lineHeight: 1.6 }}>
                         Sign in to manage campaigns, requests, and your Porchest workspace.
