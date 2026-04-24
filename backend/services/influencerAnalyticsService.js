@@ -205,36 +205,36 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
     const mediaStats = deriveMediaStats(profile);
     const pricing = await getCampaignPricingSummary(profile);
 
-    const averageViews = calculateAverageViews({
+    const averageViews = Number(profile.avgViews || calculateAverageViews({
         totalViews: mediaStats.totalViews,
         totalPosts: mediaStats.totalPosts,
-    });
-    const engagementRate = calculateEngagementRate({
+    }));
+    const engagementRate = Number(profile.engagementRate || calculateEngagementRate({
         likes: mediaStats.likes,
         comments: mediaStats.comments,
         shares: mediaStats.shares,
         followers,
-    });
-    const viewRate = calculateViewRate({ averageViews, followers });
+    }));
+    const viewRate = Number(profile.viewRate || calculateViewRate({ averageViews, followers }));
     const commentRate = calculateCommentRate({ comments: mediaStats.comments, views: mediaStats.totalViews });
     const likeToViewRate = calculateLikeToViewRate({ likes: mediaStats.likes, views: mediaStats.totalViews });
-    const growthRate = calculateGrowthRate({ currentFollowers: followers, previousFollowers });
-    const costPerView = calculateCostPerView({ postRate: pricing.estimatedPostRate, averageViews });
-    const costPerEngagement = calculateCostPerEngagement({ postRate: pricing.estimatedPostRate, totalEngagements: mediaStats.totalEngagements });
-    const consistencyScore = calculateConsistencyScore({ engagementRates: mediaStats.engagementRates });
+    const growthRate = Number(profile.growthRate || calculateGrowthRate({ currentFollowers: followers, previousFollowers }));
+    const costPerView = profile.costPerView != null ? Number(profile.costPerView) : calculateCostPerView({ postRate: pricing.estimatedPostRate, averageViews });
+    const costPerEngagement = profile.costPerEngagement != null ? Number(profile.costPerEngagement) : calculateCostPerEngagement({ postRate: pricing.estimatedPostRate, totalEngagements: mediaStats.totalEngagements });
+    const consistencyScore = Number(profile.consistencyScore || calculateConsistencyScore({ engagementRates: mediaStats.engagementRates }));
     const costEfficiencyScore = calculateCostEfficiencyScore({ costPerView });
     const engagementGrowthDelta = previousEngagementRate > 0
         ? ((engagementRate - previousEngagementRate) / previousEngagementRate) * 100
         : 100;
-    const authenticityScore = calculateAuthenticityScore({
+    const authenticityScore = Number(profile.authenticityScore || calculateAuthenticityScore({
         followers,
         engagementRate,
         viewRate,
         growthRate,
         commentRate,
         engagementGrowthDelta,
-    });
-    const { engagementScore, viewRateScore, growthScore, finalScore } = calculateFinalInfluencerScore({
+    }));
+    const scoreBundle = calculateFinalInfluencerScore({
         engagementRate,
         viewRate,
         authenticityScore,
@@ -242,6 +242,10 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
         costEfficiencyScore,
         consistencyScore,
     });
+    const engagementScore = scoreBundle.engagementScore;
+    const viewRateScore = scoreBundle.viewRateScore;
+    const growthScore = scoreBundle.growthScore;
+    const finalScore = profile.influencerScore != null ? Number(profile.influencerScore) : scoreBundle.finalScore;
     const ratingTier = getInfluencerRatingTier(finalScore);
     const estimatedMediaValue = calculateEstimatedMediaValue({
         averageViews,
@@ -292,7 +296,7 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
         followers,
         previousFollowers,
         totalPosts: mediaStats.totalPosts,
-        postsAnalyzed: mediaStats.totalPosts,
+        postsAnalyzed: Number(profile.postsAnalyzed || mediaStats.totalPosts),
         totalViews: mediaStats.totalViews,
         likes: mediaStats.likes,
         comments: mediaStats.comments,

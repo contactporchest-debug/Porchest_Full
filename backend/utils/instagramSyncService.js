@@ -9,6 +9,28 @@
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const meta = require('./metaOAuth');
+const { upsertInsightsRaw, upsertMediaRaw, upsertUserRaw } = require('../services/metaRawStorageService');
+
+function parseGenderAgeDistribution(genderAge = null) {
+    if (!genderAge || typeof genderAge !== 'object') {
+        return { genderDistribution: null, ageDistribution: null };
+    }
+
+    const genderDistribution = {};
+    const ageDistribution = {};
+
+    Object.entries(genderAge).forEach(([key, value]) => {
+        const [gender, age] = key.split('.');
+        if (gender) {
+            genderDistribution[gender] = (genderDistribution[gender] || 0) + Number(value || 0);
+        }
+        if (age) {
+            ageDistribution[age] = (ageDistribution[age] || 0) + Number(value || 0);
+        }
+    });
+
+    return { genderDistribution, ageDistribution };
+}
 
 /**
  * Compute a normalised fit score (0–100) for an influencer.
@@ -44,30 +66,16 @@ exports.runFullSync = async (userId, role, accessToken) => {
     const igUserId = profile.id;
 
     // 2. Fetch audience demographics from Meta API
-    const audienceData = await meta.fetchAudienceDemographics(accessToken, igUserId);
+    const audienceBundle = await meta.fetchAudienceDemographics(accessToken, igUserId);
+    const audienceData = audienceBundle?.parsed || null;
+
+    // 2b. Fetch account insights from Meta API
+    const accountInsightsBundle = await meta.fetchAccountInsights(accessToken, igUserId);
+    const accountInsights = accountInsightsBundle?.parsed || {};
+    const audienceBreakdown = parseGenderAgeDistribution(audienceData?.genderAge);
 
     // 3. Fetch all available media within the last 60 days
     const mediaList = await meta.fetchMediaList(accessToken, igUserId);
-    
-    // We optionally extract comments/insights for the top 5 recent posts to compute rich metrics,
-    // but we don't save raw comments to a Detached Collection anymore.
-    const topPosts = [...mediaList]
-        .sort((a, b) => ((b.like_count || 0) + (b.comments_count || 0)) - ((a.like_count || 0) + (a.comments_count || 0)))
-        .slice(0, 5);
-        
-    let overallSaves = 0;
-    let overallReach = 0;
-    for (const post of topPosts) {
-        try {
-            const insights = await meta.fetchMediaInsights(accessToken, post.id, post.media_type);
-            if (insights) {
-                overallReach += (insights.reach || 0);
-                overallSaves += (insights.saved || insights.saves || 0);
-            }
-        } catch {
-            // Silently skip if insights aren't available for this post/account type
-        }
-    }
 
     let existingProfile = null;
     if (role === 'influencer') {
@@ -76,21 +84,86 @@ exports.runFullSync = async (userId, role, accessToken) => {
         existingProfile = await BrandProfile.findOne({ userId });
     }
 
+    const enrichedMediaList = [];
+    const mediaInsightsRaw = [];
+    for (const media of mediaList) {
+        try {
+            const insightBundle = await meta.fetchMediaInsights(accessToken, media.id, media.media_type);
+            if (insightBundle?.raw) {
+                mediaInsightsRaw.push({
+                    targetType: 'media',
+                    targetId: media.id,
+                    payload: insightBundle.raw,
+                });
+            }
+            enrichedMediaList.push({
+                ...media,
+                insights: insightBundle?.parsed || {},
+            });
+        } catch {
+            enrichedMediaList.push({
+                ...media,
+                insights: {},
+            });
+        }
+    }
+
+    await upsertUserRaw({ userId, payload: profile });
+    await upsertMediaRaw({ userId, influencerProfileId: existingProfile?._id || null, mediaList });
+    await upsertInsightsRaw({
+        userId,
+        influencerProfileId: existingProfile?._id || null,
+        insights: [
+            { targetType: 'account', targetId: igUserId, payload: accountInsightsBundle?.raw?.summary || null },
+            { targetType: 'online_followers', targetId: igUserId, payload: accountInsightsBundle?.raw?.onlineFollowers || null },
+            { targetType: 'audience', targetId: igUserId, payload: audienceBundle?.raw || null },
+            ...mediaInsightsRaw,
+        ],
+    });
+
     // 4. Compute derived metrics natively
-    const metrics = meta.computeDerivedMetrics(profile, mediaList, existingProfile);
+    const metrics = meta.computeDerivedMetrics(profile, enrichedMediaList, existingProfile, accountInsights);
     const followersCount = profile.followers_count || 0;
 
     // Persist the full 60-day media window so analytics can score every eligible post
-    const recentMediaSummary = mediaList.map(m => ({
+    const recentMediaSummary = enrichedMediaList.map(m => ({
         mediaId: m.id,
         mediaUrl: m.media_url,
+        thumbnailUrl: m.thumbnail_url || null,
         permalink: m.permalink,
         mediaType: m.media_type,
         caption: (m.caption || '').slice(0, 500),
         likeCount: m.like_count || 0,
         commentsCount: m.comments_count || 0,
-        timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
+        shareCount: Number(m.insights?.shares || 0),
+        saveCount: Number(m.insights?.saved || 0),
+        playCount: Number(m.insights?.plays || 0),
+        reachCount: Number(m.insights?.reach || 0),
+        impressionCount: Number(m.insights?.impressions || 0),
+        engagementCount: Number((m.like_count || 0) + (m.comments_count || 0) + Number(m.insights?.shares || 0)),
+        viewCount: Number((m.media_type === 'VIDEO' || m.media_type === 'REEL') ? (m.insights?.plays || 0) : (m.insights?.reach || 0)),
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
     }));
+
+    const historicalSnapshots = Array.isArray(existingProfile?.historicalSnapshots)
+        ? [...existingProfile.historicalSnapshots]
+        : [];
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const nextSnapshot = {
+        capturedAt: new Date(),
+        followersCount,
+        engagementRate: metrics.engagementRate || 0,
+        accountReach: accountInsights.reach || metrics.totalReach || 0,
+        accountImpressions: accountInsights.impressions || metrics.totalImpressions || 0,
+        influencerScore: metrics.influencerScore || 0,
+    };
+    if (historicalSnapshots.length) {
+        const lastKey = new Date(historicalSnapshots[historicalSnapshots.length - 1].capturedAt).toISOString().slice(0, 10);
+        if (lastKey === todayKey) historicalSnapshots[historicalSnapshots.length - 1] = nextSnapshot;
+        else historicalSnapshots.push(nextSnapshot);
+    } else {
+        historicalSnapshots.push(nextSnapshot);
+    }
 
     // 5. Build the massive structural update object
     const updatePayload = {
@@ -109,8 +182,13 @@ exports.runFullSync = async (userId, role, accessToken) => {
         followersCount:        followersCount,
         followingCount:        profile.follows_count || 0, // Maps nicely
         mediaCount:            profile.media_count || 0,
-        postsCount:            mediaList.filter(m => m.media_type !== 'VIDEO' && m.media_type !== 'REELS').length,
-        reelsCount:            mediaList.filter(m => m.media_type === 'VIDEO' || m.media_type === 'REELS').length,
+        postsCount:            enrichedMediaList.filter(m => m.media_type !== 'VIDEO' && m.media_type !== 'REELS').length,
+        reelsCount:            enrichedMediaList.filter(m => m.media_type === 'VIDEO' || m.media_type === 'REELS').length,
+        profileViews:          accountInsights.profileViews || 0,
+        websiteClicks:         accountInsights.websiteClicks || 0,
+        accountReach:          accountInsights.reach || 0,
+        accountImpressions:    accountInsights.impressions || 0,
+        onlineFollowers:       accountInsights.onlineFollowers || null,
         
         lastSyncAt:            new Date(),
         lastAnalyticsRefreshAt: new Date(),
@@ -136,24 +214,65 @@ exports.runFullSync = async (userId, role, accessToken) => {
         updatePayload.engagementRate       = metrics.engagementRate || 0;
         updatePayload.avgLikes             = metrics.avgLikesPerPost || 0;
         updatePayload.avgComments          = metrics.avgCommentsPerPost || 0;
+        updatePayload.avgViews             = metrics.avgViewsPerPost || 0;
+        updatePayload.avgReach             = metrics.avgReachPerPost || 0;
         updatePayload.avgLikesPerPost      = metrics.avgLikesPerPost || 0;
         updatePayload.avgCommentsPerPost   = metrics.avgCommentsPerPost || 0;
         updatePayload.avgEngagementPerPost = metrics.avgEngagementPerPost || 0;
+        updatePayload.averageEngagement    = metrics.averageEngagement || 0;
+        updatePayload.averageReach         = metrics.averageReach || 0;
+        updatePayload.viewRate             = metrics.viewRate || 0;
         updatePayload.likeToCommentRatio   = metrics.likeToCommentRatio || 0;
         updatePayload.postsAnalyzed        = metrics.postsAnalyzed || 0;
         updatePayload.influencerEfficiencyRate = metrics.influencerEfficiencyRate || 0;
+        updatePayload.totalReach           = metrics.totalReach || 0;
+        updatePayload.totalImpressions     = metrics.totalImpressions || 0;
+        updatePayload.totalPlays           = metrics.totalPlays || 0;
+        updatePayload.totalShares          = metrics.totalShares || 0;
+        updatePayload.totalSaved           = metrics.totalSaved || 0;
+        updatePayload.totalEngagements     = metrics.totalEngagements || 0;
         
-        updatePayload.postingFrequency     = metrics.postingFrequency7d || 0;
+        updatePayload.postingFrequency     = metrics.postingFrequency || 0;
         updatePayload.postingFrequency7d   = metrics.postingFrequency7d || 0;
         updatePayload.postingFrequency30d  = metrics.postingFrequency30d || 0;
+        updatePayload.consistencyRatio     = metrics.consistencyRatio || 0;
+        updatePayload.consistencyScore     = metrics.postingConsistencyScore || 0;
+        updatePayload.costPerView          = metrics.costPerView;
+        updatePayload.costPerEngagement    = metrics.costPerEngagement;
+        updatePayload.authenticityScore    = metrics.authenticityScore || 0;
+        updatePayload.engagementQualityScore = metrics.engagementQualityScore || 0;
+        updatePayload.viralityScore        = metrics.viralityScore || 0;
+        updatePayload.influencerScore      = metrics.influencerScore || 0;
         
         updatePayload.topPerformingContentType = metrics.topReelScore > metrics.topPostScore ? 'REELS' : 'POSTS';
         updatePayload.recentMediaSummary   = recentMediaSummary;
+        updatePayload.historicalSnapshots  = historicalSnapshots.slice(-60);
+        updatePayload.demographics         = {
+            genderDistribution: audienceBreakdown.genderDistribution,
+            ageDistribution: audienceBreakdown.ageDistribution,
+            topCountries: audienceData?.countries || null,
+            topCities: audienceData?.cities || null,
+            languages: existingProfile?.demographics?.languages || null,
+            audienceType: existingProfile?.demographics?.audienceType || null,
+            onlineFollowers: accountInsights.onlineFollowers || null,
+        };
         
         updatePayload.topReelScore         = metrics.topReelScore || 0;
         updatePayload.scoreLabel           = metrics.scoreLabel || 'Average';
         updatePayload.growthRate           = metrics.growthRate || 0;
         updatePayload.fitScore             = computeFitScore(metrics, followersCount, isComplete);
+        updatePayload.qualityScore         = metrics.qualityScore || 0;
+        updatePayload.profileScore         = metrics.influencerScore || 0;
+        updatePayload.credibilityScore     = metrics.authenticityScore || 0;
+        updatePayload.scoreBreakdown       = {
+            engagementRate: metrics.engagementRate || 0,
+            viewRate: metrics.viewRate || 0,
+            growthRate: metrics.growthRate || 0,
+            consistency: metrics.postingConsistencyScore || 0,
+            authenticity: metrics.authenticityScore || 0,
+            engagementQualityScore: metrics.engagementQualityScore || 0,
+            viralityScore: metrics.viralityScore || 0,
+        };
 
         await InfluencerProfile.findOneAndUpdate(
             { userId },
@@ -186,7 +305,7 @@ exports.runFullSync = async (userId, role, accessToken) => {
         console.log(`[syncService] ✅ Brand ${userId} data written natively.`);
     }
 
-    return { profile, metrics, mediaList };
+    return { profile, metrics, mediaList: enrichedMediaList };
 };
 
 exports.computeFitScore = computeFitScore;

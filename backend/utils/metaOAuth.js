@@ -307,15 +307,15 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
     try {
         const res = await fetch(url);
         const data = await res.json();
-        if (!res.ok || data.error) return null;
+        if (!res.ok || data.error) return { raw: data, parsed: null };
 
         const result = {};
         (data.data || []).forEach(m => {
             result[m.name] = m.values?.[0]?.value ?? m.value ?? null;
         });
-        return result;
+        return { raw: data, parsed: result };
     } catch {
-        return null;
+        return { raw: null, parsed: null };
     }
 };
 
@@ -348,7 +348,7 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
     try {
         const res = await fetch(url);
         const data = await res.json();
-        if (!res.ok || data.error) return null;
+        if (!res.ok || data.error) return { raw: data, parsed: null };
 
         const result = { cities: null, countries: null, genderAge: null };
         (data.data || []).forEach(m => {
@@ -356,9 +356,66 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
             if (m.name === 'audience_country') result.countries = m.values?.[0]?.value ?? null;
             if (m.name === 'audience_gender_age') result.genderAge = m.values?.[0]?.value ?? null;
         });
-        return result;
+        return { raw: data, parsed: result };
     } catch {
-        return null;
+        return { raw: null, parsed: null };
+    }
+};
+
+exports.fetchAccountInsights = async (accessToken, igUserId) => {
+    const base = igUserId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE;
+    const summaryUrl = `${base}/${igUserId}/insights?metric=reach,impressions,profile_views,website_clicks&period=day&access_token=${accessToken}`;
+    const onlineFollowersUrl = `${base}/${igUserId}/insights?metric=online_followers&period=lifetime&access_token=${accessToken}`;
+
+    try {
+        const [summaryRes, onlineFollowersRes] = await Promise.all([
+            fetch(summaryUrl),
+            fetch(onlineFollowersUrl),
+        ]);
+
+        const summaryRaw = await summaryRes.json();
+        const onlineFollowersRaw = await onlineFollowersRes.json();
+
+        const parsed = {
+            reach: 0,
+            impressions: 0,
+            profileViews: 0,
+            websiteClicks: 0,
+            onlineFollowers: null,
+        };
+
+        if (summaryRes.ok && !summaryRaw.error) {
+            (summaryRaw.data || []).forEach((metric) => {
+                const value = Number(metric?.values?.[0]?.value || 0);
+                if (metric.name === 'reach') parsed.reach = value;
+                if (metric.name === 'impressions') parsed.impressions = value;
+                if (metric.name === 'profile_views') parsed.profileViews = value;
+                if (metric.name === 'website_clicks') parsed.websiteClicks = value;
+            });
+        }
+
+        if (onlineFollowersRes.ok && !onlineFollowersRaw.error) {
+            parsed.onlineFollowers = onlineFollowersRaw?.data?.[0]?.values?.[0]?.value ?? null;
+        }
+
+        return {
+            raw: {
+                summary: summaryRaw,
+                onlineFollowers: onlineFollowersRaw,
+            },
+            parsed,
+        };
+    } catch {
+        return {
+            raw: null,
+            parsed: {
+                reach: 0,
+                impressions: 0,
+                profileViews: 0,
+                websiteClicks: 0,
+                onlineFollowers: null,
+            },
+        };
     }
 };
 
@@ -372,84 +429,143 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
  * @param {Array} mediaList - Raw media from fetchMediaList()
  * @returns {object} Computed analytics
  */
-exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null) => {
+exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, accountInsights = {}) => {
     const followersCount = profile.followers_count || 0;
     const totalPosts = mediaList.length;
 
     const base = {
         engagementRate: 0,
-        engagementPerImpression: null,
+        engagementPerImpression: 0,
         avgEngagementPerPost: 0,
         avgLikesPerPost: 0,
         avgCommentsPerPost: 0,
-        avgViewsPerPost: null,
+        avgViewsPerPost: 0,
+        avgReachPerPost: 0,
+        averageEngagement: 0,
+        averageReach: 0,
+        averageViews: 0,
+        viewRate: 0,
         likeToCommentRatio: 0,
-        followerGrowthRate: null,
+        followerGrowthRate: 0,
         followerGrowthTrend: null,
-        postingFrequency7d: null,
-        postingFrequency30d: null,
-        postingConsistencyScore: null,
-        topPostScore: null,
-        topReelScore: null,
-        contentEfficiencyRate: null,
+        postingFrequency: 0,
+        postingFrequency7d: 0,
+        postingFrequency30d: 0,
+        consistencyRatio: 0,
+        postingConsistencyScore: 0,
+        topPostScore: 0,
+        topReelScore: 0,
+        contentEfficiencyRate: 0,
         sentimentScore: null,
         positiveCommentRatio: null,
         negativeCommentRatio: null,
-        qualityScore: null,
-        authenticityScore: null,
-        fakeFollowerRiskScore: null,
-        influencerEfficiencyRate: null,
+        qualityScore: 0,
+        authenticityScore: 0,
+        fakeFollowerRiskScore: 0,
+        influencerEfficiencyRate: 0,
+        engagementQualityScore: 0,
+        viralityScore: 0,
+        influencerScore: 0,
+        totalReach: 0,
+        totalImpressions: 0,
+        totalPlays: 0,
+        totalShares: 0,
+        totalSaved: 0,
+        totalEngagements: 0,
+        costPerView: null,
+        costPerEngagement: null,
         postsAnalyzed: totalPosts,
         hasEstimatedMetrics: true,
     };
 
     if (totalPosts === 0 || followersCount === 0) return base;
 
-    const totalLikes = mediaList.reduce((s, m) => s + (m.like_count || 0), 0);
-    const totalComments = mediaList.reduce((s, m) => s + (m.comments_count || 0), 0);
-    const totalEngagement = totalLikes + totalComments;
+    const totalLikes = mediaList.reduce((s, m) => s + Number(m.like_count || 0), 0);
+    const totalComments = mediaList.reduce((s, m) => s + Number(m.comments_count || 0), 0);
+    const totalShares = mediaList.reduce((s, m) => s + Number(m.insights?.shares || 0), 0);
+    const totalSaved = mediaList.reduce((s, m) => s + Number(m.insights?.saved || 0), 0);
+    const totalReach = mediaList.reduce((s, m) => s + Number(m.insights?.reach || 0), 0);
+    const totalImpressions = mediaList.reduce((s, m) => s + Number(m.insights?.impressions || 0), 0);
+    const totalPlays = mediaList.reduce((s, m) => s + Number(m.insights?.plays || 0), 0);
+    const totalEngagement = totalLikes + totalComments + totalShares;
+    const totalVisibility = mediaList.reduce((sum, media) => {
+        if (media.media_type === 'VIDEO' || media.media_type === 'REEL') return sum + Number(media.insights?.plays || 0);
+        return sum + Number(media.insights?.reach || 0);
+    }, 0);
 
     const avgLikesPerPost = totalPosts > 0 ? parseFloat((totalLikes / totalPosts).toFixed(2)) : 0;
     const avgCommentsPerPost = totalPosts > 0 ? parseFloat((totalComments / totalPosts).toFixed(2)) : 0;
     const avgEngagementPerPost = totalPosts > 0 ? parseFloat((totalEngagement / totalPosts).toFixed(2)) : 0;
+    const avgReachPerPost = totalPosts > 0 ? parseFloat((totalReach / totalPosts).toFixed(2)) : 0;
+    const avgViewsPerPost = totalPosts > 0 ? parseFloat((totalVisibility / totalPosts).toFixed(2)) : 0;
 
-    const engagementRate = followersCount > 0 ? parseFloat(((avgEngagementPerPost / followersCount) * 100).toFixed(2)) : 0;
+    const engagementRate = followersCount > 0 ? parseFloat(((totalEngagement / followersCount) * 100).toFixed(2)) : 0;
+    const viewRate = followersCount > 0 ? parseFloat(((avgViewsPerPost / followersCount) * 100).toFixed(2)) : 0;
     
     const likeToCommentRatio = totalComments > 0
         ? parseFloat((totalLikes / totalComments).toFixed(2))
         : null;
+    const engagementQualityScore = totalLikes > 0
+        ? parseFloat(Math.min(100, ((totalComments / totalLikes) * 100)).toFixed(2))
+        : 0;
+    const viralityScore = followersCount > 0
+        ? parseFloat((((totalPlays / Math.max(totalPosts, 1)) / followersCount) * 100).toFixed(2))
+        : 0;
 
     // Follower Growth Rate
-    let growthRate = null;
+    let growthRate = 0;
     if (existingProfile && existingProfile.followersCount && existingProfile.followersCount > 0) {
         const oldFollowers = existingProfile.followersCount;
         growthRate = parseFloat((((followersCount - oldFollowers) / oldFollowers) * 100).toFixed(2));
     }
+    const followerGrowthRate = growthRate;
 
     // Posting frequency
     const now = Date.now();
     const posts7d = mediaList.filter(m => m.timestamp && (now - new Date(m.timestamp).getTime()) < 7 * 86400000).length;
     const posts30d = mediaList.filter(m => m.timestamp && (now - new Date(m.timestamp).getTime()) < 30 * 86400000).length;
+    const postingFrequency = posts7d;
     const postingFrequency7d = posts7d;
     const postingFrequency30d = posts30d;
 
+    const engagementSeries = mediaList.map((media) => (
+        Number(media.like_count || 0) + Number(media.comments_count || 0) + Number(media.insights?.shares || 0)
+    ));
+    const meanEngagement = engagementSeries.reduce((sum, value) => sum + value, 0) / Math.max(engagementSeries.length, 1);
+    const variance = engagementSeries.reduce((sum, value) => sum + ((value - meanEngagement) ** 2), 0) / Math.max(engagementSeries.length, 1);
+    const stdDeviation = Math.sqrt(variance);
+    const consistencyRatio = meanEngagement > 0
+        ? Math.max(0, Math.min(1, 1 - (stdDeviation / meanEngagement)))
+        : 0;
+    const consistencyScore = parseFloat((consistencyRatio * 100).toFixed(2));
+
     // Top post by engagement
     const sorted = [...mediaList].sort((a, b) =>
-        ((b.like_count || 0) + (b.comments_count || 0)) - ((a.like_count || 0) + (a.comments_count || 0))
+        ((b.like_count || 0) + (b.comments_count || 0) + Number(b.insights?.shares || 0)) -
+        ((a.like_count || 0) + (a.comments_count || 0) + Number(a.insights?.shares || 0))
     );
     const topPost = sorted[0];
     const topPostScore = (topPost && followersCount > 0)
-        ? parseFloat(((((topPost.like_count || 0) + (topPost.comments_count || 0)) / followersCount) * 100).toFixed(2))
-        : null;
+        ? parseFloat(((((topPost.like_count || 0) + (topPost.comments_count || 0) + Number(topPost.insights?.shares || 0)) / followersCount) * 100).toFixed(2))
+        : 0;
 
     // Top reel score
     const reels = mediaList.filter(m => m.media_type === 'REEL' || m.media_type === 'VIDEO');
     const topReel = reels.length > 0 ? reels.sort((a, b) =>
-        ((b.like_count || 0) + (b.comments_count || 0)) - ((a.like_count || 0) + (a.comments_count || 0))
+        ((b.like_count || 0) + (b.comments_count || 0) + Number(b.insights?.shares || 0)) -
+        ((a.like_count || 0) + (a.comments_count || 0) + Number(a.insights?.shares || 0))
     )[0] : null;
     const topReelScore = (topReel && followersCount > 0)
-        ? parseFloat(((((topReel.like_count || 0) + (topReel.comments_count || 0)) / followersCount) * 100).toFixed(2))
-        : null;
+        ? parseFloat(((((topReel.like_count || 0) + (topReel.comments_count || 0) + Number(topReel.insights?.shares || 0)) / followersCount) * 100).toFixed(2))
+        : 0;
+
+    const reachRatio = followersCount > 0 ? ((avgReachPerPost / followersCount) * 100) : 0;
+    let authenticityScore = 100;
+    if (followersCount > 100000 && engagementRate < 1) authenticityScore -= 20;
+    if (reachRatio < 8) authenticityScore -= 15;
+    if (growthRate > 40 && engagementRate < 2) authenticityScore -= 20;
+    if (accountInsights.reach && followersCount > 0 && ((accountInsights.reach / followersCount) * 100) < 12) authenticityScore -= 10;
+    authenticityScore = parseFloat(Math.max(0, Math.min(100, authenticityScore)).toFixed(2));
 
     // ── PROPER NORMALIZED QUALITY SCORE (0-100) ──
     // 1. Engagement Score
@@ -468,9 +584,9 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null) => 
     }
 
     // 3. Consistency Score
-    let consistencyScore = 40;
-    if (posts7d >= 3) consistencyScore = 100;
-    else if (posts7d >= 1) consistencyScore = 80;
+    let cadenceConsistencyScore = 40;
+    if (posts7d >= 3) cadenceConsistencyScore = 100;
+    else if (posts7d >= 1) cadenceConsistencyScore = 80;
 
     // 4. Content Score
     let contentScore = 70;
@@ -480,7 +596,7 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null) => 
     const qualityScore = parseFloat((
         (engagementScore * 0.4) +
         (growthScore * 0.2) +
-        (consistencyScore * 0.2) +
+        (cadenceConsistencyScore * 0.2) +
         (contentScore * 0.2)
     ).toFixed(1));
 
@@ -491,22 +607,80 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null) => 
 
     // efficiencyRate: engagement per 1000 followers
     const influencerEfficiencyRate = followersCount > 0 ? parseFloat(((avgEngagementPerPost / followersCount) * 1000).toFixed(2)) : 0;
+    const engagementPerImpression = totalImpressions > 0 ? parseFloat((totalEngagement / totalImpressions).toFixed(4)) : 0;
+
+    const perMediaViewCosts = mediaList
+        .map((media) => {
+            const isReel = media.media_type === 'VIDEO' || media.media_type === 'REEL';
+            const denominator = isReel ? Number(media.insights?.plays || 0) : Number(media.insights?.reach || 0);
+            const price = isReel ? Number(existingProfile?.avgReelPrice || 0) : Number(existingProfile?.avgPostPrice || 0);
+            if (!price || !denominator) return null;
+            return price / denominator;
+        })
+        .filter((value) => Number.isFinite(value));
+
+    const perMediaEngagementCosts = mediaList
+        .map((media) => {
+            const engagement = Number(media.like_count || 0) + Number(media.comments_count || 0) + Number(media.insights?.shares || 0);
+            const isReel = media.media_type === 'VIDEO' || media.media_type === 'REEL';
+            const price = isReel ? Number(existingProfile?.avgReelPrice || 0) : Number(existingProfile?.avgPostPrice || 0);
+            if (!price || !engagement) return null;
+            return price / engagement;
+        })
+        .filter((value) => Number.isFinite(value));
+
+    const costPerView = perMediaViewCosts.length
+        ? parseFloat((perMediaViewCosts.reduce((sum, value) => sum + value, 0) / perMediaViewCosts.length).toFixed(4))
+        : null;
+    const costPerEngagement = perMediaEngagementCosts.length
+        ? parseFloat((perMediaEngagementCosts.reduce((sum, value) => sum + value, 0) / perMediaEngagementCosts.length).toFixed(4))
+        : null;
+    const influencerScore = parseFloat(Math.max(0, Math.min(100, (
+        (0.3 * engagementRate) +
+        (0.25 * viewRate) +
+        (0.2 * Math.max(growthRate, 0)) +
+        (0.15 * consistencyScore) +
+        (0.1 * authenticityScore)
+    ))).toFixed(2));
 
     return {
         ...base,
         engagementRate,
+        engagementPerImpression,
         avgEngagementPerPost,
         avgLikesPerPost,
         avgCommentsPerPost,
+        avgViewsPerPost,
+        avgReachPerPost,
+        averageEngagement: avgEngagementPerPost,
+        averageReach: avgReachPerPost,
+        averageViews: avgViewsPerPost,
+        viewRate,
         likeToCommentRatio,
+        followerGrowthRate,
+        postingFrequency,
         postingFrequency7d,
         postingFrequency30d,
+        consistencyRatio,
+        postingConsistencyScore: consistencyScore,
         topPostScore,
         topReelScore,
         qualityScore,
         scoreLabel,
         growthRate,
         influencerEfficiencyRate,
+        authenticityScore,
+        engagementQualityScore,
+        viralityScore,
+        influencerScore,
+        totalReach,
+        totalImpressions,
+        totalPlays,
+        totalShares,
+        totalSaved,
+        totalEngagements: totalEngagement,
+        costPerView,
+        costPerEngagement,
         postsAnalyzed: totalPosts,
         hasEstimatedMetrics: false,
     };

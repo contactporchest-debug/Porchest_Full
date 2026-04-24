@@ -140,6 +140,11 @@ interface DerivedMetrics {
     postsLast30Days?: number; efficiencyRate?: number; qualityScore?: number;
     scoreLabel?: string; topPostScore?: number; topReelScore?: number;
     likeToCommentRatio?: number | null; postsAnalyzed?: number; lastSyncedAt?: string;
+    avgViews?: number; avgReach?: number; averageEngagement?: number; averageReach?: number;
+    viewRate?: number; postingFrequency?: number; consistencyScore?: number;
+    authenticityScore?: number; engagementQualityScore?: number; viralityScore?: number;
+    influencerScore?: number; costPerView?: number | null; costPerEngagement?: number | null;
+    accountReach?: number; accountImpressions?: number; profileViews?: number; websiteClicks?: number;
 }
 interface IGConnection {
     followersCount?: number; followsCount?: number; mediaCount?: number;
@@ -154,6 +159,7 @@ interface PostLookupResult {
 
 /* ─── Helpers ───────────────────────────────────────────────── */
 const fmt = (v: number | null | undefined, suffix = '', d = 1) => v != null ? `${v.toFixed(d)}${suffix}` : '—';
+const fmtMoney = (v: number | null | undefined, d = 4) => v != null ? `$${v.toFixed(d)}` : '—';
 const fmtK = (v: number | null | undefined) => {
     if (v == null) return '—';
     if (v >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
@@ -368,6 +374,10 @@ export default function AnalyticsPage() {
                         <StatChip label="Total Media" value={fmtK(connection?.mediaCount)} color={C.indigo} />
                         <StatChip label="Posts Analyzed" value={String(analytics?.postsAnalyzed ?? '—')} color={C.lavender} />
                         <StatChip label="Growth Rate" value={fmt(analytics?.growthRate, '%', 2)} color={er > 0 ? C.green : C.red} />
+                        <StatChip label="View Rate" value={fmt(analytics?.viewRate, '%', 2)} color={C.teal} />
+                        <StatChip label="Avg Reach" value={fmtK(analytics?.averageReach ?? analytics?.avgReach)} color={C.amber} />
+                        <StatChip label="Profile Views" value={fmtK(analytics?.profileViews)} color={C.pink} />
+                        <StatChip label="Website Clicks" value={fmtK(analytics?.websiteClicks)} color={C.blue} />
                     </div>
 
                     {/* Follower Growth — Area Chart */}
@@ -613,6 +623,48 @@ export default function AnalyticsPage() {
                                 </div>
                                 <p style={{ fontSize: 11, color: MUTED }}>Top reel vs follower ratio</p>
                             </div>
+                        </ChartCard>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginTop: 16 }}>
+                        <ChartCard title="Authenticity Score" subtitle="Follower/reach/engagement trust signal">
+                            <div style={{ textAlign: 'center', paddingTop: 22 }}>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: C.green }}>{analytics?.authenticityScore?.toFixed(0) ?? '—'}</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>out of 100</p>
+                            </div>
+                        </ChartCard>
+                        <ChartCard title="Consistency Score" subtitle="1 - std dev / mean engagement">
+                            <div style={{ textAlign: 'center', paddingTop: 22 }}>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: C.violet }}>{analytics?.consistencyScore?.toFixed(0) ?? '—'}</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>out of 100</p>
+                            </div>
+                        </ChartCard>
+                        <ChartCard title="Virality Score" subtitle="Average plays vs followers">
+                            <div style={{ textAlign: 'center', paddingTop: 22 }}>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: C.blue }}>{fmt(analytics?.viralityScore, '%', 2)}</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>plays / followers</p>
+                            </div>
+                        </ChartCard>
+                        <ChartCard title="Influencer Score" subtitle="Weighted Porchest final score">
+                            <div style={{ textAlign: 'center', paddingTop: 22 }}>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color: C.amber }}>{analytics?.influencerScore?.toFixed(1) ?? '—'}</p>
+                                <p style={{ fontSize: 11, color: MUTED }}>weighted intelligence</p>
+                            </div>
+                        </ChartCard>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16, marginTop: 16 }}>
+                        <ChartCard title="Avg Engagement" subtitle="Total engagement / post count">
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.8rem', color: C.pink }}>{fmtK(analytics?.averageEngagement)}</p>
+                        </ChartCard>
+                        <ChartCard title="Engagement Quality" subtitle="Comments / likes ratio">
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.8rem', color: C.green }}>{fmt(analytics?.engagementQualityScore, '%', 2)}</p>
+                        </ChartCard>
+                        <ChartCard title="Cost Per View" subtitle="Price / plays or reach">
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.8rem', color: C.teal }}>{fmtMoney(analytics?.costPerView)}</p>
+                        </ChartCard>
+                        <ChartCard title="Cost Per Engagement" subtitle="Price / engagement">
+                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.8rem', color: C.indigo }}>{fmtMoney(analytics?.costPerEngagement)}</p>
                         </ChartCard>
                     </div>
 

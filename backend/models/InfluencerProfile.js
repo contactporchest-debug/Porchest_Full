@@ -42,6 +42,11 @@ const influencerProfileSchema = new mongoose.Schema(
         mediaCount: { type: Number, default: 0 },
         postsCount: { type: Number, default: 0 },
         reelsCount: { type: Number, default: 0 },
+        profileViews: { type: Number, default: 0 },
+        websiteClicks: { type: Number, default: 0 },
+        accountReach: { type: Number, default: 0 },
+        accountImpressions: { type: Number, default: 0 },
+        onlineFollowers: { type: mongoose.Schema.Types.Mixed, default: null },
 
         // ── D. Analytics / Metrics ───────────────────────────────────────
         engagementRate: { type: Number, default: 0 }, // e.g., 3.45 (%)
@@ -54,13 +59,38 @@ const influencerProfileSchema = new mongoose.Schema(
         avgLikesPerPost: { type: Number, default: 0 },
         avgCommentsPerPost: { type: Number, default: 0 },
         avgEngagementPerPost: { type: Number, default: 0 },
+        averageEngagement: { type: Number, default: 0 },
+        averageReach: { type: Number, default: 0 },
+        viewRate: { type: Number, default: 0 },
         likeToCommentRatio: { type: Number, default: 0 },
         postsAnalyzed: { type: Number, default: 0 },
         influencerEfficiencyRate: { type: Number, default: 0 },
+        totalReach: { type: Number, default: 0 },
+        totalImpressions: { type: Number, default: 0 },
+        totalPlays: { type: Number, default: 0 },
+        totalShares: { type: Number, default: 0 },
+        totalSaved: { type: Number, default: 0 },
+        totalEngagements: { type: Number, default: 0 },
         postingFrequency: { type: Number, default: 0 }, // legacy
         postingFrequency7d: { type: Number, default: 0 },
         postingFrequency30d: { type: Number, default: 0 },
+        consistencyRatio: { type: Number, default: 0 },
+        consistencyScore: { type: Number, default: 0 },
+        costPerView: { type: Number, default: null },
+        costPerEngagement: { type: Number, default: null },
+        authenticityScore: { type: Number, default: 0 },
+        engagementQualityScore: { type: Number, default: 0 },
+        viralityScore: { type: Number, default: 0 },
+        influencerScore: { type: Number, default: 0 },
         topPerformingContentType: { type: String },
+        historicalSnapshots: [{
+            capturedAt: { type: Date, default: Date.now },
+            followersCount: { type: Number },
+            engagementRate: { type: Number },
+            accountReach: { type: Number },
+            accountImpressions: { type: Number },
+            influencerScore: { type: Number },
+        }],
         
         // ── E. Demographics ──────────────────────────────────────────────
         demographics: {
@@ -69,7 +99,8 @@ const influencerProfileSchema = new mongoose.Schema(
             topCountries: { type: mongoose.Schema.Types.Mixed }, // { "US": 50, "PK": 30, ... }
             topCities: { type: mongoose.Schema.Types.Mixed }, // { "New York": 20, ... }
             languages: { type: mongoose.Schema.Types.Mixed },
-            audienceType: { type: String }
+            audienceType: { type: String },
+            onlineFollowers: { type: mongoose.Schema.Types.Mixed },
         },
 
         // ── F. Pricing / Cost Information ────────────────────────────────
@@ -107,11 +138,19 @@ const influencerProfileSchema = new mongoose.Schema(
         recentMediaSummary: [{
             mediaId: { type: String },
             mediaUrl: { type: String },
+            thumbnailUrl: { type: String },
             permalink: { type: String },
             mediaType: { type: String },
             caption: { type: String },
             likeCount: { type: Number },
             commentsCount: { type: Number },
+            shareCount: { type: Number },
+            saveCount: { type: Number },
+            playCount: { type: Number },
+            reachCount: { type: Number },
+            impressionCount: { type: Number },
+            engagementCount: { type: Number },
+            viewCount: { type: Number },
             timestamp: { type: Date }
         }]
     },
