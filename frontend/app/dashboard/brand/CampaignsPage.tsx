@@ -37,6 +37,9 @@ const TEXT = '#0f172a';
 const MUTED = '#64748b';
 
 function CampaignDetail({ request, verifications }: { request: any; verifications: any[] }) {
+    const [counterPrice, setCounterPrice] = useState(request.counterOfferPrice ? String(request.counterOfferPrice) : '');
+    const [counterMessage, setCounterMessage] = useState('');
+    const [submittingCounter, setSubmittingCounter] = useState(false);
     const verification = verifications.find(v => {
         // Standardize: handle both ObjectId and string formats from backend
         const vId = typeof v.campaignRequestId === 'object' ? v.campaignRequestId?._id : v.campaignRequestId;
@@ -58,6 +61,27 @@ function CampaignDetail({ request, verifications }: { request: any; verification
         { label: 'Disclosure Requirements', val: request.disclosureRequirements },
         { label: 'Payment Terms', val: request.paymentTerms },
     ];
+
+    const submitBrandCounter = async () => {
+        if (!counterPrice.trim() || Number.isNaN(Number(counterPrice))) {
+            toast.error('Enter a valid counter offer amount.');
+            return;
+        }
+
+        try {
+            setSubmittingCounter(true);
+            await brandAPI.updateRequest(request._id, {
+                status: 'negotiation',
+                counterOfferPrice: Number(counterPrice),
+                counterOfferMessage: counterMessage.trim() || undefined,
+            });
+            toast.success('Counter offer sent to influencer.');
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to send counter offer');
+        } finally {
+            setSubmittingCounter(false);
+        }
+    };
 
     return (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
@@ -116,6 +140,32 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                                 }}
                                 style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
                                 Reject
+                            </button>
+                        </div>
+                        <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(250,204,21,0.16)' }}>
+                            <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Send New Counter Offer</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 160px) minmax(0, 1fr)', gap: '10px', marginBottom: '10px' }}>
+                                <input
+                                    className="input-dark"
+                                    value={counterPrice}
+                                    onChange={(e) => setCounterPrice(e.target.value)}
+                                    placeholder="Counter amount"
+                                    style={{ height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px' }}
+                                />
+                                <input
+                                    className="input-dark"
+                                    value={counterMessage}
+                                    onChange={(e) => setCounterMessage(e.target.value)}
+                                    placeholder="Add a message for the influencer"
+                                    style={{ height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px' }}
+                                />
+                            </div>
+                            <button
+                                onClick={submitBrandCounter}
+                                disabled={submittingCounter}
+                                style={{ padding: '10px 16px', borderRadius: '10px', background: '#facc15', color: '#3b2f05', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+                                {submittingCounter ? <Loader2 size={14} className="spin" /> : <AlertCircle size={14} />}
+                                Send Counter
                             </button>
                         </div>
                     </div>

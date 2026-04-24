@@ -316,7 +316,7 @@ exports.respondToRequest = async (req, res, next) => {
 exports.brandRespondToRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { status, agreedPrice, brandMessage, rejectionReason } = req.body;
+        const { status, agreedPrice, brandMessage, rejectionReason, counterOfferPrice, counterOfferMessage } = req.body;
 
         if (!isValidObjectId(id)) {
             return res.status(400).json({ success: false, message: 'Invalid request ID' });
@@ -340,15 +340,21 @@ exports.brandRespondToRequest = async (req, res, next) => {
         if (status === 'deal_closed' || status === 'accepted') {
             request.status = 'deal_closed';
             request.dealClosedAt = new Date();
-            if (agreedPrice) request.agreedPrice = agreedPrice;
+            if (agreedPrice != null) request.agreedPrice = Number(agreedPrice);
+            if (counterOfferPrice != null) request.agreedPrice = Number(counterOfferPrice);
+            request.counterOfferPrice = undefined;
+            request.counterOfferMessage = undefined;
         } else if (status === 'rejected' || status === 'cancelled') {
             request.status = 'cancelled';
             request.cancelledAt = new Date();
             request.rejectionReason = rejectionReason || '';
         } else if (status === 'negotiation') {
             request.negotiationStartedAt = new Date();
-            if (agreedPrice) request.agreedPrice = agreedPrice;
-            if (brandMessage) request.brandMessage = brandMessage;
+            if (counterOfferPrice == null || Number.isNaN(Number(counterOfferPrice))) {
+                return res.status(400).json({ success: false, message: 'Counter offer price is required' });
+            }
+            request.counterOfferPrice = Number(counterOfferPrice);
+            request.counterOfferMessage = counterOfferMessage || brandMessage || '';
         }
 
         await request.save();
@@ -381,6 +387,8 @@ exports.brandRespondToRequest = async (req, res, next) => {
             senderAvatar: request.brandLogoUrl,
             metadata: {
                 agreedPrice,
+                counterOfferPrice,
+                counterOfferMessage,
                 brandMessage,
                 rejectionReason,
             },
