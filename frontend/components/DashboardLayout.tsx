@@ -28,7 +28,6 @@ const brandNav = [
 const influencerNav = [
     { label: 'Overview', href: '/dashboard/influencer', icon: <LayoutDashboard size={17} /> },
     { label: 'My Profile', href: '/dashboard/influencer/profile', icon: <UserCircle size={17} /> },
-    { label: 'Requests', href: '/dashboard/influencer/requests', icon: <Inbox size={17} /> },
     { label: 'Analytics', href: '/dashboard/influencer/analytics', icon: <BarChart3 size={17} /> },
     { label: 'Collaborations', href: '/dashboard/influencer/collaborations', icon: <Briefcase size={17} /> },
 ];
@@ -131,7 +130,7 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                         <div key={n._id}
                             onClick={() => {
                                 if (!n.isRead) onMarkRead(n._id);
-                                if (role === 'influencer') router.push('/dashboard/influencer/requests');
+                                if (role === 'influencer') router.push('/dashboard/influencer/collaborations');
                                 else router.push('/dashboard/brand/collaborations');
                                 onClose();
                             }}
@@ -280,7 +279,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <span style={{ flexShrink: 0, color: isActive ? '#7B3FF2' : '#738196' }}>{item.icon}</span>
                                  {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
                                 {/* Show unread count on primary action items */}
-                                {(item.label === 'Requests' || item.label === 'Collaborations') && unreadCount > 0 && (
+                                {item.label === 'Collaborations' && unreadCount > 0 && (
                                     <span style={{
                                         position: collapsed ? 'absolute' : 'relative',
                                         top: collapsed ? '4px' : 'auto',

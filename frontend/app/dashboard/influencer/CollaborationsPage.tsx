@@ -9,6 +9,7 @@ import {
 import { influencerAPI } from '@/lib/api';
 import { useCollaborationUpdates } from '@/lib/useSocket';
 import toast from 'react-hot-toast';
+import RequestsBoard from './RequestsBoard';
 
 type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'verified' | 'paid';
 
@@ -52,208 +53,6 @@ function SectionHeader({ title, count }: { title: string; count?: number }) {
             <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT, marginBottom: '3px' }}>{title}</h2>
             {count !== undefined && (
                 <p style={{ fontSize: '12px', color: MUTED }}>{count} item{count !== 1 ? 's' : ''}</p>
-            )}
-        </div>
-    );
-}
-
-/* ─── PENDING REQUESTS ─── */
-function PendingRequests({ onChanged }: { onChanged: () => void }) {
-    const [requests, setRequests] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-    const [acting, setActing] = useState<string | null>(null);
-    const [expanded, setExpanded] = useState<string | null>(null);
-    const [submitOpen, setSubmitOpen] = useState<string | null>(null);
-    const [counterOpen, setCounterOpen] = useState<string | null>(null);
-    const [counterPrice, setCounterPrice] = useState('');
-    const [counterMsg, setCounterMsg] = useState('');
-    const [agreedTerms, setAgreedTerms] = useState<Record<string, boolean>>({});
-    const [submitting, setSubmitting] = useState(false);
-
-    const load = () => {
-        influencerAPI.getRequests({ status: 'pending' })
-            .then(res => {
-                if (!res.data || typeof res.data !== 'object') {
-                    throw new Error('Invalid API response format');
-                }
-                setRequests(res.data.requests || []);
-                setError(null);
-                setLastUpdated(new Date());
-            })
-            .catch(err => {
-                const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load pending requests';
-                console.error('Failed to load pending requests:', err);
-                setError(errorMsg);
-                if (loading) toast.error(errorMsg);
-            })
-            .finally(() => setLoading(false));
-    };
-
-    useEffect(() => {
-        load();
-        // Fallback polling every 30s (reduced from 10s)
-        const intervalId = setInterval(load, 30000);
-        return () => clearInterval(intervalId);
-    }, []);
-
-    const respond = async (id: string, status: 'accepted' | 'rejected' | 'negotiation', additional: any = {}) => {
-        if (status === 'accepted' && !agreedTerms[id]) {
-            toast.error('You must agree to the Terms & Conditions and Payment Policy to accept.');
-            return;
-        }
-
-        setActing(id);
-        try {
-            await influencerAPI.respondToRequest(id, { status, ...additional });
-            toast.success(status === 'accepted' ? '✅ Collaboration accepted!' : status === 'negotiation' ? 'Counter offer sent!' : 'Request declined');
-            setCounterOpen(null);
-            setCounterPrice('');
-            setCounterMsg('');
-            load();
-            onChanged();
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to respond');
-        } finally {
-            setActing(null);
-        }
-    };
-
-    if (loading) return <div style={{ textAlign: 'center', padding: '40px', color: MUTED }}><Loader2 size={28} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} /></div>;
-
-    return (
-        <div style={{ marginBottom: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <SectionHeader title="Pending Requests" count={requests.length} />
-                {lastUpdated && <p style={{ fontSize: '11px', color: MUTED }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
-            </div>
-            {error && (
-                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
-                    <div>
-                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
-                        <p style={{ fontSize: '11px', color: MUTED, marginTop: '2px' }}>{error}</p>
-                    </div>
-                </div>
-            )}
-            {requests.length === 0 ? (
-                error ? (
-                    <EmptyState icon={<AlertCircle size={40} />} title="Unable to Load Requests" subtitle="Please check your connection and try again." />
-                ) : (
-                    <EmptyState icon={<Clock size={40} />} title="No Pending Requests" subtitle="Brands will send campaign requests here. Check back later." />
-                )
-            ) : (
-                <AnimatePresence>
-                    {requests.map((r, i) => {
-                        const brand = r.brandId;
-                        const initials = (brand?.companyName || '?')[0].toUpperCase();
-                        const isOpen = expanded === r._id;
-                        return (
-                            <motion.div key={r._id} layout initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }}
-                                transition={{ delay: i * 0.06, duration: 0.32 }}
-                                className="glass-card" style={{ borderRadius: '26px', marginBottom: '12px', overflow: 'hidden', border: `1px solid ${BORDER}` }}>
-                                {/* Header row */}
-                                <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}
-                                    onClick={() => setExpanded(isOpen ? null : r._id)}>
-                                    <div style={{ width: '46px', height: '46px', borderRadius: '13px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', flexShrink: 0 }}>{initials}</div>
-                                    <div style={{ flex: 1, minWidth: '130px' }}>
-                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: TEXT, marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '12px', color: MUTED }}>{brand?.companyName || 'Brand'} · {brand?.industry || ''}</p>
-                                    </div>
-                                    <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#a78bfa', filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.45))' }}>
-                                        ${r.agreedPrice?.toLocaleString()}
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
-                                        <Calendar size={11} style={{ color: '#60d5f8' }} />
-                                        Due {new Date(r.postingDeadline).toLocaleDateString()}
-                                    </div>
-                                    <div style={{ fontSize: '11px', color: MUTED, padding: '3px 9px', borderRadius: '7px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-                                        <FileText size={10} style={{ display: 'inline', marginRight: '4px' }} />{isOpen ? 'Hide ▲' : 'Brief ▼'}
-                                    </div>
-                                </div>
-                                {/* Brief */}
-                                {isOpen && (
-                                    <div style={{ padding: '0 24px 18px', borderTop: `1px solid ${BORDER}` }}>
-                                        <div style={{ paddingTop: '14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '9px', marginBottom: '12px' }}>
-                                            {[
-                                                { label: 'Deliverables', val: r.deliverables },
-                                                { label: 'Required Elements', val: r.requiredElements },
-                                                { label: 'Video Length', val: r.videoLength },
-                                                { label: 'Hashtags', val: r.hashtags || '—' },
-                                                { label: 'Payment Terms', val: '50% advance before campaign starts, 50% after deliverables are verified' },
-                                                { label: 'Disclosure', val: r.disclosureRequirements },
-                                            ].map(f => (
-                                                <div key={f.label} style={{ padding: '9px 12px', borderRadius: '10px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-                                                    <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>{f.label}</p>
-                                                    <p style={{ fontSize: '13px', color: TEXT }}>{f.val}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {r.campaignDescription && (
-                                            <div style={{ padding: '10px 13px', borderRadius: '10px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, marginBottom: '10px' }}>
-                                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Description</p>
-                                                <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.65' }}>{r.campaignDescription}</p>
-                                            </div>
-                                        )}
-
-                                        {/* T&C Checkbox for Acceptance */}
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedTerms[r._id] ? 'rgba(74,222,128,0.05)' : SURFACE_ALT, border: `1px solid ${agreedTerms[r._id] ? 'rgba(74,222,128,0.3)' : BORDER}`, cursor: 'pointer', transition: 'all 200ms ease', marginBottom: '16px' }}>
-                                            <input type="checkbox" checked={!!agreedTerms[r._id]} onChange={e => setAgreedTerms(prev => ({ ...prev, [r._id]: e.target.checked }))} style={{ width: '16px', height: '16px', accentColor: '#7B3FF2', cursor: 'pointer' }} />
-                                            <span style={{ fontSize: '12px', color: agreedTerms[r._id] ? TEXT : MUTED }}>
-                                                I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: '#a78bfa', textDecoration: 'none' }}>Porchest Terms & Conditions</a> and standard Payment Policy
-                                            </span>
-                                        </label>
-
-                                        {/* Actions */}
-                                        <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
-                                            <button onClick={() => respond(r._id, 'accepted')} disabled={!!acting || !agreedTerms[r._id]}
-                                                style={{ flex: 1, padding: '11px', borderRadius: '13px', background: acting === r._id ? 'rgba(123,63,242,0.15)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: (acting || !agreedTerms[r._id]) ? 'not-allowed' : 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: (acting || !agreedTerms[r._id]) ? 'none' : '0 0 20px rgba(123,63,242,0.3)', opacity: (acting || !agreedTerms[r._id]) ? 0.6 : 1 }}>
-                                                <CheckCircle size={13} /> Accept
-                                            </button>
-                                            <button onClick={() => { setCounterOpen(counterOpen === r._id ? null : r._id); setCounterPrice(r.agreedPrice?.toString() || ''); }} disabled={!!acting}
-                                                style={{ flex: 1, padding: '11px', borderRadius: '13px', background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.3)', color: '#facc15', fontFamily: 'inherit', fontSize: '13px', fontWeight: '700', cursor: acting ? 'wait' : 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                                                Counter Offer
-                                            </button>
-                                            <button onClick={() => respond(r._id, 'rejected')} disabled={!!acting}
-                                                style={{ flex: 1, padding: '11px 18px', borderRadius: '13px', background: 'transparent', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171', fontFamily: 'inherit', fontSize: '13px', fontWeight: '600', cursor: acting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 200ms ease' }}>
-                                                <X size={13} /> Decline
-                                            </button>
-                                        </div>
-
-                                        {/* Counter Offer Form */}
-                                        <AnimatePresence>
-                                            {counterOpen === r._id && (
-                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                                                    style={{ overflow: 'hidden', marginTop: '12px' }}>
-                                                    <div style={{ padding: '16px', borderRadius: '14px', background: '#fffbeb', border: '1px solid rgba(250,204,21,0.2)' }}>
-                                                        <p style={{ fontSize: '12px', color: '#facc15', fontWeight: '700', marginBottom: '10px' }}>Propose New Terms</p>
-                                                        <div style={{ display: 'grid', gap: '10px' }}>
-                                                            <div>
-                                                                <label style={{ display: 'block', fontSize: '11px', color: MUTED, marginBottom: '4px' }}>Counter Price (USD)</label>
-                                                                <input type="number" value={counterPrice} onChange={e => setCounterPrice(e.target.value)}
-                                                                    placeholder="e.g. 500" style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
-                                                            </div>
-                                                            <div>
-                                                                <label style={{ display: 'block', fontSize: '11px', color: MUTED, marginBottom: '4px' }}>Message to Brand</label>
-                                                                <textarea value={counterMsg} onChange={e => setCounterMsg(e.target.value)}
-                                                                    placeholder="Explain your counter offer..." rows={2} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
-                                                            </div>
-                                                            <button onClick={() => respond(r._id, 'negotiation', { counterOfferPrice: Number(counterPrice), counterOfferMessage: counterMsg })} disabled={!!acting || !counterPrice}
-                                                                style={{ padding: '11px', borderRadius: '10px', background: '#facc15', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: (acting || !counterPrice) ? 'wait' : 'pointer' }}>
-                                                                Send Counter Offer
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                )}
-                            </motion.div>
-                        );
-                    })}
-                </AnimatePresence>
             )}
         </div>
     );
@@ -492,7 +291,7 @@ export default function CollaborationsPage() {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <PendingRequests onChanged={() => setRefreshTrigger(p => p + 1)} />
+            <RequestsBoard onChanged={() => setRefreshTrigger(p => p + 1)} />
             <ActiveCollaborations refresh={refreshTrigger} />
             <CompletedHistory />
         </motion.div>
