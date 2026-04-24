@@ -2,6 +2,7 @@ const User = require('../models/User');
 const CampaignRequest = require('../models/CampaignRequest');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
+const Notification = require('../models/Notification');
 const { generateUniqueCode } = require('../utils/generateCode');
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -30,6 +31,55 @@ async function removeRoleSpecificProfiles(user) {
     }
 
     await Promise.all(ops);
+}
+
+async function hardDeleteUserData(user) {
+    const brandProfiles = await BrandProfile.find({
+        $or: [
+            { userId: user._id },
+            ...(user.brandProfileId ? [{ _id: user.brandProfileId }] : []),
+        ],
+    }).select('_id');
+
+    const influencerProfiles = await InfluencerProfile.find({
+        $or: [
+            { userId: user._id },
+            ...(user.influencerProfileId ? [{ _id: user.influencerProfileId }] : []),
+        ],
+    }).select('_id');
+
+    const brandProfileIds = brandProfiles.map((profile) => profile._id);
+    const influencerProfileIds = influencerProfiles.map((profile) => profile._id);
+
+    const campaignRequests = await CampaignRequest.find({
+        $or: [
+            { brandUserId: user._id },
+            { influencerUserId: user._id },
+            ...(brandProfileIds.length ? [{ brandProfileId: { $in: brandProfileIds } }] : []),
+            ...(influencerProfileIds.length ? [{ influencerProfileId: { $in: influencerProfileIds } }] : []),
+        ],
+    }).select('_id');
+
+    const campaignRequestIds = campaignRequests.map((request) => request._id);
+
+    await Promise.all([
+        brandProfileIds.length
+            ? BrandProfile.deleteMany({ _id: { $in: brandProfileIds } })
+            : Promise.resolve(),
+        influencerProfileIds.length
+            ? InfluencerProfile.deleteMany({ _id: { $in: influencerProfileIds } })
+            : Promise.resolve(),
+        campaignRequestIds.length
+            ? CampaignRequest.deleteMany({ _id: { $in: campaignRequestIds } })
+            : Promise.resolve(),
+        Notification.deleteMany({
+            $or: [
+                { recipientUserId: user._id },
+                ...(campaignRequestIds.length ? [{ campaignRequestId: { $in: campaignRequestIds } }] : []),
+            ],
+        }),
+        User.deleteOne({ _id: user._id }),
+    ]);
 }
 
 async function ensureProfileForRole(user, role) {
@@ -220,8 +270,17 @@ exports.updateUserRole = async (req, res) => {
 /* ─── DELETE /api/admin/users/:id ────────────────────────── */
 exports.deleteUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findById(req.params.id).select('-password -otp -otpExpires');
         if (!user) return err(res, 'User not found', 404);
+
+        if (user.role === 'admin') {
+            const adminCount = await User.countDocuments({ role: 'admin' });
+            if (adminCount <= 1) {
+                return err(res, 'Cannot delete the last admin', 400);
+            }
+        }
+
+        await hardDeleteUserData(user);
         return ok(res, { message: 'User deleted' });
     } catch (e) {
         console.error('[Admin] deleteUser error:', e);

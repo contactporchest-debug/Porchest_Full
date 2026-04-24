@@ -15,6 +15,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '../backend/.en
 const app = require('../backend/app');
 const connectDB = require('../backend/config/db');
 const ensureAdminUser = require('../backend/utils/ensureAdminUser');
+const { ensureDemoInfluencers } = require('../backend/utils/ensureDemoInfluencers');
 
 // Cache the DB connection across warm serverless invocations
 let dbConnected = false;
@@ -24,6 +25,7 @@ module.exports = async (req, res) => {
         if (!dbConnected) {
             await connectDB();
             await ensureAdminUser();
+            await ensureDemoInfluencers();
             dbConnected = true;
         }
     } catch (err) {
