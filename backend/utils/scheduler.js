@@ -16,13 +16,14 @@ function initScheduler() {
         console.log(`[Scheduler] ⏳ Running Instagram auto-refresh job at ${new Date().toISOString()}`);
 
         try {
-            // Find Influencers that are connected and haven't synced their profile in 48 hours
-            const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-
             const influencerProfilesToSync = await InfluencerProfile.find({
                 instagramConnectionStatus: 'connected',
+                'sync.source': { $ne: 'Instagram Demo Dataset' },
                 'sync.longLivedToken': { $exists: true, $ne: null },
-                lastSyncAt: { $lte: fortyEightHoursAgo }
+                $or: [
+                    { nextScheduledRefreshAt: { $exists: true, $lte: new Date() } },
+                    { lastSyncAt: { $lte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+                ],
             });
 
             console.log(`[Scheduler] 🔄 Found ${influencerProfilesToSync.length} Influencer profile(s) to auto-refresh...`);
@@ -57,8 +58,45 @@ function initScheduler() {
                 await new Promise(res => setTimeout(res, 2000));
             }
 
-            // Optional: Repeat loop for Brands if necessary
-            // For now, limiting active sync mostly to influencer portfolios
+            const brandProfilesToSync = await BrandProfile.find({
+                instagramConnectionStatus: 'connected',
+                'sync.source': { $ne: 'Instagram Demo Dataset' },
+                'sync.longLivedToken': { $exists: true, $ne: null },
+                $or: [
+                    { nextScheduledRefreshAt: { $exists: true, $lte: new Date() } },
+                    { lastSyncedAt: { $lte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+                ],
+            });
+
+            console.log(`[Scheduler] 🔄 Found ${brandProfilesToSync.length} Brand profile(s) to auto-refresh...`);
+
+            for (const profile of brandProfilesToSync) {
+                try {
+                    console.log(`[Scheduler] Starting refresh for Brand ${profile.userId}`);
+
+                    if (profile.sync.tokenExpiresAt && profile.sync.tokenExpiresAt < new Date()) {
+                        console.log(`[Scheduler] ⚠️ Token expired for brand user ${profile.userId}`);
+                        profile.sync.refreshStatus = 'failed';
+                        profile.sync.refreshError = 'Token expired';
+                        profile.instagramConnectionStatus = 'token_expired';
+                        await profile.save();
+                        continue;
+                    }
+
+                    profile.sync.refreshStatus = 'syncing';
+                    await profile.save();
+
+                    await syncService.runFullSync(profile.userId, 'brand', profile.sync.longLivedToken);
+                    console.log(`[Scheduler] ✅ Successfully refreshed Brand ${profile.userId}`);
+                } catch (syncError) {
+                    console.error(`[Scheduler] ❌ Failed to refresh Brand ${profile.userId}:`, syncError.message);
+                    profile.sync.refreshStatus = 'failed';
+                    profile.sync.refreshError = syncError.message;
+                    await profile.save();
+                }
+
+                await new Promise(res => setTimeout(res, 2000));
+            }
 
             console.log(`[Scheduler] 🏁 Auto-refresh job completed.`);
         } catch (error) {

@@ -46,7 +46,7 @@ exports.runFullSync = async (userId, role, accessToken) => {
     // 2. Fetch audience demographics from Meta API
     const audienceData = await meta.fetchAudienceDemographics(accessToken, igUserId);
 
-    // 3. Fetch media (limit to 30 for performance, keeping recent only as per rules)
+    // 3. Fetch all available media within the last 60 days
     const mediaList = await meta.fetchMediaList(accessToken, igUserId);
     
     // We optionally extract comments/insights for the top 5 recent posts to compute rich metrics,
@@ -80,8 +80,8 @@ exports.runFullSync = async (userId, role, accessToken) => {
     const metrics = meta.computeDerivedMetrics(profile, mediaList, existingProfile);
     const followersCount = profile.followers_count || 0;
 
-    // Build the Recent Media Summary block (save only top 12 posts)
-    const recentMediaSummary = mediaList.slice(0, 12).map(m => ({
+    // Persist the full 60-day media window so analytics can score every eligible post
+    const recentMediaSummary = mediaList.map(m => ({
         mediaId: m.id,
         mediaUrl: m.media_url,
         permalink: m.permalink,
@@ -114,7 +114,7 @@ exports.runFullSync = async (userId, role, accessToken) => {
         
         lastSyncAt:            new Date(),
         lastAnalyticsRefreshAt: new Date(),
-        nextScheduledRefreshAt: new Date(Date.now() + 48 * 60 * 60 * 1000), // Next refresh in 48h
+        nextScheduledRefreshAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Next refresh in 24h
         
         'sync.refreshStatus':  'success',
         'sync.refreshError':   null,

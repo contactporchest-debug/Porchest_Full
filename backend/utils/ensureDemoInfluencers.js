@@ -8,17 +8,31 @@ const DEMO_PASSWORD = 'demo_porchest';
 const now = new Date();
 const daysAgo = (days) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-const makeRecentMedia = (items) =>
-    items.map((item, index) => ({
-        mediaId: item.mediaId,
-        mediaUrl: item.mediaUrl,
-        permalink: item.permalink,
-        mediaType: item.mediaType,
-        caption: item.caption,
-        likeCount: item.likeCount,
-        commentsCount: item.commentsCount,
-        timestamp: daysAgo(index + 2),
-    }));
+const buildSixtyDayMediaWindow = (items, options = {}) => {
+    const targetCount = options.targetCount || 24;
+    const intervalDays = options.intervalDays || 2;
+    const media = [];
+
+    for (let index = 0; index < targetCount; index += 1) {
+        const template = items[index % items.length];
+        const cycle = Math.floor(index / items.length);
+        const engagementShift = 1 + (((index % 5) - 2) * 0.035);
+        const daysBack = Math.min(59, 2 + (index * intervalDays));
+
+        media.push({
+            mediaId: `${template.mediaId}-${index + 1}`,
+            mediaUrl: template.mediaUrl,
+            permalink: `${template.permalink}-${index + 1}`,
+            mediaType: template.mediaType,
+            caption: cycle === 0 ? template.caption : `${template.caption} Update ${cycle + 1}.`,
+            likeCount: Math.max(0, Math.round((template.likeCount || 0) * engagementShift)),
+            commentsCount: Math.max(0, Math.round((template.commentsCount || 0) * (1 + (((index % 4) - 1.5) * 0.04)))),
+            timestamp: daysAgo(daysBack),
+        });
+    }
+
+    return media.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+};
 
 const DEMO_INFLUENCERS = [
     {
@@ -49,7 +63,7 @@ const DEMO_INFLUENCERS = [
         avgCommentsPerPost: 182,
         avgEngagementPerPost: 4296,
         likeToCommentRatio: 21.7,
-        postsAnalyzed: 30,
+        postsAnalyzed: 24,
         influencerEfficiencyRate: 51.02,
         postingFrequency: 4,
         postingFrequency7d: 4,
@@ -73,7 +87,7 @@ const DEMO_INFLUENCERS = [
             languages: { English: 57, Urdu: 38, Arabic: 5 },
             audienceType: 'Women interested in beauty and premium modest fashion',
         },
-        recentMediaSummary: makeRecentMedia([
+        recentMediaSummary: buildSixtyDayMediaWindow([
             { mediaId: 'ak-1', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ak-1', caption: 'Neutral-toned Eid edit with styling details.', likeCount: 4410, commentsCount: 218 },
             { mediaId: 'ak-2', mediaType: 'IMAGE', mediaUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ak-2', caption: 'Silk textures and gold accents for evening wear.', likeCount: 3895, commentsCount: 174 },
             { mediaId: 'ak-3', mediaType: 'CAROUSEL_ALBUM', mediaUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ak-3', caption: '3 outfit formulas for polished brand shoots.', likeCount: 3620, commentsCount: 141 },
@@ -110,7 +124,7 @@ const DEMO_INFLUENCERS = [
         avgCommentsPerPost: 241,
         avgEngagementPerPost: 6669,
         likeToCommentRatio: 25.81,
-        postsAnalyzed: 30,
+        postsAnalyzed: 24,
         influencerEfficiencyRate: 52.72,
         postingFrequency: 5,
         postingFrequency7d: 5,
@@ -134,7 +148,7 @@ const DEMO_INFLUENCERS = [
             languages: { English: 61, Urdu: 34, Arabic: 5 },
             audienceType: 'Young professionals and gym beginners seeking practical fitness guidance',
         },
-        recentMediaSummary: makeRecentMedia([
+        recentMediaSummary: buildSixtyDayMediaWindow([
             { mediaId: 'hs-1', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/hs-1', caption: 'Upper-body session with tempo-focused reps.', likeCount: 6912, commentsCount: 256 },
             { mediaId: 'hs-2', mediaType: 'CAROUSEL_ALBUM', mediaUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/hs-2', caption: 'Macro-friendly meal ideas for busy weekdays.', likeCount: 5780, commentsCount: 217 },
             { mediaId: 'hs-3', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/hs-3', caption: 'Mobility routine to fix stiff hips.', likeCount: 6488, commentsCount: 244 },
@@ -171,7 +185,7 @@ const DEMO_INFLUENCERS = [
         avgCommentsPerPost: 119,
         avgEngagementPerPost: 2741,
         likeToCommentRatio: 20.84,
-        postsAnalyzed: 30,
+        postsAnalyzed: 24,
         influencerEfficiencyRate: 40.73,
         postingFrequency: 4,
         postingFrequency7d: 3,
@@ -195,7 +209,7 @@ const DEMO_INFLUENCERS = [
             languages: { English: 58, Arabic: 37, Hindi: 5 },
             audienceType: 'Affluent women interested in home refreshes, hosting, and premium lifestyle products',
         },
-        recentMediaSummary: makeRecentMedia([
+        recentMediaSummary: buildSixtyDayMediaWindow([
             { mediaId: 'ma-1', mediaType: 'CAROUSEL_ALBUM', mediaUrl: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ma-1', caption: 'Warm-neutral dining setup for Ramadan hosting.', likeCount: 2810, commentsCount: 128 },
             { mediaId: 'ma-2', mediaType: 'IMAGE', mediaUrl: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ma-2', caption: 'Morning light in the reading corner.', likeCount: 2366, commentsCount: 101 },
             { mediaId: 'ma-3', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ma-3', caption: 'Kitchen counter reset in under 20 minutes.', likeCount: 2694, commentsCount: 117 },
@@ -232,7 +246,7 @@ const DEMO_INFLUENCERS = [
         avgCommentsPerPost: 166,
         avgEngagementPerPost: 3963,
         likeToCommentRatio: 21.75,
-        postsAnalyzed: 30,
+        postsAnalyzed: 24,
         influencerEfficiencyRate: 42.03,
         postingFrequency: 4,
         postingFrequency7d: 4,
@@ -256,7 +270,7 @@ const DEMO_INFLUENCERS = [
             languages: { English: 69, Urdu: 24, Hindi: 7 },
             audienceType: 'Tech-forward buyers comparing gadgets and creator tools before purchase',
         },
-        recentMediaSummary: makeRecentMedia([
+        recentMediaSummary: buildSixtyDayMediaWindow([
             { mediaId: 'ns-1', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ns-1', caption: 'Best creator mic under a mid-range budget.', likeCount: 3848, commentsCount: 171 },
             { mediaId: 'ns-2', mediaType: 'CAROUSEL_ALBUM', mediaUrl: 'https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ns-2', caption: 'Three laptops I would actually recommend in 2026.', likeCount: 3494, commentsCount: 149 },
             { mediaId: 'ns-3', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/ns-3', caption: 'Desk setup cable management in one hour.', likeCount: 4012, commentsCount: 188 },
@@ -293,7 +307,7 @@ const DEMO_INFLUENCERS = [
         avgCommentsPerPost: 143,
         avgEngagementPerPost: 3101,
         likeToCommentRatio: 19.3,
-        postsAnalyzed: 30,
+        postsAnalyzed: 24,
         influencerEfficiencyRate: 53.37,
         postingFrequency: 4,
         postingFrequency7d: 4,
@@ -317,7 +331,7 @@ const DEMO_INFLUENCERS = [
             languages: { English: 55, Urdu: 41, Punjabi: 4 },
             audienceType: 'Urban food lovers looking for trusted recipes and premium kitchen recommendations',
         },
-        recentMediaSummary: makeRecentMedia([
+        recentMediaSummary: buildSixtyDayMediaWindow([
             { mediaId: 'si-1', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/si-1', caption: 'Creamy pistachio dessert cups for small gatherings.', likeCount: 2980, commentsCount: 151 },
             { mediaId: 'si-2', mediaType: 'CAROUSEL_ALBUM', mediaUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/si-2', caption: 'Three brunch plates guests always ask for.', likeCount: 2712, commentsCount: 136 },
             { mediaId: 'si-3', mediaType: 'VIDEO', mediaUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1200&q=80', permalink: 'https://instagram.com/p/si-3', caption: 'Cafe-style iced latte at home.', likeCount: 3225, commentsCount: 168 },
@@ -404,7 +418,7 @@ async function upsertDemoInfluencerAccount(config) {
         isSearchable: true,
         lastSyncAt: now,
         lastAnalyticsRefreshAt: now,
-        nextScheduledRefreshAt: daysAgo(-20),
+        nextScheduledRefreshAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
         followersCount: config.followersCount,
         followingCount: config.followingCount,
         mediaCount: config.mediaCount,
@@ -421,7 +435,7 @@ async function upsertDemoInfluencerAccount(config) {
         avgCommentsPerPost: config.avgCommentsPerPost,
         avgEngagementPerPost: config.avgEngagementPerPost,
         likeToCommentRatio: config.likeToCommentRatio,
-        postsAnalyzed: config.postsAnalyzed,
+        postsAnalyzed: config.recentMediaSummary.length,
         influencerEfficiencyRate: config.influencerEfficiencyRate,
         postingFrequency: config.postingFrequency,
         postingFrequency7d: config.postingFrequency7d,

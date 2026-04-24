@@ -244,24 +244,46 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
 // ─── Media Fetch ─────────────────────────────────────────────────
 
 /**
- * Fetch recent media list (up to 25 most recent).
+ * Fetch all recent media within the last 60 days.
+ * Traverses Graph pagination until the cutoff is reached or no more pages exist.
  * Returns [] if permissions are missing or fetch fails (non-fatal).
  */
 exports.fetchMediaList = async (accessToken, igUserId) => {
     const fields = 'id,caption,media_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
     const base = igUserId.startsWith('1784') ? FB_GRAPH_BASE : GRAPH_BASE; // 1784 is typical for IG Business IDs on FB Graph
-    const url = `${base}/${igUserId}/media?fields=${fields}&limit=25&access_token=${accessToken}`;
+    const cutoffTime = Date.now() - (60 * 24 * 60 * 60 * 1000);
+    let url = `${base}/${igUserId}/media?fields=${fields}&limit=100&access_token=${accessToken}`;
+    const media = [];
+
     try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!res.ok || data.error) {
-            console.warn('[metaOAuth] Media fetch failed:', data.error?.message);
-            return [];
+        while (url) {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                console.warn('[metaOAuth] Media fetch failed:', data.error?.message);
+                return media;
+            }
+
+            const pageItems = Array.isArray(data.data) ? data.data : [];
+            let reachedCutoff = false;
+
+            for (const item of pageItems) {
+                const timestamp = item?.timestamp ? new Date(item.timestamp).getTime() : null;
+                if (timestamp && timestamp < cutoffTime) {
+                    reachedCutoff = true;
+                    continue;
+                }
+                media.push(item);
+            }
+
+            if (reachedCutoff) break;
+            url = data?.paging?.next || null;
         }
-        return data.data || [];
+
+        return media;
     } catch (err) {
         console.warn('[metaOAuth] Media fetch exception:', err.message);
-        return [];
+        return media;
     }
 };
 

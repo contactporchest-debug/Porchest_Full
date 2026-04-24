@@ -55,6 +55,7 @@ type Metrics = {
     followers: number;
     previousFollowers: number;
     totalPosts: number;
+    postsAnalyzed?: number;
     totalViews: number;
     likes: number;
     comments: number;
@@ -300,6 +301,12 @@ export default function AnalyticsPage() {
             value: fmtNumber(metrics.averageViews),
             tone: COLORS.teal,
             formula: 'totalViews / totalPosts',
+        },
+        {
+            label: 'Posts Analyzed (60d)',
+            value: fmtNumber(metrics.postsAnalyzed ?? metrics.totalPosts),
+            tone: COLORS.slate,
+            formula: 'Every available post within the last 60 days is included in the analytics calculation.',
         },
         {
             label: 'View Rate',

@@ -25,6 +25,7 @@ const { ObjectId } = mongoose.Types;
 const toObjectId = (value) => (value instanceof ObjectId ? value : new ObjectId(value));
 
 const formatDateLabel = (value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const SIXTY_DAYS_IN_MS = 60 * 24 * 60 * 60 * 1000;
 
 function mapDemographicEntries(source) {
     if (!source || typeof source !== 'object') return [];
@@ -162,7 +163,13 @@ async function getCampaignPricingSummary(profile) {
 }
 
 function deriveMediaStats(profile) {
-    const media = Array.isArray(profile.recentMediaSummary) ? profile.recentMediaSummary : [];
+    const cutoffTime = Date.now() - SIXTY_DAYS_IN_MS;
+    const media = (Array.isArray(profile.recentMediaSummary) ? profile.recentMediaSummary : [])
+        .filter((item) => {
+            if (!item?.timestamp) return false;
+            const timestamp = new Date(item.timestamp).getTime();
+            return Number.isFinite(timestamp) && timestamp >= cutoffTime;
+        });
     const totalPosts = media.length;
     const totalViews = media.reduce((sum, item) => sum + Number(item.viewCount || item.videoViews || 0), 0);
     const likes = media.reduce((sum, item) => sum + Number(item.likeCount || 0), 0);
@@ -285,6 +292,7 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
         followers,
         previousFollowers,
         totalPosts: mediaStats.totalPosts,
+        postsAnalyzed: mediaStats.totalPosts,
         totalViews: mediaStats.totalViews,
         likes: mediaStats.likes,
         comments: mediaStats.comments,
