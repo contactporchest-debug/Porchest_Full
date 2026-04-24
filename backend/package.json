@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "create-admin": "node scripts/createAdmin.js",
     "create-demo-influencers": "node scripts/createDemoInfluencers.js",
+    "create-demo-brand": "node scripts/createDemoBrand.js",
     "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {

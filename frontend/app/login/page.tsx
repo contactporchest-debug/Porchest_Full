@@ -46,6 +46,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [loginError, setLoginError] = useState('');
     const [pendingGoogleToken, setPendingGoogleToken] = useState<string | null>(null);
     const [showRolePicker, setShowRolePicker] = useState(false);
     const [roleSubmitting, setRoleSubmitting] = useState<'brand' | 'influencer' | null>(null);
@@ -54,6 +55,7 @@ export default function LoginPage() {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoginError('');
         if (!email || !password) return toast.error('Enter email and password');
         setLoading(true);
         try {
@@ -63,7 +65,9 @@ export default function LoginPage() {
                 router.push(`/dashboard/${result.role}`);
             }
         } catch (err: unknown) {
-            toast.error((err as Error).message || 'Login failed');
+            const message = (err as Error).message || 'Login failed';
+            setLoginError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -201,6 +205,12 @@ export default function LoginPage() {
                             </div>
                         </div>
 
+                        {loginError && (
+                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.18)', color: '#b42318', fontSize: '13px', fontWeight: 600 }}>
+                                {loginError}
+                            </div>
+                        )}
+
                         <GlowButton type="submit" fullWidth loading={loading} size="lg" style={{ marginTop: '6px' }}>
                             {!loading && <Zap size={15} />} Sign In
                         </GlowButton>
@@ -223,6 +233,24 @@ export default function LoginPage() {
                     </Link>
                 </p>
             </motion.div>
+
+            {loading && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(248,250,252,0.76)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 15 }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        style={{ width: '100%', maxWidth: '360px', borderRadius: '28px', background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(148,163,184,0.20)', boxShadow: '0 28px 70px rgba(15,23,42,0.12)', padding: '30px', textAlign: 'center' }}
+                    >
+                        <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', boxShadow: '0 14px 28px rgba(123,63,242,0.24)' }}>
+                            <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', animation: 'spin 0.8s linear infinite' }} />
+                        </div>
+                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '8px' }}>Signing You In</p>
+                        <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.6 }}>
+                            We&apos;re checking your credentials and preparing your Porchest workspace.
+                        </p>
+                    </motion.div>
+                </div>
+            )}
 
             {showRolePicker && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(248,250,252,0.82)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 20 }}>
