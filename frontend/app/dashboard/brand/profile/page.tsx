@@ -148,19 +148,6 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
 
     return (
         <SectionCard title="Brand Instagram Integration" icon={<Instagram size={16} />}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '11px', background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(131,58,180,0.4)', flexShrink: 0 }}>
-                    <Instagram size={17} style={{ color: '#fff' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#fff' }}>Meta / Instagram OAuth</p>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>Brand-specific connection — separate from influencer data</p>
-                </div>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '99px', fontSize: '11px', fontWeight: '700', background: isConn ? 'rgba(74,222,128,0.1)' : 'rgba(251,191,36,0.1)', border: `1px solid ${isConn ? 'rgba(74,222,128,0.3)' : 'rgba(251,191,36,0.3)'}`, color: isConn ? '#4ade80' : '#fbbf24' }}>
-                    {isConn ? <><Zap size={10} /> Connected</> : <><AlertCircle size={10} /> Not Connected</>}
-                </span>
-            </div>
 
             <AnimatePresence mode="wait">
                 {!isConn ? (
@@ -176,9 +163,9 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
                         <button onClick={handleConnect} disabled={connecting}
                             style={{ padding: '13px 32px', borderRadius: '99px', background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: connecting ? 'not-allowed' : 'pointer', opacity: connecting ? 0.7 : 1, display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 0 30px rgba(131,58,180,0.4)', fontFamily: 'inherit' }}>
                             {connecting ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Instagram size={16} />}
-                            {connecting ? 'Redirecting to Meta…' : 'Connect via Meta OAuth'}
+                            {connecting ? 'Connecting…' : 'Connect Instagram'}
                         </button>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', marginTop: '12px' }}>Porchest never stores your password. Tokens are server-side only.</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', marginTop: '12px' }}>Porchest never stores your password.</p>
                     </motion.div>
                 ) : (
                     <motion.div key="conn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
