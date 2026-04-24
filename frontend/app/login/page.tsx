@@ -155,9 +155,6 @@ export default function LoginPage() {
                             Por<span className="gradient-text">chest</span>
                         </span>
                     </Link>
-                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '32px', color: '#172033', letterSpacing: '-0.04em', marginBottom: '8px' }}>
-                        Sign in
-                    </h1>
                     <p style={{ fontSize: '15px', color: '#6b7688', lineHeight: 1.6 }}>
                         Sign in to manage campaigns, requests, and your Porchest workspace.
                     </p>
