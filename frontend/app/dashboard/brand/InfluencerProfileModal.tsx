@@ -120,6 +120,8 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const followers = profile?.followersCount  || instagram?.followersCount || 0;
     const baseEngagement = profile?.engagementRate || analytics?.engagementRate || 0;
     const igLink   = handle ? `https://instagram.com/${handle}` : '#';
+    const profileUserId = profile?.userId || influencer?.userId?._id || influencer?.userId || null;
+    const fullProfileHref = profileUserId ? `/dashboard/brand/influencers/${profileUserId}` : null;
     const bio      = profile?.instagramBiography || profile?.shortBio || instagram?.biography || 'No biography available.';
     const country  = profile?.countryOfResidence || null;
     const city     = profile?.city || null;
@@ -284,6 +286,32 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                             </div>
                             <p style={{ fontSize: '14px', color: MUTED, lineHeight: '1.7', marginBottom: '24px' }}>{bio}</p>
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                {fullProfileHref && (
+                                    <a
+                                        href={fullProfileHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            padding: '14px 20px',
+                                            borderRadius: '16px',
+                                            background: '#172033',
+                                            border: '1px solid rgba(23,32,51,0.1)',
+                                            color: '#fff',
+                                            fontSize: '14px',
+                                            fontWeight: '700',
+                                            textDecoration: 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            transition: 'transform 200ms ease',
+                                        }}
+                                        onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+                                        onMouseLeave={e => (e.currentTarget.style.transform = '')}
+                                    >
+                                        <ExternalLink size={15} /> View Full Profile
+                                    </a>
+                                )}
                                 <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(123,63,242,0.3)', transition: 'transform 200ms ease', fontFamily: 'inherit' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')} onMouseLeave={e => (e.currentTarget.style.transform = '')}>
                                     <Send size={15} /> Send Request
                                 </button>
