@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, Zap } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Zap, Building2, Star, ArrowRight } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const shellStyle: React.CSSProperties = {
@@ -46,6 +46,9 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [pendingGoogleToken, setPendingGoogleToken] = useState<string | null>(null);
+    const [showRolePicker, setShowRolePicker] = useState(false);
+    const [roleSubmitting, setRoleSubmitting] = useState<'brand' | 'influencer' | null>(null);
     const { login } = useAuth();
     const router = useRouter();
 
@@ -80,12 +83,6 @@ export default function LoginPage() {
                 localStorage.setItem('porchest_token', data.token);
                 localStorage.setItem('porchest_user', JSON.stringify(data.user));
                 window.location.href = data.user?.role ? `/dashboard/${data.user.role}` : '/dashboard/brand';
-            } else {
-                toast.error(data.message || 'Google Auth failed');
-                if (data.message && data.message.includes('Role is required')) {
-                    toast.error('You do not have an account. Please sign up to choose a role.');
-                    router.push('/signup');
-                }
             }
         } catch (err: any) {
             const message =
@@ -93,9 +90,48 @@ export default function LoginPage() {
                 (typeof err?.response?.data === 'string' ? err.response.data : null) ||
                 err?.message ||
                 'Google auth error';
-            toast.error(message);
+            if (message.includes('Role is required')) {
+                setPendingGoogleToken(idToken);
+                setShowRolePicker(true);
+                toast('Choose how you want to use Porchest to finish creating your account.', { icon: '🪄' });
+            } else {
+                toast.error(message);
+            }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGoogleRoleSelect = async (role: 'brand' | 'influencer') => {
+        if (!pendingGoogleToken) {
+            toast.error('Your Google session expired. Please try Google sign in again.');
+            setShowRolePicker(false);
+            return;
+        }
+
+        try {
+            setRoleSubmitting(role);
+            const { data } = await authAPI.googleAuth({ idToken: pendingGoogleToken, role });
+            if (!data.success) {
+                toast.error(data.message || 'Google signup failed');
+                return;
+            }
+
+            localStorage.setItem('porchest_token', data.token);
+            localStorage.setItem('porchest_user', JSON.stringify(data.user));
+            setShowRolePicker(false);
+            setPendingGoogleToken(null);
+            toast.success(`Your ${role} account is ready!`);
+            window.location.href = `/dashboard/${data.user?.role || role}`;
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ||
+                (typeof err?.response?.data === 'string' ? err.response.data : null) ||
+                err?.message ||
+                'Google signup failed';
+            toast.error(message);
+        } finally {
+            setRoleSubmitting(null);
         }
     };
 
@@ -190,6 +226,84 @@ export default function LoginPage() {
                     </Link>
                 </p>
             </motion.div>
+
+            {showRolePicker && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(248,250,252,0.82)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', zIndex: 20 }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+                        style={{ width: '100%', maxWidth: '560px', borderRadius: '30px', background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(148,163,184,0.20)', boxShadow: '0 28px 70px rgba(15,23,42,0.12)', padding: '34px' }}
+                    >
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(123,63,242,0.08)', color: '#7B3FF2', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '14px' }}>
+                                New Google Account
+                            </div>
+                            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '28px', color: '#172033', letterSpacing: '-0.04em', marginBottom: '8px' }}>
+                                Choose Your Role
+                            </h2>
+                            <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.65 }}>
+                                Your Google account is verified. Pick how you want to use Porchest and we’ll create the right account instantly.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '20px' }}>
+                            <button
+                                type="button"
+                                onClick={() => handleGoogleRoleSelect('brand')}
+                                disabled={!!roleSubmitting}
+                                style={{ textAlign: 'left', padding: '22px', borderRadius: '22px', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', border: '1px solid rgba(148,163,184,0.24)', cursor: roleSubmitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                                    <Building2 size={20} />
+                                </div>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '18px', color: '#172033', marginBottom: '6px' }}>Brand</p>
+                                <p style={{ fontSize: '13px', color: '#667085', lineHeight: 1.6, marginBottom: '14px' }}>
+                                    Find influencers, send collaboration requests, and manage campaigns.
+                                </p>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#7B3FF2', fontSize: '13px', fontWeight: 700 }}>
+                                    Continue as Brand <ArrowRight size={14} />
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => handleGoogleRoleSelect('influencer')}
+                                disabled={!!roleSubmitting}
+                                style={{ textAlign: 'left', padding: '22px', borderRadius: '22px', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', border: '1px solid rgba(148,163,184,0.24)', cursor: roleSubmitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(14,165,233,0.10)', color: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                                    <Star size={20} />
+                                </div>
+                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '18px', color: '#172033', marginBottom: '6px' }}>Influencer</p>
+                                <p style={{ fontSize: '13px', color: '#667085', lineHeight: 1.6, marginBottom: '14px' }}>
+                                    Build your profile, get discovered by brands, and manage paid collaborations.
+                                </p>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0ea5e9', fontSize: '13px', fontWeight: 700 }}>
+                                    Continue as Influencer <ArrowRight size={14} />
+                                </span>
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowRolePicker(false);
+                                    setPendingGoogleToken(null);
+                                }}
+                                disabled={!!roleSubmitting}
+                                style={{ background: 'none', border: 'none', color: '#667085', fontSize: '13px', fontWeight: 600, cursor: roleSubmitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                                Cancel
+                            </button>
+                            <p style={{ fontSize: '12px', color: '#7a8798' }}>
+                                {roleSubmitting ? `Creating your ${roleSubmitting} account...` : 'You can complete the rest of your profile after this step.'}
+                            </p>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </main>
     );
 }
