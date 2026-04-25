@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Megaphone, Clock, CheckCircle, XCircle, DollarSign, ArrowRight, Loader2, FileText, AlertCircle, ChevronRight } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -16,12 +17,16 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function OverviewPage() {
     const router = useRouter();
+    const { user, token, loading: authLoading } = useAuth();
     const [requests, setRequests] = useState<any[]>([]);
     const [verifications, setVerifications] = useState<any[]>([]);
     const [profileComplete, setProfileComplete] = useState<boolean>(true);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading || user?.role !== 'brand' || !token) return;
+
+        setLoading(true);
         Promise.all([
             brandAPI.getRequests(),
             brandAPI.getBrandVerifications(),
@@ -32,7 +37,7 @@ export default function OverviewPage() {
             setProfileComplete(dashRes.data.dashboard.profileComplete);
         }).catch(() => toast.error('Failed to load dashboard'))
             .finally(() => setLoading(false));
-    }, []);
+    }, [authLoading, token, user?.role]);
 
     // Derive campaign states from actual stored request statuses
     const pending = requests.filter(r => ['sent', 'viewed', 'negotiation'].includes(r.status));
@@ -55,7 +60,7 @@ export default function OverviewPage() {
 
     const runningPreview = [...accepted, ...completed].slice(0, 5);
 
-    if (loading) return (
+    if (authLoading || loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
             <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
         </div>

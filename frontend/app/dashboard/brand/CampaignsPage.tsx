@@ -6,6 +6,7 @@ import {
     XCircle, Link2, ChevronDown, ChevronUp, Search, Eye, AlertCircle, PlayCircle,
 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCollaborationUpdates } from '@/lib/useSocket';
@@ -243,6 +244,7 @@ function CampaignDetail({ request, verifications }: { request: any; verification
 
 export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) {
     const router = useRouter();
+    const { user, token, loading: authLoading } = useAuth();
     const [requests, setRequests] = useState<any[]>([]);
     const [verifications, setVerifications] = useState<any[]>([]);
     const [filter, setFilter] = useState<Filter>('all');
@@ -254,6 +256,8 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
 
     const fetchData = useCallback(async () => {
+        if (authLoading || user?.role !== 'brand' || !token) return;
+
         try {
             const [requestsRes, verificationsRes] = await Promise.all([
                 brandAPI.getRequests(),
@@ -278,7 +282,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         } finally {
             setLoading(false);
         }
-    }, [loading]);
+    }, [authLoading, loading, token, user?.role]);
 
     // Listen for real-time collaboration updates
     useCollaborationUpdates(useCallback(async (_data: any) => {
@@ -287,11 +291,14 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     }, [fetchData]));
 
     useEffect(() => {
+        if (authLoading || user?.role !== 'brand' || !token) return;
+
+        setLoading(true);
         fetchData();
         // Fallback polling every 30s as backup (reduced from 10s for better performance)
         const intervalId = setInterval(fetchData, 30000);
         return () => clearInterval(intervalId);
-    }, [fetchData]);
+    }, [authLoading, fetchData, token, user?.role]);
 
     const filtered = requests.filter(r => {
         let matchFilter = false;
@@ -299,7 +306,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         else if (filter === 'pending') matchFilter = ['sent', 'viewed'].includes(r.status);
         else if (filter === 'negotiation') matchFilter = r.status === 'negotiation';
         else if (filter === 'accepted') matchFilter = ['accepted', 'deal_closed'].includes(r.status);
-        else if (filter === 'rejected') matchFilter = r.status === 'rejected';
+        else if (filter === 'rejected') matchFilter = ['rejected', 'cancelled'].includes(r.status);
 
         const q = search.toLowerCase();
         const matchSearch = !q || r.campaignTitle?.toLowerCase().includes(q) || r.influencerName?.toLowerCase().includes(q);
@@ -308,7 +315,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
 
     const verifiedReqIds = new Set(verifications.filter(v => v.status === 'verified').map(v => v.campaignRequestId?._id || v.campaignRequestId));
 
-    if (loading) return (
+    if (authLoading || loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
             <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
         </div>
