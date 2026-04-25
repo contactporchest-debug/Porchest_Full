@@ -186,19 +186,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // Fetch notifications
     const fetchNotifications = useCallback(async () => {
         try {
-            const [nRes, cRes] = await Promise.all([
-                api.getNotifications({ limit: 20 }),
-                api.getUnreadCount(),
-            ]);
-            setNotifications(nRes.data.notifications || []);
-            setUnreadCount(cRes.data.count || 0);
+            const response = await api.getNotifications({ limit: 20 });
+            setNotifications(response.data.notifications || []);
+            setUnreadCount(response.data.unreadCount || 0);
         } catch { /* silent */ }
-    }, [user.role]);
+    }, [api]);
 
     useEffect(() => {
         if (user.role === 'brand' || user.role === 'influencer') {
             fetchNotifications();
-            const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+            const interval = setInterval(() => {
+                if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+                fetchNotifications();
+            }, 45000);
             return () => clearInterval(interval);
         }
     }, [fetchNotifications, user.role]);

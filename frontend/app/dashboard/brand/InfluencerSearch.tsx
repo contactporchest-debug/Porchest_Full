@@ -1,10 +1,10 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useDeferredValue, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Globe, TrendingUp, BarChart3, Send, Loader2, UserX, DollarSign, MessageCircle, Heart, Film, Star, ExternalLink, Image, Instagram, Users, ShieldCheck } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
-import CreateRequestModal from './CreateRequestModal';
-import InfluencerProfileModal from './InfluencerProfileModal';
+import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
 const NICHES = ['All', 'Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gaming', 'Lifestyle', 'Education', 'Entertainment', 'Finance', 'Business', 'Other'];
@@ -19,9 +19,14 @@ const NICHE_COLORS: Record<string, string> = {
     Education: '#38bdf8', Entertainment: '#f97316', Finance: '#34d399', Business: '#818cf8',
 };
 
+const InfluencerProfileModal = dynamic(() => import('./InfluencerProfileModal'));
+const CreateRequestModal = dynamic(() => import('./CreateRequestModal'));
+
 export default function InfluencerSearch() {
+    const { user, token, loading: authLoading } = useAuth();
     const [influencers, setInfluencers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [hasAttemptedInitialLoad, setHasAttemptedInitialLoad] = useState(false);
     const [query, setQuery] = useState('');
     const [niche, setNiche] = useState('All');
     const [followerRange, setFollowerRange] = useState('Any');
@@ -32,9 +37,22 @@ export default function InfluencerSearch() {
     const [selectedInfluencerProfile, setSelectedInfluencerProfile] = useState<any>(null); // Details Modal
     const [selectedForCollaboration, setSelectedForCollaboration] = useState<any>(null);   // Request Flow
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set()); // Track broken image IDs
+    const deferredQuery = useDeferredValue(query);
+    const normalizedCountry = country === 'UAE' ? 'United Arab Emirates' : country;
+    const cacheKey = useMemo(() => JSON.stringify({
+        niche,
+        followerRange,
+        country: normalizedCountry,
+        engagementRange,
+        costRange,
+    }), [costRange, engagementRange, followerRange, niche, normalizedCountry]);
 
     // Fetch influencers wrapper
-    const fetchInfluencers = useCallback(async () => {
+    const fetchInfluencers = useCallback(async (options?: { retryAttempt?: number }) => {
+        if (authLoading || user?.role !== 'brand' || !token) return;
+
+        const retryAttempt = options?.retryAttempt ?? 0;
+
         setLoading(true);
         try {
             const params: Record<string, unknown> = {};
@@ -45,7 +63,7 @@ export default function InfluencerSearch() {
             if (followerRange === '100K–500K') { params.minFollowers = 100000; params.maxFollowers = 500000; }
             if (followerRange === '500K+') { params.minFollowers = 500000; }
 
-            if (country !== 'Any') params.country = country === 'UAE' ? 'United Arab Emirates' : country;
+            if (country !== 'Any') params.country = normalizedCountry;
 
             if (engagementRange === '> 1%') params.minEngagement = 1;
             if (engagementRange === '> 3%') params.minEngagement = 3;
@@ -58,29 +76,60 @@ export default function InfluencerSearch() {
             if (costRange === '< $1000') params.maxPostCost = 1000;
 
             const res = await brandAPI.getInfluencers(params);
-            setInfluencers(res.data.influencers || []);
+            const nextInfluencers = res.data.influencers || [];
+            setInfluencers(nextInfluencers);
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem(`brand_influencers_${cacheKey}`, JSON.stringify({
+                    influencers: nextInfluencers,
+                    savedAt: Date.now(),
+                }));
+            }
         } catch {
+            if (retryAttempt < 1) {
+                await new Promise((resolve) => window.setTimeout(resolve, 500));
+                await fetchInfluencers({ retryAttempt: retryAttempt + 1 });
+                return;
+            }
             toast.error('Failed to load influencers');
         } finally {
             setLoading(false);
         }
-    }, [niche, followerRange, country, engagementRange, costRange]);
+    }, [authLoading, cacheKey, costRange, country, engagementRange, followerRange, niche, normalizedCountry, token, user?.role]);
 
-    useEffect(() => { fetchInfluencers(); }, [fetchInfluencers]);
+    useEffect(() => {
+        if (authLoading || user?.role !== 'brand' || !token) return;
+
+        if (typeof window !== 'undefined') {
+            const cached = sessionStorage.getItem(`brand_influencers_${cacheKey}`);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed?.influencers)) {
+                        setInfluencers(parsed.influencers);
+                    }
+                } catch {
+                    sessionStorage.removeItem(`brand_influencers_${cacheKey}`);
+                }
+            }
+        }
+
+        setHasAttemptedInitialLoad(true);
+        fetchInfluencers();
+    }, [authLoading, cacheKey, fetchInfluencers, token, user?.role]);
 
     // Local client-side filter — works on flat card fields
-    const filtered = influencers.filter((inf: any) => {
+    const filtered = useMemo(() => influencers.filter((inf: any) => {
         const fullName = inf.fullName?.toLowerCase() || '';
         const infNiche = inf.niche?.toLowerCase() || '';
         const handle   = inf.username?.toLowerCase()  || '';
         const bio      = inf.bio?.toLowerCase()        || '';
-        const search   = query.toLowerCase();
-        return !query ||
+        const search   = deferredQuery.toLowerCase();
+        return !deferredQuery ||
                fullName.includes(search) ||
                infNiche.includes(search) ||
                handle.includes(search)   ||
                bio.includes(search);
-    });
+    }), [deferredQuery, influencers]);
 
     const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
         <button onClick={onClick} style={{
@@ -135,7 +184,7 @@ export default function InfluencerSearch() {
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
-                        {loading ? 'Analyzing influencer network…' : `Showing ${filtered.length} curated matches`}
+                        {authLoading || !hasAttemptedInitialLoad || loading ? 'Analyzing influencer network…' : `Showing ${filtered.length} curated matches`}
                     </p>
                     <div style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <ShieldCheck size={10} style={{ color: '#4ade80' }} />
@@ -182,7 +231,7 @@ export default function InfluencerSearch() {
             </div>
 
             {/* Loading */}
-            {loading && (
+            {(authLoading || !hasAttemptedInitialLoad || loading) && (
                 <div style={{ textAlign: 'center', padding: '80px', color: 'rgba(255,255,255,0.3)' }}>
                     <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
                     <p style={{ fontSize: '14px' }}>AI Matchmaker is analyzing profiles…</p>
@@ -190,7 +239,7 @@ export default function InfluencerSearch() {
             )}
 
             {/* Empty state */}
-            {!loading && filtered.length === 0 && (
+            {!authLoading && hasAttemptedInitialLoad && !loading && filtered.length === 0 && (
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
                     <UserX size={44} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '8px' }}>
@@ -203,7 +252,7 @@ export default function InfluencerSearch() {
             )}
 
             {/* Results Grid */}
-            {!loading && filtered.length > 0 && (
+            {!authLoading && hasAttemptedInitialLoad && !loading && filtered.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
                     <AnimatePresence>
                         {filtered.map((inf: any, i: number) => {

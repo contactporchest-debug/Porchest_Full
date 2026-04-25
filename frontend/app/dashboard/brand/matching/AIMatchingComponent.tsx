@@ -1,10 +1,9 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, Loader2, UserX, Globe, TrendingUp, BarChart3, Image, Film, Star, ShieldCheck, Instagram, Users, Sparkles, User } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
-import CreateRequestModal from '../CreateRequestModal';
-import InfluencerProfileModal from '../InfluencerProfileModal';
 import toast from 'react-hot-toast';
 
 const NICHE_COLORS: Record<string, string> = {
@@ -12,6 +11,9 @@ const NICHE_COLORS: Record<string, string> = {
     Travel: '#facc15', Beauty: '#f472b6', Gaming: '#7B3FF2', Lifestyle: '#e879f9',
     Education: '#38bdf8', Entertainment: '#f97316', Finance: '#34d399', Business: '#818cf8',
 };
+
+const InfluencerProfileModal = dynamic(() => import('../InfluencerProfileModal'));
+const CreateRequestModal = dynamic(() => import('../CreateRequestModal'));
 
 export default function AIMatchingComponent() {
     const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([

@@ -21,6 +21,35 @@ const {
 } = require('../utils/influencerMetrics');
 
 const { ObjectId } = mongoose.Types;
+const ANALYTICS_LIST_LIMIT = 100;
+const ANALYTICS_READ_STALE_MS = 15 * 60 * 1000;
+const PROFILE_LIST_PROJECTION = {
+    fullName: 1,
+    displayName: 1,
+    instagramUsername: 1,
+    username: 1,
+    niche: 1,
+    country: 1,
+    profilePictureUrl: 1,
+    followersCount: 1,
+    platform: 1,
+    updatedAt: 1,
+    userId: 1,
+    avgPostPrice: 1,
+    avgReelPrice: 1,
+    recentMediaSummary: 1,
+    demographics: 1,
+    engagementRate: 1,
+    avgViews: 1,
+    viewRate: 1,
+    costPerView: 1,
+    costPerEngagement: 1,
+    authenticityScore: 1,
+    consistencyScore: 1,
+    influencerScore: 1,
+    growthRate: 1,
+    postsAnalyzed: 1,
+};
 
 const toObjectId = (value) => (value instanceof ObjectId ? value : new ObjectId(value));
 
@@ -76,6 +105,16 @@ function upsertTrendPoint(history, nextPoint) {
     return cloned.slice(-12);
 }
 
+function isAnalyticsFresh(profile, analytics, { forceRecalculate = false } = {}) {
+    if (forceRecalculate || !analytics) return false;
+    const analyticsUpdatedAt = analytics.updatedAt ? new Date(analytics.updatedAt).getTime() : 0;
+    const profileUpdatedAt = profile.updatedAt ? new Date(profile.updatedAt).getTime() : 0;
+    if (!analyticsUpdatedAt) return false;
+    if (profileUpdatedAt > analyticsUpdatedAt) return false;
+    if ((Date.now() - analyticsUpdatedAt) > ANALYTICS_READ_STALE_MS) return false;
+    return true;
+}
+
 async function getInfluencerProfileCollection() {
     const info = await getProfileCollectionInfo();
     return {
@@ -101,7 +140,7 @@ async function getAccessibleProfiles({ user, search = '' }) {
         ];
     }
 
-    const profiles = await collection.find(query).sort({ followersCount: -1, updatedAt: -1 }).toArray();
+    const profiles = await collection.find(query, { projection: PROFILE_LIST_PROJECTION }).sort({ followersCount: -1, updatedAt: -1 }).limit(ANALYTICS_LIST_LIMIT).toArray();
     return { profiles, collectionInfo: info };
 }
 
@@ -198,7 +237,7 @@ function deriveMediaStats(profile) {
     };
 }
 
-async function buildAnalyticsDocument(profile, existingAnalytics = null) {
+async function buildAnalyticsDocument(profile, existingAnalytics = null, { appendTrendPoint = true } = {}) {
     const followers = Number(profile.followersCount || 0);
     const previousFollowers = Number(existingAnalytics?.metrics?.followers || 0);
     const previousEngagementRate = Number(existingAnalytics?.metrics?.engagementRate || 0);
@@ -258,8 +297,15 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
         postRate: pricing.estimatedPostRate,
     });
 
-    const followerGrowth = upsertTrendPoint(existingAnalytics?.charts?.followerGrowth || [], buildTrendPoint(new Date(), followers, engagementRate));
-    const engagementTrend = upsertTrendPoint(existingAnalytics?.charts?.engagementTrend || [], buildTrendPoint(new Date(), followers, engagementRate))
+    const baseFollowerGrowth = Array.isArray(existingAnalytics?.charts?.followerGrowth) ? existingAnalytics.charts.followerGrowth : [];
+    const baseEngagementTrend = Array.isArray(existingAnalytics?.charts?.engagementTrend) ? existingAnalytics.charts.engagementTrend : [];
+    const nextTrendPoint = buildTrendPoint(new Date(), followers, engagementRate);
+    const followerGrowth = appendTrendPoint
+        ? upsertTrendPoint(baseFollowerGrowth, nextTrendPoint)
+        : baseFollowerGrowth;
+    const engagementTrend = (appendTrendPoint
+        ? upsertTrendPoint(baseEngagementTrend, nextTrendPoint)
+        : baseEngagementTrend)
         .map(({ date, label, engagementRate: value }) => ({ date, label, engagementRate: value }));
 
     const charts = {
@@ -340,16 +386,10 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null) {
     };
 }
 
-async function ensureAnalyticsForProfile(profile) {
-    const existingAnalytics = await Analytics.findOne({
-        influencerId: profile._id,
-        platform: profile.platform || 'Instagram',
-        period: 'lifetime',
-    }).lean();
+async function persistAnalytics(profile, existingAnalytics = null, { appendTrendPoint = true } = {}) {
+    const nextDocument = await buildAnalyticsDocument(profile, existingAnalytics, { appendTrendPoint });
 
-    const nextDocument = await buildAnalyticsDocument(profile, existingAnalytics);
-
-    const analytics = await Analytics.findOneAndUpdate(
+    return Analytics.findOneAndUpdate(
         {
             influencerId: profile._id,
             platform: nextDocument.platform,
@@ -365,8 +405,16 @@ async function ensureAnalyticsForProfile(profile) {
         },
         { new: true, upsert: true, setDefaultsOnInsert: true }
     ).lean();
+}
 
-    return analytics;
+async function ensureAnalyticsForProfile(profile, existingAnalytics = null, options = {}) {
+    if (isAnalyticsFresh(profile, existingAnalytics, options)) {
+        return existingAnalytics;
+    }
+
+    return persistAnalytics(profile, existingAnalytics, {
+        appendTrendPoint: options.appendTrendPoint ?? !existingAnalytics,
+    });
 }
 
 function buildSummary(profile, analytics) {
@@ -386,17 +434,35 @@ function buildSummary(profile, analytics) {
 
 async function listInfluencerAnalytics({ user, search }) {
     const { profiles, collectionInfo } = await getAccessibleProfiles({ user, search });
-    const analyticsDocs = await Promise.all(profiles.map((profile) => ensureAnalyticsForProfile(profile)));
+    const analyticsDocs = await Analytics.find({
+        influencerId: { $in: profiles.map((profile) => profile._id) },
+        platform: 'Instagram',
+        period: 'lifetime',
+    }).lean();
+    const analyticsByInfluencerId = new Map(analyticsDocs.map((doc) => [String(doc.influencerId), doc]));
+
+    const resolvedAnalytics = await Promise.all(
+        profiles.map((profile) => ensureAnalyticsForProfile(
+            profile,
+            analyticsByInfluencerId.get(String(profile._id)) || null,
+            { appendTrendPoint: false }
+        ))
+    );
 
     return {
-        influencers: profiles.map((profile, index) => buildSummary(profile, analyticsDocs[index])),
+        influencers: profiles.map((profile, index) => buildSummary(profile, resolvedAnalytics[index])),
         collectionInfo,
     };
 }
 
 async function getInfluencerAnalyticsDetail({ user, id }) {
     const { profile, collectionInfo } = await getProfileById({ id, user });
-    const analytics = await ensureAnalyticsForProfile(profile);
+    const existingAnalytics = await Analytics.findOne({
+        influencerId: profile._id,
+        platform: profile.platform || 'Instagram',
+        period: 'lifetime',
+    }).lean();
+    const analytics = await ensureAnalyticsForProfile(profile, existingAnalytics, { appendTrendPoint: false });
 
     return {
         influencer: {
@@ -423,7 +489,15 @@ async function recalculateInfluencerAnalytics({ user, id }) {
     }
 
     const { profile, collectionInfo } = await getProfileById({ id, user });
-    const analytics = await ensureAnalyticsForProfile(profile);
+    const existingAnalytics = await Analytics.findOne({
+        influencerId: profile._id,
+        platform: profile.platform || 'Instagram',
+        period: 'lifetime',
+    }).lean();
+    const analytics = await ensureAnalyticsForProfile(profile, existingAnalytics, {
+        forceRecalculate: true,
+        appendTrendPoint: true,
+    });
 
     return {
         influencerId: String(profile._id),

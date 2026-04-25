@@ -4,6 +4,37 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const INFLUENCER_CARD_FIELDS = [
+    '_id',
+    'influencerProfileId',
+    'userId',
+    'fullName',
+    'displayName',
+    'instagramUsername',
+    'instagramProfileURL',
+    'instagramDPURL',
+    'profilePictureUrl',
+    'instagramBiography',
+    'bio',
+    'niche',
+    'country',
+    'city',
+    'followersCount',
+    'followingCount',
+    'mediaCount',
+    'engagementRate',
+    'avgLikes',
+    'avgComments',
+    'avgPostPrice',
+    'avgReelPrice',
+    'demographics',
+    'instagramConnected',
+    'instagramConnectionStatus',
+    'profileCompletionStatus',
+    'lastSyncAt',
+    'postingFrequency7d',
+    'postingFrequency',
+].join(' ');
 
 /**
  * Dynamically compute a weighted influence fit score (0–100).
@@ -311,6 +342,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
         if (maxPostCost) filter.avgPostPrice = { $lte: Number(maxPostCost), $gt: 0 };
 
         const influencerProfiles = await InfluencerProfile.find(filter)
+            .select(INFLUENCER_CARD_FIELDS)
             .sort({ fitScore: -1, followersCount: -1 })
             .limit(100)
             .lean();
@@ -481,6 +513,7 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
         }
 
         const influencerProfiles = await InfluencerProfile.find(filter)
+            .select(INFLUENCER_CARD_FIELDS)
             .sort({ fitScore: -1, followersCount: -1 })
             .limit(20)
             .lean();

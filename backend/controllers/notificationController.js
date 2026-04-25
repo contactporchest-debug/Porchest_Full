@@ -5,25 +5,28 @@ const { isValidObjectId } = require('../utils/validators');
 // @route   GET /api/influencer/notifications  OR  /api/brand/notifications
 exports.getNotifications = async (req, res, next) => {
     try {
-        const { page = 1, limit = 30 } = req.query;
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 30));
         const filter = { recipientUserId: req.user._id };
 
-        const notifications = await Notification.find(filter)
-            .sort({ createdAt: -1 })
-            .skip((Number(page) - 1) * Number(limit))
-            .limit(Number(limit))
-            .lean();
-
-        const total = await Notification.countDocuments(filter);
-        const unreadCount = await Notification.countDocuments({ ...filter, isRead: false });
+        const [notifications, total, unreadCount] = await Promise.all([
+            Notification.find(filter)
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .select('_id type title message isRead createdAt senderName senderAvatar campaignRequestId')
+                .lean(),
+            Notification.countDocuments(filter),
+            Notification.countDocuments({ ...filter, isRead: false }),
+        ]);
 
         res.json({
             success: true,
             notifications,
             total,
             unreadCount,
-            page: Number(page),
-            totalPages: Math.ceil(total / Number(limit)),
+            page,
+            totalPages: Math.ceil(total / limit),
         });
     } catch (error) {
         next(error);

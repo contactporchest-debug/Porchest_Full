@@ -1,8 +1,16 @@
 'use client';
+import dynamic from 'next/dynamic';
 
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import AnalyticsPage from '../AnalyticsPage';
+
+const AnalyticsPage = dynamic(() => import('../AnalyticsPage'), {
+    loading: () => (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', color: '#64748b' }}>
+            Loading analytics...
+        </div>
+    ),
+});
 
 export default function BrandAnalyticsRoute() {
     return (
