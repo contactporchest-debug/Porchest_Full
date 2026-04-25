@@ -44,6 +44,21 @@ interface Campaign {
     budget: number;
 }
 
+interface AdminCampaignRequest {
+    _id: string;
+    campaignTitle: string;
+    brandName?: string;
+    influencerName?: string;
+    influencerNiche?: string;
+    status: 'sent' | 'viewed' | 'accepted' | 'rejected' | 'negotiation' | 'deal_closed' | 'expired' | 'cancelled';
+    postingDeadline?: string;
+    campaignStartDate?: string;
+    campaignEndDate?: string;
+    agreedPrice?: number;
+    counterOfferPrice?: number;
+    createdAt?: string;
+}
+
 interface Stats {
     totalUsers: number;
     totalBrands: number;
@@ -114,7 +129,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
     const { socket } = useSocket();
     const [stats,   setStats]   = useState<Stats | null>(null);
     const [users,   setUsers]   = useState<AdminUser[]>([]);
-    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [campaigns, setCampaigns] = useState<AdminCampaignRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const activeTab = initialTab;
 
@@ -131,7 +146,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
     const [campStatus,  setCampStatus]  = useState('');
     const [campLoading, setCampLoading] = useState(false);
 
-    const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+    const [selectedCampaign, setSelectedCampaign] = useState<AdminCampaignRequest | null>(null);
 
     /* ── Data Loading ──────────────────────────────────── */
     const loadStats = useCallback(async () => {
@@ -156,8 +171,8 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
             const params: Record<string, unknown> = {};
             if (campStatus) params.status = campStatus;
             if (campSearch) params.search = campSearch;
-            const r = await adminAPI.getCampaigns(params);
-            setCampaigns(r.data.campaigns || []);
+            const r = await adminAPI.getRequests(params);
+            setCampaigns(r.data.requests || []);
         } catch { toast.error('Failed to load campaigns'); }
         finally { setCampLoading(false); }
     }, [campStatus, campSearch]);
@@ -174,7 +189,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
             toast.success(`User ${updatedUser.fullName || updatedUser.email} was updated.`);
         };
 
-        const handleCampaignUpdate = ({ campaignId, status }: { campaignId: string, status: Campaign['status'] }) => {
+        const handleCampaignUpdate = ({ campaignId, status }: { campaignId: string, status: AdminCampaignRequest['status'] }) => {
             setCampaigns(prev => prev.map(c => c._id === campaignId ? { ...c, status } : c));
             toast.success(`A campaign status was updated to ${status}.`);
         };
@@ -221,7 +236,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
         } catch { toast.error('Delete failed'); }
     };
 
-    const handleCampaignStatus = async (id: string, status: 'running' | 'paused' | 'completed') => {
+    const handleCampaignStatus = async (id: string, status: 'deal_closed' | 'cancelled' | 'accepted') => {
         try {
             await adminAPI.updateCampaignStatus(id, status);
             toast.success(`Campaign status updated to ${status}`);
@@ -234,7 +249,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
     /* ── Derived ────────────────────────────────────────── */
     const filteredCampaigns = campaigns.filter(c => {
         const q = campSearch.toLowerCase();
-        return (!q || c.name?.toLowerCase().includes(q) || c.brand?.companyName?.toLowerCase().includes(q))
+        return (!q || c.campaignTitle?.toLowerCase().includes(q) || c.brandName?.toLowerCase().includes(q) || c.influencerName?.toLowerCase().includes(q))
             && (!campStatus || c.status === campStatus);
     });
 
@@ -435,10 +450,13 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                     <select value={campStatus} onChange={e => setCampStatus(e.target.value)}
                                         style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
                                         <option value="">All Statuses</option>
-                                        <option value="running">Running</option>
-                                        <option value="paused">Paused</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="pending">Pending</option>
+                                        <option value="sent">Sent</option>
+                                        <option value="viewed">Viewed</option>
+                                        <option value="negotiation">Negotiation</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="deal_closed">Closed</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="cancelled">Cancelled</option>
                                     </select>
                                     <button onClick={loadCampaigns} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 12, background: 'rgba(255,140,66,0.1)', border: '1px solid rgba(255,140,66,0.2)', color: '#ff8c42', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                                         <RefreshCw size={12} /> Refresh
@@ -460,7 +478,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <thead>
                                                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        {['Campaign', 'Brand', 'Status', 'Dates', 'Progress', 'Budget', 'Actions'].map(h => (
+                                                        {['Campaign', 'Brand', 'Influencer', 'Status', 'Dates', 'Budget', 'Actions'].map(h => (
                                                             <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{h}</th>
                                                         ))}
                                                     </tr>
@@ -474,12 +492,20 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Campaign title */}
                                                             <td style={{ padding: '14px 16px', maxWidth: 220 }}>
-                                                                <p style={{ fontWeight: 600, color: '#fff', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || '—'}</p>
+                                                                <p style={{ fontWeight: 600, color: '#fff', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.campaignTitle || '—'}</p>
                                                             </td>
 
                                                             {/* Brand */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                <p style={{ fontSize: 12, color: '#a78bfa' }}>{c.brand?.companyName || '—'}</p>
+                                                                <p style={{ fontSize: 12, color: '#a78bfa' }}>{c.brandName || '—'}</p>
+                                                            </td>
+
+                                                            {/* Influencer */}
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <div>
+                                                                    <p style={{ fontSize: 12, color: '#fff' }}>{c.influencerName || '—'}</p>
+                                                                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{c.influencerNiche || '—'}</p>
+                                                                </div>
                                                             </td>
 
                                                             {/* Status */}
@@ -487,27 +513,22 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Dates */}
                                                             <td style={{ padding: '14px 16px', color: 'rgba(255,255,255,0.35)', fontSize: 12, whiteSpace: 'nowrap' }}>
-                                                                {new Date(c.startDate).toLocaleDateString()} - {new Date(c.endDate).toLocaleDateString()}
-                                                            </td>
-
-                                                            {/* Progress */}
-                                                            <td style={{ padding: '14px 16px' }}>
-                                                                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-                                                                    {c.influencers.filter(i => i.status === 'accepted').length} / {c.influencers.length} influencers
-                                                                </div>
+                                                                {(c.campaignStartDate || c.createdAt) ? new Date(c.campaignStartDate || c.createdAt || '').toLocaleDateString() : '—'}
+                                                                {' - '}
+                                                                {c.campaignEndDate ? new Date(c.campaignEndDate).toLocaleDateString() : (c.postingDeadline ? new Date(c.postingDeadline).toLocaleDateString() : '—')}
                                                             </td>
 
                                                             {/* Budget */}
-                                                            <td style={{ padding: '14px 16px', color: c.budget ? '#4ade80' : 'rgba(255,255,255,0.3)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                                                {c.budget ? `$${c.budget.toLocaleString()}` : '—'}
+                                                            <td style={{ padding: '14px 16px', color: (c.counterOfferPrice || c.agreedPrice) ? '#4ade80' : 'rgba(255,255,255,0.3)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                                                {(c.counterOfferPrice || c.agreedPrice) ? `$${(c.counterOfferPrice || c.agreedPrice || 0).toLocaleString()}` : '—'}
                                                             </td>
 
                                                             {/* Actions */}
                                                             <td style={{ padding: '14px 16px' }}>
                                                                 <div style={{ display: 'flex', gap: 6 }}>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'paused'); }} title="Pause" style={{ padding: '6px', borderRadius: 8, background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer' }}><UserX size={13} /></button>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'running'); }} title="Resume" style={{ padding: '6px', borderRadius: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}><UserCheck size={13} /></button>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'completed'); }} title="End" style={{ padding: '6px', borderRadius: 8, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}><Trash2 size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'accepted'); }} title="Mark Accepted" style={{ padding: '6px', borderRadius: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}><UserCheck size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'deal_closed'); }} title="Close Deal" style={{ padding: '6px', borderRadius: 8, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa', cursor: 'pointer' }}><CheckCircle size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'cancelled'); }} title="Cancel" style={{ padding: '6px', borderRadius: 8, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}><Trash2 size={13} /></button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -533,17 +554,12 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 20, color: '#fff', marginBottom: 20 }}>Campaign Details</h2>
-                                            <p><strong>Name:</strong> {selectedCampaign.name}</p>
-                                            <p><strong>Brand:</strong> {selectedCampaign.brand.companyName}</p>
+                                            <p><strong>Name:</strong> {selectedCampaign.campaignTitle}</p>
+                                            <p><strong>Brand:</strong> {selectedCampaign.brandName || '—'}</p>
+                                            <p><strong>Influencer:</strong> {selectedCampaign.influencerName || '—'}</p>
                                             <p><strong>Status:</strong> {selectedCampaign.status}</p>
-                                            <p><strong>Budget:</strong> ${selectedCampaign.budget.toLocaleString()}</p>
-                                            <p><strong>Dates:</strong> {new Date(selectedCampaign.startDate).toLocaleDateString()} - {new Date(selectedCampaign.endDate).toLocaleDateString()}</p>
-                                            <h3 style={{ marginTop: 20, marginBottom: 10 }}>Influencers</h3>
-                                            <ul>
-                                                {selectedCampaign.influencers.map(inf => (
-                                                    <li key={inf.influencer._id}>{inf.influencer.fullName} - {inf.status}</li>
-                                                ))}
-                                            </ul>
+                                            <p><strong>Budget:</strong> {(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice) ? `$${(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice || 0).toLocaleString()}` : '—'}</p>
+                                            <p><strong>Dates:</strong> {(selectedCampaign.campaignStartDate || selectedCampaign.createdAt) ? new Date(selectedCampaign.campaignStartDate || selectedCampaign.createdAt || '').toLocaleDateString() : '—'} - {selectedCampaign.campaignEndDate ? new Date(selectedCampaign.campaignEndDate).toLocaleDateString() : (selectedCampaign.postingDeadline ? new Date(selectedCampaign.postingDeadline).toLocaleDateString() : '—')}</p>
                                             <button onClick={() => setSelectedCampaign(null)} style={{ marginTop: 20, padding: '10px 20px', borderRadius: 10, background: '#ff8c42', color: '#fff', border: 'none', cursor: 'pointer' }}>Close</button>
                                         </motion.div>
                                     </motion.div>
