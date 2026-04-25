@@ -245,7 +245,8 @@ function Footer() {
 
 export default function LandingPage() {
     return (
-        <main style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)' }}>
+        <main style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)', position: 'relative', overflow: 'hidden' }}>
+            <div className="landing-texture-grid" />
             <LandingNav />
             <Hero />
             <Features />
