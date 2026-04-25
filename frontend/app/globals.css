@@ -100,14 +100,35 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(123, 63, 242, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px),
-    radial-gradient(circle at 20% 18%, rgba(123, 63, 242, 0.06) 0%, transparent 24%),
-    radial-gradient(circle at 78% 30%, rgba(249, 115, 22, 0.045) 0%, transparent 22%);
-  background-size: 34px 34px, 34px 34px, 520px 520px, 460px 460px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.08) 100%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0.08) 100%);
-  opacity: 0.72;
+    linear-gradient(rgba(123, 63, 242, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.34) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+    radial-gradient(circle at 18% 16%, rgba(123, 63, 242, 0.11) 0%, transparent 25%),
+    radial-gradient(circle at 78% 24%, rgba(168, 85, 247, 0.09) 0%, transparent 24%),
+    radial-gradient(circle at 50% 58%, rgba(255, 255, 255, 0.18) 0%, transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.06) 100%);
+  background-size:
+    44px 44px,
+    44px 44px,
+    176px 176px,
+    176px 176px,
+    620px 620px,
+    560px 560px,
+    720px 720px,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0,
+    -1px -1px,
+    -1px -1px,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.42) 58%, rgba(0, 0, 0, 0.16) 100%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.42) 58%, rgba(0, 0, 0, 0.16) 100%);
+  opacity: 0.95;
 }
 
 /* Hero glow */

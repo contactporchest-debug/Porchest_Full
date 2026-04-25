@@ -34,18 +34,13 @@ export default function OverviewPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Derive campaign states from requests + verifications
+    // Derive campaign states from actual stored request statuses
+    const pending = requests.filter(r => ['sent', 'viewed', 'negotiation'].includes(r.status));
     const accepted = requests.filter(r => r.status === 'accepted');
-    const pending = requests.filter(r => r.status === 'pending');
-    const rejected = requests.filter(r => r.status === 'rejected');
-    const verified = verifications.filter(v => v.status === 'verified');
-
-    // Running = accepted + has verified post
-    const verifiedReqIds = new Set(verifications.filter(v => v.status === 'verified').map(v =>
-        v.campaignRequestId?._id || v.campaignRequestId
-    ));
-    const running = accepted.filter(r => verifiedReqIds.has(r._id));
-    const inProcess = accepted.filter(r => !verifiedReqIds.has(r._id));
+    const completed = requests.filter(r => r.status === 'deal_closed');
+    const rejected = requests.filter(r => ['rejected', 'cancelled'].includes(r.status));
+    const running = accepted;
+    const inProcess = pending;
 
     // Budget rollups (from accepted requests)
     const totalAllocated = accepted.reduce((s, r) => s + (r.agreedPrice || 0), 0);
@@ -54,11 +49,11 @@ export default function OverviewPage() {
     const counts = [
         { label: 'Running', val: running.length, color: '#4ade80', icon: <Megaphone size={18} /> },
         { label: 'In-Process', val: inProcess.length, color: '#60d5f8', icon: <Clock size={18} /> },
-        { label: 'Completed', val: verified.length, color: '#a78bfa', icon: <CheckCircle size={18} /> },
+        { label: 'Completed', val: completed.length, color: '#a78bfa', icon: <CheckCircle size={18} /> },
         { label: 'Canceled', val: rejected.length, color: '#f87171', icon: <XCircle size={18} /> },
     ];
 
-    const runningPreview = accepted.slice(0, 5);
+    const runningPreview = [...accepted, ...completed].slice(0, 5);
 
     if (loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
@@ -156,17 +151,18 @@ export default function OverviewPage() {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {runningPreview.map((r: any) => {
-                            const inf = r.influencerId;
-                            const initials = (inf?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
-                            const isRunning = verifiedReqIds.has(r._id);
-                            const statusLabel = isRunning ? 'Running' : 'In-Process';
-                            const statusColor = isRunning ? '#4ade80' : '#60d5f8';
+                            const influencerName = r.influencerName || r.influencerId?.fullName || 'Influencer';
+                            const initials = influencerName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+                            const statusLabel = r.status === 'deal_closed' ? 'Completed' : 'Running';
+                            const statusColor = r.status === 'deal_closed' ? '#a78bfa' : '#4ade80';
                             return (
                                 <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.84)', border: '1px solid rgba(148,163,184,0.16)', flexWrap: 'wrap' }}>
-                                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: '#fff', flexShrink: 0 }}>{initials}</div>
+                                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                        {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt={influencerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+                                    </div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
                                         <p style={{ fontSize: '13px', fontWeight: '700', color: '#172033' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '11px', color: '#667085' }}>{inf?.fullName || '—'}</p>
+                                        <p style={{ fontSize: '11px', color: '#667085' }}>{influencerName}</p>
                                     </div>
                                     <span style={{ padding: '3px 11px', borderRadius: '99px', background: `${statusColor}12`, border: `1px solid ${statusColor}28`, color: statusColor, fontSize: '11px', fontWeight: '700' }}>{statusLabel}</span>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>
