@@ -5,7 +5,7 @@ import { authAPI } from '@/lib/api';
 
 interface User {
     _id: string;
-    role: 'admin' | 'brand' | 'influencer';
+    role: 'admin' | 'brand' | 'influencer' | 'software-client';
     email: string;
     status: string;
     profileImageURL?: string;
@@ -55,6 +55,14 @@ interface User {
     companyCountry?: string;
     industry?: string;
     brandInstagramHandle?: string;
+
+    // Software client fields
+    roleTitle?: string;
+    phone?: string;
+    preferredContact?: string;
+    workingHours?: string;
+    companyStage?: string;
+    teamSize?: string;
 }
 
 interface AuthContextType {

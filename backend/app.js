@@ -5,6 +5,7 @@ const brandRoutes = require('./routes/brand');
 const influencerRoutes = require('./routes/influencer');
 const adminRoutes = require('./routes/admin');
 const analyticsRoutes = require('./routes/analytics');
+const softwareClientRoutes = require('./routes/softwareClient');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -59,6 +60,7 @@ app.use('/api/brand', brandRoutes);
 app.use('/api/influencer', influencerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/software-client', softwareClientRoutes);
 
 // 404
 app.use('*', (req, res) => {

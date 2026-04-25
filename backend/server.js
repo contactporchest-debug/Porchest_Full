@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const { initScheduler } = require('./utils/scheduler');
 const ensureAdminUser = require('./utils/ensureAdminUser');
 const { ensureDemoInfluencers } = require('./utils/ensureDemoInfluencers');
+const { ensureDemoSoftwareClient } = require('./utils/ensureDemoSoftwareClient');
 const socketIO = require('socket.io');
 
 const PORT = process.env.PORT || 5000;
@@ -49,6 +50,8 @@ connectDB().then(() => {
     return ensureAdminUser();
 }).then(() => {
     return ensureDemoInfluencers();
+}).then(() => {
+    return ensureDemoSoftwareClient();
 }).then(() => {
     // Initialize scheduled cron jobs
     initScheduler();

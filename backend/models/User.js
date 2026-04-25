@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
         userCode: { type: String, unique: true, required: true },
         role: {
             type: String,
-            enum: ['admin', 'brand', 'influencer'],
+            enum: ['admin', 'brand', 'influencer', 'software-client'],
             required: true,
         },
         email: {
@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
         // Linkage fields for the profile-centric architecture
         influencerProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'InfluencerProfile' },
         brandProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'BrandProfile' },
+        softwareClientProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'SoftwareClientProfile' },
         
         // Allowed auth/recovery
         otp: { type: String },
@@ -63,6 +64,7 @@ userSchema.methods.toJSON = function () {
         delete obj.instagramConnected;
         delete obj.brandProfileId;
         delete obj.influencerProfileId;
+        delete obj.softwareClientProfileId;
     }
     return obj;
 };

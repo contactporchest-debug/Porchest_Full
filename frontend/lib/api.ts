@@ -145,3 +145,9 @@ export const influencerAPI = {
     cashout: (amount: number) => api.post('/influencer/cashout', { amount }),
     getCashouts: () => api.get('/influencer/cashouts'),
 };
+
+export const softwareClientAPI = {
+    getDashboard: () => api.get('/software-client/dashboard'),
+    getProfile: () => api.get('/software-client/profile'),
+    getProjects: () => api.get('/software-client/projects'),
+};

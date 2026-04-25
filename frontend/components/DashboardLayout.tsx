@@ -11,7 +11,7 @@ import {
     LayoutDashboard, Users, Megaphone, BarChart3,
     UserCircle, Briefcase, LogOut,
     ChevronLeft, ChevronRight, Bell, Search, Bot, Shield,
-    Inbox, Mail, CheckCheck, ExternalLink,
+    Inbox, Mail, CheckCheck, ExternalLink, FolderKanban, ClipboardList,
 } from 'lucide-react';
 
 const adminNav = [
@@ -32,13 +32,19 @@ const influencerNav = [
     { label: 'Analytics', href: '/dashboard/influencer/analytics', icon: <BarChart3 size={17} /> },
     { label: 'Collaborations', href: '/dashboard/influencer/collaborations', icon: <Briefcase size={17} /> },
 ];
+const softwareClientNav = [
+    { label: 'Overview', href: '/dashboard/software-client', icon: <LayoutDashboard size={17} /> },
+    { label: 'Profile', href: '/dashboard/software-client/profile', icon: <UserCircle size={17} /> },
+    { label: 'Projects', href: '/dashboard/software-client/projects', icon: <FolderKanban size={17} /> },
+];
 
-const roleNav: Record<string, typeof adminNav> = { admin: adminNav, brand: brandNav, influencer: influencerNav };
-const rolePillColor: Record<string, string> = { admin: '#ff8c42', brand: '#7B3FF2', influencer: '#A855F7' };
+const roleNav: Record<string, typeof adminNav> = { admin: adminNav, brand: brandNav, influencer: influencerNav, 'software-client': softwareClientNav };
+const rolePillColor: Record<string, string> = { admin: '#ff8c42', brand: '#7B3FF2', influencer: '#A855F7', 'software-client': '#2563eb' };
 const roleIcons: Record<string, React.ReactNode> = {
     admin: <Shield size={12} />,
     brand: <Megaphone size={12} />,
     influencer: <Bot size={12} />,
+    'software-client': <ClipboardList size={12} />,
 };
 
 interface NotifItem {
@@ -182,10 +188,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const roleColor = rolePillColor[user.role];
     const displayName = user.companyName || user.fullName || user.email.split('@')[0];
 
-    const api = user.role === 'brand' ? brandAPI : influencerAPI;
+    const api = user.role === 'brand' ? brandAPI : user.role === 'influencer' ? influencerAPI : null;
 
     // Fetch notifications
     const fetchNotifications = useCallback(async () => {
+        if (!api) return;
         try {
             const response = await api.getNotifications({ limit: 20 });
             setNotifications(response.data.notifications || []);
@@ -194,7 +201,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, [api]);
 
     useEffect(() => {
-        if (user.role === 'brand' || user.role === 'influencer') {
+        if (api && (user.role === 'brand' || user.role === 'influencer')) {
             fetchNotifications();
             const interval = setInterval(() => {
                 if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
@@ -205,6 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, [fetchNotifications, user.role]);
 
     const handleMarkRead = async (id: string) => {
+        if (!api) return;
         try {
             await api.markNotificationRead(id);
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
@@ -213,6 +221,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     const handleMarkAllRead = async () => {
+        if (!api) return;
         try {
             await api.markAllNotificationsRead();
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -369,35 +378,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
                         {/* Notification bell */}
-                        <button
-                            onClick={() => setShowNotifs(!showNotifs)}
-                            style={{
-                                position: 'relative', width: '36px', height: '36px', borderRadius: '10px',
-                                background: showNotifs ? 'rgba(123,63,242,0.12)' : 'rgba(255,255,255,0.78)',
-                                border: showNotifs ? '1px solid rgba(123,63,242,0.3)' : '1px solid rgba(148,163,184,0.2)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: showNotifs ? '#7B3FF2' : '#5f6b7d', cursor: 'pointer',
-                                transition: 'all 150ms ease',
-                            }}>
-                            <Bell size={15} />
-                            {unreadCount > 0 && (
-                                <span style={{
-                                    position: 'absolute', top: '-4px', right: '-4px',
-                                    minWidth: '16px', height: '16px', borderRadius: '99px',
-                                    background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
-                                    fontSize: '9px', fontWeight: '800', color: '#fff',
+                        {api && (
+                            <button
+                                onClick={() => setShowNotifs(!showNotifs)}
+                                style={{
+                                    position: 'relative', width: '36px', height: '36px', borderRadius: '10px',
+                                    background: showNotifs ? 'rgba(123,63,242,0.12)' : 'rgba(255,255,255,0.78)',
+                                    border: showNotifs ? '1px solid rgba(123,63,242,0.3)' : '1px solid rgba(148,163,184,0.2)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    padding: '0 4px', border: '2px solid #f7f4ec',
-                                    boxShadow: '0 0 8px rgba(123,63,242,0.4)',
+                                    color: showNotifs ? '#7B3FF2' : '#5f6b7d', cursor: 'pointer',
+                                    transition: 'all 150ms ease',
                                 }}>
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                </span>
-                            )}
-                        </button>
+                                <Bell size={15} />
+                                {unreadCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute', top: '-4px', right: '-4px',
+                                        minWidth: '16px', height: '16px', borderRadius: '99px',
+                                        background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
+                                        fontSize: '9px', fontWeight: '800', color: '#fff',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        padding: '0 4px', border: '2px solid #f7f4ec',
+                                        boxShadow: '0 0 8px rgba(123,63,242,0.4)',
+                                    }}>
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                        )}
 
                         {/* Notification dropdown */}
                         <AnimatePresence>
-                            {showNotifs && (
+                            {api && showNotifs && (
                                 <NotificationDropdown
                                     notifications={notifications}
                                     unreadCount={unreadCount}
