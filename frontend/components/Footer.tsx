@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
     const links = {
-        Platform: ['AI Matching', 'For Brands', 'For Influencers', 'Analytics'],
+        Platform: ['Smart Matching', 'For Brands', 'For Influencers', 'Analytics'],
         Company: ['About', 'Sign Up', 'Sign In', 'Contact'],
     };
 
@@ -16,13 +17,10 @@ export default function Footer() {
                     {/* Brand */}
                     <div>
                         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '16px' }}>
-                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', boxShadow: '0 0 20px rgba(123,63,242,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '17px', color: '#fff' }}>P</div>
-                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '18px', color: '#fff', letterSpacing: '-0.02em' }}>
-                                Por<span style={{ background: 'linear-gradient(90deg, #7B3FF2, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
-                            </span>
+                            <Image src="/porchest-logo.png" alt="Porchest" width={156} height={38} style={{ width: '156px', height: 'auto' }} />
                         </Link>
                         <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', lineHeight: '1.65', maxWidth: '260px' }}>
-                            The AI-powered platform connecting brands with influencers for maximum impact.
+                            The platform connecting brands with influencers through clear discovery, collaboration, and analytics.
                         </p>
                         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                             {['X', 'in', 'ig'].map((s) => (

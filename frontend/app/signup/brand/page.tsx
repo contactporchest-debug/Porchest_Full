@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { authAPI } from '@/lib/api';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
@@ -99,10 +100,7 @@ export default function BrandSignupPage() {
                     <>
                         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '18px', textDecoration: 'none' }}>
-                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, background: 'linear-gradient(135deg, #7B2FF7, #9d4dff)', boxShadow: '0 14px 28px rgba(123,47,247,0.24)', color: '#fff' }}>P</div>
-                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', letterSpacing: '-0.03em' }}>
-                                    Por<span className="gradient-text">chest</span>
-                                </span>
+                                <Image src="/porchest-logo.png" alt="Porchest" width={168} height={42} priority style={{ width: '168px', height: 'auto' }} />
                             </Link>
                             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2' }}>
                                 <Building2 size={14} />

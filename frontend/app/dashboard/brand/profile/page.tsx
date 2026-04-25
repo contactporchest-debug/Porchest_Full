@@ -113,14 +113,14 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
             const res = await brandAPI.getInstagramConnectURL();
             const { authURL } = res.data;
             if (authURL) window.location.href = authURL;
-            else toast.error('Could not get Instagram auth URL. Check server config.');
+            else toast.error('Could not start Instagram connection right now.');
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to initiate Instagram connection');
         } finally { setConnecting(false); }
     };
 
     const handleDisconnect = async () => {
-        if (!confirm('Disconnecting will remove all API-synced Instagram data for your brand. Continue?')) return;
+        if (!confirm('Disconnecting will remove your connected Instagram insights from Porchest. Continue?')) return;
         setDisconnecting(true);
         try {
             await brandAPI.disconnectInstagram();
@@ -134,12 +134,12 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
         setRefreshing(true);
         try {
             await brandAPI.refreshInstagramSync();
-            toast.success('Brand Instagram data refreshed! ✅');
+            toast.success('Instagram insights refreshed');
             onRefresh();
         } catch (err: any) {
             const code = err?.response?.data?.code;
-            if (code === 'TOKEN_EXPIRED') toast.error('Token expired. Please reconnect your Instagram account.');
-            else toast.error(err?.response?.data?.message || 'Refresh failed');
+            if (code === 'TOKEN_EXPIRED') toast.error('Your Instagram session expired. Please reconnect your account.');
+            else toast.error(err?.response?.data?.message || 'Could not refresh Instagram data');
         } finally { setRefreshing(false); }
     };
 
@@ -283,14 +283,14 @@ export default function BrandProfilePage() {
         if (typeof window !== 'undefined') {
             const p = new URLSearchParams(window.location.search);
             if (p.get('ig_connected') === '1') {
-                toast.success('Brand Instagram connected! ✅', { id: 'brand-ig-conn' });
+                toast.success('Instagram connected', { id: 'brand-ig-conn' });
                 window.history.replaceState({}, '', window.location.pathname);
             }
             if (p.get('ig_error')) {
                 const m: Record<string, string> = {
                     invalid_state: 'Security check failed.',
-                    missing_code: 'Authorization cancelled.',
-                    sync_failed: 'Sync failed. Try again.',
+                    missing_code: 'Instagram connection was cancelled.',
+                    sync_failed: 'We could not finish connecting Instagram. Please try again.',
                     auth_denied: 'Instagram authorization was denied.',
                 };
                 toast.error(m[p.get('ig_error')!] || 'Instagram connection failed.', { id: 'brand-ig-err' });
@@ -394,7 +394,7 @@ export default function BrandProfilePage() {
                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 18px', borderRadius: '16px', background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.2)' }}>
                                 <CheckCircle2 size={16} style={{ color: '#4ade80', flexShrink: 0 }} />
                                 <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
-                                    Profile is <span style={{ color: '#4ade80', fontWeight: '700' }}>100% complete</span>. AI Matching & Influencer Discovery are now unlocked!
+                                    Profile is <span style={{ color: '#4ade80', fontWeight: '700' }}>100% complete</span>. Smart Matching and Influencer Discovery are now unlocked!
                                 </p>
                             </motion.div>
                         )}

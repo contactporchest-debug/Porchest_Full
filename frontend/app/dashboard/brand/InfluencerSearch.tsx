@@ -184,11 +184,11 @@ export default function InfluencerSearch() {
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
-                        {authLoading || !hasAttemptedInitialLoad || loading ? 'Analyzing influencer network…' : `Showing ${filtered.length} curated matches`}
+                        {authLoading || !hasAttemptedInitialLoad || loading ? 'Loading creator profiles…' : `Showing ${filtered.length} curated matches`}
                     </p>
                     <div style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <ShieldCheck size={10} style={{ color: '#4ade80' }} />
-                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Searchable Profiles Only</span>
+                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Verified Profiles</span>
                     </div>
                 </div>
             </div>
@@ -234,7 +234,7 @@ export default function InfluencerSearch() {
             {(authLoading || !hasAttemptedInitialLoad || loading) && (
                 <div style={{ textAlign: 'center', padding: '80px', color: 'rgba(255,255,255,0.3)' }}>
                     <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
-                    <p style={{ fontSize: '14px' }}>AI Matchmaker is analyzing profiles…</p>
+                    <p style={{ fontSize: '14px' }}>Finding matching profiles…</p>
                 </div>
             )}
 
@@ -246,7 +246,7 @@ export default function InfluencerSearch() {
                         No Matches Found
                     </p>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', maxWidth: '380px', margin: '0 auto', lineHeight: '1.6' }}>
-                        The network couldn't find an exact match. Try broading your criteria or searching another niche.
+                        We could not find an exact match yet. Try broadening your criteria or exploring another niche.
                     </p>
                 </div>
             )}

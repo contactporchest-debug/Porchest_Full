@@ -149,6 +149,7 @@ type InfluencerProfile = {
         genderDistribution?: Record<string, number>;
         ageDistribution?: Record<string, number>;
         topCountries?: Record<string, number>;
+        countries?: Record<string, number>;
         topCities?: Record<string, number>;
         languages?: Record<string, number>;
         audienceType?: string;
@@ -226,6 +227,11 @@ type FullProfileProps = {
     influencerUserId: string;
 };
 
+type DistributionItem = {
+    name: string;
+    value: number;
+};
+
 const COLORS = {
     ink: '#172033',
     text: '#24324a',
@@ -292,12 +298,44 @@ const formatDate = (value?: string) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-const mapObjectEntries = (source?: Record<string, number> | null) => {
+const mapObjectEntries = (source?: Record<string, number> | null): DistributionItem[] => {
     if (!source || typeof source !== 'object') return [];
     return Object.entries(source)
         .map(([name, value]) => ({ name, value: Number(value || 0) }))
         .filter((item) => Number.isFinite(item.value) && item.value > 0)
         .sort((a, b) => b.value - a.value);
+};
+
+const combineDistributions = (...sources: Array<Record<string, number> | null | undefined>): DistributionItem[] => {
+    const merged = sources.reduce<Record<string, number>>((acc, source) => {
+        if (!source || typeof source !== 'object') return acc;
+        Object.entries(source).forEach(([name, value]) => {
+            const numericValue = Number(value || 0);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) return;
+            acc[name] = Math.max(acc[name] || 0, numericValue);
+        });
+        return acc;
+    }, {});
+
+    return mapObjectEntries(merged);
+};
+
+const buildGenderDistribution = (profile: any, analytics: any): DistributionItem[] => {
+    const profileGender = profile?.demographics?.genderDistribution || profile?.demographics?.gender;
+    const analyticsGender = analytics?.charts?.demographics?.gender || [];
+
+    const mappedProfile = profileGender && typeof profileGender === 'object'
+        ? mapObjectEntries(
+            Object.entries(profileGender).reduce<Record<string, number>>((acc, [key, value]) => {
+                if (key === 'M') acc.Male = Number(value || 0);
+                else if (key === 'F') acc.Female = Number(value || 0);
+                else acc[key] = Number(value || 0);
+                return acc;
+            }, {})
+        )
+        : [];
+
+    return mappedProfile.length ? mappedProfile : analyticsGender;
 };
 
 const normalizeMediaType = (value?: string) => {
@@ -455,9 +493,21 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
         return Object.entries(buckets).map(([name, value]) => ({ name, value }));
     }, [recentMedia]);
 
-    const topCountries = useMemo(() => mapObjectEntries(profile?.demographics?.topCountries).slice(0, 6), [profile?.demographics?.topCountries]);
-    const ageDistribution = useMemo(() => mapObjectEntries(profile?.demographics?.ageDistribution), [profile?.demographics?.ageDistribution]);
-    const genderDistribution = useMemo(() => mapObjectEntries(profile?.demographics?.genderDistribution), [profile?.demographics?.genderDistribution]);
+    const topCountries = useMemo(
+        () => combineDistributions(profile?.demographics?.topCountries, profile?.demographics?.countries).slice(0, 6),
+        [profile?.demographics?.countries, profile?.demographics?.topCountries]
+    );
+    const ageDistribution = useMemo(
+        () => {
+            const fromProfile = mapObjectEntries(profile?.demographics?.ageDistribution);
+            return fromProfile.length ? fromProfile : (analytics?.charts?.demographics?.age || []);
+        },
+        [analytics?.charts?.demographics?.age, profile?.demographics?.ageDistribution]
+    );
+    const genderDistribution = useMemo(
+        () => buildGenderDistribution(profile, analytics),
+        [analytics, profile]
+    );
     const languageDistribution = useMemo(() => mapObjectEntries(profile?.demographics?.languages).slice(0, 6), [profile?.demographics?.languages]);
     const onlineFollowerHeatmap = useMemo(() => mapObjectEntries(profile?.demographics?.onlineFollowers || profile?.onlineFollowers), [profile?.demographics?.onlineFollowers, profile?.onlineFollowers]);
 
@@ -591,7 +641,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
             </SectionCard>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 18 }}>
-                <SectionCard title="Audience & Score Trends" subtitle="Follower growth, engagement change, reach, impressions, and score across stored snapshots." icon={<LineChartIcon size={16} />}>
+                <SectionCard title="Audience & Score Trends" subtitle="Follower growth, engagement change, reach, impressions, and score across historical performance points." icon={<LineChartIcon size={16} />}>
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <ComposedChart data={snapshotTrend}>
@@ -626,11 +676,11 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             </ComposedChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyChart copy="Trend charts appear here as snapshot history accumulates from profile refreshes and analytics recalculations." />
+                        <EmptyChart copy="Trend charts will appear here as more historical performance data becomes available." />
                     )}
                 </SectionCard>
 
-                <SectionCard title="Reach vs Impressions" subtitle="Distribution of visibility signals across the stored snapshot history." icon={<TrendingUp size={16} />}>
+                <SectionCard title="Reach vs Impressions" subtitle="Distribution of visibility signals across the available performance history." icon={<TrendingUp size={16} />}>
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <AreaChart data={snapshotTrend}>
@@ -644,7 +694,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             </AreaChart>
                         </ResponsiveContainer>
                     ) : (
-                        <EmptyChart copy="Reach and impression trends will populate once the profile has multiple stored snapshots." />
+                        <EmptyChart copy="Reach and impression trends will appear once more historical performance data is available." />
                     )}
                 </SectionCard>
             </div>

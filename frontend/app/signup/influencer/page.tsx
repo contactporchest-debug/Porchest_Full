@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { authAPI } from '@/lib/api';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
@@ -11,7 +12,7 @@ import { Star, Mail, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import OTPVerify from '@/components/auth/OTPVerify';
 import { GoogleLogin } from '@react-oauth/google';
 
-const TERMS_TEXT = `Welcome to Porchest — the AI-powered influencer-brand collaboration platform.
+const TERMS_TEXT = `Welcome to Porchest — the influencer-brand collaboration platform.
 
 By creating an account, you agree to the following:
 
@@ -119,10 +120,7 @@ export default function InfluencerSignupPage() {
                     <>
                         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '18px', textDecoration: 'none' }}>
-                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, background: 'linear-gradient(135deg, #7B2FF7, #9d4dff)', boxShadow: '0 14px 28px rgba(123,47,247,0.24)', color: '#fff' }}>P</div>
-                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', letterSpacing: '-0.03em' }}>
-                                    Por<span className="gradient-text">chest</span>
-                                </span>
+                                <Image src="/porchest-logo.png" alt="Porchest" width={168} height={42} priority style={{ width: '168px', height: 'auto' }} />
                             </Link>
                             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(14,165,233,0.10)', color: '#0ea5e9' }}>
                                 <Star size={14} />

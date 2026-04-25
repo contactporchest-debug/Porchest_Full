@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
@@ -23,7 +24,7 @@ const brandNav = [
     { label: 'My Profile', href: '/dashboard/brand/profile', icon: <UserCircle size={17} /> },
     { label: 'Influencers', href: '/dashboard/brand/influencers', icon: <Users size={17} /> },
     { label: 'Collaborations', href: '/dashboard/brand/collaborations', icon: <Briefcase size={17} /> },
-    { label: 'AI Matching', href: '/dashboard/brand/matching', icon: <Bot size={17} /> },
+    { label: 'Smart Matching', href: '/dashboard/brand/matching', icon: <Bot size={17} /> },
 ];
 const influencerNav = [
     { label: 'Overview', href: '/dashboard/influencer', icon: <LayoutDashboard size={17} /> },
@@ -242,31 +243,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }}
             >
                 {/* Logo area */}
-                <div style={{ height: '64px', display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
+                <div style={{ minHeight: '78px', display: 'flex', alignItems: 'center', padding: collapsed ? '12px 10px' : '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
                     {collapsed ? (
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', boxShadow: '0 0 20px rgba(123,63,242,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#fff', margin: '0 auto' }}>P</div>
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                            <Image
+                                src="/logo.png"
+                                alt="Porchest"
+                                width={38}
+                                height={38}
+                                priority
+                                style={{ width: '38px', height: '38px', borderRadius: '12px', boxShadow: '0 0 20px rgba(123,63,242,0.22)' }}
+                            />
+                        </Link>
                     ) : (
-                        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', boxShadow: '0 0 16px rgba(123,63,242,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#fff', flexShrink: 0 }}>P</div>
-                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '17px', color: '#172033', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
-                                Por<span style={{ background: 'linear-gradient(90deg, #7B3FF2, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
-                            </span>
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', width: '100%' }}>
+                            <Image
+                                src="/porchest-logo.png"
+                                alt="Porchest"
+                                width={164}
+                                height={44}
+                                priority
+                                style={{ width: '164px', height: '44px', objectFit: 'contain', objectPosition: 'left center' }}
+                            />
                         </Link>
                     )}
                 </div>
 
                 {/* Role badge */}
                 {!collapsed && (
-                    <div style={{ padding: '12px 12px 4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 12px', borderRadius: '10px', background: `${roleColor}0d`, border: `1px solid ${roleColor}25` }}>
+                    <div style={{ padding: '18px 18px 10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', padding: '11px 14px', borderRadius: '18px', background: `${roleColor}0d`, border: `1px solid ${roleColor}25` }}>
                             <span style={{ color: roleColor }}>{roleIcons[user.role]}</span>
-                            <span style={{ fontSize: '11px', color: roleColor, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{user.role}</span>
+                            <span style={{ fontSize: '12px', color: roleColor, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{user.role}</span>
                         </div>
                     </div>
                 )}
 
                 {/* Nav */}
-                <nav style={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
+                <nav style={{ flex: 1, padding: collapsed ? '8px 8px 12px' : '4px 10px 16px', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
                     {nav.map((item) => {
                         const isExact = pathname === item.href;
                         const isNested = item.href !== `/dashboard/${user.role}` && pathname?.startsWith(item.href) && item.href !== '/dashboard/messages';
@@ -275,9 +289,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link key={item.href} href={item.href}
                                 className={`sidebar-link ${isActive ? 'active' : ''}`}
                                 title={collapsed ? item.label : undefined}
-                                style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '11px 0' : '', position: 'relative' }}>
+                                style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '13px 0' : '14px 16px', position: 'relative' }}>
                                 <span style={{ flexShrink: 0, color: isActive ? '#7B3FF2' : '#738196' }}>{item.icon}</span>
-                                 {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
+                                 {!collapsed && <span style={{ whiteSpace: 'nowrap', fontSize: '14px', fontWeight: isActive ? 700 : 500 }}>{item.label}</span>}
                                 {/* Show unread count on primary action items */}
                                 {item.label === 'Collaborations' && unreadCount > 0 && (
                                     <span style={{
@@ -301,9 +315,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
 
                 {/* User + logout */}
-                <div style={{ padding: '8px', borderTop: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
+                <div style={{ padding: collapsed ? '8px' : '12px 10px 10px', borderTop: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
                     {!collapsed && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px 10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px 12px' }}>
                             <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>
                                 {displayName.charAt(0).toUpperCase()}
                             </div>

@@ -47,7 +47,7 @@ const ReadOnlyField = ({ label, value, color = '#60d5f8' }: { label: string; val
     <div style={{ padding: '11px 15px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color }}>{value || '—'}</p>
-        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', marginTop: '2px' }}>API-synced · read-only</p>
+        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', marginTop: '2px' }}>Connected account data · read-only</p>
     </div>
 );
 
@@ -215,7 +215,7 @@ export default function MyProfilePage() {
                         </div>
                         <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', marginTop: '5px' }}>Enter the URL of your Instagram profile photo. Used by brands to identify you.</p>
                     </div>
-                    {/* API-synced read-only */}
+                    {/* Connected account data is read-only */}
                     <ReadOnlyField label="Followers" value={user?.followers ? `${(user.followers / 1000).toFixed(1)}K` : '—'} color="#60d5f8" />
                     <ReadOnlyField label="Engagement Rate" value={user?.engagementRate ? `${user.engagementRate}%` : '—'} color="#4ade80" />
                 </div>

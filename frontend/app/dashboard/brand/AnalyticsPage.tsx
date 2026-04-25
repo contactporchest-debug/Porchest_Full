@@ -129,6 +129,9 @@ const tooltipStyle = {
     boxShadow: '0 12px 26px rgba(15,23,42,0.10)',
 };
 
+const hasChartData = (data?: Array<{ value?: number } | { followers?: number } | { engagementRate?: number }>) =>
+    Array.isArray(data) && data.some((item: any) => Object.values(item || {}).some((value) => typeof value === 'number' && value > 0));
+
 const fmtNumber = (value: number | null | undefined, digits = 0) => {
     if (value == null || Number.isNaN(value)) return '—';
     return Number(value).toLocaleString(undefined, {
@@ -480,14 +483,18 @@ export default function AnalyticsPage() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
                                 <SectionCard title="Influencer Score Radar" subtitle="Normalized 0–100 scoring breakdown." icon={<Target size={16} />}>
-                                    <ResponsiveContainer width="100%" height={280}>
-                                        <RadarChart data={radarData}>
-                                            <PolarGrid stroke="rgba(148,163,184,0.22)" />
-                                            <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
-                                            <Radar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.28} />
-                                            <Tooltip contentStyle={tooltipStyle} />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
+                                    {hasChartData(radarData) ? (
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <RadarChart data={radarData}>
+                                                <PolarGrid stroke="rgba(148,163,184,0.22)" />
+                                                <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
+                                                <Radar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.28} />
+                                                <Tooltip contentStyle={tooltipStyle} />
+                                            </RadarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState title="Score data unavailable" copy="Radar metrics will appear once the selected influencer has enough analytics signals." />
+                                    )}
                                 </SectionCard>
 
                                 <SectionCard title="ROI / EMV" subtitle="Predicted return based on estimated media value and current pricing." icon={<TrendingUp size={16} />}>
@@ -502,45 +509,57 @@ export default function AnalyticsPage() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
                                 <SectionCard title="Follower Growth" subtitle="Historical snapshot trend from stored analytics recalculations." icon={<LineChartIcon size={16} />}>
-                                    <ResponsiveContainer width="100%" height={260}>
-                                        <LineChart data={followerGrowth}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
-                                            <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={tooltipStyle} />
-                                            <Line type="monotone" dataKey="followers" stroke={COLORS.blue} strokeWidth={3} dot={{ r: 4 }} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
+                                    {hasChartData(followerGrowth) ? (
+                                        <ResponsiveContainer width="100%" height={260}>
+                                            <LineChart data={followerGrowth}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <Tooltip contentStyle={tooltipStyle} />
+                                                <Line type="monotone" dataKey="followers" stroke={COLORS.blue} strokeWidth={3} dot={{ r: 4 }} />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState title="No follower trend yet" copy="This chart will fill in as more historical performance data becomes available." />
+                                    )}
                                 </SectionCard>
 
                                 <SectionCard title="Engagement Trend" subtitle="Stored engagement-rate history over time." icon={<Activity size={16} />}>
-                                    <ResponsiveContainer width="100%" height={260}>
-                                        <LineChart data={engagementTrend}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
-                                            <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={tooltipStyle} />
-                                            <Line type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 4 }} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
+                                    {hasChartData(engagementTrend) ? (
+                                        <ResponsiveContainer width="100%" height={260}>
+                                            <LineChart data={engagementTrend}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <Tooltip contentStyle={tooltipStyle} />
+                                                <Line type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 4 }} />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState title="No engagement trend yet" copy="Trend history will appear as performance data builds over time." />
+                                    )}
                                 </SectionCard>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
                                 <SectionCard title="Engagement Breakdown" subtitle="Current likes, comments, shares, and saves totals." icon={<BarChart3 size={16} />}>
-                                    <ResponsiveContainer width="100%" height={260}>
-                                        <BarChart data={engagementBreakdown}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
-                                            <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                            <Tooltip contentStyle={tooltipStyle} />
-                                            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                                {engagementBreakdown.map((entry, index) => (
-                                                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                    {hasChartData(engagementBreakdown) ? (
+                                        <ResponsiveContainer width="100%" height={260}>
+                                            <BarChart data={engagementBreakdown}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <Tooltip contentStyle={tooltipStyle} />
+                                                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                                                    {engagementBreakdown.map((entry, index) => (
+                                                        <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <EmptyState title="No engagement mix yet" copy="This visualization will appear when likes, comments, shares, and saves are available." />
+                                    )}
                                 </SectionCard>
 
                                 <SectionCard title="Audience Demographics" subtitle={demographicsLabel || 'No audience demographic data is currently stored.'} icon={<PieChartIcon size={16} />}>

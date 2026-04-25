@@ -105,7 +105,7 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
             const res = await influencerAPI.getInstagramConnectURL();
             const { authURL } = res.data;
             if (authURL) window.location.href = authURL;
-            else toast.error('Could not get Instagram auth URL. Check server config.');
+            else toast.error('Could not start Instagram connection right now.');
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to initiate Instagram connect');
         } finally {
@@ -114,7 +114,7 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
     };
 
     const handleDisconnect = async () => {
-        if (!confirm('Disconnecting will remove all API-synced metrics. Continue?')) return;
+        if (!confirm('Disconnecting will remove your connected Instagram insights from Porchest. Continue?')) return;
         setDisconnecting(true);
         try {
             await influencerAPI.disconnectInstagram();
@@ -128,12 +128,12 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
         setRefreshing(true);
         try {
             await influencerAPI.refreshInstagramSync();
-            toast.success('Instagram data refreshed! ✅');
+            toast.success('Instagram insights refreshed');
             onRefresh();
         } catch (err: any) {
             const code = err?.response?.data?.code;
-            if (code === 'TOKEN_EXPIRED') toast.error('Token expired. Please reconnect your Instagram account.');
-            else toast.error(err?.response?.data?.message || 'Refresh failed');
+            if (code === 'TOKEN_EXPIRED') toast.error('Your Instagram session expired. Please reconnect your account.');
+            else toast.error(err?.response?.data?.message || 'Could not refresh Instagram data');
         } finally { setRefreshing(false); }
     };
 
@@ -232,10 +232,6 @@ export default function InfluencerProfilePage() {
             const res = await influencerAPI.getProfile();
             const { user: u, instagramConnection, influencerProfile: ip } = res.data;
 
-            // DEBUG: log what we receive so mismatches are easy to spot
-            console.log('[ProfilePage] fetch user:', u);
-            console.log('[ProfilePage] fetch influencerProfile:', ip);
-
             // Priority: InfluencerProfile (ip) > User (u) for all profile fields.
             // avgPostCostUSD is saved as avgPostPrice in InfluencerProfile.
             const newForm = {
@@ -262,17 +258,17 @@ export default function InfluencerProfilePage() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const p = new URLSearchParams(window.location.search);
-            if (p.get('ig_connected') === '1') { toast.success('Instagram connected! ✅'); window.history.replaceState({}, '', window.location.pathname); }
+            if (p.get('ig_connected') === '1') { toast.success('Instagram connected'); window.history.replaceState({}, '', window.location.pathname); }
             if (p.get('ig_error')) {
                 const errType = p.get('ig_error')!;
                 const details = p.get('details') ? ` (${decodeURIComponent(p.get('details')!)})` : '';
                 const m: Record<string, string> = { 
                     invalid_state: 'Security check failed.', 
-                    missing_code: 'Authorization cancelled.', 
-                    sync_failed: 'Sync failed. Try again.', 
-                    token_expired: 'Token expired. Reconnect.',
+                    missing_code: 'Instagram connection was cancelled.', 
+                    sync_failed: 'We could not finish connecting Instagram. Please try again.', 
+                    token_expired: 'Your Instagram session expired. Please reconnect.',
                     auth_denied: 'You declined the connection.',
-                    invalid_state_format: 'Session corrupted.'
+                    invalid_state_format: 'Your session could not be verified.'
                 };
                 toast.error((m[errType] || 'Instagram connection failed.') + details);
                 window.history.replaceState({}, '', window.location.pathname);

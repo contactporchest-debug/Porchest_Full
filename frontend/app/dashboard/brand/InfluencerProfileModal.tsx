@@ -57,6 +57,69 @@ const formatDateShort = (isoString: string) => {
     }
 };
 
+const mapDistribution = (source: any): Array<{ name: string; value: number }> => {
+    if (!source) return [];
+
+    if (Array.isArray(source)) {
+        return source
+            .map((item) => ({
+                name: String(item?.name || item?.range || ''),
+                value: Number(item?.value ?? item?.percentage ?? 0),
+            }))
+            .filter((item) => item.name && Number.isFinite(item.value) && item.value > 0);
+    }
+
+    if (typeof source === 'object') {
+        return Object.entries(source)
+            .map(([name, value]) => ({ name, value: Number(value || 0) }))
+            .filter((item) => Number.isFinite(item.value) && item.value > 0)
+            .sort((a, b) => b.value - a.value);
+    }
+
+    return [];
+};
+
+const buildModalDemographics = (analytics: any, profile: any) => {
+    const analyticsDemo = analytics?.audienceDemographics;
+    const profileDemo = profile?.demographics;
+
+    const countries = mapDistribution(
+        analyticsDemo?.countries ||
+        profileDemo?.topCountries ||
+        profileDemo?.countries
+    ).slice(0, 5);
+
+    const ageRanges = mapDistribution(
+        analyticsDemo?.ageRanges ||
+        profileDemo?.ageDistribution
+    );
+
+    const gender = (() => {
+        const analyticsGender = analyticsDemo?.gender;
+        if (analyticsGender && typeof analyticsGender === 'object') {
+            const mapped = mapDistribution({
+                Male: analyticsGender.male || analyticsGender.M || 0,
+                Female: analyticsGender.female || analyticsGender.F || 0,
+            });
+            if (mapped.length) return mapped;
+        }
+
+        const profileGender = profileDemo?.genderDistribution || profileDemo?.gender;
+        return mapDistribution(
+            profileGender && typeof profileGender === 'object'
+                ? Object.entries(profileGender).reduce((acc: Record<string, number>, [key, value]) => {
+                    if (key === 'M') acc.Male = Number(value || 0);
+                    else if (key === 'F') acc.Female = Number(value || 0);
+                    else acc[key] = Number(value || 0);
+                    return acc;
+                }, {})
+                : null
+        );
+    })();
+
+    return { countries, ageRanges, gender };
+};
+
 const COLORS = ['#7B3FF2', '#A855F7', '#f472b6', '#38bdf8', '#34d399', '#facc15'];
 const SURFACE = '#ffffff';
 const SURFACE_ALT = '#f8fafc';
@@ -171,6 +234,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const displayEngagement  = derived.postsCount > 0 ? derived.engagementRate  : baseEngagement;
     const displayAvgLikes    = derived.postsCount > 0 ? derived.avgLikes    : (profile?.avgLikes    || analytics?.avgLikesPerPost    || 0);
     const displayAvgComments = derived.postsCount > 0 ? derived.avgComments : (profile?.avgComments || analytics?.avgCommentsPerPost || 0);
+    const normalizedDemographics = useMemo(() => buildModalDemographics(analytics, profile), [analytics, profile]);
 
     // ─ Commercial Metrics (corrected formulas) ──────────────────────────────
     // Engagement defined as: likes + comments per post (consistent across all screens)
@@ -503,25 +567,30 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     <Users size={16} color="#facc15" />
                                     <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Audience Demographics</h3>
                                 </div>
-                                {analytics?.audienceDemographics?.countries ? (() => {
-                                    const c = analytics.audienceDemographics.countries;
-                                    const cKeys = Object.keys(c).sort((a: string, b: string) => (c as any)[b] - (c as any)[a]).slice(0, 5);
-                                    let total = 0;
-                                    cKeys.forEach((k: string) => total += (c as any)[k]);
-                                    const demoData = cKeys.map((k: string) => ({ name: k, value: total > 0 ? ((c as any)[k] / total) * 100 : 0 }));
-                                    if (demoData.length === 0) return <EmptyChartState message="Insufficient demographic data." />;
+                                {normalizedDemographics.countries.length || normalizedDemographics.gender.length || normalizedDemographics.ageRanges.length ? (() => {
+                                    const demoData = normalizedDemographics.countries.length
+                                        ? normalizedDemographics.countries
+                                        : normalizedDemographics.gender.length
+                                            ? normalizedDemographics.gender
+                                            : normalizedDemographics.ageRanges;
+                                    const total = demoData.reduce((sum, item) => sum + item.value, 0);
+                                    const ratioData = demoData.map((item) => ({
+                                        name: item.name,
+                                        value: total > 0 ? (item.value / total) * 100 : 0,
+                                    }));
+                                    if (ratioData.length === 0) return <EmptyChartState message="Insufficient demographic data." />;
                                     return (
                                         <div style={{ height: '220px', width: '100%', display: 'flex', alignItems: 'center' }}>
                                             <ResponsiveContainer width="60%" height="100%">
                                                 <PieChart>
-                                                    <Pie data={demoData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} dataKey="value" stroke="none">
-                                                        {demoData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                                    <Pie data={ratioData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={2} dataKey="value" stroke="none">
+                                                        {ratioData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                                     </Pie>
                                                     <RechartsTooltip formatter={(val: number) => val.toFixed(1) + '%'} contentStyle={customTooltipStyle} />
                                                 </PieChart>
                                             </ResponsiveContainer>
                                             <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                {demoData.map((d, i) => (
+                                                {ratioData.map((d, i) => (
                                                     <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '10px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[i % COLORS.length] }}></div>
@@ -534,7 +603,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         </div>
                                     );
                                 })() : (
-                                    <EmptyChartState message="Demographic data not yet synced. Re-connect Instagram to load demographics." />
+                                    <EmptyChartState message="Demographic data is not available for this profile yet." />
                                 )}
                             </div>
                         </div>

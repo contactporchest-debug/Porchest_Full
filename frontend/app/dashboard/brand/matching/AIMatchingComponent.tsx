@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Loader2, UserX, Globe, TrendingUp, BarChart3, Image, Film, Star, ShieldCheck, Instagram, Users, Sparkles, User } from 'lucide-react';
+import { Bot, Send, Loader2, UserX, Globe, TrendingUp, BarChart3, Image, Film, Star, ShieldCheck, Instagram, Users, User } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -17,7 +17,7 @@ const CreateRequestModal = dynamic(() => import('../CreateRequestModal'));
 
 export default function AIMatchingComponent() {
     const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-        { role: 'ai', text: "Hi! I'm your AI Matchmaker. Tell me what kind of influencers you're looking for. For example: 'influencers in Pakistan with tech niche and engagement rate above 5% and cost per reel under $500'." }
+        { role: 'ai', text: "Hi! Tell me what kind of creators you're looking for. For example: 'tech creators in Pakistan with engagement above 5% and reel rates under $500'." }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -55,8 +55,8 @@ export default function AIMatchingComponent() {
                 toast.error(res.data.message || 'Failed to match influencers');
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Error communicating with AI matching');
-            setMessages(prev => [...prev, { role: 'ai', text: "Sorry, I had trouble understanding that. Please try rephrasing your search." }]);
+            toast.error(error.response?.data?.message || 'Could not load recommendations right now');
+            setMessages(prev => [...prev, { role: 'ai', text: "I couldn’t complete that search just now. Please try again or simplify the request." }]);
         } finally {
             setLoading(false);
             scrollToBottom();
@@ -107,16 +107,12 @@ export default function AIMatchingComponent() {
             {/* Header */}
             <div>
                 <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-                    AI Matchmaker
+                    Smart Matching
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
-                        Describe your ideal creator in plain language to find the perfect match.
+                        Describe your ideal creator in plain language to get tailored recommendations.
                     </p>
-                    <div style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.2)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Sparkles size={10} style={{ color: '#a78bfa' }} />
-                        <span style={{ fontSize: '10px', color: '#a78bfa', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Powered by AI</span>
-                    </div>
                 </div>
             </div>
 

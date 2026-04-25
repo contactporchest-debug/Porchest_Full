@@ -79,7 +79,7 @@ export default function OverviewPage() {
                         </div>
                         <div>
                             <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033', marginBottom: '2px' }}>Action Required: Complete Your Profile</p>
-                            <p style={{ fontSize: '12px', color: '#667085' }}>You need to complete your brand profile to start using AI Matching.</p>
+                            <p style={{ fontSize: '12px', color: '#667085' }}>You need to complete your brand profile to start using Smart Matching.</p>
                         </div>
                     </div>
                     <Link href="/dashboard/brand/profile" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fbbf24', fontSize: '12px', fontWeight: '700', textDecoration: 'none', transition: 'all 200ms ease' }}>

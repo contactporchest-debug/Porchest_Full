@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
 import { GlowButton } from '@/components/ui';
@@ -154,10 +155,7 @@ export default function LoginPage() {
             >
                 <div style={{ textAlign: 'center', marginBottom: '26px' }}>
                     <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '18px' }}>
-                        <div style={{ width: '46px', height: '46px', borderRadius: '15px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '21px', boxShadow: '0 14px 28px rgba(123,63,242,0.24)' }}>P</div>
-                        <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', letterSpacing: '-0.03em' }}>
-                            Por<span className="gradient-text">chest</span>
-                        </span>
+                        <Image src="/porchest-logo.png" alt="Porchest" width={168} height={42} priority style={{ width: '168px', height: 'auto' }} />
                     </Link>
                     <p style={{ fontSize: '15px', color: '#6b7688', lineHeight: 1.6 }}>
                         Sign in to manage campaigns, requests, and your Porchest workspace.

@@ -58,7 +58,7 @@ function Hero() {
                 <div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '999px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.14)', marginBottom: '26px' }}>
                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7B3FF2', display: 'inline-block' }} />
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#7B3FF2', letterSpacing: '0.04em' }}>AI-Powered Influencer Marketing Platform</span>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#7B3FF2', letterSpacing: '0.04em' }}>Smart Influencer Marketing Platform</span>
                     </div>
 
                     <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(3rem, 7vw, 5.6rem)', lineHeight: 1.02, letterSpacing: '-0.06em', color: '#172033', marginBottom: '20px' }}>

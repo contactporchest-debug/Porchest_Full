@@ -29,7 +29,7 @@ export default function InfluencerPortal() {
                 window.history.replaceState({}, '', window.location.pathname);
             }
             if (p.get('ig_error')) {
-                const m: Record<string, string> = { invalid_state: 'Security check failed.', missing_code: 'Authorization cancelled.', sync_failed: 'Sync failed. Try again.', token_expired: 'Token expired. Reconnect.' };
+                const m: Record<string, string> = { invalid_state: 'Security check failed.', missing_code: 'Instagram connection was cancelled.', sync_failed: 'We could not finish connecting Instagram. Please try again.', token_expired: 'Your Instagram session expired. Please reconnect.' };
                 toast.error(m[p.get('ig_error')!] || 'Instagram connection failed.', { id: 'ig-err' });
                 window.history.replaceState({}, '', window.location.pathname);
             }

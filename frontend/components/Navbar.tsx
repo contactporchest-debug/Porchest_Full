@@ -11,22 +11,19 @@ export function Logo() {
     return (
         <Link href="/" className="flex items-center gap-3" style={{ textDecoration: 'none' }}>
             <Image
-                src="/logo.png"
+                src="/porchest-logo.png"
                 alt="Porchest"
-                width={38}
+                width={156}
                 height={38}
-                style={{ borderRadius: '10px', objectFit: 'contain' }}
+                style={{ width: '156px', height: 'auto', objectFit: 'contain' }}
             />
-            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '19px', color: '#fff', letterSpacing: '-0.02em' }}>
-                Por<span style={{ background: 'linear-gradient(90deg, #7B3FF2, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>chest</span>
-            </span>
         </Link>
     );
 }
 
 const navLinks = [
     { label: 'How it Works', href: '#how' },
-    { label: 'AI Matching', href: '#ai' },
+    { label: 'Smart Matching', href: '#ai' },
     { label: 'For Brands', href: '#brands' },
     { label: 'For Influencers', href: '#influencers' },
 ];

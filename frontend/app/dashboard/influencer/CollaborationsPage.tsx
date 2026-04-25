@@ -81,7 +81,6 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                 })
                 .catch(err => {
                     const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load active collaborations';
-                    console.error('Failed to load active collaborations:', err);
                     setError(errorMsg);
                     if (loading) toast.error(errorMsg);
                 })
@@ -197,7 +196,6 @@ function CompletedHistory() {
                 })
                 .catch(err => {
                     const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load verification history';
-                    console.error('Failed to load history:', err);
                     setError(errorMsg);
                     if (loading) toast.error(errorMsg);
                 })
@@ -283,8 +281,7 @@ export default function CollaborationsPage() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Listen for real-time collaboration updates
-    useCollaborationUpdates(useCallback((data: any) => {
-        console.log('[Influencer Collaboration Update]', data);
+    useCollaborationUpdates(useCallback((_data: any) => {
         // Trigger refresh of collaborations
         setRefreshTrigger(p => p + 1);
     }, []));

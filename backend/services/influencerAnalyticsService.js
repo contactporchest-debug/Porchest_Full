@@ -64,6 +64,50 @@ function mapDemographicEntries(source) {
         .sort((a, b) => b.value - a.value);
 }
 
+function normalizeGenderDistribution(source) {
+    if (!source || typeof source !== 'object') return [];
+    if (Array.isArray(source)) return source;
+
+    if ('male' in source || 'female' in source) {
+        return mapDemographicEntries({
+            Male: Number(source.male || 0),
+            Female: Number(source.female || 0),
+        });
+    }
+
+    return mapDemographicEntries(
+        Object.entries(source).reduce((acc, [key, value]) => {
+            if (key === 'M') acc.Male = Number(value || 0);
+            else if (key === 'F') acc.Female = Number(value || 0);
+            else acc[key] = Number(value || 0);
+            return acc;
+        }, {})
+    );
+}
+
+function normalizeAgeDistribution(source, genderAgeSource) {
+    if (source && typeof source === 'object' && !Array.isArray(source)) {
+        const mapped = mapDemographicEntries(source);
+        if (mapped.length) return mapped;
+    }
+
+    if (!genderAgeSource || typeof genderAgeSource !== 'object') return [];
+
+    const ages = Object.entries(genderAgeSource).reduce((acc, [key, value]) => {
+        const ageKey = key.includes('.') ? key.split('.').slice(1).join('.') : key;
+        if (!ageKey) return acc;
+        acc[ageKey] = (acc[ageKey] || 0) + Number(value || 0);
+        return acc;
+    }, {});
+
+    return mapDemographicEntries(ages);
+}
+
+function normalizeCountryDistribution(source) {
+    if (!source || typeof source !== 'object') return [];
+    return mapDemographicEntries(source);
+}
+
 function estimateStoryRate(postRate, reelRate) {
     if (Number.isFinite(postRate) && postRate > 0) return Number((postRate * 0.35).toFixed(2));
     if (Number.isFinite(reelRate) && reelRate > 0) return Number((reelRate * 0.25).toFixed(2));
@@ -318,9 +362,9 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null, { appen
             { name: 'Saves', value: mediaStats.saves },
         ],
         demographics: {
-            gender: mapDemographicEntries(profile.demographics?.genderDistribution),
-            age: mapDemographicEntries(profile.demographics?.ageDistribution),
-            country: mapDemographicEntries(profile.demographics?.topCountries),
+            gender: normalizeGenderDistribution(profile.demographics?.genderDistribution || profile.demographics?.gender),
+            age: normalizeAgeDistribution(profile.demographics?.ageDistribution, profile.demographics?.genderAge),
+            country: normalizeCountryDistribution(profile.demographics?.topCountries || profile.demographics?.countries),
         },
         radar: [
             { metric: 'Engagement', value: Math.round(engagementScore) },

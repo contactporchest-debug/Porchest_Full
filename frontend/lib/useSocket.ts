@@ -37,17 +37,9 @@ export function useSocket() {
                 transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
             });
 
-            socketInstance.on('connect', () => {
-                console.log('[Socket] Connected to server');
-            });
-
-            socketInstance.on('disconnect', () => {
-                console.log('[Socket] Disconnected from server');
-            });
-
-            socketInstance.on('error', (error) => {
-                console.error('[Socket] Error:', error);
-            });
+            socketInstance.on('connect', () => {});
+            socketInstance.on('disconnect', () => {});
+            socketInstance.on('error', () => {});
         }
 
         return () => {

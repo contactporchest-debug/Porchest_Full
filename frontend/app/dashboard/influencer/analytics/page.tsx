@@ -357,9 +357,9 @@ export default function AnalyticsPage() {
                         </div>
                     </motion.div>
 
-                    {/* Verified data banner */}
+                    {/* Live data banner */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)', marginBottom: 28, fontSize: 12, color: 'rgba(74,222,128,0.85)' }}>
-                        <Zap size={13} /> <strong>Verified Data</strong> — Metrics shown here come from your synced Instagram account and recent fetched media only.
+                        <Zap size={13} /> <strong>Live Account Data</strong> — Metrics shown here come from your connected Instagram account and the latest available media.
                     </div>
 
                     {/* ════════════════════════════════════════════════════════
@@ -383,7 +383,7 @@ export default function AnalyticsPage() {
                     {/* Follower Growth — Area Chart */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                         <ChartCard title="Follower Growth" subtitle={`Trend over last ${timeRange} days`}>
-                            <EmptyChartState text="Historical follower snapshots are not stored yet. Current follower count is shown above from live synced account data." />
+                            <EmptyChartState text="Historical follower history is still building. Your current follower count is shown above using live account data." />
                         </ChartCard>
 
                         {/* Posts Analyzed — Donut */}

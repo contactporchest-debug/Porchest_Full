@@ -273,7 +273,6 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
             setLastUpdated(new Date());
         } catch (err: any) {
             const errorMsg = err?.response?.data?.message || err?.message || 'Failed to load campaigns';
-            console.error('Failed to load campaigns:', err);
             setError(errorMsg);
             if (loading) toast.error(errorMsg);
         } finally {
@@ -282,8 +281,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
     }, [loading]);
 
     // Listen for real-time collaboration updates
-    useCollaborationUpdates(useCallback(async (data: any) => {
-        console.log('[Collaboration Update]', data);
+    useCollaborationUpdates(useCallback(async (_data: any) => {
         // Refetch data when collaboration is updated
         await fetchData();
     }, [fetchData]));

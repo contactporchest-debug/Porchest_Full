@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { motion } from 'framer-motion';
-import { Bot, UserX, ArrowRight, Loader2 } from 'lucide-react';
+import { UserX, ArrowRight, Loader2 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 const AIMatchingComponent = dynamic(() => import('./AIMatchingComponent'), {
     loading: () => (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', color: '#64748b' }}>
-            Loading AI matching...
+            Loading recommendations...
         </div>
     ),
 });
@@ -56,8 +56,8 @@ export default function AiMatchingPage() {
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#0f172a', letterSpacing: '-0.03em', marginBottom: '4px' }}>AI Matching</h1>
-                            <p style={{ fontSize: '13px', color: '#64748b' }}>Intelligent influencer recommendations for your brand</p>
+                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#0f172a', letterSpacing: '-0.03em', marginBottom: '4px' }}>Smart Matching</h1>
+                            <p style={{ fontSize: '13px', color: '#64748b' }}>Discover suitable influencers for your brand</p>
                         </div>
 
                         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
@@ -70,7 +70,7 @@ export default function AiMatchingPage() {
                                 </div>
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#0f172a', marginBottom: '10px' }}>Action Required: Complete Your Profile</p>
                                 <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '420px', margin: '0 auto 28px', lineHeight: '1.7' }}>
-                                    To unlock our intelligent matchmaking system and discover influencers, you must first complete your brand profile 100%.
+                                    Complete your brand profile to unlock tailored creator recommendations and discovery tools.
                                 </p>
                                 <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '99px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 0 30px rgba(123,63,242,0.4)', transition: 'all 200ms ease' }}>
                                     Go to Profile <ArrowRight size={15} />
