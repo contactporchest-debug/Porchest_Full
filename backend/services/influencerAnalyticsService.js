@@ -133,6 +133,33 @@ function buildTrendPoint(date, followers, engagementRate) {
     };
 }
 
+function buildTrendHistoryFromSnapshots(profile) {
+    if (!Array.isArray(profile?.historicalSnapshots) || profile.historicalSnapshots.length === 0) {
+        return {
+            followerGrowth: [],
+            engagementTrend: [],
+        };
+    }
+
+    const snapshots = [...profile.historicalSnapshots]
+        .filter((item) => item?.capturedAt)
+        .sort((a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime())
+        .slice(-12);
+
+    return {
+        followerGrowth: snapshots.map((item) => ({
+            date: new Date(item.capturedAt),
+            label: formatDateLabel(item.capturedAt),
+            followers: Math.round(Number(item.followersCount || 0)),
+        })),
+        engagementTrend: snapshots.map((item) => ({
+            date: new Date(item.capturedAt),
+            label: formatDateLabel(item.capturedAt),
+            engagementRate: Number(Number(item.engagementRate || 0).toFixed(2)),
+        })),
+    };
+}
+
 function upsertTrendPoint(history, nextPoint) {
     if (!Array.isArray(history) || history.length === 0) return [nextPoint];
     const cloned = history.map((point) => ({ ...point }));
@@ -341,8 +368,13 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null, { appen
         postRate: pricing.estimatedPostRate,
     });
 
-    const baseFollowerGrowth = Array.isArray(existingAnalytics?.charts?.followerGrowth) ? existingAnalytics.charts.followerGrowth : [];
-    const baseEngagementTrend = Array.isArray(existingAnalytics?.charts?.engagementTrend) ? existingAnalytics.charts.engagementTrend : [];
+    const snapshotTrend = buildTrendHistoryFromSnapshots(profile);
+    const baseFollowerGrowth = Array.isArray(existingAnalytics?.charts?.followerGrowth) && existingAnalytics.charts.followerGrowth.length
+        ? existingAnalytics.charts.followerGrowth
+        : snapshotTrend.followerGrowth;
+    const baseEngagementTrend = Array.isArray(existingAnalytics?.charts?.engagementTrend) && existingAnalytics.charts.engagementTrend.length
+        ? existingAnalytics.charts.engagementTrend
+        : snapshotTrend.engagementTrend;
     const nextTrendPoint = buildTrendPoint(new Date(), followers, engagementRate);
     const followerGrowth = appendTrendPoint
         ? upsertTrendPoint(baseFollowerGrowth, nextTrendPoint)

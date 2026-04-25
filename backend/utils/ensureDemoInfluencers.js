@@ -8,6 +8,73 @@ const DEMO_PASSWORD = 'demo_porchest';
 const now = new Date();
 const daysAgo = (days) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
+const buildOnlineFollowerHeatmap = (config) => ({
+    '00:00': 24,
+    '03:00': 16,
+    '06:00': 12,
+    '09:00': Math.max(28, Math.round((config.engagementRate || 0) * 8)),
+    '12:00': Math.max(42, Math.round((config.engagementRate || 0) * 11)),
+    '15:00': Math.max(58, Math.round((config.engagementRate || 0) * 13)),
+    '18:00': Math.max(72, Math.round((config.engagementRate || 0) * 15)),
+    '21:00': Math.max(66, Math.round((config.engagementRate || 0) * 14)),
+});
+
+const buildHistoricalSnapshots = (config) => {
+    const points = [];
+    const currentFollowers = Number(config.followersCount || 0);
+    const currentEngagement = Number(config.engagementRate || 0);
+    const currentReach = Number(config.accountReach || config.avgReach || 0);
+    const currentImpressions = Number(config.accountImpressions || config.avgImpressions || 0);
+    const currentScore = Number(config.fitScore || config.qualityScore || 0);
+    const startingFollowers = Math.round(currentFollowers * 0.9);
+
+    for (let index = 0; index < 12; index += 1) {
+        const progress = index / 11;
+        const engagementSwing = ((index % 4) - 1.5) * 0.14;
+        const reachSwing = 1 + (((index % 5) - 2) * 0.045);
+        const impressionSwing = 1 + (((index % 3) - 1) * 0.05);
+
+        points.push({
+            capturedAt: daysAgo(55 - (index * 5)),
+            followersCount: Math.round(startingFollowers + ((currentFollowers - startingFollowers) * progress)),
+            engagementRate: Number(Math.max(1.2, currentEngagement - 0.35 + (progress * 0.42) + engagementSwing).toFixed(2)),
+            accountReach: Math.round((currentReach || config.avgReach || 0) * (0.78 + (progress * 0.2)) * reachSwing),
+            accountImpressions: Math.round((currentImpressions || config.avgImpressions || 0) * (0.8 + (progress * 0.18)) * impressionSwing),
+            influencerScore: Math.round(Math.max(65, currentScore - 6 + (progress * 7))),
+        });
+    }
+
+    return points;
+};
+
+const enrichRecentMediaSummary = (config) =>
+    (config.recentMediaSummary || []).map((item, index) => {
+        const reachBase = config.avgReach || 0;
+        const impressionBase = config.avgImpressions || 0;
+        const viewBase = config.avgViews || 0;
+        const shareBase = config.avgShares || 0;
+        const variation = 1 + (((index % 5) - 2) * 0.055);
+        const isVideo = item.mediaType === 'VIDEO';
+        const viewCount = isVideo ? Math.round(viewBase * variation) : Math.round((viewBase * 0.38) * variation);
+        const reachCount = Math.round(reachBase * variation);
+        const impressionCount = Math.round(impressionBase * (1 + (((index % 4) - 1.5) * 0.05)));
+        const shareCount = Math.max(18, Math.round(shareBase * (1 + (((index % 3) - 1) * 0.08))));
+        const saveCount = Math.max(22, Math.round(shareCount * 0.86));
+        const engagementCount = Math.round((item.likeCount || 0) + (item.commentsCount || 0) + shareCount + saveCount);
+
+        return {
+            ...item,
+            thumbnailUrl: item.thumbnailUrl || item.mediaUrl,
+            shareCount,
+            saveCount,
+            playCount: isVideo ? viewCount : 0,
+            reachCount,
+            impressionCount,
+            engagementCount,
+            viewCount,
+        };
+    });
+
 const buildSixtyDayMediaWindow = (items, options = {}) => {
     const targetCount = options.targetCount || 24;
     const intervalDays = options.intervalDays || 2;
@@ -390,6 +457,7 @@ async function upsertDemoInfluencerAccount(config) {
         }
     }
 
+    const enrichedMediaSummary = enrichRecentMediaSummary(config);
     const baseProfile = {
         totalReach: Math.round((config.avgReach || 0) * config.recentMediaSummary.length),
         totalImpressions: Math.round((config.avgImpressions || 0) * config.recentMediaSummary.length),
@@ -462,7 +530,13 @@ async function upsertDemoInfluencerAccount(config) {
         postingFrequency7d: config.postingFrequency7d,
         postingFrequency30d: config.postingFrequency30d,
         topPerformingContentType: config.topPerformingContentType,
+        historicalSnapshots: buildHistoricalSnapshots({
+            ...config,
+            accountReach: Math.round((config.avgReach || 0) * Math.min(7, config.postingFrequency30d || 1)),
+            accountImpressions: Math.round((config.avgImpressions || 0) * Math.min(7, config.postingFrequency30d || 1)),
+        }),
         demographics: config.demographics,
+        onlineFollowers: buildOnlineFollowerHeatmap(config),
         avgPostPrice: config.avgPostPrice,
         avgReelPrice: config.avgReelPrice,
         currency: config.currency,
@@ -492,7 +566,7 @@ async function upsertDemoInfluencerAccount(config) {
             longLivedToken: 'demo_long_lived_token',
             tokenExpiresAt: daysAgo(-45),
         },
-        recentMediaSummary: config.recentMediaSummary,
+        recentMediaSummary: enrichedMediaSummary,
     };
 
     if (!profile) {

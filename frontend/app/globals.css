@@ -26,6 +26,7 @@
   --text-faint: rgba(95, 107, 125, 0.78);
   --font-display: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   --font-body: Inter, "Avenir Next", "Segoe UI", Arial, sans-serif;
+  --font-portal: Calibri, Candara, "Segoe UI", Arial, sans-serif;
 
   /* Glows */
   --glow-card: 0 24px 60px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(123, 63, 242, 0.08);
@@ -514,6 +515,11 @@ body {
 
 .light-dashboard-content {
   color: var(--text-primary);
+}
+
+.portal-shell,
+.portal-shell * {
+  font-family: var(--font-portal) !important;
 }
 
 .light-dashboard-content h1,

@@ -223,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const handleLogout = () => { logout(); router.push('/'); };
 
     return (
-        <div className="light-dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7f4ec' }}>
+        <div className="light-dashboard portal-shell" style={{ display: 'flex', minHeight: '100vh', background: '#f7f4ec' }}>
             {/* Neon grid */}
             <div className="neon-grid" />
             <div className="edge-glow" />
@@ -243,28 +243,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }}
             >
                 {/* Logo area */}
-                <div style={{ minHeight: '78px', display: 'flex', alignItems: 'center', padding: collapsed ? '12px 10px' : '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
+                <div style={{ minHeight: '78px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '12px 10px' : '14px 16px', borderBottom: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
                     {collapsed ? (
-                        <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                            <Image
-                                src="/logo.png"
-                                alt="Porchest"
-                                width={38}
-                                height={38}
-                                priority
-                                style={{ width: '38px', height: '38px', borderRadius: '12px', boxShadow: '0 0 20px rgba(123,63,242,0.22)' }}
-                            />
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
+                            <div style={{ position: 'relative', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ position: 'absolute', inset: '4px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.32) 0%, rgba(168,85,247,0.16) 42%, rgba(168,85,247,0.02) 72%, transparent 100%)', filter: 'blur(8px)', transform: 'scale(1.2)' }} />
+                                <Image
+                                    src="/porchest-mark-no-bg.png"
+                                    alt="Porchest"
+                                    width={40}
+                                    height={40}
+                                    priority
+                                    style={{ width: '40px', height: '40px', objectFit: 'contain', position: 'relative', zIndex: 1 }}
+                                />
+                            </div>
                         </Link>
                     ) : (
-                        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', width: '100%' }}>
-                            <Image
-                                src="/porchest-logo.png"
-                                alt="Porchest"
-                                width={164}
-                                height={44}
-                                priority
-                                style={{ width: '164px', height: '44px', objectFit: 'contain', objectPosition: 'left center' }}
-                            />
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', width: '100%' }}>
+                            <div style={{ position: 'relative', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <div style={{ position: 'absolute', inset: '3px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.36) 0%, rgba(168,85,247,0.18) 44%, rgba(168,85,247,0.04) 72%, transparent 100%)', filter: 'blur(10px)', transform: 'scale(1.24)' }} />
+                                <Image
+                                    src="/porchest-mark-no-bg.png"
+                                    alt="Porchest"
+                                    width={52}
+                                    height={52}
+                                    priority
+                                    style={{ width: '52px', height: '52px', objectFit: 'contain', position: 'relative', zIndex: 1 }}
+                                />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                                <p style={{ fontSize: '16px', fontWeight: '700', color: '#172033', lineHeight: 1.1 }}>Porchest</p>
+                                <p style={{ fontSize: '11px', color: '#7a8798', marginTop: '3px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{user.role} Portal</p>
+                            </div>
                         </Link>
                     )}
                 </div>
