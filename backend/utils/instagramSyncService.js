@@ -64,6 +64,7 @@ function computeFitScore(metrics, followersCount, profileComplete) {
  */
 exports.runFullSync = async (userId, role, accessToken, options = {}) => {
     const bootstrap = !!options.bootstrap;
+    const syncedAt = new Date();
     // 1. Fetch raw Instagram profile
     const profile = await meta.fetchProfile(accessToken);
     const igUserId = profile.id;
