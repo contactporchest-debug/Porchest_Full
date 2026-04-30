@@ -436,3 +436,5 @@ function syncAudienceFromLegacy(doc) {
         doc.audience.languages = doc.languages;
     }
 }
+
+module.exports = mongoose.model('InfluencerProfile', influencerProfileSchema, 'influencer_profiles');
