@@ -125,7 +125,7 @@ const influencerProfileSchema = new mongoose.Schema(
     {
         // Identity
         influencerProfileId: { type: String, unique: true },
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
         fullName: {
             type: String,
             required: function requiredFullName() {

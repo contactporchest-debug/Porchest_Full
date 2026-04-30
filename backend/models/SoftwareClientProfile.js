@@ -56,7 +56,4 @@ const softwareClientProfileSchema = new mongoose.Schema({
     activeProject: projectSchema,
     projects: [projectSchema],
 }, { timestamps: true });
-
-softwareClientProfileSchema.index({ userId: 1 });
-
 module.exports = mongoose.model('SoftwareClientProfile', softwareClientProfileSchema);

@@ -26,7 +26,7 @@ const brandProfileSchema = new mongoose.Schema(
     {
         // Identity
         brandProfileId: { type: String, unique: true },
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
         businessName: {
             type: String,
             required: function requiredBusinessName() {

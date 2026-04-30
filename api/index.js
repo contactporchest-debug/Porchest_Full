@@ -25,7 +25,9 @@ module.exports = async (req, res) => {
         if (!dbConnected) {
             await connectDB();
             await ensureAdminUser();
-            await ensureDemoInfluencers();
+            if (process.env.ENABLE_DEMO_SEEDING === 'true' && process.env.VERCEL_ENV !== 'production') {
+                await ensureDemoInfluencers();
+            }
             dbConnected = true;
         }
     } catch (err) {
