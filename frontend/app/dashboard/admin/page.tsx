@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { adminAPI } from '@/lib/api';
+import { USER_ROLES, isAdminRole } from '@/lib/accessRoles';
 import toast from 'react-hot-toast';
 import { useSocket } from '@/context/SocketContext';
 import {
@@ -16,7 +17,7 @@ import {
 
 /* ─── Types ────────────────────────────────────────────── */
 export type Tab = 'users' | 'campaigns';
-type UserRole = 'admin' | 'brand' | 'influencer';
+type UserRole = typeof USER_ROLES[number];
 type UserStatus = 'active' | 'pending' | 'suspended';
 
 interface AdminUser {
@@ -87,8 +88,14 @@ const statusColors: Record<string, { bg: string; color: string }> = {
 };
 const roleColors: Record<string, { bg: string; color: string }> = {
     admin:      { bg: 'rgba(255,140,66,0.12)',  color: '#ff8c42' },
+    'admin-marketing': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
+    'admin-software': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
+    'employee-marketing': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
+    'employee-software': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
+    owner:      { bg: 'rgba(255,140,66,0.12)',  color: '#ff8c42' },
     brand:      { bg: 'rgba(123,63,242,0.12)',  color: '#a78bfa' },
     influencer: { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa' },
+    'software-client': { bg: 'rgba(37,99,235,0.12)', color: '#60a5fa' },
 };
 
 /* ─── Shared tiny components ───────────────────────────── */
@@ -278,7 +285,12 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                         <option value="">All Roles</option>
                                         <option value="brand">Brand</option>
                                         <option value="influencer">Influencer</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="software-client">Software Client</option>
+                                        <option value="admin-marketing">Admin Marketing</option>
+                                        <option value="admin-software">Admin Software</option>
+                                        <option value="employee-marketing">Employee Marketing</option>
+                                        <option value="employee-software">Employee Software</option>
+                                        <option value="owner">Owner</option>
                                     </select>
                                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
                                         style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.22)', color: '#475467', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
@@ -347,7 +359,12 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                                             style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
                                                                             <option value="brand">Brand</option>
                                                                             <option value="influencer">Influencer</option>
-                                                                            <option value="admin">Admin</option>
+                                                                            <option value="software-client">Software Client</option>
+                                                                            <option value="admin-marketing">Admin Marketing</option>
+                                                                            <option value="admin-software">Admin Software</option>
+                                                                            <option value="employee-marketing">Employee Marketing</option>
+                                                                            <option value="employee-software">Employee Software</option>
+                                                                            <option value="owner">Owner</option>
                                                                         </select>
                                                                     </div>
                                                                 ) : (
@@ -366,7 +383,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Profile completion */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                {u.role === 'admin' ? (
+                                                                {isAdminRole(u.role) ? (
                                                                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>—</span>
                                                                 ) : (
                                                                     <span style={{ fontSize: 11, color: u.profileCompletionStatus ? '#4ade80' : '#fbbf24' }}>
@@ -382,7 +399,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Actions */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                {u.role !== 'admin' && (
+                                                                {!isAdminRole(u.role) && (
                                                                     <div style={{ display: 'flex', gap: 6 }}>
                                                                         <button onClick={(e) => { e.stopPropagation(); handleStatus(u._id, 'active'); }} title="Approve / Activate"
                                                                             disabled={actioningUser === u._id}

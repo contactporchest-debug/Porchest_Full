@@ -302,6 +302,7 @@ async function ensureDemoBrand() {
         brandProfile = await BrandProfile.create({
             userId: user._id,
             brandProfileId,
+            businessName: REALISTIC_BRAND_PROFILE.businessName || REALISTIC_BRAND_PROFILE.brandName,
             ...REALISTIC_BRAND_PROFILE,
         });
     } else {

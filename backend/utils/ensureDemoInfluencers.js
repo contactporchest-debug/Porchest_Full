@@ -572,6 +572,7 @@ async function upsertDemoInfluencerAccount(config) {
     if (!profile) {
         profile = new InfluencerProfile({
             influencerProfileId: await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId'),
+            fullName: baseProfile.fullName || baseProfile.displayName || user.email.split('@')[0] || 'Influencer',
             ...baseProfile,
         });
     } else {

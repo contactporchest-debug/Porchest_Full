@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const CANDIDATE_COLLECTIONS = {
-    influencer: ['influencerprofiles', 'influencer_profiles'],
-    brand: ['brandprofiles', 'brand_profiles'],
+    influencer: ['influencer_profiles', 'influencerprofiles'],
+    brand: ['brand_profiles', 'brandprofiles'],
 };
 
 async function detectCollections() {
@@ -24,8 +24,8 @@ async function getProfileCollectionInfo() {
     return {
         influencerCollection: influencerAvailable[0] || CANDIDATE_COLLECTIONS.influencer[0],
         brandCollection: brandAvailable[0] || CANDIDATE_COLLECTIONS.brand[0],
-        influencerCollectionMismatch: influencerAvailable.length > 1 || influencerAvailable[0] === 'influencer_profiles',
-        brandCollectionMismatch: brandAvailable.length > 1 || brandAvailable[0] === 'brand_profiles',
+        influencerCollectionMismatch: influencerAvailable.length > 1 || influencerAvailable[0] === 'influencerprofiles',
+        brandCollectionMismatch: brandAvailable.length > 1 || brandAvailable[0] === 'brandprofiles',
         availableCollections: {
             influencer: influencerAvailable,
             brand: brandAvailable,

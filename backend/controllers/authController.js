@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 const { generateUniqueCode } = require('../utils/generateCode');
+const { PUBLIC_SIGNUP_ROLES, isAdminRole } = require('../utils/accessRoles');
 const { OAuth2Client } = require('google-auth-library');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -24,6 +25,7 @@ const ensureGoogleRoleProfile = async (user, role, payload = {}) => {
                 userId: user._id,
                 influencerProfileId,
                 fullName: payload.name,
+                displayName: payload.name,
                 profilePictureUrl: payload.picture,
                 contactEmail: user.email,
             });
@@ -48,6 +50,7 @@ const ensureGoogleRoleProfile = async (user, role, payload = {}) => {
             profile = await BrandProfile.create({
                 userId: user._id,
                 brandProfileId,
+                businessName: payload.name,
                 brandName: payload.name,
                 contactDetails: {
                     officialEmail: user.email,
@@ -62,7 +65,12 @@ const ensureGoogleRoleProfile = async (user, role, payload = {}) => {
 
 const generateToken = (user) => {
     return jwt.sign(
-        { id: user._id, role: user.role, email: user.email },
+        {
+            id: user._id,
+            role: user.role,
+            accountType: isAdminRole(user.role) ? 'admin' : 'user',
+            email: user.email,
+        },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -78,8 +86,8 @@ exports.register = async (req, res, next) => {
     try {
         const { role, email, password, termsAccepted, ...profileData } = req.body;
 
-        if (!['brand', 'influencer'].includes(role)) {
-            return res.status(400).json({ success: false, message: 'Invalid role. Must be brand or influencer.' });
+        if (!PUBLIC_SIGNUP_ROLES.includes(role)) {
+            return res.status(400).json({ success: false, message: 'Invalid role. Must be brand, influencer, or software-client.' });
         }
 
         if (role === 'influencer' && !termsAccepted) {
@@ -171,11 +179,25 @@ exports.verifyOTP = async (req, res, next) => {
         // Auto-provision native profile based on role
         if (user.role === 'influencer' && !user.influencerProfileId) {
             const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-            profileObj = await InfluencerProfile.create({ userId: user._id, influencerProfileId });
+            profileObj = await InfluencerProfile.create({
+                userId: user._id,
+                influencerProfileId,
+                fullName: user.fullName || user.displayName || user.email.split('@')[0],
+                displayName: user.displayName || user.fullName || user.email.split('@')[0],
+                contactEmail: user.email,
+            });
             user.influencerProfileId = profileObj._id;
         } else if (user.role === 'brand' && !user.brandProfileId) {
             const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
-            profileObj = await BrandProfile.create({ userId: user._id, brandProfileId });
+            profileObj = await BrandProfile.create({
+                userId: user._id,
+                brandProfileId,
+                businessName: user.brandName || user.companyName || user.email.split('@')[0],
+                brandName: user.brandName || user.companyName || user.email.split('@')[0],
+                contactDetails: {
+                    officialEmail: user.email,
+                },
+            });
             user.brandProfileId = profileObj._id;
         }
 
@@ -185,11 +207,7 @@ exports.verifyOTP = async (req, res, next) => {
         user.otpExpires = undefined;
         await user.save();
 
-        const token = jwt.sign(
-            { id: user._id, role: user.role, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
-        );
+        const token = generateToken(user);
 
         res.json({
             success: true,
@@ -230,10 +248,10 @@ exports.googleAuth = async (req, res, next) => {
 
         if (!user) {
             // New user Signup (only requires email for Google, no password needed)
-            if (!role || !['brand', 'influencer'].includes(role)) {
+            if (!role || !PUBLIC_SIGNUP_ROLES.includes(role)) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: 'Role is required for new user registration (brand or influencer).' 
+                    message: 'Role is required for new user registration (brand, influencer, or software-client).' 
                 });
             }
 
@@ -246,21 +264,21 @@ exports.googleAuth = async (req, res, next) => {
                 isVerified: true,
                 status: 'active'
             });
-            await ensureGoogleRoleProfile(user, role, { name, picture });
+            if (role === 'brand' || role === 'influencer') {
+                await ensureGoogleRoleProfile(user, role, { name, picture });
+            }
             await user.save();
-        } else if (user.role !== 'admin') {
+        } else {
             // Existing non-admin users signing in with Google should keep a valid linked profile.
-            await ensureGoogleRoleProfile(user, user.role, { name, picture });
+            if (user.role === 'brand' || user.role === 'influencer') {
+                await ensureGoogleRoleProfile(user, user.role, { name, picture });
+            }
             user.loginProvider = user.loginProvider || 'google';
             user.isVerified = true;
         }
 
         // Return token/login
-        const token = jwt.sign(
-            { id: user._id, role: user.role, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
-        );
+        const token = generateToken(user);
 
         user.lastLoginAt = Date.now();
         await user.save();
@@ -336,26 +354,26 @@ exports.login = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Email and password are required' });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) {
+        const account = await User.findOne({ email });
+        if (!account) {
             return res.status(401).json({ success: false, message: 'Wrong credentials' });
         }
 
-        const isMatch = await user.comparePassword(password);
+        const isMatch = await account.comparePassword(password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: 'Wrong credentials' });
         }
 
-        if (user.status === 'suspended') {
+        if (account.status === 'suspended') {
             return res.status(403).json({ success: false, message: 'Account suspended. Contact support.' });
         }
 
-        if (user.status === 'pending' && !user.isVerified) {
-            return res.status(403).json({ success: false, message: 'Please verify your email before logging in.', needsVerification: true, email: user.email });
+        if (account.status === 'pending' && !account.isVerified) {
+            return res.status(403).json({ success: false, message: 'Please verify your email before logging in.', needsVerification: true, email: account.email });
         }
 
-        const token = generateToken(user);
-        res.json({ success: true, token, user: user.toJSON() });
+        const token = generateToken(account);
+        res.json({ success: true, token, user: account.toJSON() });
     } catch (error) {
         next(error);
     }

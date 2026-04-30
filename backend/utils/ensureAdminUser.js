@@ -9,8 +9,8 @@ async function ensureAdminUser() {
     if (existing) {
         let changed = false;
 
-        if (existing.role !== 'admin') {
-            existing.role = 'admin';
+        if (existing.role !== 'owner') {
+            existing.role = 'owner';
             changed = true;
         }
 
@@ -32,44 +32,25 @@ async function ensureAdminUser() {
         existing.password = adminPassword;
         changed = true;
 
-        if (existing.profileCompletionStatus !== undefined) {
-            existing.set('profileCompletionStatus', undefined);
-            changed = true;
-        }
-
-        if (existing.instagramConnected !== undefined) {
-            existing.set('instagramConnected', undefined);
-            changed = true;
-        }
-
-        if (existing.brandProfileId) {
-            existing.set('brandProfileId', undefined);
-            changed = true;
-        }
-
-        if (existing.influencerProfileId) {
-            existing.set('influencerProfileId', undefined);
-            changed = true;
-        }
-
         if (changed) {
             await existing.save();
-            console.log('[Bootstrap] Admin account ensured for existing user');
+            console.log('[Bootstrap] Owner account ensured for existing user record');
         }
 
         return existing;
     }
 
-    const userCode = await generateUniqueCode('USR', User, 'userCode');
+    const adminCode = await generateUniqueCode('USR', User, 'userCode');
     const admin = await User.create({
-        userCode,
-        role: 'admin',
+        userCode: adminCode,
+        role: 'owner',
         email: adminEmail,
         password: adminPassword,
         status: 'active',
+        isVerified: true,
     });
 
-    console.log('[Bootstrap] Default admin account created: admin@porchest.com');
+    console.log('[Bootstrap] Default owner account created: admin@porchest.com');
     return admin;
 }
 

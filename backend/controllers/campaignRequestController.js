@@ -4,6 +4,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
+const { ensureTrackingAssets } = require('../services/trackingService');
 
 // @desc    Brand creates a campaign request to an influencer
 // @route   POST /api/brand/requests
@@ -44,13 +45,55 @@ exports.createRequest = async (req, res, next) => {
         }
 
         const requestCode = await generateUniqueCode('REQ', CampaignRequest, 'requestCode');
+        const agreedFee = agreedPrice ? Number(agreedPrice) : undefined;
+        const brandName = brandProfile.businessName || brandProfile.brandName || brandProfile.companyName;
+        const influencerName = influencerProfile.fullName || influencerProfile.displayName || influencerProfile.instagramUsername;
 
         const request = await CampaignRequest.create({
             requestCode,
+            brandId: brandProfile._id,
+            influencerId: influencerProfile._id,
+            assignedEmployeeFK: brandProfile.assignedEmployeeFK || null,
             brandUserId,
             influencerUserId: influencerId,
             brandProfileId: brandProfile._id,
             influencerProfileId: influencerProfile._id,
+            brief: {
+                brandIntro: brandProfile.bio || brandProfile.description || brandMessage || '',
+                campaignObjective: campaignType || 'sponsored_post',
+                productDetails: campaignDescription || '',
+                targetAudience: JSON.stringify(brandProfile.targetAudience || {}),
+                keyMessage: campaignTitle,
+                contentTypes: Array.isArray(deliverables) ? deliverables : (deliverables ? String(deliverables).split(',').map((item) => item.trim()).filter(Boolean) : []),
+                creativeDirection: brandProfile.tone || 'professional',
+                mandatoryTalkingPoints: requiredElements ? [requiredElements] : [],
+                dos: [],
+                donts: [],
+                captionGuidelines: contentGuidelines,
+                requiredHashtags: Array.isArray(hashtags) ? hashtags : (hashtags ? String(hashtags).split(',').map((item) => item.trim()).filter(Boolean) : []),
+                requiredTags: [],
+                callToAction: paymentTerms || '',
+                trackingLink: null,
+                promoCode: null,
+                visualRequirements: contentGuidelines || '',
+                postingSchedule: postingDeadline ? new Date(postingDeadline) : undefined,
+                revisionRounds: 0,
+                deliverables: Array.isArray(deliverables) ? deliverables : (deliverables ? String(deliverables).split(',').map((item) => item.trim()).filter(Boolean) : []),
+                usageRights: false,
+                disclosureRequired: disclosureRequirements,
+                porchestContact: brandProfile.assignedEmployeeFK ? String(brandProfile.assignedEmployeeFK) : null,
+            },
+            brandOfferedFee: agreedFee,
+            agreedFee,
+            influencerPayable: agreedFee,
+            porchestCommission: 0,
+            financials: {
+                brandOfferedFee: agreedFee,
+                agreedFee,
+                influencerPayable: agreedFee,
+                porchestCommission: 0,
+                currency: 'USD',
+            },
             campaignTitle,
             campaignDescription,
             campaignType: campaignType || 'sponsored_post',
@@ -70,13 +113,25 @@ exports.createRequest = async (req, res, next) => {
             brandMessage,
             status: 'sent',
             sentAt: new Date(),
+            metrics: {
+                clicks: 0,
+                visits: 0,
+                conversions: 0,
+                revenue: 0,
+                reach: 0,
+                impressions: 0,
+                engagementRate: 0,
+                roas: 0,
+                cpa: 0,
+                lastUpdatedAt: new Date(),
+            },
             // Denormalized snapshots
-            brandName: brandProfile.brandName,
-            brandLogoUrl: brandProfile.logoUrl || brandProfile.instagramDPURL,
-            brandCategory: brandProfile.category,
-            influencerName: influencerProfile.displayName || influencerProfile.fullName,
+            brandName,
+            brandLogoUrl: brandProfile.logo || brandProfile.logoUrl || brandProfile.instagramDPURL,
+            brandCategory: brandProfile.industry || brandProfile.category,
+            influencerName,
             influencerUsername: influencerProfile.instagramUsername,
-            influencerProfilePic: influencerProfile.profilePictureUrl || influencerProfile.instagramDPURL,
+            influencerProfilePic: influencerProfile.avatar || influencerProfile.profilePictureUrl || influencerProfile.instagramDPURL,
             influencerNiche: influencerProfile.niche,
         });
 
@@ -85,10 +140,10 @@ exports.createRequest = async (req, res, next) => {
             recipientUserId: influencerId,
             type: 'collaboration_request',
             title: 'New Collaboration Request',
-            message: `${brandProfile.brandName} wants to collaborate on "${campaignTitle}"`,
+            message: `${brandName} wants to collaborate on "${campaignTitle}"`,
             campaignRequestId: request._id,
-            senderName: brandProfile.brandName,
-            senderAvatar: brandProfile.logoUrl || brandProfile.instagramDPURL,
+            senderName: brandName,
+            senderAvatar: brandProfile.logo || brandProfile.logoUrl || brandProfile.instagramDPURL,
             metadata: {
                 campaignTitle,
                 agreedPrice,
@@ -249,6 +304,10 @@ exports.respondToRequest = async (req, res, next) => {
 
         await request.save();
 
+        if (status === 'accepted' || status === 'deal_closed') {
+            await ensureTrackingAssets(request._id);
+        }
+
         // Notify the brand
         const notifTypeMap = {
             accepted: 'request_accepted',
@@ -358,6 +417,10 @@ exports.brandRespondToRequest = async (req, res, next) => {
         }
 
         await request.save();
+
+        if (request.status === 'accepted' || request.status === 'deal_closed') {
+            await ensureTrackingAssets(request._id);
+        }
 
         const notifTypeMap = {
             deal_closed: 'deal_closed',

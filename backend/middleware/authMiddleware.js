@@ -11,15 +11,18 @@ const authMiddleware = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        const user = await User.findById(decoded.id).select('-password');
-        if (!user) {
+        const account = await User.findById(decoded.id);
+
+        if (!account) {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
-        if (user.status === 'suspended') {
+
+        const hydrated = account.toJSON ? account.toJSON() : account;
+        if (hydrated.status === 'suspended') {
             return res.status(403).json({ success: false, message: 'Account suspended' });
         }
 
-        req.user = user;
+        req.user = hydrated;
         next();
     } catch (error) {
         return res.status(401).json({ success: false, message: 'Invalid or expired token' });

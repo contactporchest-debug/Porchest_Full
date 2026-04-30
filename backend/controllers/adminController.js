@@ -2,20 +2,16 @@ const User = require('../models/User');
 const CampaignRequest = require('../models/CampaignRequest');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
+const SoftwareClientProfile = require('../models/SoftwareClientProfile');
 const Notification = require('../models/Notification');
 const { generateUniqueCode } = require('../utils/generateCode');
+const { ADMIN_ROLES, USER_ROLES } = require('../utils/accessRoles');
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 const ok  = (res, data = {}) => res.status(200).json({ success: true, ...data });
 const err = (res, msg, code = 500) => res.status(code).json({ success: false, message: msg });
 
 function sanitizeAdminUserFields(user) {
-    if (!user || user.role !== 'admin') return user;
-    delete user.isVerified;
-    delete user.profileCompletionStatus;
-    delete user.instagramConnected;
-    delete user.brandProfileId;
-    delete user.influencerProfileId;
     return user;
 }
 
@@ -28,6 +24,10 @@ async function removeRoleSpecificProfiles(user) {
 
     if (user.influencerProfileId) {
         ops.push(InfluencerProfile.findByIdAndDelete(user.influencerProfileId));
+    }
+
+    if (user.softwareClientProfileId) {
+        ops.push(SoftwareClientProfile.findByIdAndDelete(user.softwareClientProfileId));
     }
 
     await Promise.all(ops);
@@ -48,8 +48,16 @@ async function hardDeleteUserData(user) {
         ],
     }).select('_id');
 
+    const softwareClientProfiles = await SoftwareClientProfile.find({
+        $or: [
+            { userId: user._id },
+            ...(user.softwareClientProfileId ? [{ _id: user.softwareClientProfileId }] : []),
+        ],
+    }).select('_id');
+
     const brandProfileIds = brandProfiles.map((profile) => profile._id);
     const influencerProfileIds = influencerProfiles.map((profile) => profile._id);
+    const softwareClientProfileIds = softwareClientProfiles.map((profile) => profile._id);
 
     const campaignRequests = await CampaignRequest.find({
         $or: [
@@ -68,6 +76,9 @@ async function hardDeleteUserData(user) {
             : Promise.resolve(),
         influencerProfileIds.length
             ? InfluencerProfile.deleteMany({ _id: { $in: influencerProfileIds } })
+            : Promise.resolve(),
+        softwareClientProfileIds.length
+            ? SoftwareClientProfile.deleteMany({ _id: { $in: softwareClientProfileIds } })
             : Promise.resolve(),
         campaignRequestIds.length
             ? CampaignRequest.deleteMany({ _id: { $in: campaignRequestIds } })
@@ -88,6 +99,8 @@ async function ensureProfileForRole(user, role) {
         const profile = await BrandProfile.create({
             userId: user._id,
             brandProfileId,
+            businessName: user.brandName || user.companyName || user.email.split('@')[0] || 'Brand',
+            brandName: user.brandName || user.companyName || user.email.split('@')[0] || 'Brand',
         });
         user.brandProfileId = profile._id;
     }
@@ -97,8 +110,16 @@ async function ensureProfileForRole(user, role) {
         const profile = await InfluencerProfile.create({
             userId: user._id,
             influencerProfileId,
+            fullName: user.fullName || user.displayName || user.email.split('@')[0] || 'Influencer',
+            displayName: user.displayName || user.fullName || user.email.split('@')[0] || 'Influencer',
         });
         user.influencerProfileId = profile._id;
+    }
+
+    if (!['brand', 'influencer', 'software-client'].includes(role)) {
+        user.brandProfileId = undefined;
+        user.influencerProfileId = undefined;
+        user.softwareClientProfileId = undefined;
     }
 }
 
@@ -109,6 +130,7 @@ exports.getStats = async (req, res) => {
             totalUsers,
             totalBrands,
             totalInfluencers,
+            totalSoftwareClients,
             totalAdmins,
             pendingUsers,
             totalRequests,
@@ -119,7 +141,8 @@ exports.getStats = async (req, res) => {
             User.countDocuments(),
             User.countDocuments({ role: 'brand' }),
             User.countDocuments({ role: 'influencer' }),
-            User.countDocuments({ role: 'admin' }),
+            User.countDocuments({ role: 'software-client' }),
+            User.countDocuments({ role: { $in: ADMIN_ROLES } }),
             User.countDocuments({ status: 'pending' }),
             CampaignRequest.countDocuments(),
             CampaignRequest.countDocuments({ status: 'sent' }),
@@ -132,6 +155,7 @@ exports.getStats = async (req, res) => {
                 totalUsers,
                 totalBrands,
                 totalInfluencers,
+                totalSoftwareClients,
                 totalAdmins,
                 pendingUsers,
                 pendingVerifications: pendingUsers, // use pending users as verification proxy
@@ -217,38 +241,16 @@ exports.updateUserStatus = async (req, res) => {
 exports.updateUserRole = async (req, res) => {
     try {
         const { role } = req.body;
-        if (!['brand', 'influencer', 'admin'].includes(role))
+        if (!USER_ROLES.includes(role))
             return err(res, 'Invalid role', 400);
-
-        // Prevent demoting the only admin
-        if (role !== 'admin') {
-            const adminCount = await User.countDocuments({ role: 'admin' });
-            const target = await User.findById(req.params.id).select('role');
-            if (target?.role === 'admin' && adminCount <= 1)
-                return err(res, 'Cannot demote the last admin', 400);
-        }
 
         const user = await User.findById(req.params.id).select('-password -otp -otpExpires');
         if (!user) return err(res, 'User not found', 404);
 
-        if (role === 'admin') {
-            await removeRoleSpecificProfiles(user);
-            user.set('brandProfileId', undefined);
-            user.set('influencerProfileId', undefined);
-            user.set('profileCompletionStatus', undefined);
-            user.set('instagramConnected', undefined);
-            user.set('isVerified', undefined);
-        } else {
-            if (user.role === 'admin') {
-                user.set('profileCompletionStatus', undefined);
-                user.set('instagramConnected', undefined);
-                user.set('isVerified', undefined);
-            }
-
-            if (role !== 'brand') user.set('brandProfileId', undefined);
-            if (role !== 'influencer') user.set('influencerProfileId', undefined);
-            await ensureProfileForRole(user, role);
-        }
+        if (role !== 'brand') user.set('brandProfileId', undefined);
+        if (role !== 'influencer') user.set('influencerProfileId', undefined);
+        if (role !== 'software-client') user.set('softwareClientProfileId', undefined);
+        await ensureProfileForRole(user, role);
 
         user.role = role;
         await user.save();
@@ -272,13 +274,6 @@ exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password -otp -otpExpires');
         if (!user) return err(res, 'User not found', 404);
-
-        if (user.role === 'admin') {
-            const adminCount = await User.countDocuments({ role: 'admin' });
-            if (adminCount <= 1) {
-                return err(res, 'Cannot delete the last admin', 400);
-            }
-        }
 
         await hardDeleteUserData(user);
         return ok(res, { message: 'User deleted' });

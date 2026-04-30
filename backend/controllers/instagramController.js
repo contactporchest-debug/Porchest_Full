@@ -21,7 +21,12 @@ async function ensureProfileObj(userId) {
     let profile = await InfluencerProfile.findOne({ userId });
     if (!profile) {
         const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
-        profile = await InfluencerProfile.create({ userId, influencerProfileId });
+        profile = await InfluencerProfile.create({
+            userId,
+            influencerProfileId,
+            fullName: req.user?.fullName || req.user?.displayName || req.user?.email?.split('@')[0] || 'Influencer',
+            displayName: req.user?.displayName || req.user?.fullName || req.user?.email?.split('@')[0] || 'Influencer',
+        });
         await User.findByIdAndUpdate(userId, { influencerProfileId: profile._id });
     }
     return profile;

@@ -20,10 +20,11 @@ const BRAND_NICHES = [
  */
 exports.validateInfluencerProfile = (body) => {
     const errors = [];
-    const { fullName, contactEmail, age, countryOfResidence, niche, avgPostCostUSD, avgReelCostUSD, shortBio } = body;
+    const { fullName, displayName, contactEmail, age, countryOfResidence, country, niche, avgPostCostUSD, avgReelCostUSD, shortBio, bio } = body;
 
-    if (fullName !== undefined) {
-        if (!fullName || typeof fullName !== 'string' || fullName.trim().length < 2) {
+    if (fullName !== undefined || displayName !== undefined) {
+        const value = fullName || displayName;
+        if (!value || typeof value !== 'string' || value.trim().length < 2) {
             errors.push('Full name must be at least 2 characters');
         }
     }
@@ -42,7 +43,8 @@ exports.validateInfluencerProfile = (body) => {
     }
 
     if (niche !== undefined) {
-        if (!INFLUENCER_NICHES.includes(niche)) {
+        const nicheValue = Array.isArray(niche) ? niche[0] : niche;
+        if (!INFLUENCER_NICHES.includes(nicheValue)) {
             errors.push(`Niche must be one of: ${INFLUENCER_NICHES.join(', ')}`);
         }
     }
@@ -61,8 +63,9 @@ exports.validateInfluencerProfile = (body) => {
         }
     }
 
-    if (shortBio !== undefined && shortBio !== null) {
-        const wordCount = shortBio.trim().split(/\s+/).filter(Boolean).length;
+    const bioValue = shortBio ?? bio;
+    if (bioValue !== undefined && bioValue !== null) {
+        const wordCount = String(bioValue).trim().split(/\s+/).filter(Boolean).length;
         if (wordCount > 100) {
             errors.push('Bio must not exceed 100 words');
         }
@@ -77,10 +80,11 @@ exports.validateInfluencerProfile = (body) => {
  */
 exports.validateBrandProfile = (body) => {
     const errors = [];
-    const { brandName, officialEmail, contactPersonName, brandGoal, brandNiche, approxBudgetUSD, companyCountry, companyWebsite } = body;
+    const { brandName, businessName, officialEmail, contactPersonName, brandGoal, brandNiche, approxBudgetUSD, companyCountry, country, companyWebsite, website } = body;
 
-    if (brandName !== undefined) {
-        if (!brandName || typeof brandName !== 'string' || brandName.trim().length < 2) {
+    if (brandName !== undefined || businessName !== undefined) {
+        const value = brandName || businessName;
+        if (!value || typeof value !== 'string' || value.trim().length < 2) {
             errors.push('Brand name must be at least 2 characters');
         }
     }
@@ -117,8 +121,9 @@ exports.validateBrandProfile = (body) => {
         }
     }
 
-    if (companyWebsite !== undefined && companyWebsite !== null && companyWebsite !== '') {
-        try { new URL(companyWebsite); } catch {
+    const websiteValue = companyWebsite || website;
+    if (websiteValue !== undefined && websiteValue !== null && websiteValue !== '') {
+        try { new URL(websiteValue); } catch {
             errors.push('Company website must be a valid URL (include https://)');
         }
     }

@@ -1,17 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { isAdminRole } from '@/lib/accessRoles';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
-    allowedRoles?: ('admin' | 'brand' | 'influencer' | 'software-client')[];
+    allowedRoles?: string[];
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const allowed = useMemo(
+        () => allowedRoles
+            ? allowedRoles.flatMap((role) => (role === 'admin' ? ['admin', 'admin-marketing', 'admin-software', 'employee-marketing', 'employee-software', 'owner'] : role))
+            : null,
+        [allowedRoles]
+    );
 
     useEffect(() => {
         if (!loading) {
@@ -19,11 +26,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
                 router.replace('/login');
                 return;
             }
-            if (allowedRoles && !allowedRoles.includes(user.role)) {
-                router.replace(`/dashboard/${user.role}`);
+            if (allowed && !allowed.includes(user.role)) {
+                router.replace(isAdminRole(user.role) ? '/dashboard/admin' : `/dashboard/${user.role}`);
             }
         }
-    }, [user, loading, router, allowedRoles]);
+    }, [user, loading, router, allowed]);
 
     if (loading) {
         return (
@@ -37,7 +44,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     }
 
     if (!user) return null;
-    if (allowedRoles && !allowedRoles.includes(user.role)) return null;
+    if (allowed && !allowed.includes(user.role)) return null;
 
     return <>{children}</>;
 }

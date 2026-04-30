@@ -18,7 +18,7 @@ A futuristic SaaS platform connecting brands with influencers via AI matching, r
 cd backend
 cp .env.example .env   # Fill in your MongoDB Atlas URI
 npm install
-npm run create-admin   # Ensures the default admin login exists
+npm run create-admin   # Ensures the default owner login exists
 npm run dev            # Starts on http://localhost:5000
 ```
 
@@ -29,10 +29,10 @@ npm install
 npm run dev            # Starts on http://localhost:3000
 ```
 
-## Default Admin Login
+## Default Owner Login
 | Role | Email | Password |
 |---|---|---|
-| 👑 Admin | `admin@porchest.com` | `Porchest_Admin` |
+| 👑 Owner | `admin@porchest.com` | `Porchest_Admin` |
 
 ## Environment Variables
 **.env** (backend):
@@ -51,7 +51,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 
 ## Deployment
 - **Frontend**: Vercel (`vercel deploy`)
-- **Backend**: Render or Railway
+- **Backend**: Vercel serverless via `api/index.js` or a separate host like Render/Railway if you want a long-running Socket.IO server
 
 ## Features
 - ✅ 3 role portals: Admin, Brand, Influencer
@@ -62,4 +62,18 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 - ✅ Earnings tracking
 - ✅ Glassmorphism dark UI with neon purple accent
 - ✅ Responsive design + smooth animations
-# Porchest_Full
+
+## Project Structure
+```text
+.
+├── api/            # Vercel serverless entry for the backend
+├── backend/        # Express app, models, controllers, routes, services, scripts
+├── frontend/       # Next.js app, components, context, and static assets
+├── vercel.json     # Deployment routing for frontend + API
+└── README.md
+```
+
+## Cleaned Up
+- Removed the legacy duplicate `Landing Page/` app copy
+- Removed build artifacts like `frontend/.next/` and `node_modules/`
+- Removed the debug file `backend/test-gemini.js` that contained a hardcoded API key

@@ -6,7 +6,16 @@ const userSchema = new mongoose.Schema(
         userCode: { type: String, unique: true, required: true },
         role: {
             type: String,
-            enum: ['admin', 'brand', 'influencer', 'software-client'],
+            enum: [
+                'admin-marketing',
+                'admin-software',
+                'employee-marketing',
+                'employee-software',
+                'owner',
+                'brand',
+                'influencer',
+                'software-client',
+            ],
             required: true,
         },
         email: {
@@ -58,15 +67,7 @@ userSchema.methods.toJSON = function () {
     delete obj.password;
     delete obj.otp;
     delete obj.otpExpires;
-    if (obj.role === 'admin') {
-        delete obj.isVerified;
-        delete obj.profileCompletionStatus;
-        delete obj.instagramConnected;
-        delete obj.brandProfileId;
-        delete obj.influencerProfileId;
-        delete obj.softwareClientProfileId;
-    }
     return obj;
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('User', userSchema, 'users');

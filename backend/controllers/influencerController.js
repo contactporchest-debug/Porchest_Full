@@ -111,7 +111,8 @@ exports.updateProfile = async (req, res, next) => {
         // Just extracting fields manually to bypass strict legacy validator mismatch
         const updates = req.body;
         const mappedUpdates = {
-            fullName: updates.fullName,
+            fullName: updates.fullName || updates.displayName || req.user?.name || req.user?.email?.split('@')[0] || 'Influencer',
+            displayName: updates.displayName || updates.fullName,
             contactEmail: updates.contactEmail,
             age: updates.age,
             country: updates.countryOfResidence || updates.country,
@@ -120,7 +121,8 @@ exports.updateProfile = async (req, res, next) => {
             bio: updates.shortBio || updates.bio,
             avgPostPrice: updates.avgPostCostUSD !== undefined ? updates.avgPostCostUSD : updates.avgPostPrice,
             avgReelPrice: updates.avgReelCostUSD !== undefined ? updates.avgReelCostUSD : updates.avgReelPrice,
-            profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl
+            profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl,
+            avatar: updates.profileImageURL || updates.profilePictureUrl,
         };
 
         const existing = await InfluencerProfile.findOne({ userId: req.user._id });
@@ -163,4 +165,3 @@ exports.updateProfile = async (req, res, next) => {
         next(error);
     }
 };
-

@@ -2,10 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authAPI } from '@/lib/api';
+import { UserRole } from '@/lib/accessRoles';
 
 interface User {
     _id: string;
-    role: 'admin' | 'brand' | 'influencer' | 'software-client';
+    role: UserRole;
     email: string;
     status: string;
     profileImageURL?: string;

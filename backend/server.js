@@ -2,7 +2,8 @@ require('dotenv').config();
 const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
-const { initScheduler } = require('./utils/scheduler');
+const { startSyncScheduler } = require('./services/schedulerService');
+const { startTrackingScheduler } = require('./services/trackingScheduler');
 const ensureAdminUser = require('./utils/ensureAdminUser');
 const { ensureDemoInfluencers } = require('./utils/ensureDemoInfluencers');
 const { ensureDemoSoftwareClient } = require('./utils/ensureDemoSoftwareClient');
@@ -53,8 +54,9 @@ connectDB().then(() => {
 }).then(() => {
     return ensureDemoSoftwareClient();
 }).then(() => {
-    // Initialize scheduled cron jobs
-    initScheduler();
+    // Initialize the Instagram sync scheduler
+    startSyncScheduler();
+    startTrackingScheduler();
 
     server.listen(PORT, () => {
         console.log(`\n🚀 Porchest API running on http://localhost:${PORT}`);

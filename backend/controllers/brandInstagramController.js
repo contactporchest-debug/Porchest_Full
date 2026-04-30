@@ -21,7 +21,12 @@ async function ensureProfileObj(userId) {
     let profile = await BrandProfile.findOne({ userId });
     if (!profile) {
         const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
-        profile = await BrandProfile.create({ userId, brandProfileId });
+        profile = await BrandProfile.create({
+            userId,
+            brandProfileId,
+            businessName: req.user?.brandName || req.user?.companyName || req.user?.email?.split('@')[0] || 'Brand',
+            brandName: req.user?.brandName || req.user?.companyName || req.user?.email?.split('@')[0] || 'Brand',
+        });
         await User.findByIdAndUpdate(userId, { brandProfileId: profile._id });
     }
     return profile;

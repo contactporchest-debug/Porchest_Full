@@ -253,12 +253,15 @@ exports.updateProfile = async (req, res, next) => {
         // Just extract basic fields since validator isn't perfectly mapped in reality
         const updates = req.body;
         const mappedUpdates = {
-            brandName: updates.brandName,
+            businessName: updates.businessName || updates.brandName || updates.companyName || req.user?.name || req.user?.email?.split('@')[0] || 'Brand',
+            brandName: updates.brandName || updates.businessName || updates.companyName,
             category: updates.brandNiche || updates.category,
             country: updates.companyCountry || updates.country,
             website: updates.companyWebsite || updates.website,
             description: updates.brandGoal || updates.description,
             approxBudgetUSD: updates.approxBudgetUSD,
+            logo: updates.logo || updates.logoUrl,
+            logoUrl: updates.logoUrl || updates.logo,
             contactDetails: {
                 officialEmail: updates.officialEmail,
                 contactPersonName: updates.contactPersonName

@@ -8,7 +8,7 @@ async function main() {
     await connectDB();
     await ensureAdminUser();
     await ensureDemoBrand();
-    console.log('Admin login ensured: admin@porchest.com / Porchest_Admin');
+    console.log('Owner login ensured: admin@porchest.com / Porchest_Admin');
     console.log(`Demo brand login ensured: ${DEMO_BRAND_EMAIL} / ${DEMO_BRAND_PASSWORD}`);
     process.exit(0);
 }

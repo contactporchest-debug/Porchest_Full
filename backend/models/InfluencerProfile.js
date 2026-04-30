@@ -1,42 +1,227 @@
 const mongoose = require('mongoose');
 
+function mergeFieldPair(target, source, left, right) {
+    const hasLeft = Object.prototype.hasOwnProperty.call(source, left);
+    const hasRight = Object.prototype.hasOwnProperty.call(source, right);
+
+    if (hasLeft && !hasRight) target[right] = source[left];
+    if (!hasLeft && hasRight) target[left] = source[right];
+}
+
+function normalizeUpdate(update, pairs) {
+    if (!update || typeof update !== 'object') return update;
+
+    const buckets = [update, update.$set, update.$setOnInsert];
+    for (const bucket of buckets) {
+        if (!bucket || typeof bucket !== 'object') continue;
+        for (const [left, right] of pairs) {
+            mergeFieldPair(bucket, bucket, left, right);
+        }
+    }
+
+    return update;
+}
+
+function tierFromFollowers(followers = 0) {
+    if (followers >= 1_000_000) return 'mega';
+    if (followers >= 100_000) return 'macro';
+    if (followers >= 10_000) return 'micro';
+    return 'nano';
+}
+
+function syncAudienceFromLegacy(doc) {
+    if (!doc) return;
+
+    if (!doc.audience || typeof doc.audience !== 'object') {
+        doc.audience = {};
+    }
+
+    const demographics = doc.demographics || {};
+
+    if (!doc.audience.ageGender && (demographics.genderDistribution || demographics.ageDistribution)) {
+        const ageGender = {};
+        const genders = demographics.genderDistribution || {};
+        const ages = demographics.ageDistribution || {};
+        for (const [key, value] of Object.entries(genders)) {
+            ageGender[key] = value;
+        }
+        for (const [key, value] of Object.entries(ages)) {
+            ageGender[key] = value;
+        }
+        doc.audience.ageGender = ageGender;
+    }
+
+    if (!doc.audience.topCountries && demographics.topCountries) {
+        doc.audience.topCountries = demographics.topCountries;
+    }
+    if (!doc.audience.topCities && demographics.topCities) {
+        doc.audience.topCities = demographics.topCities;
+    }
+
+    if (!doc.audience.languages && Array.isArray(doc.languages) && doc.languages.length) {
+        doc.audience.languages = doc.languages;
+    }
+}
+
+function syncDerivedInfluencerState(doc) {
+    if (!doc) return;
+
+    if (!doc.avatar && doc.profilePictureUrl) doc.avatar = doc.profilePictureUrl;
+    if (!doc.profilePictureUrl && doc.avatar) doc.profilePictureUrl = doc.avatar;
+
+    if (!doc.igUserId && doc.instagramAccountId) doc.igUserId = doc.instagramAccountId;
+    if (!doc.instagramAccountId && doc.igUserId) doc.instagramAccountId = doc.igUserId;
+
+    if (!doc.igUsername && doc.instagramUsername) doc.igUsername = doc.instagramUsername;
+    if (!doc.instagramUsername && doc.igUsername) doc.instagramUsername = doc.igUsername;
+
+    if (!doc.igProfileUrl && doc.instagramDPURL) doc.igProfileUrl = doc.instagramDPURL;
+    if (!doc.instagramDPURL && doc.igProfileUrl) doc.instagramDPURL = doc.igProfileUrl;
+
+    if (!doc.igBio && doc.instagramBiography) doc.igBio = doc.instagramBiography;
+    if (!doc.instagramBiography && doc.igBio) doc.instagramBiography = doc.igBio;
+
+    if (!doc.igWebsite && doc.website) doc.igWebsite = doc.website;
+    if (!doc.website && doc.igWebsite) doc.website = doc.igWebsite;
+
+    if (!doc.igAccountType && doc.instagramAccountType) doc.igAccountType = doc.instagramAccountType;
+    if (!doc.instagramAccountType && doc.igAccountType) doc.instagramAccountType = doc.igAccountType;
+
+    if (doc.igFollowersCount == null && doc.followersCount != null) doc.igFollowersCount = doc.followersCount;
+    if (doc.followersCount == null && doc.igFollowersCount != null) doc.followersCount = doc.igFollowersCount;
+
+    if (doc.igFollowingCount == null && doc.followingCount != null) doc.igFollowingCount = doc.followingCount;
+    if (doc.followingCount == null && doc.igFollowingCount != null) doc.followingCount = doc.igFollowingCount;
+
+    if (doc.igMediaCount == null && doc.mediaCount != null) doc.igMediaCount = doc.mediaCount;
+    if (doc.mediaCount == null && doc.igMediaCount != null) doc.mediaCount = doc.igMediaCount;
+
+    if (!doc.igLastSyncedAt && doc.lastSyncAt) doc.igLastSyncedAt = doc.lastSyncAt;
+    if (!doc.lastSyncAt && doc.igLastSyncedAt) doc.lastSyncAt = doc.igLastSyncedAt;
+
+    if (doc.avgEngagementRate == null && doc.engagementRate != null) doc.avgEngagementRate = doc.engagementRate;
+    if (doc.engagementRate == null && doc.avgEngagementRate != null) doc.engagementRate = doc.avgEngagementRate;
+
+    if (doc.porchestScore == null && doc.influencerScore != null) doc.porchestScore = doc.influencerScore;
+    if (doc.influencerScore == null && doc.porchestScore != null) doc.influencerScore = doc.porchestScore;
+
+    if (doc.profileComplete == null && doc.profileCompletionStatus != null) doc.profileComplete = doc.profileCompletionStatus;
+    if (doc.profileCompletionStatus == null && doc.profileComplete != null) doc.profileCompletionStatus = doc.profileComplete;
+
+    if (doc.verified === true) doc.verificationStatus = 'verified';
+    if (doc.verificationStatus === 'verified') doc.verified = true;
+
+    const followers = Number(doc.igFollowersCount || doc.followersCount || 0);
+    if (!doc.followerTier && followers) doc.followerTier = tierFromFollowers(followers);
+
+    syncAudienceFromLegacy(doc);
+
+    if (!doc.audience || !doc.audience.ageGender) {
+        doc.audience = doc.audience || {};
+    }
+}
+
 const influencerProfileSchema = new mongoose.Schema(
     {
-        // ── A. Identity ──────────────────────────────────────────────────
-        influencerProfileId: { type: String, unique: true, required: true }, // INF-xxx
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-        username: { type: String }, // App username
+        // Identity
+        influencerProfileId: { type: String, unique: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+        fullName: {
+            type: String,
+            required: function requiredFullName() {
+                return !this.displayName && !this.username;
+            },
+        },
         displayName: { type: String },
-        fullName: { type: String },
-        contactEmail: { type: String },
-        age: { type: Number },
+        avatar: { type: String },
         bio: { type: String },
+        country: { type: String },
+        city: { type: String },
+        niche: [{ type: String }],
+        languages: [{ type: String }],
+        contactEmail: { type: String },
+        phoneNumber: { type: String },
+
+        // Instagram / Meta
+        igUserId: { type: String, index: true },
+        igUsername: { type: String },
+        igProfileUrl: { type: String },
+        igBio: { type: String },
+        igWebsite: { type: String },
+        igAccountType: { type: String, enum: ['PERSONAL', 'BUSINESS', 'CREATOR'] },
+        igFollowersCount: { type: Number, default: 0 },
+        igFollowingCount: { type: Number, default: 0 },
+        igMediaCount: { type: Number, default: 0 },
+        igLastSyncedAt: { type: Date },
+
+        // Performance
+        avgReachPerPost: { type: Number, default: 0 },
+        avgImpressionsPerPost: { type: Number, default: 0 },
+        avgSavesPerPost: { type: Number, default: 0 },
+        avgSharesPerPost: { type: Number, default: 0 },
+        postingFrequency: { type: Number, default: 0 },
+
+        // Computed scores
+        avgEngagementRate: { type: Number, default: 0 },
+        followerTier: { type: String, enum: ['nano', 'micro', 'macro', 'mega'] },
+        porchestScore: { type: Number, default: 0 },
+        authenticityScore: { type: Number, default: 0 },
+
+        // Audience demographics
+        audience: {
+            ageGender: { type: mongoose.Schema.Types.Mixed },
+            topCountries: { type: [mongoose.Schema.Types.Mixed], default: [] },
+            topCities: { type: [mongoose.Schema.Types.Mixed], default: [] },
+        },
+
+        // Collaboration history
+        totalCampaigns: { type: Number, default: 0 },
+        totalEarnings: { type: Number, default: 0 },
+        avgCampaignRating: { type: Number, default: 0 },
+        preferredRate: { type: Number, default: 0 },
+
+        // Payment info
+        bankDetails: {
+            accountName: { type: String },
+            iban: { type: String },
+            bankName: { type: String },
+        },
+
+        // Porchest internal
+        assignedEmployeeFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        profileComplete: { type: Boolean, default: false },
+        verified: { type: Boolean, default: false },
+        suspended: { type: Boolean, default: false },
+
+        // Legacy compatibility
+        username: { type: String },
+        displayNameLegacy: { type: String },
         profilePictureUrl: { type: String },
-        platform: { type: String, default: 'Instagram' },
+        profileUrl: { type: String },
         instagramAccountId: { type: String },
         instagramUsername: { type: String },
         instagramAccountType: { type: String },
-        isVerified: { type: Boolean, default: false }, // Platform verification
-        profileUrl: { type: String },
-        country: { type: String },
-        city: { type: String },
-        languages: [{ type: String }],
-        niche: { type: String },
+        isVerified: { type: Boolean, default: false },
+        countryOfResidence: { type: String },
         categories: [{ type: String }],
-
-        // ── B. Profile Status ────────────────────────────────────────────
         profileCompletionStatus: { type: Boolean, default: false },
-        verificationStatus: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' }, // App verification
+        verificationStatus: {
+            type: String,
+            enum: ['unverified', 'pending', 'verified', 'rejected'],
+            default: 'unverified',
+        },
         instagramConnected: { type: Boolean, default: false },
-        instagramConnectionStatus: { type: String, enum: ['disconnected', 'connected', 'token_expired', 'failed'], default: 'disconnected' },
+        instagramConnectionStatus: {
+            type: String,
+            enum: ['disconnected', 'connected', 'token_expired', 'failed'],
+            default: 'disconnected',
+        },
         lastConnectedAt: { type: Date },
         isActive: { type: Boolean, default: true },
         isSearchable: { type: Boolean, default: false },
         lastSyncAt: { type: Date },
         lastAnalyticsRefreshAt: { type: Date },
         nextScheduledRefreshAt: { type: Date },
-
-        // ── C. Instagram Account Summary ─────────────────────────────────
         followersCount: { type: Number, default: 0 },
         followingCount: { type: Number, default: 0 },
         mediaCount: { type: Number, default: 0 },
@@ -47,9 +232,7 @@ const influencerProfileSchema = new mongoose.Schema(
         accountReach: { type: Number, default: 0 },
         accountImpressions: { type: Number, default: 0 },
         onlineFollowers: { type: mongoose.Schema.Types.Mixed, default: null },
-
-        // ── D. Analytics / Metrics ───────────────────────────────────────
-        engagementRate: { type: Number, default: 0 }, // e.g., 3.45 (%)
+        engagementRate: { type: Number, default: 0 },
         avgLikes: { type: Number, default: 0 },
         avgComments: { type: Number, default: 0 },
         avgShares: { type: Number, default: 0 },
@@ -71,14 +254,13 @@ const influencerProfileSchema = new mongoose.Schema(
         totalShares: { type: Number, default: 0 },
         totalSaved: { type: Number, default: 0 },
         totalEngagements: { type: Number, default: 0 },
-        postingFrequency: { type: Number, default: 0 }, // legacy
         postingFrequency7d: { type: Number, default: 0 },
         postingFrequency30d: { type: Number, default: 0 },
         consistencyRatio: { type: Number, default: 0 },
         consistencyScore: { type: Number, default: 0 },
         costPerView: { type: Number, default: null },
         costPerEngagement: { type: Number, default: null },
-        authenticityScore: { type: Number, default: 0 },
+        authenticityScoreLegacy: { type: Number, default: 0 },
         engagementQualityScore: { type: Number, default: 0 },
         viralityScore: { type: Number, default: 0 },
         influencerScore: { type: Number, default: 0 },
@@ -91,34 +273,26 @@ const influencerProfileSchema = new mongoose.Schema(
             accountImpressions: { type: Number },
             influencerScore: { type: Number },
         }],
-        
-        // ── E. Demographics ──────────────────────────────────────────────
         demographics: {
-            genderDistribution: { type: mongoose.Schema.Types.Mixed }, // { "M": 60, "F": 40 }
-            ageDistribution: { type: mongoose.Schema.Types.Mixed }, // { "18-24": 40, ... }
-            topCountries: { type: mongoose.Schema.Types.Mixed }, // { "US": 50, "PK": 30, ... }
-            topCities: { type: mongoose.Schema.Types.Mixed }, // { "New York": 20, ... }
+            genderDistribution: { type: mongoose.Schema.Types.Mixed },
+            ageDistribution: { type: mongoose.Schema.Types.Mixed },
+            topCountries: { type: mongoose.Schema.Types.Mixed },
+            topCities: { type: mongoose.Schema.Types.Mixed },
             languages: { type: mongoose.Schema.Types.Mixed },
             audienceType: { type: String },
             onlineFollowers: { type: mongoose.Schema.Types.Mixed },
         },
-
-        // ── F. Pricing / Cost Information ────────────────────────────────
         avgPostPrice: { type: Number, default: 0 },
         avgReelPrice: { type: Number, default: 0 },
         currency: { type: String, default: 'USD' },
-
-        // ── G. Score / Rating Section ────────────────────────────────────
         profileScore: { type: Number, default: 0 },
-        fitScore: { type: Number, default: 0 }, // 0 - 100
+        fitScore: { type: Number, default: 0 },
         qualityScore: { type: Number, default: 0 },
         topPostScore: { type: Number, default: 0 },
         topReelScore: { type: Number, default: 0 },
         credibilityScore: { type: Number, default: 0 },
         scoreLabel: { type: String },
         scoreBreakdown: { type: mongoose.Schema.Types.Mixed },
-
-        // ── H. Refresh Metadata & Authorization (No separate tables!) ────
         sync: {
             source: { type: String, default: 'Instagram Graph API' },
             lastRawFetchAt: { type: Date },
@@ -127,14 +301,11 @@ const influencerProfileSchema = new mongoose.Schema(
             refreshStatus: { type: String, enum: ['idle', 'syncing', 'success', 'failed'] },
             refreshError: { type: String },
             retryCount: { type: Number, default: 0 },
-            // Tokens strictly scoped to the profile, wiped on disconnect
             oauthState: { type: String },
             accessToken: { type: String },
             longLivedToken: { type: String },
-            tokenExpiresAt: { type: Date }
+            tokenExpiresAt: { type: Date },
         },
-
-        // ── I. Optional Recent Content Summary ───────────────────────────
         recentMediaSummary: [{
             mediaId: { type: String },
             mediaUrl: { type: String },
@@ -151,18 +322,117 @@ const influencerProfileSchema = new mongoose.Schema(
             impressionCount: { type: Number },
             engagementCount: { type: Number },
             viewCount: { type: Number },
-            timestamp: { type: Date }
-        }]
+            timestamp: { type: Date },
+        }],
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        collection: 'influencer_profiles',
+    }
 );
 
-influencerProfileSchema.index({ niche: 1 });
-influencerProfileSchema.index({ country: 1 });
-influencerProfileSchema.index({ followersCount: -1 });
-influencerProfileSchema.index({ engagementRate: -1 });
-influencerProfileSchema.index({ fitScore: -1 });
-influencerProfileSchema.index({ isSearchable: 1, isActive: 1 });
-influencerProfileSchema.index({ 'sync.tokenExpiresAt': 1 }); // For scheduler
+const MIRROR_PAIRS = [
+    ['avatar', 'profilePictureUrl'],
+    ['igUserId', 'instagramAccountId'],
+    ['igUsername', 'instagramUsername'],
+    ['igProfileUrl', 'instagramDPURL'],
+    ['igBio', 'instagramBiography'],
+    ['igWebsite', 'website'],
+    ['igAccountType', 'instagramAccountType'],
+    ['igFollowersCount', 'followersCount'],
+    ['igFollowingCount', 'followingCount'],
+    ['igMediaCount', 'mediaCount'],
+    ['igLastSyncedAt', 'lastSyncAt'],
+    ['avgEngagementRate', 'engagementRate'],
+    ['porchestScore', 'influencerScore'],
+    ['profileComplete', 'profileCompletionStatus'],
+    ['verified', 'isVerified'],
+];
 
-module.exports = mongoose.model('InfluencerProfile', influencerProfileSchema);
+function syncDerivedInfluencerState(doc) {
+    if (!doc) return;
+
+    if (!doc.avatar && doc.profilePictureUrl) doc.avatar = doc.profilePictureUrl;
+    if (!doc.profilePictureUrl && doc.avatar) doc.profilePictureUrl = doc.avatar;
+
+    if (!doc.igUserId && doc.instagramAccountId) doc.igUserId = doc.instagramAccountId;
+    if (!doc.instagramAccountId && doc.igUserId) doc.instagramAccountId = doc.igUserId;
+
+    if (!doc.igUsername && doc.instagramUsername) doc.igUsername = doc.instagramUsername;
+    if (!doc.instagramUsername && doc.igUsername) doc.instagramUsername = doc.igUsername;
+
+    if (!doc.igProfileUrl && doc.instagramDPURL) doc.igProfileUrl = doc.instagramDPURL;
+    if (!doc.instagramDPURL && doc.igProfileUrl) doc.instagramDPURL = doc.igProfileUrl;
+
+    if (!doc.igBio && doc.instagramBiography) doc.igBio = doc.instagramBiography;
+    if (!doc.instagramBiography && doc.igBio) doc.instagramBiography = doc.igBio;
+
+    if (!doc.igWebsite && doc.website) doc.igWebsite = doc.website;
+    if (!doc.website && doc.igWebsite) doc.website = doc.igWebsite;
+
+    if (!doc.igAccountType && doc.instagramAccountType) doc.igAccountType = doc.instagramAccountType;
+    if (!doc.instagramAccountType && doc.igAccountType) doc.instagramAccountType = doc.igAccountType;
+
+    if (doc.igFollowersCount == null && doc.followersCount != null) doc.igFollowersCount = doc.followersCount;
+    if (doc.followersCount == null && doc.igFollowersCount != null) doc.followersCount = doc.igFollowersCount;
+
+    if (doc.igFollowingCount == null && doc.followingCount != null) doc.igFollowingCount = doc.followingCount;
+    if (doc.followingCount == null && doc.igFollowingCount != null) doc.followingCount = doc.igFollowingCount;
+
+    if (doc.igMediaCount == null && doc.mediaCount != null) doc.igMediaCount = doc.mediaCount;
+    if (doc.mediaCount == null && doc.igMediaCount != null) doc.mediaCount = doc.igMediaCount;
+
+    if (!doc.igLastSyncedAt && doc.lastSyncAt) doc.igLastSyncedAt = doc.lastSyncAt;
+    if (!doc.lastSyncAt && doc.igLastSyncedAt) doc.lastSyncAt = doc.igLastSyncedAt;
+
+    if (doc.avgEngagementRate == null && doc.engagementRate != null) doc.avgEngagementRate = doc.engagementRate;
+    if (doc.engagementRate == null && doc.avgEngagementRate != null) doc.engagementRate = doc.avgEngagementRate;
+
+    if (doc.porchestScore == null && doc.influencerScore != null) doc.porchestScore = doc.influencerScore;
+    if (doc.influencerScore == null && doc.porchestScore != null) doc.influencerScore = doc.porchestScore;
+
+    if (doc.profileComplete == null && doc.profileCompletionStatus != null) doc.profileComplete = doc.profileCompletionStatus;
+    if (doc.profileCompletionStatus == null && doc.profileComplete != null) doc.profileCompletionStatus = doc.profileComplete;
+
+    if (doc.verified === true) doc.isVerified = true;
+    if (doc.isVerified === true) doc.verified = true;
+
+    const followers = Number(doc.igFollowersCount || doc.followersCount || 0);
+    if (!doc.followerTier) {
+        doc.followerTier = tierFromFollowers(followers);
+    }
+
+    syncAudienceFromLegacy(doc);
+}
+
+function syncAudienceFromLegacy(doc) {
+    if (!doc) return;
+    const demographics = doc.demographics || {};
+
+    if (!doc.audience || typeof doc.audience !== 'object') {
+        doc.audience = {};
+    }
+
+    if (!doc.audience.ageGender && (demographics.genderDistribution || demographics.ageDistribution)) {
+        const ageGender = {};
+        const genderDistribution = demographics.genderDistribution || {};
+        const ageDistribution = demographics.ageDistribution || {};
+        for (const [key, value] of Object.entries(genderDistribution)) {
+            ageGender[key] = value;
+        }
+        for (const [key, value] of Object.entries(ageDistribution)) {
+            ageGender[key] = value;
+        }
+        doc.audience.ageGender = ageGender;
+    }
+
+    if (!doc.audience.topCountries && demographics.topCountries) {
+        doc.audience.topCountries = demographics.topCountries;
+    }
+    if (!doc.audience.topCities && demographics.topCities) {
+        doc.audience.topCities = demographics.topCities;
+    }
+    if (!doc.audience.languages && Array.isArray(doc.languages) && doc.languages.length) {
+        doc.audience.languages = doc.languages;
+    }
+}

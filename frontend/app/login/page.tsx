@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
+import { resolveDashboardRole } from '@/lib/accessRoles';
 import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, Zap, Building2, Star, ArrowRight } from 'lucide-react';
@@ -53,6 +54,7 @@ export default function LoginPage() {
     const [roleSubmitting, setRoleSubmitting] = useState<'brand' | 'influencer' | null>(null);
     const { login } = useAuth();
     const router = useRouter();
+    const goToDashboard = (role?: string) => router.push(`/dashboard/${resolveDashboardRole(role)}`);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -63,7 +65,7 @@ export default function LoginPage() {
             const result = await login(email, password);
             if (result.success) {
                 toast.success('Signed in');
-                router.push(`/dashboard/${result.role}`);
+                goToDashboard(result.role);
             }
         } catch (err: unknown) {
             const message = (err as Error).message || 'Login failed';
@@ -87,7 +89,7 @@ export default function LoginPage() {
             if (data.success) {
                 localStorage.setItem('porchest_token', data.token);
                 localStorage.setItem('porchest_user', JSON.stringify(data.user));
-                window.location.href = data.user?.role ? `/dashboard/${data.user.role}` : '/dashboard/brand';
+                window.location.href = `/dashboard/${resolveDashboardRole(data.user?.role)}`;
             }
         } catch (err: any) {
             const message =
@@ -127,7 +129,7 @@ export default function LoginPage() {
             setShowRolePicker(false);
             setPendingGoogleToken(null);
             toast.success(`Your ${role} account is ready!`);
-            window.location.href = `/dashboard/${data.user?.role || role}`;
+            window.location.href = `/dashboard/${resolveDashboardRole(data.user?.role || role)}`;
         } catch (err: any) {
             const message =
                 err?.response?.data?.message ||

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
+import { isAdminRole, resolveDashboardRole } from '@/lib/accessRoles';
 import { brandAPI, influencerAPI } from '@/lib/api';
 import {
     LayoutDashboard, Users, Megaphone, BarChart3,
@@ -38,10 +39,35 @@ const softwareClientNav = [
     { label: 'Projects', href: '/dashboard/software-client/projects', icon: <FolderKanban size={17} /> },
 ];
 
-const roleNav: Record<string, typeof adminNav> = { admin: adminNav, brand: brandNav, influencer: influencerNav, 'software-client': softwareClientNav };
-const rolePillColor: Record<string, string> = { admin: '#ff8c42', brand: '#7B3FF2', influencer: '#A855F7', 'software-client': '#2563eb' };
+const roleNav: Record<string, typeof adminNav> = {
+    admin: adminNav,
+    'admin-marketing': adminNav,
+    'admin-software': adminNav,
+    'employee-marketing': adminNav,
+    'employee-software': adminNav,
+    owner: adminNav,
+    brand: brandNav,
+    influencer: influencerNav,
+    'software-client': softwareClientNav,
+};
+const rolePillColor: Record<string, string> = {
+    admin: '#ff8c42',
+    'admin-marketing': '#ff8c42',
+    'admin-software': '#ff8c42',
+    'employee-marketing': '#ff8c42',
+    'employee-software': '#ff8c42',
+    owner: '#ff8c42',
+    brand: '#7B3FF2',
+    influencer: '#A855F7',
+    'software-client': '#2563eb',
+};
 const roleIcons: Record<string, React.ReactNode> = {
     admin: <Shield size={12} />,
+    'admin-marketing': <Shield size={12} />,
+    'admin-software': <Shield size={12} />,
+    'employee-marketing': <Shield size={12} />,
+    'employee-software': <Shield size={12} />,
+    owner: <Shield size={12} />,
     brand: <Megaphone size={12} />,
     influencer: <Bot size={12} />,
     'software-client': <ClipboardList size={12} />,
@@ -138,7 +164,8 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                             onClick={() => {
                                 if (!n.isRead) onMarkRead(n._id);
                                 if (role === 'influencer') router.push('/dashboard/influencer/collaborations');
-                                else router.push('/dashboard/brand/collaborations');
+                                else if (role === 'brand') router.push('/dashboard/brand/collaborations');
+                                else router.push('/dashboard/admin');
                                 onClose();
                             }}
                             style={{
@@ -184,8 +211,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     if (!user) return null;
 
-    const nav = roleNav[user.role] || [];
-    const roleColor = rolePillColor[user.role];
+    const normalizedRole = resolveDashboardRole(user.role);
+    const nav = roleNav[user.role] || roleNav[normalizedRole] || [];
+    const roleColor = rolePillColor[user.role] || rolePillColor[normalizedRole];
     const displayName = user.companyName || user.fullName || user.email.split('@')[0];
 
     const api = user.role === 'brand' ? brandAPI : user.role === 'influencer' ? influencerAPI : null;
