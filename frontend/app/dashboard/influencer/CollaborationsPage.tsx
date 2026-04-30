@@ -10,6 +10,7 @@ import { influencerAPI } from '@/lib/api';
 import { useCollaborationUpdates } from '@/lib/useSocket';
 import toast from 'react-hot-toast';
 import RequestsBoard from './RequestsBoard';
+import CampaignMetricsCard from '@/components/influencer/CampaignMetricsCard';
 
 type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'verified' | 'paid';
 
@@ -168,6 +169,9 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                                     </button>
                                 </div>
                             )}
+                            <div style={{ marginTop: '16px' }}>
+                                <CampaignMetricsCard collaborationId={c._id} />
+                            </div>
                         </motion.div>
                     );
                 })

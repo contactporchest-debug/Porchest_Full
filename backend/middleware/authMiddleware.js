@@ -4,11 +4,14 @@ const User = require('../models/User');
 const authMiddleware = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const rawToken = req.headers['x-access-token'];
+        const bearerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+        const token = bearerToken || rawToken || (typeof authHeader === 'string' ? authHeader.trim() : '');
+
+        if (!token) {
             return res.status(401).json({ success: false, message: 'No token provided' });
         }
 
-        const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         const account = await User.findById(decoded.id);

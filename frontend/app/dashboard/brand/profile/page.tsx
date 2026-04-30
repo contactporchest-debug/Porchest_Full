@@ -12,6 +12,7 @@ import { brandAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const BRAND_NICHES = [
@@ -402,6 +403,20 @@ export default function BrandProfilePage() {
 
                     {/* ── Brand Instagram Integration ── */}
                     <BrandInstagramSection conn={igConn} onRefresh={loadProfile} />
+
+                    {/* Purchase tracking setup */}
+                    <div style={{ padding: '16px 18px', borderRadius: '18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>
+                        <div>
+                            <p style={{ color: '#fff', fontSize: '14px', fontWeight: '600' }}>Purchase tracking</p>
+                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.42)', marginTop: '4px' }}>Connect your checkout to track promo code sales and ROI</p>
+                        </div>
+                        <Link
+                            href="/brand/webhook-setup"
+                            className="text-sm px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-900/30 text-purple-300 hover:bg-purple-900/50 transition-colors"
+                        >
+                            Setup guide
+                        </Link>
+                    </div>
 
                     {/* ── Brand Identity ── */}
                     <SectionCard title="Brand Identity" icon={<Briefcase size={16} />}>

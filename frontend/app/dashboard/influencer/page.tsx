@@ -7,6 +7,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/context/AuthContext';
 import OverviewPage from './OverviewPage';
 import ProfileCompletionBanner from './ProfileCompletionBanner';
+import InstagramAnalytics from '@/components/influencer/InstagramAnalytics';
+import ConnectInstagramBanner from '@/components/shared/ConnectInstagramBanner';
 import { influencerAPI } from '@/lib/api';
 import {
     Instagram, CheckCircle, AlertCircle,
@@ -18,6 +20,7 @@ export default function InfluencerPortal() {
     const [igConnected, setIgConnected] = useState(false);
     const [dashStats, setDashStats] = useState<any>(null);
     const [profileCompletion, setProfileCompletion] = useState<any>(null);
+    const instagramConnected = igConnected || !!(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
 
     const displayName = user?.fullName || user?.email?.split('@')[0] || 'Influencer';
 
@@ -54,6 +57,7 @@ export default function InfluencerPortal() {
 
                 {/* ── CONTENT ── */}
                 <OverviewPage stats={dashStats} />
+                {instagramConnected ? <InstagramAnalytics /> : <ConnectInstagramBanner role="influencer" />}
             </DashboardLayout>
         </ProtectedRoute>
     );

@@ -4,11 +4,15 @@ const CampaignRequest = require('../models/CampaignRequest');
 
 const router = express.Router();
 
+function normalizeSecret(value) {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
 router.post('/purchase', async (req, res) => {
     try {
         const { promoCode, orderValue, orderId, currency, webhookSecret } = req.body || {};
 
-        if (webhookSecret !== process.env.PORCHEST_WEBHOOK_SECRET) {
+        if (normalizeSecret(webhookSecret) !== normalizeSecret(process.env.PORCHEST_WEBHOOK_SECRET)) {
             return res.status(401).json({ error: 'Invalid webhook secret' });
         }
 
@@ -91,7 +95,7 @@ router.post('/purchase', async (req, res) => {
 
 router.get('/verify', (req, res) => {
     const { webhookSecret } = req.query || {};
-    if (webhookSecret !== process.env.PORCHEST_WEBHOOK_SECRET) {
+    if (normalizeSecret(webhookSecret) !== normalizeSecret(process.env.PORCHEST_WEBHOOK_SECRET)) {
         return res.status(401).json({ error: 'Invalid webhook secret' });
     }
     return res.status(200).json({ success: true, message: 'Webhook endpoint is reachable' });

@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useCollaborationUpdates } from '@/lib/useSocket';
+import CollaborationMetrics from '@/components/brand/CollaborationMetrics';
 
 type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
 
@@ -188,6 +189,9 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                     <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: '#f5f3ff', border: '1px solid rgba(123,63,242,0.14)' }}>
                         <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Content Guidelines</p>
                         <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>{request.contentGuidelines}</p>
+                    </div>
+                    <div style={{ marginTop: '4px' }}>
+                        <CollaborationMetrics collaborationId={request._id} />
                     </div>
                 </div>
 
