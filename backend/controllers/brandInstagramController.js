@@ -95,7 +95,7 @@ exports.handleCallback = async (req, res, next) => {
         );
 
         // Run full sync (generates native structure directly into BrandProfile)
-        await syncService.runFullSync(userId, ROLE, longToken);
+        await syncService.runFullSync(userId, ROLE, longToken, { bootstrap: true });
 
         res.redirect(`${FRONTEND_URL}${CALLBACK_PATH}?ig_connected=1`);
     } catch (error) {

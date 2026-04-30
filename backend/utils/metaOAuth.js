@@ -248,11 +248,13 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
  * Traverses Graph pagination until the cutoff is reached or no more pages exist.
  * Returns [] if permissions are missing or fetch fails (non-fatal).
  */
-exports.fetchMediaList = async (accessToken, igUserId) => {
+exports.fetchMediaList = async (accessToken, igUserId, options = {}) => {
     const fields = 'id,caption,media_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
     const base = igUserId.startsWith('1784') ? FB_GRAPH_BASE : GRAPH_BASE; // 1784 is typical for IG Business IDs on FB Graph
-    const cutoffTime = Date.now() - (60 * 24 * 60 * 60 * 1000);
-    let url = `${base}/${igUserId}/media?fields=${fields}&limit=100&access_token=${accessToken}`;
+    const days = Number.isFinite(options.days) ? options.days : 60;
+    const limit = Number.isFinite(options.limit) && options.limit > 0 ? options.limit : 100;
+    const cutoffTime = Number.isFinite(days) ? Date.now() - (days * 24 * 60 * 60 * 1000) : null;
+    let url = `${base}/${igUserId}/media?fields=${fields}&limit=${limit}&access_token=${accessToken}`;
     const media = [];
 
     try {
@@ -269,7 +271,7 @@ exports.fetchMediaList = async (accessToken, igUserId) => {
 
             for (const item of pageItems) {
                 const timestamp = item?.timestamp ? new Date(item.timestamp).getTime() : null;
-                if (timestamp && timestamp < cutoffTime) {
+                if (cutoffTime && timestamp && timestamp < cutoffTime) {
                     reachedCutoff = true;
                     continue;
                 }
@@ -350,11 +352,24 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
         const data = await res.json();
         if (!res.ok || data.error) return { raw: data, parsed: null };
 
-        const result = { cities: null, countries: null, genderAge: null };
+        const result = { ageGender: null, topCities: [], topCountries: [] };
         (data.data || []).forEach(m => {
-            if (m.name === 'audience_city') result.cities = m.values?.[0]?.value ?? null;
-            if (m.name === 'audience_country') result.countries = m.values?.[0]?.value ?? null;
-            if (m.name === 'audience_gender_age') result.genderAge = m.values?.[0]?.value ?? null;
+            const value = m.values?.[0]?.value ?? null;
+            if (m.name === 'audience_city' && value && typeof value === 'object') {
+                result.topCities = Object.entries(value)
+                    .map(([city, pct]) => ({ city, value: Number(pct || 0) }))
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 5);
+            }
+            if (m.name === 'audience_country' && value && typeof value === 'object') {
+                result.topCountries = Object.entries(value)
+                    .map(([country, pct]) => ({ country, value: Number(pct || 0) }))
+                    .sort((a, b) => b.value - a.value)
+                    .slice(0, 5);
+            }
+            if (m.name === 'audience_gender_age' && value && typeof value === 'object') {
+                result.ageGender = value;
+            }
         });
         return { raw: data, parsed: result };
     } catch {

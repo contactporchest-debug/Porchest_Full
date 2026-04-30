@@ -93,7 +93,7 @@ exports.handleCallback = async (req, res, next) => {
         );
 
         // Run full sync (it internally updates InfluencerProfile with ALL analytics)
-        await syncService.runFullSync(userId, ROLE, longToken);
+        await syncService.runFullSync(userId, ROLE, longToken, { bootstrap: true });
 
         // Finalize User layer
         await Promise.all([

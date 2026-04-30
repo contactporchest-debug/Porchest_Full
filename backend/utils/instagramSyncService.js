@@ -58,9 +58,12 @@ function computeFitScore(metrics, followersCount, profileComplete) {
  * @param {string} userId - MongoDB user ID
  * @param {string} role - 'influencer' | 'brand'
  * @param {string} accessToken - Valid Meta access token
+ * @param {object} [options]
+ * @param {boolean} [options.bootstrap=false] - When true, fetch the full media set for the first connection sync.
  * @returns {object} Computed analytics summary
  */
-exports.runFullSync = async (userId, role, accessToken) => {
+exports.runFullSync = async (userId, role, accessToken, options = {}) => {
+    const bootstrap = !!options.bootstrap;
     // 1. Fetch raw Instagram profile
     const profile = await meta.fetchProfile(accessToken);
     const igUserId = profile.id;
@@ -72,10 +75,13 @@ exports.runFullSync = async (userId, role, accessToken) => {
     // 2b. Fetch account insights from Meta API
     const accountInsightsBundle = await meta.fetchAccountInsights(accessToken, igUserId);
     const accountInsights = accountInsightsBundle?.parsed || {};
-    const audienceBreakdown = parseGenderAgeDistribution(audienceData?.genderAge);
+    const audienceBreakdown = parseGenderAgeDistribution(audienceData?.ageGender);
 
-    // 3. Fetch all available media within the last 60 days
-    const mediaList = await meta.fetchMediaList(accessToken, igUserId);
+    // 3. Fetch media. Bootstrap sync pulls the full available set once on connect.
+    const mediaList = await meta.fetchMediaList(accessToken, igUserId, {
+        days: bootstrap ? null : 60,
+        limit: 100,
+    });
 
     let existingProfile = null;
     if (role === 'influencer') {
@@ -168,6 +174,18 @@ exports.runFullSync = async (userId, role, accessToken) => {
     // 5. Build the massive structural update object
     const updatePayload = {
         // Identity
+        avatar:               profile.profile_picture_url || null,
+        profilePictureUrl:    profile.profile_picture_url || null,
+        igUserId:             igUserId,
+        igUsername:           profile.username || null,
+        igProfileUrl:         profile.profile_picture_url || null,
+        igBio:                profile.biography || null,
+        igWebsite:            profile.website || null,
+        igAccountType:        profile.account_type || null,
+        igFollowersCount:     followersCount,
+        igFollowingCount:     profile.follows_count || 0,
+        igMediaCount:         profile.media_count || 0,
+        igLastSyncedAt:       syncedAt,
         instagramUserId:       igUserId,
         instagramUsername:     profile.username || null,
         instagramProfileURL:   profile.username ? `https://instagram.com/${profile.username}` : null,
@@ -223,7 +241,7 @@ exports.runFullSync = async (userId, role, accessToken) => {
         updatePayload.averageReach         = metrics.averageReach || 0;
         updatePayload.viewRate             = metrics.viewRate || 0;
         updatePayload.likeToCommentRatio   = metrics.likeToCommentRatio || 0;
-        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || 0;
+        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || recentMediaSummary.length || 0;
         updatePayload.influencerEfficiencyRate = metrics.influencerEfficiencyRate || 0;
         updatePayload.totalReach           = metrics.totalReach || 0;
         updatePayload.totalImpressions     = metrics.totalImpressions || 0;
@@ -247,11 +265,16 @@ exports.runFullSync = async (userId, role, accessToken) => {
         updatePayload.topPerformingContentType = metrics.topReelScore > metrics.topPostScore ? 'REELS' : 'POSTS';
         updatePayload.recentMediaSummary   = recentMediaSummary;
         updatePayload.historicalSnapshots  = historicalSnapshots.slice(-60);
+        updatePayload.audience            = {
+            ageGender: audienceData?.ageGender || null,
+            topCountries: audienceData?.topCountries || [],
+            topCities: audienceData?.topCities || [],
+        };
         updatePayload.demographics         = {
             genderDistribution: audienceBreakdown.genderDistribution,
             ageDistribution: audienceBreakdown.ageDistribution,
-            topCountries: audienceData?.countries || null,
-            topCities: audienceData?.cities || null,
+            topCountries: audienceData?.topCountries || [],
+            topCities: audienceData?.topCities || [],
             languages: existingProfile?.demographics?.languages || null,
             audienceType: existingProfile?.demographics?.audienceType || null,
             onlineFollowers: accountInsights.onlineFollowers || null,
@@ -284,11 +307,16 @@ exports.runFullSync = async (userId, role, accessToken) => {
         
     } else if (role === 'brand') {
         updatePayload.engagementRate       = metrics.engagementRate || 0;
+        updatePayload.igFollowers          = followersCount;
+        updatePayload.igUserId             = igUserId;
+        updatePayload.igUsername           = profile.username || null;
+        updatePayload.igProfileUrl         = profile.profile_picture_url || null;
+        updatePayload.igLastSyncedAt       = syncedAt;
         updatePayload.avgLikesPerPost      = metrics.avgLikesPerPost || 0;
         updatePayload.avgCommentsPerPost   = metrics.avgCommentsPerPost || 0;
         updatePayload.avgEngagementPerPost = metrics.avgEngagementPerPost || 0;
         updatePayload.likeToCommentRatio   = metrics.likeToCommentRatio || 0;
-        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || 0;
+        updatePayload.postsAnalyzed        = metrics.postsAnalyzed || recentMediaSummary.length || 0;
         updatePayload.influencerEfficiencyRate = metrics.influencerEfficiencyRate || 0;
         updatePayload.postingFrequency7d   = metrics.postingFrequency7d || 0;
         updatePayload.postingFrequency30d  = metrics.postingFrequency30d || 0;
