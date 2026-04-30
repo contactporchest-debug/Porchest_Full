@@ -9,6 +9,14 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 
+const normalizeSignupRole = (role) => {
+    if (!role) return role;
+    return String(role)
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_]+/g, '-');
+};
+
 const ensureGoogleRoleProfile = async (user, role, payload = {}) => {
     if (role === 'influencer') {
         let profile = null;
@@ -84,7 +92,8 @@ const generateOTP = () => {
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
     try {
-        const { role, email, password, termsAccepted, ...profileData } = req.body;
+        const { email, password, termsAccepted, ...profileData } = req.body;
+        const role = normalizeSignupRole(req.body.role);
 
         if (!PUBLIC_SIGNUP_ROLES.includes(role)) {
             return res.status(400).json({ success: false, message: 'Invalid role. Must be brand, influencer, or software-client.' });
@@ -224,7 +233,8 @@ exports.verifyOTP = async (req, res, next) => {
 // @route   POST /api/auth/google
 exports.googleAuth = async (req, res, next) => {
     try {
-        const { idToken, role } = req.body;
+        const { idToken } = req.body;
+        const role = normalizeSignupRole(req.body.role);
 
         if (!idToken) {
             return res.status(400).json({ success: false, message: 'Google ID token is required' });
