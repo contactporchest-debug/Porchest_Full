@@ -96,7 +96,7 @@ exports.runFullSync = async (userId, role, accessToken, options = {}) => {
     const mediaInsightsRaw = [];
     for (const media of mediaList) {
         try {
-            const insightBundle = await meta.fetchMediaInsights(accessToken, media.id, media.media_type);
+            const insightBundle = await meta.fetchMediaInsights(accessToken, media.id, media.media_type, media.media_product_type);
             if (insightBundle?.raw) {
                 mediaInsightsRaw.push({
                     targetType: 'media',
@@ -140,6 +140,7 @@ exports.runFullSync = async (userId, role, accessToken, options = {}) => {
         thumbnailUrl: m.thumbnail_url || null,
         permalink: m.permalink,
         mediaType: m.media_type,
+        mediaProductType: m.media_product_type || null,
         caption: (m.caption || '').slice(0, 500),
         likeCount: m.like_count || 0,
         commentsCount: m.comments_count || 0,

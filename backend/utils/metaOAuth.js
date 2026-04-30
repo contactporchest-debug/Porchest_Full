@@ -249,7 +249,7 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
  * Returns [] if permissions are missing or fetch fails (non-fatal).
  */
 exports.fetchMediaList = async (accessToken, igUserId, options = {}) => {
-    const fields = 'id,caption,media_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
+    const fields = 'id,caption,media_type,media_product_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
     const base = igUserId.startsWith('1784') ? FB_GRAPH_BASE : GRAPH_BASE; // 1784 is typical for IG Business IDs on FB Graph
     const allTime = options.allTime === true;
     const days = Number.isFinite(options.days) ? options.days : (allTime ? null : 60);
@@ -294,7 +294,7 @@ exports.fetchMediaList = async (accessToken, igUserId, options = {}) => {
  * Fetch insights for a specific media object.
  * Gracefully returns null if unsupported (e.g., personal accounts, missing permissions).
  */
-exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
+exports.fetchMediaInsights = async (accessToken, mediaId, mediaType, mediaProductType = null) => {
     // Metric availability varies by media type
     const metricsByType = {
         REEL: 'reach,impressions,plays,saved,shares',
@@ -303,7 +303,8 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
         CAROUSEL_ALBUM: 'reach,impressions,saved',
     };
 
-    const metrics = metricsByType[mediaType] || 'reach,impressions,saved';
+    const isReel = mediaType === 'REEL' || mediaProductType === 'REELS';
+    const metrics = isReel ? metricsByType.REEL : (metricsByType[mediaType] || 'reach,impressions,saved');
     const base = mediaId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE; // Heuristic to switch between FB and IG domains
     const url = `${base}/${mediaId}/insights?metric=${metrics}&access_token=${accessToken}`;
 
@@ -314,7 +315,20 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType) => {
 
         const result = {};
         (data.data || []).forEach(m => {
-            result[m.name] = m.values?.[0]?.value ?? m.value ?? null;
+            const rawValue = m.values?.[0]?.value ?? m.value ?? null;
+            if (typeof rawValue === 'number') {
+                result[m.name] = rawValue;
+            } else if (typeof rawValue === 'string') {
+                const parsed = Number(rawValue);
+                result[m.name] = Number.isFinite(parsed) ? parsed : 0;
+            } else if (rawValue && typeof rawValue === 'object') {
+                result[m.name] = Object.values(rawValue).reduce((sum, value) => {
+                    const parsed = Number(value);
+                    return sum + (Number.isFinite(parsed) ? parsed : 0);
+                }, 0);
+            } else {
+                result[m.name] = 0;
+            }
         });
         return { raw: data, parsed: result };
     } catch {
@@ -402,7 +416,16 @@ exports.fetchAccountInsights = async (accessToken, igUserId) => {
 
         if (summaryRes.ok && !summaryRaw.error) {
             (summaryRaw.data || []).forEach((metric) => {
-                const value = Number(metric?.values?.[0]?.value || 0);
+                const rawValue = metric?.values?.[0]?.value ?? 0;
+                let value = 0;
+                if (typeof rawValue === 'number') value = rawValue;
+                else if (typeof rawValue === 'string') value = Number(rawValue) || 0;
+                else if (rawValue && typeof rawValue === 'object') {
+                    value = Object.values(rawValue).reduce((sum, entry) => {
+                        const parsed = Number(entry);
+                        return sum + (Number.isFinite(parsed) ? parsed : 0);
+                    }, 0);
+                }
                 if (metric.name === 'reach') parsed.reach = value;
                 if (metric.name === 'impressions') parsed.impressions = value;
                 if (metric.name === 'profile_views') parsed.profileViews = value;
