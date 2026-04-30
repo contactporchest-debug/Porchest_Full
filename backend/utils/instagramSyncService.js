@@ -80,6 +80,7 @@ exports.runFullSync = async (userId, role, accessToken, options = {}) => {
 
     // 3. Fetch media. Bootstrap sync pulls the full available set once on connect.
     const mediaList = await meta.fetchMediaList(accessToken, igUserId, {
+        allTime: bootstrap,
         days: bootstrap ? null : 60,
         limit: 100,
     });

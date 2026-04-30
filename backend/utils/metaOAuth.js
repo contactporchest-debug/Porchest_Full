@@ -251,7 +251,8 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
 exports.fetchMediaList = async (accessToken, igUserId, options = {}) => {
     const fields = 'id,caption,media_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count';
     const base = igUserId.startsWith('1784') ? FB_GRAPH_BASE : GRAPH_BASE; // 1784 is typical for IG Business IDs on FB Graph
-    const days = Number.isFinite(options.days) ? options.days : 60;
+    const allTime = options.allTime === true;
+    const days = Number.isFinite(options.days) ? options.days : (allTime ? null : 60);
     const limit = Number.isFinite(options.limit) && options.limit > 0 ? options.limit : 100;
     const cutoffTime = Number.isFinite(days) ? Date.now() - (days * 24 * 60 * 60 * 1000) : null;
     let url = `${base}/${igUserId}/media?fields=${fields}&limit=${limit}&access_token=${accessToken}`;
