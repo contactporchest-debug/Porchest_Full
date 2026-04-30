@@ -26,6 +26,7 @@ interface User {
     instagramDPURL?: string;
     instagramUserId?: string;
     accountType?: string;
+    instagramConnectionStatus?: string;
     followers?: number;
     followsCount?: number;
     mediaCount?: number;
