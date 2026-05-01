@@ -27,13 +27,20 @@ router.get('/influencers', async (req, res) => {
     try {
         const page = Math.max(1, Number(req.query.page || 1));
         const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
-        const filter = { porchestScore: { $exists: true } };
+        // Show all influencer profiles — synced ones surface first via sort
+        const filter = {};
 
         if (req.query.niche) filter.niche = { $in: String(req.query.niche).split(',').map((n) => n.trim()).filter(Boolean) };
         if (req.query.tier) filter.followerTier = req.query.tier;
         if (req.query.country) filter.country = new RegExp(String(req.query.country), 'i');
         if (req.query.minER) filter.avgEngagementRate = { $gte: Number(req.query.minER) };
-        if (req.query.minScore) filter.porchestScore = { $gte: Number(req.query.minScore) };
+        if (req.query.minScore) {
+            const scoreVal = Number(req.query.minScore);
+            filter.$or = [
+                { porchestScore: { $gte: scoreVal } },
+                { influencerScore: { $gte: scoreVal } },
+            ];
+        }
         if (req.query.search) {
             const search = new RegExp(String(req.query.search), 'i');
             filter.$or = [{ igUsername: search }, { displayName: search }, { fullName: search }];

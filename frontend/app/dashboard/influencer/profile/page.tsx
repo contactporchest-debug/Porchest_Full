@@ -12,8 +12,6 @@ import { influencerAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ProfileForm from '@/components/influencer/ProfileForm';
-import InstagramConnect from '@/components/shared/InstagramConnect';
 import toast from 'react-hot-toast';
 
 const NICHES = [
@@ -366,13 +364,7 @@ export default function InfluencerProfilePage() {
                     {/* Instagram Integration */}
                     <InstagramSection conn={igConn} onRefresh={loadProfile} />
 
-                    <div style={{ marginBottom: '18px' }}>
-                        <InstagramConnect role="influencer" />
-                    </div>
 
-                    <div style={{ marginBottom: '18px' }}>
-                        <ProfileForm />
-                    </div>
 
                     {/* Basic Information */}
                     <SectionCard title="Basic Information" icon={<User size={16} />}>
