@@ -1,13 +1,13 @@
 'use client';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import CollaborationsPage from '../CollaborationsPage';
+import CampaignsFlow from '@/components/influencer/CampaignsFlow';
 
 export default function InfluencerCollaborationsRoute() {
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
-                <CollaborationsPage />
+                <CampaignsFlow />
             </DashboardLayout>
         </ProtectedRoute>
     );

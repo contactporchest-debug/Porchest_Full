@@ -9,6 +9,9 @@ const trackingRoutes = require('./routes/trackingRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const analyticsRoutes = require('./routes/analytics');
 const softwareClientRoutes = require('./routes/softwareClient');
+const profileRoutes = require('./routes/profileRoutes');
+const influencerDiscoveryRoutes = require('./routes/influencerDiscoveryRoutes');
+const collaborationRoutes = require('./routes/collaborationRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -67,6 +70,9 @@ app.use('/', trackingRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/software-client', softwareClientRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/discover', influencerDiscoveryRoutes);
+app.use('/api/collaborations', collaborationRoutes);
 
 // 404
 app.use('*', (req, res) => {

@@ -45,9 +45,9 @@ export function useApi(endpoint, { immediate = true } = {}) {
     return { data, loading, error, refetch: fetch_ };
 }
 
-export async function apiPost(endpoint, body) {
+async function apiRequest(endpoint, body, method = 'POST') {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        method: 'POST',
+        method,
         headers: {
             Authorization: `Bearer ${getAuthToken() || ''}`,
             'Content-Type': 'application/json',
@@ -56,4 +56,16 @@ export async function apiPost(endpoint, body) {
     });
 
     return res.json();
+}
+
+export async function apiPost(endpoint, body) {
+    return apiRequest(endpoint, body, 'POST');
+}
+
+export async function apiPut(endpoint, body) {
+    return apiRequest(endpoint, body, 'PUT');
+}
+
+export async function apiPatch(endpoint, body) {
+    return apiRequest(endpoint, body, 'PATCH');
 }

@@ -12,6 +12,7 @@ import { brandAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import BrandProfileForm from '@/components/brand/BrandProfileForm';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -403,6 +404,10 @@ export default function BrandProfilePage() {
 
                     {/* ── Brand Instagram Integration ── */}
                     <BrandInstagramSection conn={igConn} onRefresh={loadProfile} />
+
+                    <div style={{ marginBottom: '18px' }}>
+                        <BrandProfileForm />
+                    </div>
 
                     {/* Purchase tracking setup */}
                     <div style={{ padding: '16px 18px', borderRadius: '18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>

@@ -1,7 +1,7 @@
 'use client';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import CampaignsPage from '../CampaignsPage';
+import CollaborationsFlow from '@/components/brand/CollaborationsFlow';
 
 export default function BrandCollaborationsRoute() {
     return (
@@ -15,7 +15,7 @@ export default function BrandCollaborationsRoute() {
                         Manage your active campaigns, pending requests, and track influencer posts.
                     </p>
                 </div>
-                <CampaignsPage hideHeader />
+                <CollaborationsFlow />
             </DashboardLayout>
         </ProtectedRoute>
     );

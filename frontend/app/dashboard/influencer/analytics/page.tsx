@@ -11,6 +11,7 @@ import { influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import InstagramAnalytics from '@/components/influencer/InstagramAnalytics';
 import {
     ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
     AreaChart, Area, LineChart, Line, BarChart, Bar, ComposedChart,
@@ -356,6 +357,10 @@ export default function AnalyticsPage() {
                             </button>
                         </div>
                     </motion.div>
+
+                    <div style={{ marginBottom: 28 }}>
+                        <InstagramAnalytics />
+                    </div>
 
                     {/* Live data banner */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.18)', marginBottom: 28, fontSize: 12, color: 'rgba(74,222,128,0.85)' }}>

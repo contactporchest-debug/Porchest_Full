@@ -87,11 +87,18 @@ const campaignRequestSchema = new mongoose.Schema(
             enum: [
                 'pending_influencer',
                 'pending_brand_review',
+                'pending',
+                'countered',
                 'sent',
                 'viewed',
                 'negotiation',
                 'accepted',
+                'active',
+                'content_submitted',
+                'content_approved',
+                'posted',
                 'rejected',
+                'declined',
                 'brand_approved',
                 'live_post_submitted',
                 'completed',
@@ -199,6 +206,21 @@ const campaignRequestSchema = new mongoose.Schema(
             roas: { type: Number },
             cpa: { type: Number },
             lastUpdatedAt: { type: Date },
+        },
+
+        followerSnapshot: {
+            baseline: {
+                count: { type: Number },
+                timestamp: { type: Date },
+            },
+            dailyReadings: [{
+                count: { type: Number },
+                timestamp: { type: Date },
+            }],
+            currentCount: { type: Number },
+            netNewFollowers: { type: Number },
+            growthRate: { type: Number },
+            lastPolledAt: { type: Date },
         },
 
         // Legacy compatibility

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PostVerificationQueue from '@/components/admin/PostVerificationQueue';
 import { adminAPI } from '@/lib/api';
 import { USER_ROLES, isAdminRole } from '@/lib/accessRoles';
 import toast from 'react-hot-toast';
@@ -456,6 +457,10 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                         {activeTab === 'campaigns' && (
                             <motion.div key="campaigns" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
+
+                                <div style={{ marginBottom: 24 }}>
+                                    <PostVerificationQueue />
+                                </div>
 
                                 {/* Filters */}
                                 <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
