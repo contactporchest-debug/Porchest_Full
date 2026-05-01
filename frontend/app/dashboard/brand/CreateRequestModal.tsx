@@ -9,20 +9,15 @@ interface Influencer { _id: string; fullName: string; email: string; niche: stri
 interface Props { influencer: Influencer | null; onClose: () => void; onSuccess: () => void; }
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
-    <div>
-        <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.5)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {label}{required && <span style={{ color: '#f87171', marginLeft: '3px' }}>*</span>}
+    <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+            {label}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
         {children}
     </div>
 );
 
-const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '11px 14px', borderRadius: '12px',
-    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-    color: '#fff', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
-    transition: 'border-color 180ms ease', boxSizing: 'border-box',
-};
+const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-slate-400";
 
 export default function CreateRequestModal({ influencer, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
@@ -70,61 +65,62 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
     return (
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(14px)', overflowY: 'auto', padding: '24px' }}>
+                className="fixed inset-0 z-[300] bg-slate-900/40 backdrop-blur-sm overflow-y-auto p-6 flex items-center justify-center">
+                
                 <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                    style={{ maxWidth: '700px', margin: '0 auto', background: 'rgba(10,9,20,0.97)', border: '1px solid rgba(123,63,242,0.25)', borderRadius: '36px', boxShadow: '0 0 100px rgba(123,63,242,0.2)', overflow: 'hidden' }}>
+                    className="w-full max-w-[700px] bg-[rgba(255,255,255,0.98)] border border-[rgba(148,163,184,0.18)] rounded-[36px] shadow-[0_24px_60px_rgba(15,23,42,0.1)] overflow-hidden my-auto">
 
                     {/* Header */}
-                    <div style={{ padding: '24px 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '14px', background: 'rgba(123,63,242,0.05)' }}>
+                    <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-purple-50/50">
                         <div>
-                            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '17px', color: '#fff', marginBottom: '2px' }}>
+                            <h2 className="font-bold text-xl text-[#172033] mb-1">
                                 New Campaign Request
                             </h2>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>
-                                To: <strong style={{ color: '#a78bfa' }}>{influencer.fullName}</strong> · {influencer.niche}
+                            <p className="text-xs font-medium text-slate-500">
+                                To: <strong className="text-purple-600">{influencer.fullName}</strong> · {influencer.niche}
                             </p>
                         </div>
-                        <button onClick={onClose} style={{ marginLeft: 'auto', width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <X size={15} />
+                        <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center shadow-sm">
+                            <X size={18} />
                         </button>
                     </div>
 
                     {/* Important note */}
-                    <div style={{ margin: '20px 28px 0', padding: '12px 16px', borderRadius: '12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                        <AlertCircle size={14} style={{ color: '#fbbf24', flexShrink: 0, marginTop: '1px' }} />
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', lineHeight: '1.6' }}>
-                            All terms are <strong style={{ color: '#fbbf24' }}>locked once submitted</strong>. The agreed price cannot be renegotiated. If the influencer rejects, you must create a new request.
+                    <div className="mx-8 mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex gap-3 items-start">
+                        <AlertCircle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                            All terms are <strong className="text-amber-600">locked once submitted</strong>. The agreed price cannot be renegotiated. If the influencer rejects, you must create a new request.
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6">
                         {/* Row 1 */}
                         <Field label="Campaign Title" required>
                             <input required value={form.campaignTitle} onChange={set('campaignTitle')}
-                                placeholder="e.g. Smart Gadgets Review Series" style={inputStyle} />
+                                placeholder="e.g. Smart Gadgets Review Series" className={inputClass} />
                         </Field>
 
                         <Field label="Campaign Description" required>
                             <textarea required value={form.campaignDescription} onChange={set('campaignDescription')}
                                 placeholder="Describe the campaign goal, product, and target message…"
-                                rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                                rows={3} className={`${inputClass} resize-y`} />
                         </Field>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <Field label="Deliverables" required>
                                 <textarea required value={form.deliverables} onChange={set('deliverables')}
-                                    placeholder="e.g. 1 × 60s Reel, 3 × Stories" rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                                    placeholder="e.g. 1 × 60s Reel, 3 × Stories" rows={2} className={`${inputClass} resize-y`} />
                             </Field>
                             <Field label="Required Elements" required>
                                 <textarea required value={form.requiredElements} onChange={set('requiredElements')}
-                                    placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+                                    placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} className={`${inputClass} resize-y`} />
                             </Field>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <Field label="Video Length" required>
-                                <select required value={form.videoLength} onChange={set('videoLength')} style={{ ...inputStyle, cursor: 'pointer' }}>
+                                <select required value={form.videoLength} onChange={set('videoLength')} className={`${inputClass} cursor-pointer`}>
                                     <option value="">Select duration</option>
                                     {['15 seconds', '30 seconds', '60 seconds', '90 seconds', '2 minutes', '3–5 minutes'].map(v =>
                                         <option key={v} value={v}>{v}</option>)}
@@ -132,60 +128,60 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                             </Field>
                             <Field label="Posting Deadline" required>
                                 <input required type="date" value={form.postingDeadline} onChange={set('postingDeadline')}
-                                    min={new Date().toISOString().split('T')[0]} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                                    min={new Date().toISOString().split('T')[0]} className={inputClass} />
                             </Field>
                         </div>
 
                         <Field label="Content Guidelines" required>
                             <textarea required value={form.contentGuidelines} onChange={set('contentGuidelines')}
                                 placeholder="Brand tone, what to avoid, specific talking points, CTA wording…"
-                                rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                                rows={3} className={`${inputClass} resize-y`} />
                         </Field>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <Field label="Hashtags">
                                 <input value={form.hashtags} onChange={set('hashtags')}
-                                    placeholder="#YourBrand #Sponsored" style={inputStyle} />
+                                    placeholder="#YourBrand #Sponsored" className={inputClass} />
                             </Field>
                             <Field label="Disclosure Requirements">
                                 <input value={form.disclosureRequirements} onChange={set('disclosureRequirements')}
-                                    placeholder="#Ad #Sponsored" style={inputStyle} />
+                                    placeholder="#Ad #Sponsored" className={inputClass} />
                             </Field>
                         </div>
 
                         {/* Price & Fixed Terms Block */}
-                        <div style={{ padding: '18px', borderRadius: '18px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.25)' }}>
+                        <div className="p-6 rounded-[24px] bg-[#f5f3ff] border border-purple-200">
                             <Field label="Agreed Price (USD)" required>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#a78bfa', fontWeight: '700', fontSize: '14px', pointerEvents: 'none' }}>$</span>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 font-bold text-lg pointer-events-none">$</span>
                                     <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
-                                        placeholder="0.00" style={{ ...inputStyle, paddingLeft: '28px', fontFamily: 'Space Grotesk', fontWeight: '700', color: '#a78bfa', fontSize: '16px' }} />
+                                        placeholder="0.00" className={`${inputClass} pl-9 font-bold text-lg text-purple-900 border-purple-200 shadow-sm`} />
                                 </div>
                             </Field>
-                            <div style={{ marginTop: '16px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', marginBottom: '6px' }}>Standard Payment Terms</p>
-                                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', lineHeight: '1.5' }}>
+                            <div className="mt-5 p-4 rounded-xl bg-white border border-purple-100 shadow-sm">
+                                <p className="text-xs font-bold text-purple-900 mb-2">Standard Payment Terms</p>
+                                <ul className="list-disc pl-5 text-xs text-slate-600 font-medium space-y-1">
                                     <li>50% advance before campaign starts</li>
                                     <li>50% after deliverables are verified</li>
                                 </ul>
-                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '8px' }}>
+                                <p className="text-[11px] font-bold text-purple-400 mt-3 uppercase tracking-wide">
                                     By sending this request, you agree to Porchest standard payment terms.
                                 </p>
                             </div>
                         </div>
 
                         {/* Terms checkbox */}
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '12px', background: agreedToTerms ? 'rgba(74,222,128,0.05)' : 'rgba(255,255,255,0.03)', border: `1px solid ${agreedToTerms ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 200ms ease' }}>
-                            <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#7B3FF2', cursor: 'pointer' }} />
-                            <span style={{ fontSize: '12px', color: agreedToTerms ? '#fff' : 'rgba(255,255,255,0.5)' }}>
-                                I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: '#a78bfa', textDecoration: 'none' }}>Porchest Terms & Conditions</a> and Payment Policy
+                        <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+                            <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-green-600 cursor-pointer" />
+                            <span className={`text-sm font-medium ${agreedToTerms ? 'text-green-800' : 'text-slate-600'}`}>
+                                I agree to the <a href="#" onClick={e => e.preventDefault()} className="text-purple-600 hover:text-purple-700 underline font-bold">Porchest Terms & Conditions</a> and Payment Policy
                             </span>
                         </label>
 
                         {/* Submit */}
                         <button type="submit" disabled={loading || !agreedToTerms}
-                            style={{ padding: '14px', borderRadius: '16px', background: loading || !agreedToTerms ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontFamily: 'inherit', fontSize: '15px', fontWeight: '700', cursor: loading || !agreedToTerms ? 'not-allowed' : 'pointer', boxShadow: loading || !agreedToTerms ? 'none' : '0 0 30px rgba(123,63,242,0.4)', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', marginTop: '4px' }}>
-                            <Send size={16} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
+                            className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg ${loading || !agreedToTerms ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#7B3FF2] text-white hover:bg-[#6a35d4] shadow-purple-500/25'}`}>
+                            <Send size={18} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
                         </button>
                     </form>
                 </motion.div>

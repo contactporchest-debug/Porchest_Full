@@ -9,15 +9,19 @@ export default function MetricCard({ label, value, sub, accent = false, index = 
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.07, duration: 0.35 }}
             className={[
-                'rounded-xl p-5 flex flex-col gap-1 border backdrop-blur-md',
+                'rounded-[20px] p-5 flex flex-col gap-1.5 border transition-all hover:-translate-y-0.5',
                 accent
-                    ? 'bg-purple-900/40 border-purple-500/40 shadow-[0_0_40px_rgba(168,85,247,0.08)]'
-                    : 'bg-white/5 border-white/10',
+                    ? 'bg-[#f5f3ff] border-purple-200 shadow-[0_8px_24px_rgba(168,85,247,0.12)]'
+                    : 'bg-[rgba(255,255,255,0.95)] border-[rgba(148,163,184,0.18)] shadow-[0_8px_20px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_24px_rgba(15,23,42,0.06)]',
             ].join(' ')}
         >
-            <span className="text-xs uppercase tracking-[0.18em] text-gray-400">{label}</span>
-            <span className="text-2xl font-semibold text-white">{value}</span>
-            {sub ? <span className="text-xs text-gray-500">{sub}</span> : null}
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${accent ? 'text-purple-500' : 'text-slate-400'}`}>
+                {label}
+            </span>
+            <span className={`text-2xl font-bold ${accent ? 'text-purple-900' : 'text-[#172033]'}`}>
+                {value}
+            </span>
+            {sub ? <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mt-0.5">{sub}</span> : null}
         </motion.div>
     );
 }

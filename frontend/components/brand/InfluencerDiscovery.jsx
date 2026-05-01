@@ -9,6 +9,17 @@ import RequestCollaborationButton from './RequestCollaborationButton';
 const TIERS = ['nano', 'micro', 'macro', 'mega'];
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle'];
 
+const getPillColor = (niche) => {
+    const colors = {
+        fashion: 'bg-purple-100 text-purple-600',
+        fitness: 'bg-green-100 text-green-600',
+        food: 'bg-orange-100 text-orange-600',
+        beauty: 'bg-pink-100 text-pink-600',
+        tech: 'bg-blue-100 text-blue-600',
+    };
+    return colors[niche?.toLowerCase()] || 'bg-slate-100 text-slate-600';
+};
+
 export default function InfluencerDiscovery() {
     const [filters, setFilters] = useState({ search: '', niche: '', tier: '', minER: '', minScore: '', maxRate: '' });
     const [selectedId, setSelectedId] = useState(null);
@@ -16,20 +27,23 @@ export default function InfluencerDiscovery() {
     const { data, loading, error } = useApi(`/discover/influencers?${query}`);
     const influencers = data?.influencers || [];
 
-    const inputClass = 'px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50';
+    const inputClass = 'px-4 py-2.5 rounded-xl bg-[rgba(255,255,255,0.95)] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 placeholder-slate-400 transition-all';
 
     return (
-        <div className="space-y-5">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+        <div className="space-y-6">
+            <div className="p-6 rounded-[28px] bg-[rgba(255,255,255,0.92)] border border-[rgba(148,163,184,0.18)] shadow-[0_18px_40px_rgba(15,23,42,0.06)] space-y-4">
                 <input className={`w-full ${inputClass}`} placeholder="Search by username or name..." value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} />
                 <div className="flex flex-wrap gap-2">
                     {TIERS.map((tier) => (
-                        <button key={tier} onClick={() => setFilters((f) => ({ ...f, tier: f.tier === tier ? '' : tier }))} className={`px-3 py-1.5 rounded-full text-xs border capitalize ${filters.tier === tier ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                        <button key={tier} onClick={() => setFilters((f) => ({ ...f, tier: f.tier === tier ? '' : tier }))} 
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${filters.tier === tier ? 'bg-[#7B3FF2] border-[#7B3FF2] text-white shadow-md shadow-purple-500/20' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                             {tier}
                         </button>
                     ))}
+                    <div className="w-[1px] h-6 bg-slate-200 mx-1 self-center" />
                     {NICHES.map((niche) => (
-                        <button key={niche} onClick={() => setFilters((f) => ({ ...f, niche: f.niche === niche ? '' : niche }))} className={`px-3 py-1.5 rounded-full text-xs border capitalize ${filters.niche === niche ? 'bg-teal-600 border-teal-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                        <button key={niche} onClick={() => setFilters((f) => ({ ...f, niche: f.niche === niche ? '' : niche }))} 
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${filters.niche === niche ? 'bg-[#2563eb] border-[#2563eb] text-white shadow-md shadow-blue-500/20' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                             {niche}
                         </button>
                     ))}
@@ -41,47 +55,110 @@ export default function InfluencerDiscovery() {
                 </div>
             </div>
 
-            {loading && <p className="text-gray-400 text-sm">Finding influencers...</p>}
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {loading && <p className="text-slate-500 text-sm font-medium">Finding influencers...</p>}
+            {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {influencers.map((inf, i) => (
-                    <motion.div key={inf._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 hover:border-purple-500/30 transition-all">
-                        <button type="button" onClick={() => setSelectedId(selectedId === inf._id ? null : inf._id)} className="w-full text-left">
-                            <div className="flex items-center gap-3">
-                                {inf.igProfileUrl && <img src={inf.igProfileUrl} alt="" className="w-12 h-12 rounded-full object-cover border border-white/10" />}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-medium truncate">@{inf.igUsername || inf.displayName || 'creator'}</p>
-                                    <p className="text-xs text-gray-500 capitalize">{inf.niche?.slice(0, 2).join(', ') || 'No niche'} | {inf.country || 'No country'}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {influencers.map((inf, i) => {
+                    const primaryNiche = inf.niche?.[0] || 'lifestyle';
+                    return (
+                        <motion.div key={inf._id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} 
+                            className="p-6 rounded-[28px] bg-[rgba(255,255,255,0.95)] border border-[rgba(148,163,184,0.18)] shadow-[0_12px_30px_rgba(15,23,42,0.04)] space-y-4 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition-all flex flex-col justify-between">
+                            
+                            {/* Card Header */}
+                            <div className="flex items-start gap-4">
+                                {inf.igProfileUrl ? (
+                                    <img src={inf.igProfileUrl} alt="" className="w-14 h-14 rounded-[14px] object-cover border border-slate-100 shadow-sm" />
+                                ) : (
+                                    <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                                        {(inf.displayName || inf.igUsername || 'C')[0].toUpperCase()}
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0 pt-1">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[#172033] font-bold text-base truncate">{inf.displayName || inf.igUsername || 'Creator'}</p>
+                                        <div className="w-4 h-4 bg-green-100 rounded-full flex items-center justify-center text-green-500">
+                                            <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-[#667085] mt-0.5">@{inf.igUsername} <span className="mx-1">•</span> {inf.country || 'Global'}</p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xl font-semibold text-purple-400">{Math.round(inf.porchestScore || inf.influencerScore || 0)}</p>
-                                    <p className="text-xs text-gray-500">score</p>
+                                <div className="text-right pt-1">
+                                    <div className="flex items-center justify-end gap-1 mb-0.5">
+                                        {[...Array(5)].map((_, i) => (
+                                            <svg key={i} className={`w-3 h-3 ${i < 4 ? 'text-yellow-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fit Score</p>
                                 </div>
                             </div>
-                        </button>
 
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div className="p-2 rounded-lg bg-white/5"><p className="text-white text-sm font-medium">{Number(inf.igFollowersCount || inf.followersCount || 0).toLocaleString()}</p><p className="text-xs text-gray-500">Followers</p></div>
-                            <div className="p-2 rounded-lg bg-white/5"><p className="text-white text-sm font-medium">{Number(inf.avgEngagementRate || inf.engagementRate || 0).toFixed(1)}%</p><p className="text-xs text-gray-500">ER</p></div>
-                            <div className="p-2 rounded-lg bg-white/5"><p className="text-white text-sm font-medium">{Math.round(inf.authenticityScore || 0)}%</p><p className="text-xs text-gray-500">Authentic</p></div>
-                        </div>
+                            {/* Bio / Description */}
+                            <p className="text-sm text-[#667085] leading-relaxed line-clamp-2">
+                                {inf.bio || `Creative ${primaryNiche} influencer focusing on authentic content and engaging storytelling.`}
+                            </p>
 
-                        <AnimatePresence>
-                            {selectedId === inf._id && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                    <div className="pt-3 border-t border-white/10 space-y-4">
-                                        <InfluencerProfileMetrics influencerId={inf._id} />
-                                        <RequestCollaborationButton influencerId={inf._id} influencerName={inf.igUsername || inf.displayName} rates={inf.rates || { reelPrice: inf.avgReelPrice, postPrice: inf.avgPostPrice }} />
+                            {/* Niche Pill */}
+                            <div>
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getPillColor(primaryNiche)}`}>
+                                    {primaryNiche}
+                                </span>
+                            </div>
+
+                            {/* Rates Grid */}
+                            <div className="grid grid-cols-2 gap-3 mt-4">
+                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-purple-100">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wide">IG POST</span>
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                ))}
+                                    <p className="text-[#172033] font-bold text-lg">${inf.rates?.postPrice || inf.avgPostPrice || 250}</p>
+                                </div>
+                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-purple-100">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                        <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wide">IG REEL</span>
+                                    </div>
+                                    <p className="text-[#172033] font-bold text-lg">${inf.rates?.reelPrice || inf.avgReelPrice || 350}</p>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setSelectedId(selectedId === inf._id ? null : inf._id)} 
+                                    className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 transition-colors">
+                                    {selectedId === inf._id ? 'Hide Profile' : 'View Profile'}
+                                </button>
+                                <button type="button" onClick={() => setSelectedId(inf._id)} 
+                                    className="flex-[1.5] py-3 rounded-xl bg-[#7B3FF2] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                    Request
+                                </button>
+                            </div>
+
+                            <AnimatePresence>
+                                {selectedId === inf._id && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                        <div className="pt-5 mt-5 border-t border-slate-100 space-y-5">
+                                            <InfluencerProfileMetrics influencerId={inf._id} />
+                                            {/* Note: The RequestCollaborationButton handles the actual popup form */}
+                                            <RequestCollaborationButton influencerId={inf._id} influencerName={inf.igUsername || inf.displayName} rates={inf.rates || { reelPrice: inf.avgReelPrice, postPrice: inf.avgPostPrice }} />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    );
+                })}
             </div>
 
-            {!loading && influencers.length === 0 && <div className="text-center py-12 text-gray-500 text-sm">No influencers found matching your filters.</div>}
+            {!loading && influencers.length === 0 && (
+                <div className="text-center py-16 bg-[rgba(255,255,255,0.92)] border border-[rgba(148,163,184,0.18)] rounded-[28px]">
+                    <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <p className="text-slate-900 font-bold text-lg mb-1">No influencers found</p>
+                    <p className="text-slate-500 text-sm">Try adjusting your filters or search terms.</p>
+                </div>
+            )}
         </div>
     );
 }
