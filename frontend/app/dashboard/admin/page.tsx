@@ -83,7 +83,7 @@ const statusColors: Record<string, { bg: string; color: string }> = {
     accepted:    { bg: 'rgba(74,222,128,0.12)',  color: '#4ade80' },
     rejected:    { bg: 'rgba(248,113,113,0.12)', color: '#f87171' },
     negotiation: { bg: 'rgba(251,191,36,0.12)',  color: '#fbbf24' },
-    deal_closed: { bg: 'rgba(167,139,250,0.12)', color: '#a78bfa' },
+    deal_closed: { bg: 'rgba(155,111,80,0.12)', color: '#9b6f50' },
     cancelled:   { bg: 'rgba(148,163,184,0.12)', color: '#94a3b8' },
     expired:     { bg: 'rgba(148,163,184,0.12)', color: '#94a3b8' },
 };
@@ -94,7 +94,7 @@ const roleColors: Record<string, { bg: string; color: string }> = {
     'employee-marketing': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
     'employee-software': { bg: 'rgba(255,140,66,0.12)', color: '#ff8c42' },
     owner:      { bg: 'rgba(255,140,66,0.12)',  color: '#ff8c42' },
-    brand:      { bg: 'rgba(123,63,242,0.12)',  color: '#a78bfa' },
+    brand:      { bg: 'rgba(155,111,80,0.12)',  color: '#9b6f50' },
     influencer: { bg: 'rgba(96,165,250,0.12)',  color: '#60a5fa' },
     'software-client': { bg: 'rgba(37,99,235,0.12)', color: '#60a5fa' },
 };
@@ -329,7 +329,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                     {users.map((u) => (
                                                         <tr key={u._id} style={{ borderBottom: '1px solid rgba(148,163,184,0.12)', transition: 'background 150ms', cursor: 'pointer' }}
                                                             onClick={() => setSelectedUser(u)}
-                                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(123,63,242,0.04)'}
+                                                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(155,111,80,0.04)'}
                                                             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
 
                                                             {/* User */}
@@ -338,7 +338,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                                     {u.instagramProfilePicture ? (
                                                                         <img src={u.instagramProfilePicture} alt={u.companyName || u.fullName || ''} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
                                                                     ) : (
-                                                                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                                                                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                                                                             {(u.companyName || u.fullName || u.email || '?')[0]?.toUpperCase()}
                                                                         </div>
                                                                     )}
@@ -519,7 +519,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Brand */}
                                                             <td style={{ padding: '14px 16px' }}>
-                                                                <p style={{ fontSize: 12, color: '#a78bfa' }}>{c.brandName || '—'}</p>
+                                                                <p style={{ fontSize: 12, color: '#9b6f50' }}>{c.brandName || '—'}</p>
                                                             </td>
 
                                                             {/* Influencer */}
@@ -549,7 +549,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                             <td style={{ padding: '14px 16px' }}>
                                                                 <div style={{ display: 'flex', gap: 6 }}>
                                                                     <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'accepted'); }} title="Mark Accepted" style={{ padding: '6px', borderRadius: 8, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', cursor: 'pointer' }}><UserCheck size={13} /></button>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'deal_closed'); }} title="Close Deal" style={{ padding: '6px', borderRadius: 8, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa', cursor: 'pointer' }}><CheckCircle size={13} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'deal_closed'); }} title="Close Deal" style={{ padding: '6px', borderRadius: 8, background: 'rgba(155,111,80,0.1)', border: '1px solid rgba(155,111,80,0.2)', color: '#9b6f50', cursor: 'pointer' }}><CheckCircle size={13} /></button>
                                                                     <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'cancelled'); }} title="Cancel" style={{ padding: '6px', borderRadius: 8, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', cursor: 'pointer' }}><Trash2 size={13} /></button>
                                                                 </div>
                                                             </td>

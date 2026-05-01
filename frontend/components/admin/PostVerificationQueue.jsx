@@ -30,7 +30,7 @@ export default function PostVerificationQueue() {
                         </div>
                         <p className="text-white font-semibold">${Number(c.pricing?.agreedFee || c.agreedPrice || 0).toLocaleString()}</p>
                     </div>
-                    {c.content?.postLink && <a href={c.content.postLink} target="_blank" rel="noopener noreferrer" className="text-purple-400 text-sm underline break-all block">{c.content.postLink}</a>}
+                    {c.content?.postLink && <a href={c.content.postLink} target="_blank" rel="noopener noreferrer" className="text-stone-400 text-sm underline break-all block">{c.content.postLink}</a>}
                     <button onClick={() => verify(c._id)} disabled={verifying === c._id} className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium disabled:opacity-40">
                         {verifying === c._id ? 'Verifying...' : 'Verify and release payment'}
                     </button>

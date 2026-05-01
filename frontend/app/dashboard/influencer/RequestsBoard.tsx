@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     sent: { label: 'New', color: '#60d5f8', bg: 'rgba(96,213,248,0.08)', icon: <Send size={11} /> },
-    viewed: { label: 'Viewed', color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', icon: <Eye size={11} /> },
+    viewed: { label: 'Viewed', color: '#9b6f50', bg: 'rgba(155,111,80,0.08)', icon: <Eye size={11} /> },
     accepted: { label: 'Accepted', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', icon: <CheckCircle size={11} /> },
     rejected: { label: 'Declined', color: '#f87171', bg: 'rgba(248,113,113,0.08)', icon: <XCircle size={11} /> },
     negotiation: { label: 'Negotiation', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', icon: <MessageSquare size={11} /> },
@@ -226,7 +226,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                 )}
 
                 {request.brandMessage && (
-                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
                         <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Message from Brand</p>
                         <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7' }}>{request.brandMessage}</p>
                     </div>
@@ -254,9 +254,9 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                         style={{
                             padding: '11px 16px',
                             borderRadius: '12px',
-                            background: 'rgba(123,63,242,0.1)',
-                            border: '1px solid rgba(123,63,242,0.22)',
-                            color: '#a78bfa',
+                            background: 'rgba(155,111,80,0.1)',
+                            border: '1px solid rgba(155,111,80,0.22)',
+                            color: '#9b6f50',
                             fontSize: '12px',
                             fontWeight: '700',
                             cursor: 'pointer',
@@ -404,7 +404,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
     };
 
     const FILTERS = [
-        { key: 'all', label: 'All', color: '#a78bfa' },
+        { key: 'all', label: 'All', color: '#9b6f50' },
         { key: 'sent,viewed', label: 'New', color: '#60d5f8' },
         { key: 'accepted', label: 'Accepted', color: '#4ade80' },
         { key: 'negotiation', label: 'Negotiation', color: '#fbbf24' },
@@ -421,7 +421,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
     if (loading) {
         return (
             <div style={{ textAlign: 'center', padding: '50px 0' }}>
-                <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+                <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
             </div>
         );
     }
@@ -448,7 +448,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
             {filtered.length === 0 && (
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-                    <Inbox size={48} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
+                    <Inbox size={48} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '6px' }}>
                         {requests.length === 0 ? 'No collaborations yet' : 'No matching collaboration items'}
                     </p>
@@ -479,10 +479,10 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
                                     style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
                                     <div style={{
                                         width: '44px', height: '44px', borderRadius: '14px',
-                                        background: request.brandLogoUrl ? 'transparent' : 'linear-gradient(135deg, #7B3FF2, #A855F7)',
+                                        background: request.brandLogoUrl ? 'transparent' : 'linear-gradient(135deg, #9b6f50, #d7b48f)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: '800', fontSize: '15px', color: '#fff', flexShrink: 0,
-                                        overflow: 'hidden', border: '1px solid rgba(123,63,242,0.2)',
+                                        overflow: 'hidden', border: '1px solid rgba(155,111,80,0.2)',
                                     }}>
                                         {request.brandLogoUrl ? (
                                             <img src={request.brandLogoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

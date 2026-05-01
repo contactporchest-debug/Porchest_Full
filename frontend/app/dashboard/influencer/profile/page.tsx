@@ -31,7 +31,7 @@ const SectionCard = ({ title, icon, children }: { title: string; icon: React.Rea
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
         style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.18)', borderRadius: '28px', padding: '28px', marginBottom: '18px', boxShadow: '0 18px 40px rgba(15,23,42,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9b6f50' }}>
                 {icon}
             </div>
             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033' }}>{title}</h3>
@@ -50,7 +50,7 @@ const iStyle: React.CSSProperties = {
 const fh = {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         e.target.style.borderColor = 'rgba(168,85,247,0.5)';
-        (e.target as HTMLElement).style.background = 'rgba(123,63,242,0.04)';
+        (e.target as HTMLElement).style.background = 'rgba(155,111,80,0.04)';
     },
     onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         e.target.style.borderColor = 'rgba(148,163,184,0.24)';
@@ -161,17 +161,17 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
                     </motion.div>
                 ) : (
                     <motion.div key="conn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)', marginBottom: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)', marginBottom: '14px' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                                 {conn?.profilePictureURL ? <img src={conn.profilePictureURL} alt="IG" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Instagram size={20} style={{ color: '#fff' }} />}
                             </div>
                             <div style={{ flex: 1 }}>
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#fff', fontSize: '15px' }}>@{conn?.username || '—'}</p>
-                                {conn?.accountType && <span style={{ fontSize: '11px', color: '#a78bfa', background: 'rgba(123,63,242,0.15)', border: '1px solid rgba(123,63,242,0.3)', padding: '1px 8px', borderRadius: '6px' }}>{conn.accountType}</span>}
+                                {conn?.accountType && <span style={{ fontSize: '11px', color: '#9b6f50', background: 'rgba(155,111,80,0.15)', border: '1px solid rgba(155,111,80,0.3)', padding: '1px 8px', borderRadius: '6px' }}>{conn.accountType}</span>}
                             </div>
                             {conn?.username && (
                                 <a href={`https://instagram.com/${conn.username}`} target="_blank" rel="noreferrer"
-                                    style={{ color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', flexShrink: 0 }}>
+                                    style={{ color: '#9b6f50', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', flexShrink: 0 }}>
                                     <ExternalLink size={13} /> View
                                 </a>
                             )}
@@ -191,7 +191,7 @@ function InstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRefresh:
 
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             <button onClick={handleRefresh} disabled={refreshing}
-                                style={{ flex: 1, minWidth: '130px', padding: '10px 16px', borderRadius: '12px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.25)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: refreshing ? 'not-allowed' : 'pointer', opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontFamily: 'inherit' }}>
+                                style={{ flex: 1, minWidth: '130px', padding: '10px 16px', borderRadius: '12px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.25)', color: '#9b6f50', fontSize: '13px', fontWeight: '600', cursor: refreshing ? 'not-allowed' : 'pointer', opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontFamily: 'inherit' }}>
                                 <RefreshCw size={13} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
                                 {refreshing ? 'Refreshing…' : 'Refresh Sync'}
                             </button>
@@ -326,7 +326,7 @@ export default function InfluencerProfilePage() {
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-                    <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+                    <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
                 </div>
             </DashboardLayout>
         </ProtectedRoute>
@@ -344,7 +344,7 @@ export default function InfluencerProfilePage() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {!isEditing && score === 100 && (
-                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.3)', color: '#a78bfa', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(155,111,80,0.1)', border: '1px solid rgba(155,111,80,0.3)', color: '#9b6f50', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                                     Edit Profile
                                 </button>
                             )}
@@ -358,7 +358,7 @@ export default function InfluencerProfilePage() {
                     {/* Progress bar */}
                     <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: '24px' }}>
                         <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-                            style={{ height: '100%', borderRadius: '2px', background: score === 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#7B3FF2,#A855F7)', boxShadow: `0 0 12px ${score === 100 ? 'rgba(74,222,128,0.4)' : 'rgba(123,63,242,0.4)'}` }} />
+                            style={{ height: '100%', borderRadius: '2px', background: score === 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#9b6f50,#d7b48f)', boxShadow: `0 0 12px ${score === 100 ? 'rgba(74,222,128,0.4)' : 'rgba(155,111,80,0.4)'}` }} />
                     </div>
 
                     {/* Instagram Integration */}
@@ -506,7 +506,7 @@ export default function InfluencerProfilePage() {
                     {/* Save Button */}
                     {isEditing && (
                         <button onClick={handleSave} disabled={saving}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(123,63,242,0.4)' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(155,111,80,0.4)' : 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(155,111,80,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
                             {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Profile</>}
                         </button>
                     )}

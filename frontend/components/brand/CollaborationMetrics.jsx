@@ -40,7 +40,7 @@ export default function CollaborationMetrics({ collaborationId }) {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        {m.daysRemaining > 0 ? <span className="text-xs font-bold text-purple-600">{m.daysRemaining} days left</span> : null}
+                        {m.daysRemaining > 0 ? <span className="text-xs font-bold text-stone-700">{m.daysRemaining} days left</span> : null}
                         <span className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${statusColors[windowStatus] || statusColors.active}`}>
                             {windowStatus.replace('_', ' ')}
                         </span>
@@ -119,7 +119,7 @@ export default function CollaborationMetrics({ collaborationId }) {
                                     return readings.map((r, index) => (
                                         <div
                                             key={`${r.date || index}-${index}`}
-                                            className="min-h-[4px] flex-1 rounded-sm bg-purple-500 hover:bg-purple-400 transition-colors cursor-pointer"
+                                            className="min-h-[4px] flex-1 rounded-sm bg-stone-500 hover:bg-stone-400 transition-colors cursor-pointer"
                                             style={{ height: `${Math.round(((Number(r.count || 0) - min) / range) * 80) + 4}px` }}
                                             title={`${new Date(r.date).toLocaleDateString()}: ${Number(r.count || 0).toLocaleString()}`}
                                         />

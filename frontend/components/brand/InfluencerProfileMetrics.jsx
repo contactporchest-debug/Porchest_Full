@@ -28,7 +28,7 @@ export default function InfluencerProfileMetrics({ influencerId }) {
                         className="h-16 w-16 rounded-[16px] border border-slate-100 object-cover shadow-sm"
                     />
                 ) : (
-                    <div className="w-16 h-16 rounded-[16px] bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-sm">
+                    <div className="w-16 h-16 rounded-[16px] bg-gradient-to-br from-stone-500 to-stone-700 flex items-center justify-center text-white font-bold text-2xl shadow-sm">
                         {(data.igUsername || 'C')[0].toUpperCase()}
                     </div>
                 )}

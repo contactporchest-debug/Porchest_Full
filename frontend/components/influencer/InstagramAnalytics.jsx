@@ -41,7 +41,7 @@ export default function InstagramAnalytics() {
     const tierColors = {
         nano: 'text-gray-400',
         micro: 'text-sky-400',
-        macro: 'text-purple-400',
+        macro: 'text-stone-400',
         mega: 'text-amber-400',
     };
 
@@ -61,7 +61,7 @@ export default function InstagramAnalytics() {
                     <button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="rounded-lg border border-purple-500/40 bg-purple-900/30 px-4 py-2 text-sm text-purple-300 transition-all hover:bg-purple-900/50 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg border border-stone-500/10 bg-stone-900/30 px-4 py-2 text-sm text-stone-300 transition-all hover:bg-stone-900/50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {syncing ? 'Syncing...' : 'Sync now'}
                     </button>
@@ -118,7 +118,7 @@ export default function InstagramAnalytics() {
                                     <span className="w-10 text-sm text-white">{item.country || item.name || '—'}</span>
                                     <div className="h-1.5 flex-1 rounded-full bg-white/10">
                                         <div
-                                            className="h-1.5 rounded-full bg-purple-500"
+                                            className="h-1.5 rounded-full bg-stone-500"
                                             style={{ width: `${Math.max(0, Math.min(100, Math.round((Number(item.value ?? item.pct ?? 0) * 100))))}%` }}
                                         />
                                     </div>

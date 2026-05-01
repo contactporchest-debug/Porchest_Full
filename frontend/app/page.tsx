@@ -13,7 +13,7 @@ function LandingNav() {
         <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', borderBottom: '1px solid rgba(148,163,184,0.16)', background: 'rgba(252,250,244,0.88)', backdropFilter: 'blur(18px)' }}>
             <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 24px', display: 'flex', height: '72px', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-                    <Image src="/logo.png" alt="Porchest" width={40} height={40} style={{ borderRadius: '12px', boxShadow: '0 10px 24px rgba(123,63,242,0.14)' }} />
+                    <Image src="/logo.png" alt="Porchest" width={40} height={40} style={{ borderRadius: '12px', boxShadow: '0 10px 24px rgba(155,111,80,0.14)' }} />
                     <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em' }}>
                         Porchest
                     </span>
@@ -39,7 +39,7 @@ function LandingNav() {
                     <Link href="/login" style={{ padding: '10px 18px', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.20)', color: '#172033', fontSize: '14px', fontWeight: 700, textDecoration: 'none', background: 'rgba(255,255,255,0.7)' }}>
                         Sign In
                     </Link>
-                    <Link href="/signup" style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontSize: '14px', fontWeight: 700, textDecoration: 'none', boxShadow: '0 14px 30px rgba(123,63,242,0.20)' }}>
+                    <Link href="/signup" style={{ padding: '10px 18px', borderRadius: '12px', background: 'linear-gradient(135deg,#111318,#9b6f50)', color: '#fff', fontSize: '14px', fontWeight: 700, textDecoration: 'none', boxShadow: '0 14px 30px rgba(155,111,80,0.18)' }}>
                         Sign Up
                     </Link>
                 </div>
@@ -51,14 +51,14 @@ function LandingNav() {
 function Hero() {
     return (
         <section style={{ position: 'relative', padding: '88px 24px 72px', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: '-120px', right: '-120px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.14) 0%, transparent 72%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: '-120px', right: '-120px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.14) 0%, transparent 72%)', pointerEvents: 'none' }} />
             <div style={{ position: 'absolute', left: '-140px', bottom: '-160px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 72%)', pointerEvents: 'none' }} />
 
             <div style={{ maxWidth: '1180px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(320px,0.9fr)', gap: '32px', alignItems: 'center', position: 'relative', zIndex: 1 }}>
                 <div>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '999px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.14)', marginBottom: '26px' }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7B3FF2', display: 'inline-block' }} />
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#7B3FF2', letterSpacing: '0.04em' }}>Smart Influencer Marketing Platform</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '999px', background: 'rgba(155,111,80,0.08)', border: '1px solid rgba(155,111,80,0.14)', marginBottom: '26px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#9b6f50', display: 'inline-block' }} />
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#9b6f50', letterSpacing: '0.04em' }}>Smart Creator Collaboration Platform</span>
                     </div>
 
                     <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 'clamp(3rem, 7vw, 5.6rem)', lineHeight: 1.02, letterSpacing: '-0.06em', color: '#172033', marginBottom: '20px' }}>
@@ -70,10 +70,10 @@ function Hero() {
                     </p>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '40px' }}>
-                        <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer" style={{ padding: '15px 24px', borderRadius: '14px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: 700, fontSize: '15px', textDecoration: 'none', boxShadow: '0 16px 30px rgba(123,63,242,0.18)' }}>
+                        <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer" style={{ padding: '15px 24px', borderRadius: '14px', background: 'linear-gradient(135deg,#111318,#9b6f50)', color: '#fff', fontWeight: 700, fontSize: '15px', textDecoration: 'none', boxShadow: '0 16px 30px rgba(155,111,80,0.18)' }}>
                             Chat on WhatsApp
                         </a>
-                        <a href="mailto:info@porchest.com" style={{ padding: '15px 24px', borderRadius: '14px', border: '1px solid rgba(148,163,184,0.22)', background: 'rgba(255,255,255,0.78)', color: '#172033', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
+                        <a href="mailto:info@porchest.com" style={{ padding: '15px 24px', borderRadius: '14px', border: '1px solid rgba(17,19,24,0.12)', background: 'rgba(255,251,244,0.82)', color: '#111318', fontWeight: 700, fontSize: '15px', textDecoration: 'none' }}>
                             Send Email
                         </a>
                     </div>
@@ -94,8 +94,8 @@ function Hero() {
 
                 <div className="glass-card" style={{ padding: '28px', borderRadius: '34px' }}>
                     <div style={{ display: 'grid', gap: '16px' }}>
-                        <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.12)' }}>
-                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#7B3FF2', marginBottom: '8px' }}>Audience analytics</p>
+                        <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(155,111,80,0.08)', border: '1px solid rgba(155,111,80,0.12)' }}>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#9b6f50', marginBottom: '8px' }}>Audience analytics</p>
                             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '24px', color: '#172033', marginBottom: '6px' }}>See who actually matters</h3>
                             <p style={{ fontSize: '14px', color: '#667085', lineHeight: 1.7 }}>Review follower quality, engagement health, and collaboration fit before outreach begins.</p>
                         </div>
@@ -145,7 +145,7 @@ function Features() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
                     {features.map((feature) => (
                         <div key={feature.title} className="glass-card" style={{ padding: '28px', borderRadius: '28px' }}>
-                            <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '16px' }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(155,111,80,0.10)', color: '#9b6f50', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: '16px' }}>
                                 {feature.title.charAt(0)}
                             </div>
                             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '10px' }}>{feature.title}</h3>
@@ -211,14 +211,14 @@ function Contact() {
                             <div style={{ fontSize: '36px', marginBottom: '12px' }}>💬</div>
                             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '20px', color: '#172033', marginBottom: '8px' }}>Chat on WhatsApp</h3>
                             <p style={{ fontSize: '14px', color: '#667085', marginBottom: '14px' }}>Fast replies for quick questions.</p>
-                            <span style={{ color: '#7B3FF2', fontWeight: 700, fontSize: '14px' }}>Open WhatsApp</span>
+                            <span style={{ color: '#9b6f50', fontWeight: 700, fontSize: '14px' }}>Open WhatsApp</span>
                         </a>
 
                         <a href="mailto:info@porchest.com" className="glass-card" style={{ padding: '28px', borderRadius: '24px', textDecoration: 'none' }}>
                             <div style={{ fontSize: '36px', marginBottom: '12px' }}>✉️</div>
                             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '20px', color: '#172033', marginBottom: '8px' }}>Send an email</h3>
                             <p style={{ fontSize: '14px', color: '#667085', marginBottom: '14px' }}>info@porchest.com</p>
-                            <span style={{ color: '#7B3FF2', fontWeight: 700, fontSize: '14px' }}>Write to us</span>
+                            <span style={{ color: '#9b6f50', fontWeight: 700, fontSize: '14px' }}>Write to us</span>
                         </a>
                     </div>
                 </div>

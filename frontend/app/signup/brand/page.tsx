@@ -91,7 +91,7 @@ export default function BrandSignupPage() {
         <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)', position: 'relative', overflow: 'hidden' }}>
             <div className="neon-grid" />
             <div className="edge-glow" />
-            <div style={{ position: 'absolute', top: '-140px', right: '-120px', width: '340px', height: '340px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.14) 0%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', top: '-140px', right: '-120px', width: '340px', height: '340px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.14) 0%, transparent 70%)' }} />
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '520px', position: 'relative', zIndex: 1 }}>
                 {showOTP ? (
@@ -102,7 +102,7 @@ export default function BrandSignupPage() {
                             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '18px', textDecoration: 'none' }}>
                                 <Image src="/porchest-logo.png" alt="Porchest" width={168} height={42} priority style={{ width: '168px', height: 'auto' }} />
                             </Link>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(155,111,80,0.10)', color: '#9b6f50' }}>
                                 <Building2 size={14} />
                                 <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Brand Account</span>
                             </div>
@@ -122,7 +122,7 @@ export default function BrandSignupPage() {
                                             placeholder="you@email.com"
                                             value={form.email}
                                             onChange={(e) => set('email', e.target.value)}
-                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(123,63,242,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(123,63,242,0.08)'; }}
+                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(155,111,80,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(155,111,80,0.08)'; }}
                                             onBlur={(e) => { e.target.style.borderColor = 'rgba(148,163,184,0.24)'; e.target.style.boxShadow = 'none'; }}
                                         />
                                     </div>
@@ -138,7 +138,7 @@ export default function BrandSignupPage() {
                                             placeholder="Minimum 6 characters"
                                             value={form.password}
                                             onChange={(e) => set('password', e.target.value)}
-                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(123,63,242,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(123,63,242,0.08)'; }}
+                                            onFocus={(e) => { e.target.style.borderColor = 'rgba(155,111,80,0.45)'; e.target.style.boxShadow = '0 0 0 4px rgba(155,111,80,0.08)'; }}
                                             onBlur={(e) => { e.target.style.borderColor = 'rgba(148,163,184,0.24)'; e.target.style.boxShadow = 'none'; }}
                                         />
                                         <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
@@ -165,7 +165,7 @@ export default function BrandSignupPage() {
                         <p style={{ textAlign: 'center', marginTop: '18px', fontSize: '14px', color: '#667085' }}>
                             <Link href="/signup" style={{ color: '#667085', textDecoration: 'none' }}>Choose another role</Link>
                             {' · '}
-                            <Link href="/login" style={{ color: '#7B3FF2', textDecoration: 'none', fontWeight: 700 }}>Already have an account?</Link>
+                            <Link href="/login" style={{ color: '#9b6f50', textDecoration: 'none', fontWeight: 700 }}>Already have an account?</Link>
                         </p>
                     </>
                 )}

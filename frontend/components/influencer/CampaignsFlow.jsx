@@ -43,7 +43,7 @@ export default function CampaignsFlow() {
         }
     }
 
-    const inputClass = 'flex-1 px-4 py-2.5 rounded-xl bg-[rgba(255,255,255,0.95)] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 placeholder-slate-400 transition-all';
+    const inputClass = 'flex-1 px-4 py-2.5 rounded-xl bg-[rgba(255,255,255,0.95)] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-stone-500/10 focus:ring-2 focus:ring-stone-500/10 placeholder-slate-400 transition-all';
     const cardClass = 'p-6 rounded-[28px] bg-[rgba(255,255,255,0.95)] border border-[rgba(148,163,184,0.18)] shadow-[0_12px_30px_rgba(15,23,42,0.04)] space-y-5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition-all';
 
     return (
@@ -55,7 +55,7 @@ export default function CampaignsFlow() {
                         key={tab.key}
                         onClick={() => setActiveTab(i)}
                         className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                            activeTab === i ? 'bg-[#7B3FF2] text-white shadow-md shadow-purple-500/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                            activeTab === i ? 'bg-[#9b6f50] text-white shadow-md shadow-stone-500/10' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                     >
                         {tab.label}
@@ -82,13 +82,13 @@ export default function CampaignsFlow() {
                             </p>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">From</span>
-                                <span className="px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-bold border border-purple-100">
+                                <span className="px-2.5 py-1 rounded-md bg-stone-50 text-stone-800 text-xs font-bold border border-stone-100">
                                     {c.brandProfile?.businessName || c.brandName || 'Brand'}
                                 </span>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-[#7B3FF2]">
+                            <p className="text-2xl font-bold text-[#9b6f50]">
                                 ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
                             </p>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Brand offer</p>
@@ -112,7 +112,7 @@ export default function CampaignsFlow() {
                     {/* Toggle full brief */}
                     <button
                         onClick={() => setExpanded(expanded === c._id ? null : c._id)}
-                        className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100 transition-colors"
+                        className="text-xs font-bold text-stone-700 hover:text-stone-800 flex items-center gap-1 bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-100 transition-colors"
                     >
                         {expanded === c._id ? 'Hide brief ▲' : 'View full brief ▼'}
                     </button>
@@ -145,7 +145,7 @@ export default function CampaignsFlow() {
                             <button
                                 onClick={() => action(c._id, 'accept')}
                                 disabled={acting}
-                                className="flex-1 py-3 rounded-xl bg-[#7B3FF2] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-lg shadow-purple-500/25 disabled:opacity-40"
+                                className="flex-1 py-3 rounded-xl bg-[#9b6f50] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-lg shadow-stone-500/10 disabled:opacity-40"
                             >
                                 Accept ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
                             </button>
@@ -161,7 +161,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'counter', { counterAmount: Number(counterMap[c._id]) })}
                                     disabled={acting || !counterMap[c._id]}
-                                    className="px-6 py-3 rounded-xl bg-purple-50 text-purple-700 font-bold text-sm hover:bg-purple-100 transition-colors border border-purple-200 disabled:opacity-40"
+                                    className="px-6 py-3 rounded-xl bg-stone-50 text-stone-800 font-bold text-sm hover:bg-stone-100 transition-colors border border-stone-200 disabled:opacity-40"
                                 >
                                     Counter
                                 </button>
@@ -210,7 +210,7 @@ export default function CampaignsFlow() {
                             <p className="text-sm font-medium text-slate-500 mt-1">{c.brandProfile?.businessName || c.brandName}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-[#7B3FF2]">
+                            <p className="text-2xl font-bold text-[#9b6f50]">
                                 ${Number(c.pricing?.agreedFee || 0).toLocaleString()}
                             </p>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Agreed fee</p>
@@ -219,20 +219,20 @@ export default function CampaignsFlow() {
 
                     {/* Campaign tools — tracking link + promo code */}
                     {(c.brief?.trackingLink || c.brief?.promoCode) && (
-                        <div className="p-5 rounded-2xl bg-[#f5f3ff] border border-purple-100 space-y-4">
-                            <p className="text-sm font-bold text-purple-900">Your Campaign Tools</p>
+                        <div className="p-5 rounded-2xl bg-[#f5f3ff] border border-stone-100 space-y-4">
+                            <p className="text-sm font-bold text-stone-900">Your Campaign Tools</p>
                             {c.brief?.trackingLink && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
+                                    <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
                                     <div className="flex gap-2">
                                         <input
                                             readOnly
                                             value={c.brief.trackingLink}
-                                            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-purple-200 text-slate-700 text-sm font-mono"
+                                            className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-slate-700 text-sm font-mono"
                                         />
                                         <button
                                             onClick={() => navigator.clipboard.writeText(c.brief.trackingLink)}
-                                            className="px-4 py-2.5 rounded-xl bg-white border border-purple-200 text-purple-700 text-sm font-bold hover:bg-purple-50"
+                                            className="px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-800 text-sm font-bold hover:bg-stone-50"
                                         >
                                             Copy
                                         </button>
@@ -241,14 +241,14 @@ export default function CampaignsFlow() {
                             )}
                             {c.brief?.promoCode && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wide mb-1.5">Promo code</p>
+                                    <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wide mb-1.5">Promo code</p>
                                     <div className="flex gap-3 items-center">
-                                        <span className="px-5 py-2.5 rounded-xl bg-white border border-purple-200 text-purple-700 font-mono font-bold tracking-wider text-base">
+                                        <span className="px-5 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-800 font-mono font-bold tracking-wider text-base">
                                             {c.brief.promoCode}
                                         </span>
                                         <button
                                             onClick={() => navigator.clipboard.writeText(c.brief.promoCode)}
-                                            className="px-4 py-2.5 rounded-xl bg-white border border-purple-200 text-purple-700 text-sm font-bold hover:bg-purple-50"
+                                            className="px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-800 text-sm font-bold hover:bg-stone-50"
                                         >
                                             Copy
                                         </button>
@@ -257,8 +257,8 @@ export default function CampaignsFlow() {
                             )}
                             {c.brief?.requiredHashtags?.length > 0 && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wide mb-1">Required hashtags</p>
-                                    <p className="text-purple-900 font-medium text-sm">{c.brief.requiredHashtags.join(' ')}</p>
+                                    <p className="text-[10px] font-bold text-stone-500 uppercase tracking-wide mb-1">Required hashtags</p>
+                                    <p className="text-stone-900 font-medium text-sm">{c.brief.requiredHashtags.join(' ')}</p>
                                 </div>
                             )}
                         </div>
@@ -300,7 +300,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'submit-drive', { driveLink: driveLinkMap[c._id] })}
                                     disabled={acting || !driveLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-xl bg-[#7B3FF2] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-md shadow-purple-500/25 disabled:opacity-40"
+                                    className="px-6 py-2.5 rounded-xl bg-[#9b6f50] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-md shadow-stone-500/10 disabled:opacity-40"
                                 >
                                     Submit
                                 </button>
@@ -343,7 +343,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'submit-post', { postLink: postLinkMap[c._id] })}
                                     disabled={acting || !postLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-xl bg-[#7B3FF2] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-md shadow-purple-500/25 disabled:opacity-40"
+                                    className="px-6 py-2.5 rounded-xl bg-[#9b6f50] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-md shadow-stone-500/10 disabled:opacity-40"
                                 >
                                     Submit Post
                                 </button>

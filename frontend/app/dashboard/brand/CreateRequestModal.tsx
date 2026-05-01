@@ -17,7 +17,7 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
     </div>
 );
 
-const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-slate-400";
+const inputClass = "w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm focus:outline-none focus:border-stone-500/10 focus:ring-2 focus:ring-stone-500/10 transition-all placeholder-slate-400";
 
 export default function CreateRequestModal({ influencer, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
@@ -72,13 +72,13 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                     className="w-full max-w-[700px] bg-[rgba(255,255,255,0.98)] border border-[rgba(148,163,184,0.18)] rounded-[36px] shadow-[0_24px_60px_rgba(15,23,42,0.1)] overflow-hidden my-auto">
 
                     {/* Header */}
-                    <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-purple-50/50">
+                    <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-stone-50/50">
                         <div>
                             <h2 className="font-bold text-xl text-[#172033] mb-1">
                                 New Campaign Request
                             </h2>
                             <p className="text-xs font-medium text-slate-500">
-                                To: <strong className="text-purple-600">{influencer.fullName}</strong> · {influencer.niche}
+                                To: <strong className="text-stone-700">{influencer.fullName}</strong> · {influencer.niche}
                             </p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center shadow-sm">
@@ -150,21 +150,21 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         </div>
 
                         {/* Price & Fixed Terms Block */}
-                        <div className="p-6 rounded-[24px] bg-[#f5f3ff] border border-purple-200">
+                        <div className="p-6 rounded-[24px] bg-[#f5f3ff] border border-stone-200">
                             <Field label="Agreed Price (USD)" required>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-600 font-bold text-lg pointer-events-none">$</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-700 font-bold text-lg pointer-events-none">$</span>
                                     <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
-                                        placeholder="0.00" className={`${inputClass} pl-9 font-bold text-lg text-purple-900 border-purple-200 shadow-sm`} />
+                                        placeholder="0.00" className={`${inputClass} pl-9 font-bold text-lg text-stone-900 border-stone-200 shadow-sm`} />
                                 </div>
                             </Field>
-                            <div className="mt-5 p-4 rounded-xl bg-white border border-purple-100 shadow-sm">
-                                <p className="text-xs font-bold text-purple-900 mb-2">Standard Payment Terms</p>
+                            <div className="mt-5 p-4 rounded-xl bg-white border border-stone-100 shadow-sm">
+                                <p className="text-xs font-bold text-stone-900 mb-2">Standard Payment Terms</p>
                                 <ul className="list-disc pl-5 text-xs text-slate-600 font-medium space-y-1">
                                     <li>50% advance before campaign starts</li>
                                     <li>50% after deliverables are verified</li>
                                 </ul>
-                                <p className="text-[11px] font-bold text-purple-400 mt-3 uppercase tracking-wide">
+                                <p className="text-[11px] font-bold text-stone-400 mt-3 uppercase tracking-wide">
                                     By sending this request, you agree to Porchest standard payment terms.
                                 </p>
                             </div>
@@ -174,13 +174,13 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
                             <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-green-600 cursor-pointer" />
                             <span className={`text-sm font-medium ${agreedToTerms ? 'text-green-800' : 'text-slate-600'}`}>
-                                I agree to the <a href="#" onClick={e => e.preventDefault()} className="text-purple-600 hover:text-purple-700 underline font-bold">Porchest Terms & Conditions</a> and Payment Policy
+                                I agree to the <a href="#" onClick={e => e.preventDefault()} className="text-stone-700 hover:text-stone-800 underline font-bold">Porchest Terms & Conditions</a> and Payment Policy
                             </span>
                         </label>
 
                         {/* Submit */}
                         <button type="submit" disabled={loading || !agreedToTerms}
-                            className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg ${loading || !agreedToTerms ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#7B3FF2] text-white hover:bg-[#6a35d4] shadow-purple-500/25'}`}>
+                            className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg ${loading || !agreedToTerms ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-[#9b6f50] text-white hover:bg-[#6a35d4] shadow-stone-500/10'}`}>
                             <Send size={18} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
                         </button>
                     </form>

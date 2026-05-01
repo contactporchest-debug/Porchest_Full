@@ -11,7 +11,7 @@ const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gamin
 
 const getPillColor = (niche) => {
     const colors = {
-        fashion: 'bg-purple-100 text-purple-600',
+        fashion: 'bg-stone-100 text-stone-700',
         fitness: 'bg-green-100 text-green-600',
         food: 'bg-orange-100 text-orange-600',
         beauty: 'bg-pink-100 text-pink-600',
@@ -27,7 +27,7 @@ export default function InfluencerDiscovery() {
     const { data, loading, error } = useApi(`/discover/influencers?${query}`);
     const influencers = data?.influencers || [];
 
-    const inputClass = 'px-4 py-2.5 rounded-xl bg-[rgba(255,255,255,0.95)] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 placeholder-slate-400 transition-all';
+    const inputClass = 'px-4 py-2.5 rounded-xl bg-[rgba(255,255,255,0.95)] border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-stone-500/10 focus:ring-2 focus:ring-stone-500/10 placeholder-slate-400 transition-all';
 
     return (
         <div className="space-y-6">
@@ -36,7 +36,7 @@ export default function InfluencerDiscovery() {
                 <div className="flex flex-wrap gap-2">
                     {TIERS.map((tier) => (
                         <button key={tier} onClick={() => setFilters((f) => ({ ...f, tier: f.tier === tier ? '' : tier }))} 
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${filters.tier === tier ? 'bg-[#7B3FF2] border-[#7B3FF2] text-white shadow-md shadow-purple-500/20' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-all ${filters.tier === tier ? 'bg-[#9b6f50] border-[#9b6f50] text-white shadow-md shadow-stone-500/10' : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                             {tier}
                         </button>
                     ))}
@@ -70,7 +70,7 @@ export default function InfluencerDiscovery() {
                                 {inf.igProfileUrl ? (
                                     <img src={inf.igProfileUrl} alt="" className="w-14 h-14 rounded-[14px] object-cover border border-slate-100 shadow-sm" />
                                 ) : (
-                                    <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                                    <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-stone-500 to-stone-700 flex items-center justify-center text-white font-bold text-lg shadow-sm">
                                         {(inf.displayName || inf.igUsername || 'C')[0].toUpperCase()}
                                     </div>
                                 )}
@@ -107,17 +107,17 @@ export default function InfluencerDiscovery() {
 
                             {/* Rates Grid */}
                             <div className="grid grid-cols-2 gap-3 mt-4">
-                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-purple-100">
+                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-stone-100">
                                     <div className="flex items-center gap-1.5 mb-1.5">
-                                        <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                        <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wide">IG POST</span>
+                                        <svg className="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">IG POST</span>
                                     </div>
                                     <p className="text-[#172033] font-bold text-lg">${inf.rates?.postPrice || inf.avgPostPrice || 250}</p>
                                 </div>
-                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-purple-100">
+                                <div className="p-3.5 rounded-2xl bg-[#f5f3ff] border border-stone-100">
                                     <div className="flex items-center gap-1.5 mb-1.5">
-                                        <svg className="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                                        <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wide">IG REEL</span>
+                                        <svg className="w-3.5 h-3.5 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                        <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide">IG REEL</span>
                                     </div>
                                     <p className="text-[#172033] font-bold text-lg">${inf.rates?.reelPrice || inf.avgReelPrice || 350}</p>
                                 </div>
@@ -130,7 +130,7 @@ export default function InfluencerDiscovery() {
                                     {selectedId === inf._id ? 'Hide Profile' : 'View Profile'}
                                 </button>
                                 <button type="button" onClick={() => setSelectedId(inf._id)} 
-                                    className="flex-[1.5] py-3 rounded-xl bg-[#7B3FF2] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2">
+                                    className="flex-[1.5] py-3 rounded-xl bg-[#9b6f50] text-white font-bold text-sm hover:bg-[#6a35d4] transition-colors shadow-lg shadow-stone-500/10 flex items-center justify-center gap-2">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                     Request
                                 </button>

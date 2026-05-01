@@ -50,7 +50,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
                     <button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="text-sm px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-900/30 text-purple-300 hover:bg-purple-900/50 disabled:opacity-40 transition-all"
+                        className="text-sm px-4 py-2 rounded-lg border border-stone-500/10 bg-stone-900/30 text-stone-300 hover:bg-stone-900/50 disabled:opacity-40 transition-all"
                     >
                         {syncing ? 'Syncing...' : 'Sync now'}
                     </button>
@@ -74,7 +74,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
     }
 
     return (
-        <div className="p-5 rounded-xl border border-purple-500/30 bg-purple-900/20">
+        <div className="p-5 rounded-xl border border-stone-500/10 bg-stone-900/20">
             <p className="text-white font-medium">Connect your Instagram</p>
             <p className="text-sm text-gray-400 mt-1 mb-4">
                 {role === 'brand'
@@ -84,7 +84,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
             <button
                 onClick={handleConnect}
                 disabled={connecting}
-                className="px-5 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors disabled:opacity-40"
+                className="px-5 py-2.5 rounded-lg bg-stone-700 hover:bg-stone-500 text-white text-sm font-medium transition-colors disabled:opacity-40"
             >
                 {connecting ? 'Connecting...' : 'Connect Instagram'}
             </button>

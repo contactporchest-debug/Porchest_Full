@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 const STATUS_COLORS: Record<string, string> = {
     running: '#4ade80',
     'in-process': '#60d5f8',
-    completed: '#a78bfa',
+    completed: '#9b6f50',
     canceled: '#f87171',
 };
 
@@ -54,7 +54,7 @@ export default function OverviewPage() {
     const counts = [
         { label: 'Running', val: running.length, color: '#4ade80', icon: <Megaphone size={18} /> },
         { label: 'In-Process', val: inProcess.length, color: '#60d5f8', icon: <Clock size={18} /> },
-        { label: 'Completed', val: completed.length, color: '#a78bfa', icon: <CheckCircle size={18} /> },
+        { label: 'Completed', val: completed.length, color: '#9b6f50', icon: <CheckCircle size={18} /> },
         { label: 'Canceled', val: rejected.length, color: '#f87171', icon: <XCircle size={18} /> },
     ];
 
@@ -62,7 +62,7 @@ export default function OverviewPage() {
 
     if (authLoading || loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
-            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
         </div>
     );
 
@@ -111,7 +111,7 @@ export default function OverviewPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '16px' }}>
                     <div>
                         <p style={{ fontSize: '11px', color: '#7a8798', marginBottom: '4px' }}>Total Committed (Lifetime)</p>
-                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.8rem', color: '#a78bfa', filter: 'drop-shadow(0 0 10px rgba(167,139,250,0.4))' }}>
+                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '1.8rem', color: '#9b6f50', filter: 'drop-shadow(0 0 10px rgba(155,111,80,0.4))' }}>
                             {totalAllocated > 0 ? `$${totalAllocated.toLocaleString()}` : '—'}
                         </p>
                         <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '3px' }}>Sum of agreed deal prices</p>
@@ -139,18 +139,18 @@ export default function OverviewPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                     <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Campaigns</p>
                     <button onClick={() => router.push('/dashboard/brand/collaborations')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#9b6f50', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                         View All <ArrowRight size={12} />
                     </button>
                 </div>
 
                 {runningPreview.length === 0 ? (
                     <div style={{ padding: '36px', textAlign: 'center', borderRadius: '18px', background: 'rgba(255,255,255,0.84)', border: '1px dashed rgba(148,163,184,0.24)' }}>
-                        <FileText size={36} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 12px' }} />
+                        <FileText size={36} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 12px' }} />
                         <p style={{ fontSize: '14px', color: '#667085', fontWeight: '500', marginBottom: '4px' }}>No campaigns yet</p>
                         <p style={{ fontSize: '12px', color: '#94a3b8' }}>
                             Create your first campaign request from{' '}
-                            <button onClick={() => router.push('/dashboard/brand/influencers')} style={{ color: '#a78bfa', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>Influencers →</button>
+                            <button onClick={() => router.push('/dashboard/brand/influencers')} style={{ color: '#9b6f50', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }}>Influencers →</button>
                         </p>
                     </div>
                 ) : (
@@ -159,10 +159,10 @@ export default function OverviewPage() {
                             const influencerName = r.influencerName || r.influencerId?.fullName || 'Influencer';
                             const initials = influencerName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
                             const statusLabel = r.status === 'deal_closed' ? 'Completed' : 'Running';
-                            const statusColor = r.status === 'deal_closed' ? '#a78bfa' : '#4ade80';
+                            const statusColor = r.status === 'deal_closed' ? '#9b6f50' : '#4ade80';
                             return (
                                 <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255,255,255,0.84)', border: '1px solid rgba(148,163,184,0.16)', flexWrap: 'wrap' }}>
-                                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
                                         {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt={influencerName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
                                     </div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
@@ -170,9 +170,9 @@ export default function OverviewPage() {
                                         <p style={{ fontSize: '11px', color: '#667085' }}>{influencerName}</p>
                                     </div>
                                     <span style={{ padding: '3px 11px', borderRadius: '99px', background: `${statusColor}12`, border: `1px solid ${statusColor}28`, color: statusColor, fontSize: '11px', fontWeight: '700' }}>{statusLabel}</span>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#9b6f50' }}>${r.agreedPrice?.toLocaleString()}</p>
                                     <button onClick={() => router.push('/dashboard/brand/collaborations')}
-                                        style={{ padding: '5px 12px', borderRadius: '9px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.2)', color: '#a78bfa', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                        style={{ padding: '5px 12px', borderRadius: '9px', background: 'rgba(155,111,80,0.1)', border: '1px solid rgba(155,111,80,0.2)', color: '#9b6f50', fontSize: '11px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                                         View
                                     </button>
                                 </div>

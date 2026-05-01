@@ -15,7 +15,7 @@ import CollaborationMetrics from '@/components/brand/CollaborationMetrics';
 type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
 
 const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
-    { key: 'all', label: 'All', color: '#a78bfa' },
+    { key: 'all', label: 'All', color: '#9b6f50' },
     { key: 'pending', label: 'Pending / Viewed', color: '#fbbf24' },
     { key: 'negotiation', label: 'Negotiation', color: '#facc15' },
     { key: 'accepted', label: 'Active', color: '#4ade80' },
@@ -24,7 +24,7 @@ const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
 
 const STATUS_CFG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     sent: { label: 'Pending', color: '#fbbf24', icon: <Clock size={11} /> },
-    viewed: { label: 'Viewed', color: '#a78bfa', icon: <Eye size={11} /> },
+    viewed: { label: 'Viewed', color: '#9b6f50', icon: <Eye size={11} /> },
     negotiation: { label: 'Negotiation', color: '#facc15', icon: <AlertCircle size={11} /> },
     accepted: { label: 'In-Process', color: '#60d5f8', icon: <PlayCircle size={11} /> },
     deal_closed: { label: 'Closed ✓', color: '#4ade80', icon: <CheckCircle size={11} /> },
@@ -186,7 +186,7 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                             </div>
                         ))}
                     </div>
-                    <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: '#f5f3ff', border: '1px solid rgba(123,63,242,0.14)' }}>
+                    <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: '#f5f3ff', border: '1px solid rgba(155,111,80,0.14)' }}>
                         <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Content Guidelines</p>
                         <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>{request.contentGuidelines}</p>
                     </div>
@@ -321,7 +321,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
 
     if (authLoading || loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
-            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
         </div>
     );
 
@@ -369,7 +369,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
             {/* Empty */}
             {filtered.length === 0 && (
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-                    <FileText size={44} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
+                    <FileText size={44} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '6px' }}>
                         {error ? 'Unable to Load Campaigns' : requests.length === 0 ? 'No campaigns yet' : 'No results'}
                     </p>
@@ -398,7 +398,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                 {/* Card row */}
                                 <div onClick={() => setExpanded(isOpen ? null : r._id)}
                                     style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
                                         {r.influencerProfilePic && !brokenImages.has(r._id) ? <img src={r.influencerProfilePic} alt="DP" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, r._id]))} /> : initials}
                                     </div>
                                     <div style={{ flex: 1, minWidth: '120px' }}>
@@ -406,7 +406,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                         <p style={{ fontSize: '12px', color: MUTED }}>{r.influencerName || '—'} · {r.influencerNiche || '—'}</p>
                                     </div>
                                     <span style={{ fontSize: '12px', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Calendar size={11} style={{ color: '#a78bfa' }} />
+                                        <Calendar size={11} style={{ color: '#9b6f50' }} />
                                         {new Date(r.postingDeadline).toLocaleDateString()}
                                     </span>
                                     {ver && (
@@ -414,7 +414,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                             Post {ver.status === 'verified' ? 'Verified ✓' : ver.status === 'rejected' ? 'Rejected' : 'Pending Review'}
                                         </span>
                                     )}
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#a78bfa' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#9b6f50' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '99px', background: `${displayStatus.color}12`, border: `1px solid ${displayStatus.color}28`, color: displayStatus.color, fontSize: '11px', fontWeight: '700' }}>
                                         {displayStatus.icon} {displayStatus.label}
                                     </span>

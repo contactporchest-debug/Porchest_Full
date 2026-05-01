@@ -63,7 +63,7 @@ export default function BrandProfileForm() {
         setTimeout(() => setSaved(false), 1800);
     }
 
-    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50';
+    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-stone-500/10';
 
     return (
         <div className="space-y-6">
@@ -79,7 +79,7 @@ export default function BrandProfileForm() {
                     {INDUSTRIES.map((industry) => {
                         const value = industry.toLowerCase();
                         return (
-                            <button key={industry} type="button" onClick={() => setForm((f) => ({ ...f, industry: value }))} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.industry === value ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-purple-500/50'}`}>
+                            <button key={industry} type="button" onClick={() => setForm((f) => ({ ...f, industry: value }))} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.industry === value ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-stone-500/10'}`}>
                                 {industry}
                             </button>
                         );
@@ -96,7 +96,7 @@ export default function BrandProfileForm() {
                 </div>
                 <div className="flex gap-2">
                     {['male', 'female', 'all'].map((gender) => (
-                        <button key={gender} type="button" onClick={() => toggleGender(gender)} className={`px-4 py-2 rounded-lg text-sm border capitalize ${form.targetAudience.genders.includes(gender) ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                        <button key={gender} type="button" onClick={() => toggleGender(gender)} className={`px-4 py-2 rounded-lg text-sm border capitalize ${form.targetAudience.genders.includes(gender) ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
                             {gender}
                         </button>
                     ))}
@@ -115,16 +115,16 @@ export default function BrandProfileForm() {
                 </div>
                 <div className="flex gap-2">
                     <input className={inputClass} placeholder="Country code, e.g. PK" value={countryInput} onChange={(e) => setCountryInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addCountry()} />
-                    <button type="button" onClick={addCountry} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm">Add</button>
+                    <button type="button" onClick={addCountry} className="px-4 py-2 rounded-lg bg-stone-700 text-white text-sm">Add</button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {form.targetAudience.countries.map((country) => (
-                        <span key={country} className="px-3 py-1 rounded-full bg-purple-900/40 border border-purple-500/30 text-purple-300 text-xs">{country}</span>
+                        <span key={country} className="px-3 py-1 rounded-full bg-stone-900/40 border border-stone-500/10 text-stone-300 text-xs">{country}</span>
                     ))}
                 </div>
             </div>
 
-            <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-all disabled:opacity-40">
+            <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-xl bg-stone-700 hover:bg-stone-500 text-white font-medium text-sm transition-all disabled:opacity-40">
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save profile'}
             </button>
         </div>

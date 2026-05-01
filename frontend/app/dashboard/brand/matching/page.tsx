@@ -49,7 +49,7 @@ export default function AiMatchingPage() {
             <DashboardLayout>
                 {loading ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
                     </div>
                 ) : profileComplete ? (
                     <AIMatchingComponent />
@@ -61,18 +61,18 @@ export default function AiMatchingPage() {
                         </div>
 
                         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
-                            className="glass-card" style={{ padding: '80px 40px', borderRadius: '36px', textAlign: 'center', border: '1px solid rgba(123,63,242,0.15)', position: 'relative', overflow: 'hidden' }}>
+                            className="glass-card" style={{ padding: '80px 40px', borderRadius: '36px', textAlign: 'center', border: '1px solid rgba(155,111,80,0.15)', position: 'relative', overflow: 'hidden' }}>
                             {/* Glow */}
-                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(123,63,242,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(155,111,80,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
                             <div style={{ position: 'relative' }}>
-                                <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 0 40px rgba(123,63,242,0.2)' }}>
-                                    <UserX size={40} style={{ color: '#a78bfa' }} />
+                                <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 0 40px rgba(155,111,80,0.2)' }}>
+                                    <UserX size={40} style={{ color: '#9b6f50' }} />
                                 </div>
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#0f172a', marginBottom: '10px' }}>Action Required: Complete Your Profile</p>
                                 <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '420px', margin: '0 auto 28px', lineHeight: '1.7' }}>
                                     Complete your brand profile to unlock tailored creator recommendations and discovery tools.
                                 </p>
-                                <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '99px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 0 30px rgba(123,63,242,0.4)', transition: 'all 200ms ease' }}>
+                                <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '99px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 0 30px rgba(155,111,80,0.4)', transition: 'all 200ms ease' }}>
                                     Go to Profile <ArrowRight size={15} />
                                 </Link>
                             </div>

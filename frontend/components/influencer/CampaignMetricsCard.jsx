@@ -40,7 +40,7 @@ export default function CampaignMetricsCard({ collaborationId }) {
                     </p>
                 </div>
                 {m.daysRemaining > 0 ? (
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-200">
+                    <span className="px-3 py-1 bg-stone-100 text-stone-800 rounded-full text-xs font-bold border border-stone-200">
                         {m.daysRemaining} days remaining
                     </span>
                 ) : null}

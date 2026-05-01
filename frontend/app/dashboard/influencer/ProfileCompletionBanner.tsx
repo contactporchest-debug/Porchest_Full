@@ -180,14 +180,14 @@ export default function ProfileCompletionBanner({ completion }: { completion: Pr
                         onClick={() => router.push('/dashboard/influencer/profile')}
                         style={{
                             padding: '12px 28px', borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
+                            background: 'linear-gradient(135deg, #9b6f50, #d7b48f)',
                             border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700',
                             cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            boxShadow: '0 4px 20px rgba(123,63,242,0.35)',
+                            boxShadow: '0 4px 20px rgba(155,111,80,0.35)',
                             transition: 'all 200ms ease', fontFamily: 'inherit',
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(123,63,242,0.45)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(123,63,242,0.35)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(155,111,80,0.45)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(155,111,80,0.35)'; }}
                     >
                         Complete Profile <ArrowRight size={15} />
                     </button>

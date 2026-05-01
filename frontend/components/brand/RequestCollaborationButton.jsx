@@ -52,11 +52,11 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         }, 1800);
     }
 
-    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50';
+    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-stone-500/10';
 
     return (
         <>
-            <button onClick={() => setOpen(true)} className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-all">
+            <button onClick={() => setOpen(true)} className="w-full py-3 rounded-xl bg-stone-700 hover:bg-stone-500 text-white font-medium text-sm transition-all">
                 Request collaboration with @{influencerName || 'creator'}
             </button>
 
@@ -80,14 +80,14 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                     <input type="number" className={inputClass} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} />
                                     <div className="flex flex-wrap gap-2">
                                         {OBJECTIVES.map((objective) => (
-                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} className={`px-3 py-1.5 rounded-full text-xs border ${form.campaignObjective === objective ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} className={`px-3 py-1.5 rounded-full text-xs border ${form.campaignObjective === objective ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
                                                 {objective}
                                             </button>
                                         ))}
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {CONTENT_TYPES.map((type) => (
-                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} className={`px-3 py-1.5 rounded-full text-xs border ${form.contentType.includes(type) ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} className={`px-3 py-1.5 rounded-full text-xs border ${form.contentType.includes(type) ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
                                                 {type}
                                             </button>
                                         ))}
@@ -135,11 +135,11 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                 {step === 1 ? 'Cancel' : 'Back'}
                             </button>
                             {step < 3 ? (
-                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} className="px-5 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium disabled:opacity-40">
+                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} className="px-5 py-2.5 rounded-lg bg-stone-700 hover:bg-stone-500 text-white text-sm font-medium disabled:opacity-40">
                                     Next
                                 </button>
                             ) : (
-                                <button onClick={handleSend} disabled={sending} className="px-6 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium disabled:opacity-40">
+                                <button onClick={handleSend} disabled={sending} className="px-6 py-2.5 rounded-lg bg-stone-700 hover:bg-stone-500 text-white text-sm font-medium disabled:opacity-40">
                                     {sending ? 'Sending...' : 'Send request'}
                                 </button>
                             )}

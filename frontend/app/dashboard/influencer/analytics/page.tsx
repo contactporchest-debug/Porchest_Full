@@ -21,8 +21,8 @@ import {
 
 /* ─── Color palette ─────────────────────────────────────────── */
 const C = {
-    purple: '#7B3FF2',
-    violet: '#A855F7',
+    purple: '#9b6f50',
+    violet: '#d7b48f',
     pink: '#fb7185',
     amber: '#f59e0b',
     teal: '#14b8a6',
@@ -30,7 +30,7 @@ const C = {
     green: '#4ade80',
     red: '#f87171',
     indigo: '#6366f1',
-    lavender: '#a78bfa',
+    lavender: '#9b6f50',
 };
 
 const SURFACE = '#ffffff';
@@ -45,7 +45,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={{
-            background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(123,63,242,0.18)',
+            background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(155,111,80,0.18)',
             borderRadius: 14, padding: '12px 16px', fontSize: 12, color: TEXT,
             boxShadow: '0 20px 40px rgba(15,23,42,0.14)',
         }}>
@@ -171,7 +171,7 @@ const fmtK = (v: number | null | undefined) => {
 /* ─── Shared small components ────────────────────────────────── */
 const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, marginTop: 36 }}>
-            <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#A855F7,#7B3FF2)' }} />
+            <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#d7b48f,#9b6f50)' }} />
         <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{children}</h3>
         {icon && <div style={{ marginLeft: 'auto', color: MUTED }}>{icon}</div>}
     </div>
@@ -196,16 +196,16 @@ const StatChip = ({ label, value, color = C.lavender }: { label: string; value: 
 const TimePill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
     <button onClick={onClick} style={{
         padding: '6px 16px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-        background: active ? 'linear-gradient(135deg,#7B3FF2,#A855F7)' : SURFACE_ALT,
+        background: active ? 'linear-gradient(135deg,#9b6f50,#d7b48f)' : SURFACE_ALT,
         border: active ? 'none' : `1px solid ${BORDER}`,
         color: active ? '#fff' : MUTED,
         fontFamily: 'inherit', transition: 'all 200ms ease',
-        boxShadow: active ? '0 14px 26px rgba(123,63,242,0.18)' : 'none',
+        boxShadow: active ? '0 14px 26px rgba(155,111,80,0.18)' : 'none',
     }}>{label}</button>
 );
 
 const InsightCard = ({ text, icon }: { text: string; icon?: React.ReactNode }) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
         <div style={{ color: C.lavender, flexShrink: 0, marginTop: 1 }}>{icon || <Lightbulb size={14} />}</div>
         <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.6 }}>{text}</p>
     </div>
@@ -316,7 +316,7 @@ export default function AnalyticsPage() {
                     <Instagram size={48} style={{ color: C.lavender, margin: '0 auto 16px' }} />
                     <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '1.4rem', color: TEXT, marginBottom: 8 }}>Instagram Not Connected</h2>
                     <p style={{ color: MUTED, fontSize: 14, marginBottom: 24 }}>Connect your Instagram account to unlock all analytics and charts.</p>
-                    <a href="/dashboard/influencer/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 99, background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                    <a href="/dashboard/influencer/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 99, background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                         <Instagram size={14} /> Go to Profile → Connect
                     </a>
                 </div>
@@ -735,7 +735,7 @@ export default function AnalyticsPage() {
                         SECTION 7 — POST ANALYTICS LOOKUP
                     ════════════════════════════════════════════════════════ */}
                     <SectionTitle icon={<Search size={14} />}>Post Analytics Lookup</SectionTitle>
-                    <div style={{ background: SURFACE, border: '1px solid rgba(123,63,242,0.16)', borderRadius: 24, padding: 28, marginBottom: 40, boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
+                    <div style={{ background: SURFACE, border: '1px solid rgba(155,111,80,0.16)', borderRadius: 24, padding: 28, marginBottom: 40, boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
                         <p style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>Paste any Instagram post URL from your account to view its detailed analytics.</p>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             <input
@@ -745,7 +745,7 @@ export default function AnalyticsPage() {
                                 style={{ flex: 1, minWidth: 280, padding: '12px 16px', borderRadius: 12, background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
                             />
                             <button onClick={handleLookup} disabled={lookupLoading}
-                                style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: lookupLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', opacity: lookupLoading ? 0.7 : 1 }}>
+                                style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: lookupLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', opacity: lookupLoading ? 0.7 : 1 }}>
                                 {lookupLoading ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={14} />}
                                 {lookupLoading ? 'Looking up...' : 'Analyze Post'}
                             </button>
@@ -794,7 +794,7 @@ export default function AnalyticsPage() {
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
+                                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
                                         <p style={{ fontSize: 11, color: C.lavender, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Calculated Metrics</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
                                             {[

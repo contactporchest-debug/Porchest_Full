@@ -22,7 +22,7 @@ export default function OverviewPage({ stats }: Props) {
         { label: 'Total Requests Received', value: stats?.totalRequests ?? '—', color: '#60d5f8' },
         { label: 'Total Accepted', value: stats?.totalAccepted ?? '—', color: '#4ade80' },
         { label: 'Total Rejected', value: stats?.totalRejected ?? '—', color: '#f87171' },
-        { label: 'Total Completed', value: stats?.totalCompleted ?? '—', color: '#a78bfa' },
+        { label: 'Total Completed', value: stats?.totalCompleted ?? '—', color: '#9b6f50' },
     ];
 
     return (

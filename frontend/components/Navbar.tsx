@@ -51,11 +51,11 @@ export default function Navbar() {
                 style={{
                     position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)',
                     zIndex: 1000, width: 'calc(100% - 48px)', maxWidth: '1100px',
-                    background: scrolled ? 'rgba(10,10,16,0.85)' : 'rgba(10,10,16,0.6)',
+                    background: scrolled ? 'rgba(255,251,244,0.92)' : 'rgba(255,251,244,0.78)',
                     backdropFilter: 'blur(30px)',
-                    border: '1px solid rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(17,19,24,0.10)',
                     borderRadius: '20px',
-                    boxShadow: scrolled ? '0 0 60px rgba(123,63,242,0.12), 0 20px 60px rgba(0,0,0,0.5)' : '0 0 40px rgba(123,63,242,0.08)',
+                    boxShadow: scrolled ? '0 0 60px rgba(155,111,80,0.10), 0 20px 60px rgba(17,19,24,0.10)' : '0 0 40px rgba(155,111,80,0.06)',
                     padding: '12px 20px',
                     transition: 'all 300ms ease',
                 }}
@@ -70,12 +70,12 @@ export default function Navbar() {
                                 style={{
                                     padding: '6px 16px', borderRadius: '99px',
                                     fontSize: '13.5px', fontWeight: '500',
-                                    color: 'rgba(255,255,255,0.55)',
+                                    color: '#6e665d',
                                     textDecoration: 'none', transition: 'all 200ms ease',
                                     display: 'block',
                                 }}
-                                onMouseEnter={(e) => { (e.target as HTMLElement).style.color = '#fff'; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                                onMouseLeave={(e) => { (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; (e.target as HTMLElement).style.background = 'transparent'; }}>
+                                onMouseEnter={(e) => { (e.target as HTMLElement).style.color = '#111318'; (e.target as HTMLElement).style.background = 'rgba(17,19,24,0.04)'; }}
+                                onMouseLeave={(e) => { (e.target as HTMLElement).style.color = '#6e665d'; (e.target as HTMLElement).style.background = 'transparent'; }}>
                                 {l.label}
                             </a>
                         ))}
@@ -106,7 +106,7 @@ export default function Navbar() {
 
                     {/* Mobile toggle */}
                     <button className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '8px', color: '#fff', cursor: 'pointer' }}>
+                        style={{ background: 'rgba(17,19,24,0.04)', border: '1px solid rgba(17,19,24,0.10)', borderRadius: '10px', padding: '8px', color: '#111318', cursor: 'pointer' }}>
                         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
                     </button>
                 </div>
@@ -119,7 +119,7 @@ export default function Navbar() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '8px' }}>
                                 {navLinks.map((l) => (
                                     <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
-                                        style={{ padding: '10px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: '500', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', background: 'rgba(255,255,255,0.04)' }}>
+                                        style={{ padding: '10px 16px', borderRadius: '12px', fontSize: '14px', fontWeight: '500', color: '#6e665d', textDecoration: 'none', background: 'rgba(17,19,24,0.03)' }}>
                                         {l.label}
                                     </a>
                                 ))}

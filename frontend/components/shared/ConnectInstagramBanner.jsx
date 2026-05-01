@@ -11,7 +11,7 @@ export default function ConnectInstagramBanner({ role = 'influencer' }) {
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-4 rounded-2xl border border-purple-500/30 bg-purple-900/20 p-5 md:flex-row md:items-center md:justify-between"
+            className="flex flex-col gap-4 rounded-2xl border border-stone-500/10 bg-stone-900/20 p-5 md:flex-row md:items-center md:justify-between"
         >
             <div>
                 <p className="font-medium text-white">Connect your Instagram account</p>
@@ -23,7 +23,7 @@ export default function ConnectInstagramBanner({ role = 'influencer' }) {
             </div>
             <button
                 onClick={handleConnect}
-                className="shrink-0 rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-purple-500"
+                className="shrink-0 rounded-lg bg-stone-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-500"
             >
                 Connect Instagram
             </button>

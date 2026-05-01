@@ -54,7 +54,7 @@ await fetch('https://www.porchest.com/api/webhook/purchase', {
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <p className="text-xs uppercase tracking-[0.18em] text-gray-400">Your integration code</p>
-                    <button onClick={copy} className="text-xs text-purple-400 transition-colors hover:text-purple-300">
+                    <button onClick={copy} className="text-xs text-stone-400 transition-colors hover:text-stone-300">
                         {copied ? 'Copied!' : 'Copy'}
                     </button>
                 </div>

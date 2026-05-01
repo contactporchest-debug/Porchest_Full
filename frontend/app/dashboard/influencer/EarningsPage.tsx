@@ -94,7 +94,7 @@ export default function EarningsPage() {
 
     if (loading) return (
         <div style={{ textAlign: 'center', padding: '60px', color: MUTED }}>
-            <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+            <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
         </div>
     );
 
@@ -107,7 +107,7 @@ export default function EarningsPage() {
                 <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT, marginBottom: '4px' }}>Earnings Summary</h2>
                 <p style={{ fontSize: '13px', color: MUTED, marginBottom: '18px' }}>All-time earnings across your collaborations</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-                    <SummaryCard label="Total Lifetime Earnings" value={fmt(s.lifetimeTotal)} color="#a78bfa" icon={<TrendingUp size={18} />} />
+                    <SummaryCard label="Total Lifetime Earnings" value={fmt(s.lifetimeTotal)} color="#9b6f50" icon={<TrendingUp size={18} />} />
                     <SummaryCard label="Total Pending" value={fmt(s.totalPending)} color="#fbbf24" icon={<Clock size={18} />} />
                     <SummaryCard label="Total Paid" value={fmt(s.totalPaid)} color="#4ade80" icon={<CheckCircle size={18} />} />
                     <SummaryCard label="Available for Cashout" value={fmt(s.availableForCashout)} color="#60d5f8" icon={<DollarSign size={18} />} />
@@ -115,9 +115,9 @@ export default function EarningsPage() {
             </div>
 
             {/* Cashout Form */}
-            <div className="glass-card" style={{ padding: '30px', borderRadius: '28px', border: '1px solid rgba(123,63,242,0.18)' }}>
+            <div className="glass-card" style={{ padding: '30px', borderRadius: '28px', border: '1px solid rgba(155,111,80,0.18)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '11px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '11px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9b6f50' }}>
                         <ArrowDownCircle size={18} />
                     </div>
                     <div>
@@ -137,7 +137,7 @@ export default function EarningsPage() {
                         </div>
                     </div>
                     <button onClick={handleCashout} disabled={requesting || s.availableForCashout === 0}
-                        style={{ padding: '12px 28px', borderRadius: '13px', background: s.availableForCashout === 0 ? '#e2e8f0' : 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: s.availableForCashout === 0 ? MUTED : '#fff', fontSize: '14px', fontWeight: '700', cursor: (requesting || s.availableForCashout === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: s.availableForCashout === 0 ? 'none' : '0 18px 34px rgba(123,63,242,0.18)', opacity: requesting ? 0.7 : 1, whiteSpace: 'nowrap' }}>
+                        style={{ padding: '12px 28px', borderRadius: '13px', background: s.availableForCashout === 0 ? '#e2e8f0' : 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: s.availableForCashout === 0 ? MUTED : '#fff', fontSize: '14px', fontWeight: '700', cursor: (requesting || s.availableForCashout === 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: s.availableForCashout === 0 ? 'none' : '0 18px 34px rgba(155,111,80,0.18)', opacity: requesting ? 0.7 : 1, whiteSpace: 'nowrap' }}>
                         <ArrowDownCircle size={16} /> {requesting ? 'Submitting…' : 'Request Cashout'}
                     </button>
                 </div>
@@ -155,7 +155,7 @@ export default function EarningsPage() {
                 <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT, marginBottom: '16px' }}>Cashout History</h2>
                 {cashouts.length === 0 ? (
                     <div className="glass-card" style={{ padding: '48px', borderRadius: '24px', textAlign: 'center' }}>
-                        <ArrowDownCircle size={36} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 14px' }} />
+                        <ArrowDownCircle size={36} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 14px' }} />
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: TEXT, marginBottom: '4px' }}>No Cashout Requests</p>
                         <p style={{ color: MUTED, fontSize: '13px' }}>Your cashout history will appear here.</p>
                     </div>
@@ -173,7 +173,7 @@ export default function EarningsPage() {
                                     return (
                                         <motion.tr key={c._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}>
                                             <td style={{ padding: '14px', borderRadius: '14px 0 0 14px', border: `1px solid ${BORDER}`, borderRight: 'none', background: SURFACE_ALT }}>
-                                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: '#a78bfa' }}>{fmt(c.amount)}</span>
+                                                <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: '#9b6f50' }}>{fmt(c.amount)}</span>
                                             </td>
                                             <td style={{ padding: '14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none', background: SURFACE_ALT, fontSize: '13px', color: MUTED }}>
                                                 {new Date(c.createdAt).toLocaleDateString()}

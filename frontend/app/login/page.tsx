@@ -31,7 +31,7 @@ const cardStyle: React.CSSProperties = {
     borderRadius: '32px',
     background: 'rgba(255,255,255,0.88)',
     border: '1px solid rgba(148,163,184,0.20)',
-    boxShadow: '0 28px 70px rgba(15,23,42,0.10), 0 10px 28px rgba(123,63,242,0.08)',
+    boxShadow: '0 28px 70px rgba(17,19,24,0.10), 0 10px 28px rgba(155,111,80,0.08)',
     backdropFilter: 'blur(18px)',
 };
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
         <main style={shellStyle}>
             <div className="neon-grid" />
             <div className="edge-glow" />
-            <div style={{ position: 'absolute', top: '-120px', left: '-120px', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.15) 0%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', top: '-120px', left: '-120px', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.15) 0%, transparent 70%)' }} />
             <div style={{ position: 'absolute', right: '-140px', bottom: '-140px', width: '420px', height: '420px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 72%)' }} />
 
             <motion.div
@@ -228,7 +228,7 @@ export default function LoginPage() {
 
                 <p style={{ textAlign: 'center', marginTop: '22px', fontSize: '14px', color: '#6b7688' }}>
                     No account?{' '}
-                    <Link href="/signup" style={{ color: '#7B3FF2', fontWeight: 700, textDecoration: 'none' }}>
+                    <Link href="/signup" style={{ color: '#9b6f50', fontWeight: 700, textDecoration: 'none' }}>
                         Create one free
                     </Link>
                 </p>
@@ -241,7 +241,7 @@ export default function LoginPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         style={{ width: '100%', maxWidth: '360px', borderRadius: '28px', background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(148,163,184,0.20)', boxShadow: '0 28px 70px rgba(15,23,42,0.12)', padding: '30px', textAlign: 'center' }}
                     >
-                        <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', boxShadow: '0 14px 28px rgba(123,63,242,0.24)' }}>
+                        <div style={{ width: '52px', height: '52px', borderRadius: '16px', background: 'linear-gradient(135deg, #111318, #9b6f50)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px', boxShadow: '0 14px 28px rgba(155,111,80,0.18)' }}>
                             <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', animation: 'spin 0.8s linear infinite' }} />
                         </div>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '22px', color: '#172033', letterSpacing: '-0.03em', marginBottom: '8px' }}>Signing You In</p>
@@ -261,7 +261,7 @@ export default function LoginPage() {
                         style={{ width: '100%', maxWidth: '560px', borderRadius: '30px', background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(148,163,184,0.20)', boxShadow: '0 28px 70px rgba(15,23,42,0.12)', padding: '34px' }}
                     >
                         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(123,63,242,0.08)', color: '#7B3FF2', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '14px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(155,111,80,0.08)', color: '#9b6f50', fontSize: '12px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '14px' }}>
                                 New Google Account
                             </div>
                             <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '28px', color: '#172033', letterSpacing: '-0.04em', marginBottom: '8px' }}>
@@ -279,14 +279,14 @@ export default function LoginPage() {
                                 disabled={!!roleSubmitting}
                                 style={{ textAlign: 'left', padding: '22px', borderRadius: '22px', background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', border: '1px solid rgba(148,163,184,0.24)', cursor: roleSubmitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                             >
-                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(123,63,242,0.10)', color: '#7B3FF2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(155,111,80,0.10)', color: '#9b6f50', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                                     <Building2 size={20} />
                                 </div>
                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '18px', color: '#172033', marginBottom: '6px' }}>Brand</p>
                                 <p style={{ fontSize: '13px', color: '#667085', lineHeight: 1.6, marginBottom: '14px' }}>
                                     Find influencers, send collaboration requests, and manage campaigns.
                                 </p>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#7B3FF2', fontSize: '13px', fontWeight: 700 }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#9b6f50', fontSize: '13px', fontWeight: 700 }}>
                                     Continue as Brand <ArrowRight size={14} />
                                 </span>
                             </button>

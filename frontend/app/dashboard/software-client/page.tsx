@@ -119,7 +119,7 @@ export default function SoftwareClientDashboardPage() {
                     {/* Stats Grid */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
                         <StatCard label="Overall Completion" value={`${data.overview.completionPercent}%`} color="#2563eb" icon={<Activity size={18} />} progress={data.overview.completionPercent} sub="For active project phase" />
-                        <StatCard label="Total Projects" value={data.totals.totalProjects} color="#7B3FF2" icon={<LayoutDashboard size={18} />} />
+                        <StatCard label="Total Projects" value={data.totals.totalProjects} color="#9b6f50" icon={<LayoutDashboard size={18} />} />
                         <StatCard label="Completed Milestones" value={data.totals.completedMilestones} color="#4ade80" icon={<Briefcase size={18} />} sub={`${data.totals.remainingMilestones} remaining`} />
                         <StatCard label="Current Phase" value={data.overview.currentPhase} color="#f59e0b" icon={<Activity size={18} />} />
                     </div>

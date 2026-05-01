@@ -19,9 +19,9 @@ const COUNTRIES = [
 
 const SectionCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: 'rgba(14,12,26,0.75)', border: '1px solid rgba(123,63,242,0.15)', borderRadius: '28px', padding: '28px', marginBottom: '20px' }}>
+        style={{ background: 'rgba(14,12,26,0.75)', border: '1px solid rgba(155,111,80,0.15)', borderRadius: '28px', padding: '28px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(123,63,242,0.12)', border: '1px solid rgba(123,63,242,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9b6f50' }}>
                 {icon}
             </div>
             <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#fff' }}>{title}</h3>
@@ -263,7 +263,7 @@ export default function MyProfilePage() {
 
             {/* Save Button */}
             <button onClick={handleSave} disabled={saving}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '15px', borderRadius: '16px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 0 32px rgba(123,63,242,0.4)', transition: 'all 200ms ease', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '15px', borderRadius: '16px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: '0 0 32px rgba(155,111,80,0.4)', transition: 'all 200ms ease', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
                 {saving ? <Loader2 size={17} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={17} />}
                 {saving ? 'Saving…' : 'Save Profile'}
             </button>

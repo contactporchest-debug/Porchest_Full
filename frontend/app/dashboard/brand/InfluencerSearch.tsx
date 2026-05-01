@@ -14,8 +14,8 @@ const ENGAGEMENT_RANGES = ['Any', '> 1%', '> 3%', '> 5%', '> 10%'];
 const COST_RANGES = ['Any', '< $50', '< $100', '< $500', '< $1000'];
 
 const NICHE_COLORS: Record<string, string> = {
-    Fashion: '#A855F7', Fitness: '#4ade80', Tech: '#60d5f8', Food: '#fb923c',
-    Travel: '#facc15', Beauty: '#f472b6', Gaming: '#7B3FF2', Lifestyle: '#e879f9',
+    Fashion: '#d7b48f', Fitness: '#4ade80', Tech: '#60d5f8', Food: '#fb923c',
+    Travel: '#facc15', Beauty: '#f472b6', Gaming: '#9b6f50', Lifestyle: '#e879f9',
     Education: '#38bdf8', Entertainment: '#f97316', Finance: '#34d399', Business: '#818cf8',
 };
 
@@ -134,11 +134,11 @@ export default function InfluencerSearch() {
     const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
         <button onClick={onClick} style={{
             padding: '6px 14px', borderRadius: '99px',
-            border: `1px solid ${active ? 'rgba(123,63,242,0.6)' : 'rgba(255,255,255,0.08)'}`,
-            background: active ? 'rgba(123,63,242,0.18)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${active ? 'rgba(155,111,80,0.6)' : 'rgba(255,255,255,0.08)'}`,
+            background: active ? 'rgba(155,111,80,0.18)' : 'rgba(255,255,255,0.03)',
             color: active ? '#c084fc' : 'rgba(255,255,255,0.4)',
             fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 180ms ease',
-            boxShadow: active ? '0 0 16px rgba(123,63,242,0.25)' : 'none',
+            boxShadow: active ? '0 0 16px rgba(155,111,80,0.25)' : 'none',
             whiteSpace: 'nowrap'
         }}>{label}</button>
     );
@@ -233,7 +233,7 @@ export default function InfluencerSearch() {
             {/* Loading */}
             {(authLoading || !hasAttemptedInitialLoad || loading) && (
                 <div style={{ textAlign: 'center', padding: '80px', color: 'rgba(255,255,255,0.3)' }}>
-                    <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+                    <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
                     <p style={{ fontSize: '14px' }}>Finding matching profiles…</p>
                 </div>
             )}
@@ -241,7 +241,7 @@ export default function InfluencerSearch() {
             {/* Empty state */}
             {!authLoading && hasAttemptedInitialLoad && !loading && filtered.length === 0 && (
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                    <UserX size={44} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
+                    <UserX size={44} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '8px' }}>
                         No Matches Found
                     </p>
@@ -257,7 +257,7 @@ export default function InfluencerSearch() {
                     <AnimatePresence>
                         {filtered.map((inf: any, i: number) => {
                             // All fields are flat on the card object (built by brandController.buildInfluencerCard)
-                            const nc = NICHE_COLORS[inf.niche || ''] || '#a78bfa';
+                            const nc = NICHE_COLORS[inf.niche || ''] || '#9b6f50';
 
                             // DP priority: profilePictureUrl (API) > profileImageURL (flat) > instagramDPURL > fallback to initials
                             const dp       = inf.profilePictureUrl || inf.profileImageURL || inf.instagramDPURL || null;
@@ -304,7 +304,7 @@ export default function InfluencerSearch() {
                                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', marginBottom: '16px' }}>
                                             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                                                 {/* DP */}
-                                                <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #7B3FF2, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
+                                                <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #9b6f50, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
                                                     {(dp && !brokenImages.has(inf._id)) ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, inf._id]))} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
@@ -360,7 +360,7 @@ export default function InfluencerSearch() {
                                         {/* Demographics Row — only shown when data exists */}
                                         {(topCountry || genderSplit) && (
                                             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a78bfa" /> {topCountry}</div>}
+                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#9b6f50" /> {topCountry}</div>}
                                                 {topCountry && genderSplit && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
                                                 {genderSplit && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={11} color="#f472b6" /> {genderSplit}</div>}
                                                 {topAge && <><div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div><div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} yrs</div></>}
@@ -369,13 +369,13 @@ export default function InfluencerSearch() {
 
                                         {/* Rates */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
+                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Image size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Post</span>
                                                 </div>
                                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgPostCostUSD > 0 ? `$${inf.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(123,63,242,0.06)', border: '1px solid rgba(123,63,242,0.15)' }}>
+                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Film size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Reel</span>
                                                 </div>
@@ -393,9 +393,9 @@ export default function InfluencerSearch() {
                                             View Profile
                                         </button>
                                         <button onClick={() => handleRequestCollaboration(inf)}
-                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 16px rgba(123,63,242,0.2)' }}
-                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(123,63,242,0.3)'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(123,63,242,0.2)'; }}>
+                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 16px rgba(155,111,80,0.2)' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(155,111,80,0.3)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(155,111,80,0.2)'; }}>
                                             <Send size={13} /> Request
                                         </button>
                                     </div>

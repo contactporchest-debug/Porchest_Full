@@ -16,8 +16,8 @@ const STATUS_BADGE = {
     countered:        { bg: 'bg-amber-50 border-amber-200',    color: 'text-amber-700',     label: 'Countered' },
     accepted:         { bg: 'bg-green-50 border-green-200',    color: 'text-green-700',     label: 'Accepted' },
     active:           { bg: 'bg-green-50 border-green-200',    color: 'text-green-700',     label: 'Active' },
-    content_submitted:{ bg: 'bg-purple-50 border-purple-200',  color: 'text-purple-700',    label: 'Content submitted' },
-    content_approved: { bg: 'bg-purple-50 border-purple-200',  color: 'text-purple-700',    label: 'Content approved' },
+    content_submitted:{ bg: 'bg-stone-50 border-stone-200',  color: 'text-stone-800',    label: 'Content submitted' },
+    content_approved: { bg: 'bg-stone-50 border-stone-200',  color: 'text-stone-800',    label: 'Content approved' },
     posted:           { bg: 'bg-amber-50 border-amber-200',    color: 'text-amber-700',     label: 'Posted' },
     completed:        { bg: 'bg-green-50 border-green-200',    color: 'text-green-700',     label: 'Completed' },
     declined:         { bg: 'bg-red-50 border-red-200',        color: 'text-red-700',       label: 'Declined' },
@@ -59,7 +59,7 @@ export default function CollaborationsFlow() {
                         key={tab.key}
                         onClick={() => setActiveTab(i)}
                         className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                            activeTab === i ? 'bg-[#7B3FF2] text-white shadow-md shadow-purple-500/20' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                            activeTab === i ? 'bg-[#9b6f50] text-white shadow-md shadow-stone-500/10' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                         }`}
                     >
                         {tab.label}
@@ -87,7 +87,7 @@ export default function CollaborationsFlow() {
                                     className="w-14 h-14 rounded-[14px] object-cover border border-slate-100 shadow-sm flex-shrink-0"
                                 />
                             ) : (
-                                <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0">
+                                <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-stone-500 to-stone-700 flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0">
                                     {(c.influencerUsername || c.influencerProfile?.igUsername || 'C')[0].toUpperCase()}
                                 </div>
                             )}
@@ -107,7 +107,7 @@ export default function CollaborationsFlow() {
                             </div>
                         </div>
                         <div className="text-right space-y-2 pt-1">
-                            <p className="text-2xl font-bold text-[#7B3FF2] leading-none">
+                            <p className="text-2xl font-bold text-[#9b6f50] leading-none">
                                 ${Number(c.pricing?.agreedFee || c.pricing?.brandOffer || 0).toLocaleString()}
                             </p>
                             <StatusBadge status={c.status} />
@@ -224,12 +224,12 @@ export default function CollaborationsFlow() {
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs font-bold text-slate-500 w-12 flex-shrink-0">Link</span>
-                                    <p className="text-sm text-purple-600 font-mono font-medium truncate flex-1 bg-white px-3 py-1.5 rounded-lg border border-slate-100">{c.brief.trackingLink}</p>
+                                    <p className="text-sm text-stone-700 font-mono font-medium truncate flex-1 bg-white px-3 py-1.5 rounded-lg border border-slate-100">{c.brief.trackingLink}</p>
                                 </div>
                                 {c.brief?.promoCode && (
                                     <div className="flex items-center gap-3">
                                         <span className="text-xs font-bold text-slate-500 w-12 flex-shrink-0">Code</span>
-                                        <p className="text-sm text-purple-600 font-mono font-bold bg-white px-3 py-1.5 rounded-lg border border-slate-100 inline-block">{c.brief.promoCode}</p>
+                                        <p className="text-sm text-stone-700 font-mono font-bold bg-white px-3 py-1.5 rounded-lg border border-slate-100 inline-block">{c.brief.promoCode}</p>
                                     </div>
                                 )}
                             </div>

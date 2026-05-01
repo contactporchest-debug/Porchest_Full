@@ -30,13 +30,13 @@ export default function CampaignsSection() {
 
     if (loading) return (
         <div style={{ textAlign: 'center', padding: '60px', color: MUTED }}>
-            <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#7B3FF2' }} />
+            <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
         </div>
     );
 
     if (requests.length === 0) return (
         <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-            <FileText size={44} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 16px' }} />
+            <FileText size={44} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 16px' }} />
             <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '6px' }}>No Campaign Requests Yet</p>
             <p style={{ color: MUTED, fontSize: '13px' }}>Go to "Discover" to find influencers and send your first request.</p>
         </div>
@@ -65,14 +65,14 @@ export default function CampaignsSection() {
                             {/* Summary row */}
                             <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}
                                 onClick={() => setExpanded(isOpen ? null : r._id)}>
-                                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(135deg,#7B3FF2,#A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '15px', color: '#fff', boxShadow: '0 0 16px rgba(123,63,242,0.4)', flexShrink: 0 }}>{initials}</div>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '15px', color: '#fff', boxShadow: '0 0 16px rgba(155,111,80,0.4)', flexShrink: 0 }}>{initials}</div>
                                 <div style={{ flex: 1, minWidth: '140px' }}>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '2px' }}>{r.campaignTitle}</p>
                                     <p style={{ fontSize: '12px', color: MUTED }}>{inf?.fullName || 'Unknown'} · {inf?.niche || '—'}</p>
                                 </div>
-                                <div style={{ textAlign: 'center', padding: '8px 14px', borderRadius: '12px', background: 'rgba(123,63,242,0.08)', border: '1px solid rgba(123,63,242,0.18)' }}>
+                                <div style={{ textAlign: 'center', padding: '8px 14px', borderRadius: '12px', background: 'rgba(155,111,80,0.08)', border: '1px solid rgba(155,111,80,0.18)' }}>
                                     <p style={{ fontSize: '10px', color: MUTED, marginBottom: '1px' }}>Agreed Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#a78bfa' }}>${r.agreedPrice?.toLocaleString()}</p>
+                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#9b6f50' }}>${r.agreedPrice?.toLocaleString()}</p>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
                                     <Calendar size={12} style={{ color: '#60d5f8' }} />

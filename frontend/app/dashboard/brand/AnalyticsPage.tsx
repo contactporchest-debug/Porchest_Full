@@ -105,8 +105,8 @@ type AnalyticsDetail = {
 };
 
 const COLORS = {
-    purple: '#7B3FF2',
-    violet: '#A855F7',
+    purple: '#9b6f50',
+    violet: '#d7b48f',
     blue: '#60d5f8',
     teal: '#14b8a6',
     green: '#4ade80',
@@ -117,11 +117,11 @@ const COLORS = {
     muted: '#667085',
 };
 
-const PIE_COLORS = ['#7B3FF2', '#60d5f8', '#4ade80', '#fbbf24', '#fb7185', '#94a3b8'];
+const PIE_COLORS = ['#9b6f50', '#60d5f8', '#4ade80', '#fbbf24', '#fb7185', '#94a3b8'];
 
 const tooltipStyle = {
     background: 'rgba(255,255,255,0.98)',
-    border: '1px solid rgba(123,63,242,0.18)',
+    border: '1px solid rgba(155,111,80,0.18)',
     borderRadius: '12px',
     fontSize: '12px',
     color: '#172033',
@@ -198,7 +198,7 @@ const MetricCard = ({ label, value, tone, formula }: { label: string; value: str
 
 const EmptyState = ({ title, copy }: { title: string; copy: string }) => (
     <div style={{ padding: '48px 24px', borderRadius: '22px', textAlign: 'center', background: 'rgba(255,255,255,0.7)', border: '1px dashed rgba(148,163,184,0.26)' }}>
-        <BarChart3 size={38} style={{ color: 'rgba(123,63,242,0.3)', margin: '0 auto 14px' }} />
+        <BarChart3 size={38} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 14px' }} />
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 17, color: COLORS.ink, marginBottom: 6 }}>{title}</p>
         <p style={{ fontSize: 13, color: COLORS.muted, maxWidth: 420, margin: '0 auto' }}>{copy}</p>
     </div>
@@ -372,7 +372,7 @@ export default function AnalyticsPage() {
                         gap: 8,
                         padding: '10px 16px',
                         borderRadius: 12,
-                        border: '1px solid rgba(123,63,242,0.18)',
+                        border: '1px solid rgba(155,111,80,0.18)',
                         background: 'rgba(255,255,255,0.9)',
                         color: COLORS.purple,
                         fontSize: 12,
@@ -429,8 +429,8 @@ export default function AnalyticsPage() {
                                             textAlign: 'left',
                                             padding: '14px 16px',
                                             borderRadius: 16,
-                                            border: active ? '1px solid rgba(123,63,242,0.28)' : '1px solid rgba(148,163,184,0.14)',
-                                            background: active ? 'rgba(123,63,242,0.08)' : 'rgba(255,255,255,0.84)',
+                                            border: active ? '1px solid rgba(155,111,80,0.28)' : '1px solid rgba(148,163,184,0.14)',
+                                            background: active ? 'rgba(155,111,80,0.08)' : 'rgba(255,255,255,0.84)',
                                             cursor: 'pointer',
                                             fontFamily: 'inherit',
                                         }}

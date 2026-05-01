@@ -9,7 +9,7 @@ const roleCards = [
     {
         icon: <Building2 size={30} />,
         role: 'Brand',
-        color: '#7B3FF2',
+        color: '#9b6f50',
         href: '/signup/brand',
         tagline: 'Scale with clarity',
         desc: 'Create campaigns, match with creators, and manage every collaboration from one place.',
@@ -18,7 +18,7 @@ const roleCards = [
     {
         icon: <Star size={30} />,
         role: 'Influencer',
-        color: '#0ea5e9',
+        color: '#56717b',
         href: '/signup/influencer',
         tagline: 'Monetize with confidence',
         desc: 'Receive brand requests, showcase your profile, and keep your collaborations organized.',
@@ -31,8 +31,8 @@ export default function SignupPage() {
         <main style={{ minHeight: '100vh', padding: '48px 20px 64px', background: 'linear-gradient(180deg, #fcfaf4 0%, #f4efe4 100%)', position: 'relative', overflow: 'hidden' }}>
             <div className="neon-grid" />
             <div className="edge-glow" />
-            <div style={{ position: 'absolute', top: '-140px', right: '-120px', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,63,242,0.12) 0%, transparent 72%)' }} />
-            <div style={{ position: 'absolute', bottom: '-160px', left: '-100px', width: '380px', height: '380px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.10) 0%, transparent 72%)' }} />
+            <div style={{ position: 'absolute', top: '-140px', right: '-120px', width: '360px', height: '360px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.12) 0%, transparent 72%)' }} />
+            <div style={{ position: 'absolute', bottom: '-160px', left: '-100px', width: '380px', height: '380px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(86,113,123,0.10) 0%, transparent 72%)' }} />
 
             <div style={{ width: '100%', maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
                 <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '38px' }}>
@@ -110,7 +110,7 @@ export default function SignupPage() {
 
                 <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '14px', color: '#667085' }}>
                     Already have an account?{' '}
-                    <Link href="/login" style={{ color: '#7B3FF2', fontWeight: 700, textDecoration: 'none' }}>
+                    <Link href="/login" style={{ color: '#9b6f50', fontWeight: 700, textDecoration: 'none' }}>
                         Sign in
                     </Link>
                 </p>

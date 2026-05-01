@@ -111,7 +111,7 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
                                     value={digit}
                                     onChange={(e) => handleChange(e.target.value, idx)}
                                     onKeyDown={(e) => handleKeyDown(e, idx)}
-                                    className="w-12 h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold focus:border-purple-500 focus:outline-none transition-all"
+                                    className="w-12 h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold focus:border-stone-500 focus:outline-none transition-all"
                                     maxLength={1}
                                     autoFocus={idx === 0}
                                 />
@@ -129,7 +129,7 @@ export default function OTPVerify({ email, onSuccess }: OTPVerifyProps) {
                                     type="button"
                                     onClick={handleResend}
                                     disabled={timer > 0 || resending}
-                                    className={`font-medium transition-colors ${timer > 0 ? 'text-white/20 cursor-not-allowed' : 'text-purple-400 hover:text-purple-300'}`}
+                                    className={`font-medium transition-colors ${timer > 0 ? 'text-white/20 cursor-not-allowed' : 'text-stone-400 hover:text-stone-300'}`}
                                 >
                                     {resending ? 'Sending…' : timer > 0 ? `Resend in ${timer}s` : 'Resend Code'}
                                 </button>

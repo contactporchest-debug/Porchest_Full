@@ -64,7 +64,7 @@ export default function ProfileForm() {
         setTimeout(() => setSaved(false), 1800);
     }
 
-    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/50';
+    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-stone-500/10';
 
     return (
         <div className="space-y-6">
@@ -85,7 +85,7 @@ export default function ProfileForm() {
                     {NICHES.map((n) => {
                         const value = n.toLowerCase();
                         return (
-                            <button key={n} type="button" onClick={() => toggleArray('niche', value)} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.niche.includes(value) ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-purple-500/50'}`}>
+                            <button key={n} type="button" onClick={() => toggleArray('niche', value)} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.niche.includes(value) ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-stone-500/10'}`}>
                                 {n}
                             </button>
                         );
@@ -129,7 +129,7 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition-all disabled:opacity-40">
+            <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-xl bg-stone-700 hover:bg-stone-500 text-white font-medium text-sm transition-all disabled:opacity-40">
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save profile'}
             </button>
         </div>

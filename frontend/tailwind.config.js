@@ -9,15 +9,15 @@ module.exports = {
         extend: {
             colors: {
                 purple: {
-                    primary: '#7B3FF2',
-                    accent: '#A855F7',
-                    dim: 'rgba(123,63,242,0.12)',
-                    glow: 'rgba(123,63,242,0.35)',
+                    primary: '#9b6f50',
+                    accent: '#d7b48f',
+                    dim: 'rgba(155,111,80,0.12)',
+                    glow: 'rgba(155,111,80,0.35)',
                 },
                 bg: {
-                    base: '#050505',
-                    elevated: '#0B0B0F',
-                    card: 'rgba(20,20,30,0.65)',
+                    base: '#f3ede3',
+                    elevated: '#fbf7f0',
+                    card: 'rgba(255,251,244,0.88)',
                 },
             },
             fontFamily: {
@@ -32,13 +32,13 @@ module.exports = {
             },
             backdropBlur: { 'card': '25px', },
             boxShadow: {
-                'card': '0 0 60px rgba(123,63,242,0.12), 0 0 120px rgba(123,63,242,0.06)',
-                'card-hover': '0 0 80px rgba(123,63,242,0.2), 0 0 160px rgba(123,63,242,0.08)',
-                'btn': '0 0 30px rgba(123,63,242,0.5), 0 0 80px rgba(123,63,242,0.2)',
-                'btn-hover': '0 0 40px rgba(168,85,247,0.65), 0 0 100px rgba(123,63,242,0.3)',
-                'glow-sm': '0 0 20px rgba(123,63,242,0.3)',
-                'glow-md': '0 0 40px rgba(123,63,242,0.35)',
-                'glow-lg': '0 0 80px rgba(123,63,242,0.4)',
+                'card': '0 0 60px rgba(155,111,80,0.12), 0 0 120px rgba(155,111,80,0.06)',
+                'card-hover': '0 0 80px rgba(155,111,80,0.2), 0 0 160px rgba(155,111,80,0.08)',
+                'btn': '0 0 30px rgba(155,111,80,0.5), 0 0 80px rgba(155,111,80,0.2)',
+                'btn-hover': '0 0 40px rgba(155,111,80,0.28), 0 0 100px rgba(155,111,80,0.12)',
+                'glow-sm': '0 0 20px rgba(155,111,80,0.3)',
+                'glow-md': '0 0 40px rgba(155,111,80,0.35)',
+                'glow-lg': '0 0 80px rgba(155,111,80,0.4)',
             },
             animation: {
                 'float-a': 'float-a 5s ease-in-out infinite',

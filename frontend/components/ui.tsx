@@ -22,10 +22,10 @@ export function StatCard({ title, value, icon, change, positive = true, delay = 
             className="stat-card"
         >
             <div className="flex items-start justify-between mb-4">
-                <p style={{ fontSize: '12px', color: '#6b7688', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>{title}</p>
+                <p style={{ fontSize: '12px', color: '#7a7168', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>{title}</p>
                 <div className="icon-glow" style={{ width: '38px', height: '38px', fontSize: '18px', flexShrink: 0 }}>{icon}</div>
             </div>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '30px', color: '#172033', letterSpacing: '-0.03em', lineHeight: '1' }}>{value}</p>
+            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '30px', color: '#111318', letterSpacing: '-0.03em', lineHeight: '1' }}>{value}</p>
             {change && (
                 <p style={{ fontSize: '12px', marginTop: '8px', color: positive ? '#4ade80' : '#f87171', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span>{positive ? '↑' : '↓'}</span> {change}
@@ -102,14 +102,14 @@ export function GlowButton({
 // ── LoadingSpinner ───────────────────────────────── //
 export function LoadingSpinner({ text = 'Loading...' }: { text?: string }) {
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f4ec' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, #f5efe6 0%, #efe6d8 100%)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
                 <div style={{ position: 'relative', width: '60px', height: '60px' }}>
                     <div className="ring-pulse" />
                     <div className="ring-pulse ring-pulse-2" />
                     <div className="spinner" style={{ position: 'absolute', inset: '12px' }} />
                 </div>
-                <p style={{ color: '#6b7688', fontSize: '14px', fontFamily: 'Space Grotesk' }}>{text}</p>
+                <p style={{ color: '#6e665d', fontSize: '14px', fontFamily: 'Space Grotesk' }}>{text}</p>
             </div>
         </div>
     );

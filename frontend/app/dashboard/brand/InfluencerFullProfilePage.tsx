@@ -240,8 +240,8 @@ const COLORS = {
     slate: '#94a3b8',
     panel: 'rgba(255,255,255,0.9)',
     border: 'rgba(148,163,184,0.18)',
-    purple: '#7B3FF2',
-    violet: '#A855F7',
+    purple: '#9b6f50',
+    violet: '#d7b48f',
     blue: '#4f8dfd',
     sky: '#60d5f8',
     teal: '#14b8a6',
@@ -250,11 +250,11 @@ const COLORS = {
     rose: '#fb7185',
 };
 
-const PIE_COLORS = ['#7B3FF2', '#4f8dfd', '#14b8a6', '#22c55e', '#f59e0b', '#fb7185', '#94a3b8'];
+const PIE_COLORS = ['#9b6f50', '#4f8dfd', '#14b8a6', '#22c55e', '#f59e0b', '#fb7185', '#94a3b8'];
 
 const tooltipStyle = {
     background: 'rgba(255,255,255,0.98)',
-    border: '1px solid rgba(123,63,242,0.16)',
+    border: '1px solid rgba(155,111,80,0.16)',
     borderRadius: '14px',
     color: COLORS.ink,
     fontSize: '12px',
@@ -589,7 +589,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                         <div style={{ flex: 1, minWidth: 260 }}>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
                                 <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{profile?.platform || 'Instagram'}</span>
-                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(167,139,250,0.22)', fontSize: 12, fontWeight: 800 }}>{profile.niche}</span>}
+                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(155,111,80,0.22)', fontSize: 12, fontWeight: 800 }}>{profile.niche}</span>}
                                 {analyticsMetrics?.ratingTier && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', fontSize: 12, fontWeight: 800 }}>{analyticsMetrics.ratingTier}</span>}
                             </div>
                             <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 34, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: 10 }}>{displayName}</h1>
@@ -906,7 +906,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                         {recentMedia.slice().reverse().slice(0, 6).map((item) => (
                             <div key={item.id} style={{ padding: 16, borderRadius: 22, background: 'rgba(248,250,252,0.95)', border: `1px solid ${COLORS.border}` }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                                    <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(123,63,242,0.08)', color: COLORS.purple, fontSize: 11, fontWeight: 800 }}>{item.mediaType}</span>
+                                    <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(155,111,80,0.08)', color: COLORS.purple, fontSize: 11, fontWeight: 800 }}>{item.mediaType}</span>
                                     <span style={{ fontSize: 11, color: COLORS.muted }}>{item.label}</span>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>

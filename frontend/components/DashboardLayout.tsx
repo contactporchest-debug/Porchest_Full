@@ -51,15 +51,15 @@ const roleNav: Record<string, typeof adminNav> = {
     'software-client': softwareClientNav,
 };
 const rolePillColor: Record<string, string> = {
-    admin: '#ff8c42',
-    'admin-marketing': '#ff8c42',
-    'admin-software': '#ff8c42',
-    'employee-marketing': '#ff8c42',
-    'employee-software': '#ff8c42',
-    owner: '#ff8c42',
-    brand: '#7B3FF2',
-    influencer: '#A855F7',
-    'software-client': '#2563eb',
+    admin: '#9b6f50',
+    'admin-marketing': '#9b6f50',
+    'admin-software': '#9b6f50',
+    'employee-marketing': '#9b6f50',
+    'employee-software': '#9b6f50',
+    owner: '#9b6f50',
+    brand: '#7a5f4b',
+    influencer: '#56717b',
+    'software-client': '#6f7f5d',
 };
 const roleIcons: Record<string, React.ReactNode> = {
     admin: <Shield size={12} />,
@@ -118,7 +118,7 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
         collaboration_request: '#60d5f8',
         request_accepted: '#4ade80',
         request_rejected: '#f87171',
-        request_viewed: '#a78bfa',
+        request_viewed: '#9b6f50',
         negotiation: '#fbbf24',
         counter_offer: '#fbbf24',
         deal_closed: '#4ade80',
@@ -129,17 +129,17 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
             transition={{ duration: 0.2 }}
             style={{
                 position: 'absolute', top: '48px', right: '0', width: '380px', maxHeight: '480px',
-                background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(123,63,242,0.16)',
-                borderRadius: '20px', backdropFilter: 'blur(30px)', boxShadow: '0 24px 60px rgba(15,23,42,0.12), 0 12px 24px rgba(123,63,242,0.08)',
+                background: 'rgba(255,251,244,0.96)', border: '1px solid rgba(17,19,24,0.10)',
+                borderRadius: '20px', backdropFilter: 'blur(30px)', boxShadow: '0 24px 60px rgba(17,19,24,0.12), 0 12px 24px rgba(155,111,80,0.08)',
                 overflow: 'hidden', zIndex: 100,
             }}>
             {/* Header */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(148,163,184,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Bell size={14} style={{ color: '#a78bfa' }} />
+                    <Bell size={14} style={{ color: '#9b6f50' }} />
                     <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#172033' }}>Notifications</span>
                     {unreadCount > 0 && (
-                        <span style={{ padding: '2px 8px', borderRadius: '99px', background: 'rgba(123,63,242,0.2)', border: '1px solid rgba(123,63,242,0.3)', fontSize: '10px', color: '#a78bfa', fontWeight: '700' }}>
+                        <span style={{ padding: '2px 8px', borderRadius: '99px', background: 'rgba(155,111,80,0.14)', border: '1px solid rgba(155,111,80,0.24)', fontSize: '10px', color: '#9b6f50', fontWeight: '700' }}>
                             {unreadCount} new
                         </span>
                     )}
@@ -155,7 +155,7 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
             <div style={{ overflowY: 'auto', maxHeight: '380px' }}>
                 {notifications.length === 0 ? (
                     <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                        <Mail size={32} style={{ color: 'rgba(123,63,242,0.2)', margin: '0 auto 12px' }} />
+                        <Mail size={32} style={{ color: 'rgba(155,111,80,0.2)', margin: '0 auto 12px' }} />
                         <p style={{ fontSize: '13px', color: '#7a8798' }}>No notifications yet</p>
                     </div>
                 ) : (
@@ -171,13 +171,13 @@ function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAl
                             style={{
                                 padding: '14px 20px', cursor: 'pointer', transition: 'all 150ms ease',
                                 borderBottom: '1px solid rgba(148,163,184,0.12)',
-                                background: n.isRead ? 'transparent' : 'rgba(123,63,242,0.05)',
+                                background: n.isRead ? 'transparent' : 'rgba(155,111,80,0.05)',
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(123,63,242,0.10)')}
-                            onMouseLeave={e => (e.currentTarget.style.background = n.isRead ? 'transparent' : 'rgba(123,63,242,0.05)')}>
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(155,111,80,0.10)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = n.isRead ? 'transparent' : 'rgba(155,111,80,0.05)')}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                                 {/* Unread dot */}
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: n.isRead ? 'transparent' : '#7B3FF2', marginTop: '5px', flexShrink: 0, boxShadow: n.isRead ? 'none' : '0 0 8px rgba(123,63,242,0.5)' }} />
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: n.isRead ? 'transparent' : '#9b6f50', marginTop: '5px', flexShrink: 0, boxShadow: n.isRead ? 'none' : '0 0 8px rgba(155,111,80,0.5)' }} />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
                                         <span style={{ fontSize: '13px', fontWeight: '700', color: n.isRead ? '#5f6b7d' : '#172033' }}>{n.title}</span>
@@ -284,7 +284,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {collapsed ? (
                         <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', textDecoration: 'none' }}>
                             <div style={{ position: 'relative', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <div style={{ position: 'absolute', inset: '4px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.32) 0%, rgba(168,85,247,0.16) 42%, rgba(168,85,247,0.02) 72%, transparent 100%)', filter: 'blur(8px)', transform: 'scale(1.2)' }} />
+                                <div style={{ position: 'absolute', inset: '4px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.32) 0%, rgba(155,111,80,0.16) 42%, rgba(155,111,80,0.02) 72%, transparent 100%)', filter: 'blur(8px)', transform: 'scale(1.2)' }} />
                                 <Image
                                     src="/porchest-mark-no-bg.png"
                                     alt="Porchest"
@@ -298,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     ) : (
                         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '14px', textDecoration: 'none', width: '100%' }}>
                             <div style={{ position: 'relative', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <div style={{ position: 'absolute', inset: '3px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(168,85,247,0.36) 0%, rgba(168,85,247,0.18) 44%, rgba(168,85,247,0.04) 72%, transparent 100%)', filter: 'blur(10px)', transform: 'scale(1.24)' }} />
+                                <div style={{ position: 'absolute', inset: '3px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(155,111,80,0.36) 0%, rgba(155,111,80,0.18) 44%, rgba(155,111,80,0.04) 72%, transparent 100%)', filter: 'blur(10px)', transform: 'scale(1.24)' }} />
                                 <Image
                                     src="/porchest-mark-no-bg.png"
                                     alt="Porchest"
@@ -337,7 +337,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 className={`sidebar-link ${isActive ? 'active' : ''}`}
                                 title={collapsed ? item.label : undefined}
                                 style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '13px 0' : '14px 16px', position: 'relative' }}>
-                                <span style={{ flexShrink: 0, color: isActive ? '#7B3FF2' : '#738196' }}>{item.icon}</span>
+                                <span style={{ flexShrink: 0, color: isActive ? '#9b6f50' : '#738196' }}>{item.icon}</span>
                                  {!collapsed && <span style={{ whiteSpace: 'nowrap', fontSize: '14px', fontWeight: isActive ? 700 : 500 }}>{item.label}</span>}
                                 {/* Show unread count on primary action items */}
                                 {item.label === 'Collaborations' && unreadCount > 0 && (
@@ -347,10 +347,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         right: collapsed ? '4px' : 'auto',
                                         marginLeft: collapsed ? 0 : 'auto',
                                         minWidth: '18px', height: '18px', borderRadius: '99px',
-                                        background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
+                                        background: 'linear-gradient(135deg, #111318, #9b6f50)',
                                         fontSize: '10px', fontWeight: '800', color: '#fff',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        padding: '0 5px', boxShadow: '0 0 10px rgba(123,63,242,0.4)',
+                                        padding: '0 5px', boxShadow: '0 0 10px rgba(155,111,80,0.4)',
                                     }}>
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
@@ -362,10 +362,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </nav>
 
                 {/* User + logout */}
-                <div style={{ padding: collapsed ? '8px' : '12px 10px 10px', borderTop: '1px solid rgba(148,163,184,0.16)', flexShrink: 0 }}>
+                <div style={{ padding: collapsed ? '8px' : '12px 10px 10px', borderTop: '1px solid rgba(17,19,24,0.10)', flexShrink: 0 }}>
                     {!collapsed && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px 12px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #111318, #9b6f50)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: '700', flexShrink: 0 }}>
                                 {displayName.charAt(0).toUpperCase()}
                             </div>
                             <div style={{ overflow: 'hidden' }}>
@@ -383,7 +383,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 {/* Collapse toggle */}
                 <button onClick={() => setCollapsed(!collapsed)}
-                    style={{ position: 'absolute', top: '20px', right: '-12px', width: '24px', height: '24px', borderRadius: '50%', background: '#fffdf8', border: '1px solid rgba(123,63,242,0.24)', color: '#5f6b7d', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 8px 18px rgba(123,63,242,0.14)' }}>
+                    style={{ position: 'absolute', top: '20px', right: '-12px', width: '24px', height: '24px', borderRadius: '50%', background: '#fffaf3', border: '1px solid rgba(155,111,80,0.24)', color: '#5f5b55', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 8px 18px rgba(155,111,80,0.14)' }}>
                     {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
                 </button>
             </motion.aside>
@@ -394,8 +394,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <header style={{
                     height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '0 28px', position: 'sticky', top: 0, zIndex: 30,
-                    background: 'rgba(247,244,236,0.86)', backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(148,163,184,0.16)',
+                    background: 'rgba(255,251,244,0.86)', backdropFilter: 'blur(20px)',
+                    borderBottom: '1px solid rgba(17,19,24,0.10)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -411,10 +411,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 onClick={() => setShowNotifs(!showNotifs)}
                                 style={{
                                     position: 'relative', width: '36px', height: '36px', borderRadius: '10px',
-                                    background: showNotifs ? 'rgba(123,63,242,0.12)' : 'rgba(255,255,255,0.78)',
-                                    border: showNotifs ? '1px solid rgba(123,63,242,0.3)' : '1px solid rgba(148,163,184,0.2)',
+                                    background: showNotifs ? 'rgba(155,111,80,0.10)' : 'rgba(255,251,244,0.86)',
+                                    border: showNotifs ? '1px solid rgba(155,111,80,0.24)' : '1px solid rgba(17,19,24,0.10)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: showNotifs ? '#7B3FF2' : '#5f6b7d', cursor: 'pointer',
+                                    color: showNotifs ? '#9b6f50' : '#5f5b55', cursor: 'pointer',
                                     transition: 'all 150ms ease',
                                 }}>
                                 <Bell size={15} />
@@ -422,11 +422,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     <span style={{
                                         position: 'absolute', top: '-4px', right: '-4px',
                                         minWidth: '16px', height: '16px', borderRadius: '99px',
-                                        background: 'linear-gradient(135deg, #7B3FF2, #A855F7)',
+                                        background: 'linear-gradient(135deg, #111318, #9b6f50)',
                                         fontSize: '9px', fontWeight: '800', color: '#fff',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        padding: '0 4px', border: '2px solid #f7f4ec',
-                                        boxShadow: '0 0 8px rgba(123,63,242,0.4)',
+                                        padding: '0 4px', border: '2px solid #f3ede3',
+                                        boxShadow: '0 0 8px rgba(155,111,80,0.4)',
                                     }}>
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
@@ -448,7 +448,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                         </AnimatePresence>
 
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #7B3FF2, #A855F7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', boxShadow: '0 0 14px rgba(123,63,242,0.4)' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #111318, #9b6f50)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px', boxShadow: '0 0 14px rgba(155,111,80,0.4)' }}>
                             {displayName.charAt(0).toUpperCase()}
                         </div>
                     </div>
