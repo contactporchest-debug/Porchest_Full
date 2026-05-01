@@ -189,7 +189,12 @@ exports.fetchProfile = async (accessToken) => {
                     const igRes = await fetch(igUrl);
                     const igData = await igRes.json();
                     if (igRes.ok && !igData.error) {
-                        return { ...igData, isBusiness: true, linkedPageId: page.id };
+                        return {
+                            ...igData,
+                            account_type: igData.account_type || 'BUSINESS',
+                            isBusiness: true,
+                            linkedPageId: page.id,
+                        };
                     } else {
                         throw new Error(`Failed IG fetch: ${igData.error?.message}`);
                     }
@@ -240,6 +245,21 @@ exports.fetchIGBusinessAccount = async (pageId, pageAccessToken) => {
         return null;
     }
 };
+
+function normalizeMetricValue(value) {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+    if (value && typeof value === 'object') {
+        return Object.values(value).reduce((sum, entry) => {
+            const parsed = Number(entry);
+            return sum + (Number.isFinite(parsed) ? parsed : 0);
+        }, 0);
+    }
+    return 0;
+}
 
 // ─── Media Fetch ─────────────────────────────────────────────────
 
@@ -316,19 +336,7 @@ exports.fetchMediaInsights = async (accessToken, mediaId, mediaType, mediaProduc
         const result = {};
         (data.data || []).forEach(m => {
             const rawValue = m.values?.[0]?.value ?? m.value ?? null;
-            if (typeof rawValue === 'number') {
-                result[m.name] = rawValue;
-            } else if (typeof rawValue === 'string') {
-                const parsed = Number(rawValue);
-                result[m.name] = Number.isFinite(parsed) ? parsed : 0;
-            } else if (rawValue && typeof rawValue === 'object') {
-                result[m.name] = Object.values(rawValue).reduce((sum, value) => {
-                    const parsed = Number(value);
-                    return sum + (Number.isFinite(parsed) ? parsed : 0);
-                }, 0);
-            } else {
-                result[m.name] = 0;
-            }
+            result[m.name] = normalizeMetricValue(rawValue);
         });
         return { raw: data, parsed: result };
     } catch {
@@ -359,34 +367,49 @@ exports.fetchComments = async (accessToken, mediaId) => {
 exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
     // Note: Business discovery requires FB_GRAPH_BASE
     const base = igUserId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE;
-    // Audience demographics use period=lifetime
-    const url = `${base}/${igUserId}/insights?metric=audience_city,audience_country,audience_gender_age&period=lifetime&access_token=${accessToken}`;
-    
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!res.ok || data.error) return { raw: data, parsed: null };
+    const result = { ageGender: null, topCities: [], topCountries: [] };
+    const raw = {};
 
-        const result = { ageGender: null, topCities: [], topCountries: [] };
-        (data.data || []).forEach(m => {
-            const value = m.values?.[0]?.value ?? null;
-            if (m.name === 'audience_city' && value && typeof value === 'object') {
+    const metricRequests = [
+        { key: 'genderAge', metric: 'audience_gender_age' },
+        { key: 'city', metric: 'audience_city' },
+        { key: 'country', metric: 'audience_country' },
+    ];
+
+    try {
+        for (const req of metricRequests) {
+            const url = `${base}/${igUserId}/insights?metric=${req.metric}&period=lifetime&access_token=${accessToken}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            raw[req.key] = data;
+
+            if (!res.ok || data.error) {
+                continue;
+            }
+
+            const metric = Array.isArray(data.data) ? data.data[0] : null;
+            const value = metric?.values?.[0]?.value ?? null;
+
+            if (req.metric === 'audience_city' && value && typeof value === 'object') {
                 result.topCities = Object.entries(value)
-                    .map(([city, pct]) => ({ city, value: Number(pct || 0) }))
+                    .map(([city, pct]) => ({ city, value: normalizeMetricValue(pct) }))
                     .sort((a, b) => b.value - a.value)
                     .slice(0, 5);
             }
-            if (m.name === 'audience_country' && value && typeof value === 'object') {
+
+            if (req.metric === 'audience_country' && value && typeof value === 'object') {
                 result.topCountries = Object.entries(value)
-                    .map(([country, pct]) => ({ country, value: Number(pct || 0) }))
+                    .map(([country, pct]) => ({ country, value: normalizeMetricValue(pct) }))
                     .sort((a, b) => b.value - a.value)
                     .slice(0, 5);
             }
-            if (m.name === 'audience_gender_age' && value && typeof value === 'object') {
+
+            if (req.metric === 'audience_gender_age' && value && typeof value === 'object') {
                 result.ageGender = value;
             }
-        });
-        return { raw: data, parsed: result };
+        }
+
+        return { raw, parsed: result };
     } catch {
         return { raw: null, parsed: null };
     }
@@ -394,7 +417,9 @@ exports.fetchAudienceDemographics = async (accessToken, igUserId) => {
 
 exports.fetchAccountInsights = async (accessToken, igUserId) => {
     const base = igUserId.length > 15 ? FB_GRAPH_BASE : GRAPH_BASE;
-    const summaryUrl = `${base}/${igUserId}/insights?metric=reach,impressions,profile_views,website_clicks&period=day&access_token=${accessToken}`;
+    const ninetyDaysAgo = Math.floor((Date.now() - (90 * 24 * 60 * 60 * 1000)) / 1000);
+    const until = Math.floor(Date.now() / 1000);
+    const summaryUrl = `${base}/${igUserId}/insights?metric=reach,impressions,profile_views,website_clicks,likes,comments,saved,shares,total_interactions,accounts_engaged,follower_count&period=day&since=${ninetyDaysAgo}&until=${until}&access_token=${accessToken}`;
     const onlineFollowersUrl = `${base}/${igUserId}/insights?metric=online_followers&period=lifetime&access_token=${accessToken}`;
 
     try {
@@ -411,30 +436,69 @@ exports.fetchAccountInsights = async (accessToken, igUserId) => {
             impressions: 0,
             profileViews: 0,
             websiteClicks: 0,
+            likes: 0,
+            comments: 0,
+            saved: 0,
+            shares: 0,
+            totalInteractions: 0,
+            accountsEngaged: 0,
+            followerCount: 0,
+            totalReach90d: 0,
+            totalImpressions90d: 0,
+            totalProfileViews90d: 0,
+            totalWebsiteClicks90d: 0,
+            totalLikes90d: 0,
+            totalComments90d: 0,
+            totalSaved90d: 0,
+            totalShares90d: 0,
             onlineFollowers: null,
         };
 
         if (summaryRes.ok && !summaryRaw.error) {
             (summaryRaw.data || []).forEach((metric) => {
-                const rawValue = metric?.values?.[0]?.value ?? 0;
-                let value = 0;
-                if (typeof rawValue === 'number') value = rawValue;
-                else if (typeof rawValue === 'string') value = Number(rawValue) || 0;
-                else if (rawValue && typeof rawValue === 'object') {
-                    value = Object.values(rawValue).reduce((sum, entry) => {
-                        const parsed = Number(entry);
-                        return sum + (Number.isFinite(parsed) ? parsed : 0);
-                    }, 0);
+                const values = Array.isArray(metric?.values) ? metric.values : [];
+                const value = values.reduce((sum, entry) => sum + normalizeMetricValue(entry?.value), 0);
+
+                if (metric.name === 'reach') {
+                    parsed.reach = value;
+                    parsed.totalReach90d = value;
                 }
-                if (metric.name === 'reach') parsed.reach = value;
-                if (metric.name === 'impressions') parsed.impressions = value;
-                if (metric.name === 'profile_views') parsed.profileViews = value;
-                if (metric.name === 'website_clicks') parsed.websiteClicks = value;
+                if (metric.name === 'impressions') {
+                    parsed.impressions = value;
+                    parsed.totalImpressions90d = value;
+                }
+                if (metric.name === 'profile_views') {
+                    parsed.profileViews = value;
+                    parsed.totalProfileViews90d = value;
+                }
+                if (metric.name === 'website_clicks') {
+                    parsed.websiteClicks = value;
+                    parsed.totalWebsiteClicks90d = value;
+                }
+                if (metric.name === 'likes') {
+                    parsed.likes = value;
+                    parsed.totalLikes90d = value;
+                }
+                if (metric.name === 'comments') {
+                    parsed.comments = value;
+                    parsed.totalComments90d = value;
+                }
+                if (metric.name === 'saved') {
+                    parsed.saved = value;
+                    parsed.totalSaved90d = value;
+                }
+                if (metric.name === 'shares') {
+                    parsed.shares = value;
+                    parsed.totalShares90d = value;
+                }
+                if (metric.name === 'total_interactions') parsed.totalInteractions = value;
+                if (metric.name === 'accounts_engaged') parsed.accountsEngaged = value;
+                if (metric.name === 'follower_count') parsed.followerCount = value;
             });
         }
 
         if (onlineFollowersRes.ok && !onlineFollowersRaw.error) {
-            parsed.onlineFollowers = onlineFollowersRaw?.data?.[0]?.values?.[0]?.value ?? null;
+            parsed.onlineFollowers = onlineFollowersRaw?.data?.[0] || null;
         }
 
         return {
@@ -471,6 +535,26 @@ exports.fetchAccountInsights = async (accessToken, igUserId) => {
 exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, accountInsights = {}) => {
     const followersCount = profile.followers_count || 0;
     const totalPosts = mediaList.length;
+    const accountReach = Number(
+        accountInsights.totalReach90d
+        ?? accountInsights.reach
+        ?? 0
+    );
+    const accountImpressions = Number(
+        accountInsights.totalImpressions90d
+        ?? accountInsights.impressions
+        ?? 0
+    );
+    const accountProfileViews = Number(
+        accountInsights.totalProfileViews90d
+        ?? accountInsights.profileViews
+        ?? 0
+    );
+    const accountWebsiteClicks = Number(
+        accountInsights.totalWebsiteClicks90d
+        ?? accountInsights.websiteClicks
+        ?? 0
+    );
 
     const base = {
         engagementRate: 0,
@@ -478,6 +562,9 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, acc
         avgEngagementPerPost: 0,
         avgLikesPerPost: 0,
         avgCommentsPerPost: 0,
+        avgImpressionsPerPost: 0,
+        avgSavesPerPost: 0,
+        avgSharesPerPost: 0,
         avgViewsPerPost: 0,
         avgReachPerPost: 0,
         averageEngagement: 0,
@@ -521,11 +608,15 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, acc
 
     const totalLikes = mediaList.reduce((s, m) => s + Number(m.like_count || 0), 0);
     const totalComments = mediaList.reduce((s, m) => s + Number(m.comments_count || 0), 0);
-    const totalShares = mediaList.reduce((s, m) => s + Number(m.insights?.shares || 0), 0);
-    const totalSaved = mediaList.reduce((s, m) => s + Number(m.insights?.saved || 0), 0);
-    const totalReach = mediaList.reduce((s, m) => s + Number(m.insights?.reach || 0), 0);
-    const totalImpressions = mediaList.reduce((s, m) => s + Number(m.insights?.impressions || 0), 0);
+    const totalSharesFromMedia = mediaList.reduce((s, m) => s + Number(m.insights?.shares || 0), 0);
+    const totalSavedFromMedia = mediaList.reduce((s, m) => s + Number(m.insights?.saved || 0), 0);
+    const totalReachFromMedia = mediaList.reduce((s, m) => s + Number(m.insights?.reach || 0), 0);
+    const totalImpressionsFromMedia = mediaList.reduce((s, m) => s + Number(m.insights?.impressions || 0), 0);
     const totalPlays = mediaList.reduce((s, m) => s + Number(m.insights?.plays || 0), 0);
+    const totalShares = totalSharesFromMedia || Number(accountInsights.totalShares90d || accountInsights.shares || 0);
+    const totalSaved = totalSavedFromMedia || Number(accountInsights.totalSaved90d || accountInsights.saved || 0);
+    const totalReach = totalReachFromMedia || accountReach;
+    const totalImpressions = totalImpressionsFromMedia || accountImpressions;
     const totalEngagement = totalLikes + totalComments + totalShares;
     const totalVisibility = mediaList.reduce((sum, media) => {
         if (media.media_type === 'VIDEO' || media.media_type === 'REEL') return sum + Number(media.insights?.plays || 0);
@@ -534,6 +625,9 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, acc
 
     const avgLikesPerPost = totalPosts > 0 ? parseFloat((totalLikes / totalPosts).toFixed(2)) : 0;
     const avgCommentsPerPost = totalPosts > 0 ? parseFloat((totalComments / totalPosts).toFixed(2)) : 0;
+    const avgImpressionsPerPost = totalPosts > 0 ? parseFloat((totalImpressions / totalPosts).toFixed(2)) : 0;
+    const avgSavesPerPost = totalPosts > 0 ? parseFloat((totalSaved / totalPosts).toFixed(2)) : 0;
+    const avgSharesPerPost = totalPosts > 0 ? parseFloat((totalShares / totalPosts).toFixed(2)) : 0;
     const avgEngagementPerPost = totalPosts > 0 ? parseFloat((totalEngagement / totalPosts).toFixed(2)) : 0;
     const avgReachPerPost = totalPosts > 0 ? parseFloat((totalReach / totalPosts).toFixed(2)) : 0;
     const avgViewsPerPost = totalPosts > 0 ? parseFloat((totalVisibility / totalPosts).toFixed(2)) : 0;
@@ -689,6 +783,9 @@ exports.computeDerivedMetrics = (profile, mediaList, existingProfile = null, acc
         avgEngagementPerPost,
         avgLikesPerPost,
         avgCommentsPerPost,
+        avgImpressionsPerPost,
+        avgSavesPerPost,
+        avgSharesPerPost,
         avgViewsPerPost,
         avgReachPerPost,
         averageEngagement: avgEngagementPerPost,
