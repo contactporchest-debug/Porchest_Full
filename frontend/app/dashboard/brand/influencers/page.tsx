@@ -7,8 +7,13 @@ import { useApi } from '@/hooks/useApi';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+type BrandProfileResponse = {
+    profileComplete?: boolean;
+};
+
 export default function BrandInfluencersRoute() {
-    const { data: profile, loading } = useApi('/profile/brand/me');
+    const { data, loading } = useApi('/profile/brand/me');
+    const profile = data as BrandProfileResponse | null;
     const profileComplete = !!profile?.profileComplete;
 
     return (

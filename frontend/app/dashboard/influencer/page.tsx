@@ -13,9 +13,15 @@ import { useApi } from '@/hooks/useApi';
 import { influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
+type InfluencerProfileResponse = {
+    profileComplete?: boolean;
+    igUsername?: string;
+};
+
 export default function InfluencerPortal() {
     const { user } = useAuth();
-    const { data: profile } = useApi('/profile/influencer/me');
+    const { data } = useApi('/profile/influencer/me');
+    const profile = data as InfluencerProfileResponse | null;
     const [igConnected, setIgConnected] = useState(false);
     const [dashStats, setDashStats] = useState<any>(null);
     const [profileCompletion, setProfileCompletion] = useState<any>(null);

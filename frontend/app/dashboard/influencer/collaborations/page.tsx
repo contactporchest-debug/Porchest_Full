@@ -7,8 +7,13 @@ import { useApi } from '@/hooks/useApi';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+type InfluencerProfileResponse = {
+    profileComplete?: boolean;
+};
+
 export default function InfluencerCollaborationsRoute() {
-    const { data: profile, loading } = useApi('/profile/influencer/me');
+    const { data, loading } = useApi('/profile/influencer/me');
+    const profile = data as InfluencerProfileResponse | null;
     const profileComplete = !!profile?.profileComplete;
 
     return (
