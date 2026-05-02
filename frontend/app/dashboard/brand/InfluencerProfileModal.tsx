@@ -120,13 +120,13 @@ const buildModalDemographics = (analytics: any, profile: any) => {
     return { countries, ageRanges, gender };
 };
 
-const COLORS = ['#9b6f50', '#d7b48f', '#f472b6', '#38bdf8', '#34d399', '#facc15'];
-const SURFACE = '#ffffff';
-const SURFACE_ALT = '#f8fafc';
-const BORDER = 'rgba(148, 163, 184, 0.2)';
-const BORDER_STRONG = 'rgba(148, 163, 184, 0.32)';
-const TEXT = '#0f172a';
-const MUTED = '#64748b';
+const COLORS = ['#a855f7', '#c084fc', '#f472b6', '#38bdf8', '#34d399', '#facc15'];
+const SURFACE = '#0c0c0c';
+const SURFACE_ALT = 'rgba(255,255,255,0.02)';
+const BORDER = 'rgba(255, 255, 255, 0.08)';
+const BORDER_STRONG = 'rgba(255, 255, 255, 0.16)';
+const TEXT = '#ffffff';
+const MUTED = 'rgba(255,255,255,0.5)';
 
 // ── Gauge Component for Cost Efficiency ──
 function GaugeChart({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
@@ -138,7 +138,7 @@ function GaugeChart({ value, max, label, color }: { value: number; max: number; 
     return (
         <div style={{ textAlign: 'center' }}>
             <svg width="140" height="80" viewBox="0 0 140 80">
-                <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke="rgba(148, 163, 184, 0.22)" strokeWidth="8" strokeLinecap="round" />
+                <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="8" strokeLinecap="round" />
                 <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
                     strokeDasharray={`${strokeDash} ${circumference}`}
                     style={{ transition: 'stroke-dasharray 1s ease' }} />
@@ -286,9 +286,9 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const TimeButton = ({ days, label }: { days: any, label: string }) => (
         <button onClick={() => setTimeRange(days)} style={{
             padding: '6px 14px', borderRadius: '99px',
-            border: `1px solid ${timeRange === days ? 'rgba(155,111,80,0.6)' : BORDER}`,
-            background: timeRange === days ? 'rgba(155,111,80,0.14)' : SURFACE_ALT,
-            color: timeRange === days ? '#7c3aed' : MUTED,
+            border: `1px solid ${timeRange === days ? 'rgba(168,85,247,0.6)' : BORDER}`,
+            background: timeRange === days ? 'rgba(168,85,247,0.14)' : SURFACE_ALT,
+            color: timeRange === days ? '#c084fc' : MUTED,
             fontSize: '11px', fontWeight: '700', cursor: 'pointer', transition: 'all 180ms ease', whiteSpace: 'nowrap',
         }}>{label}</button>
     );
@@ -300,29 +300,29 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     );
 
     const customTooltipStyle = {
-        backgroundColor: 'rgba(255,255,255,0.97)',
-        border: '1px solid rgba(155,111,80,0.16)',
+        backgroundColor: 'rgba(12,12,12,0.95)',
+        border: '1px solid rgba(168,85,247,0.16)',
         borderRadius: '12px',
         color: TEXT,
         fontSize: '12px',
         padding: '10px 14px',
-        boxShadow: '0 16px 40px rgba(15,23,42,0.12)'
+        boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
     };
 
     return (
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(241,245,249,0.82)', backdropFilter: 'blur(14px)', overflowY: 'auto', padding: '24px' }}>
+                style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(14px)', overflowY: 'auto', padding: '24px' }}>
                 <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-                    className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(155,111,80,0.14)', borderRadius: '36px', boxShadow: '0 32px 80px rgba(15,23,42,0.16)', overflow: 'hidden', paddingBottom: '30px' }}>
+                    className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '36px', boxShadow: '0 16px 40px rgba(0,0,0,0.4)', overflow: 'hidden', paddingBottom: '30px' }}>
 
                     {/* Gradient Header Banner */}
-                    <div style={{ position: 'relative', height: '140px', background: 'linear-gradient(135deg, #ede9fe 0%, #f5f3ff 45%, #eff6ff 100%)', display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                        <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.84)', backdropFilter: 'blur(10px)', border: `1px solid ${BORDER}`, color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms ease' }}>
+                    <div style={{ position: 'relative', height: '140px', background: 'linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(192,132,252,0.1) 45%, rgba(12,12,12,0) 100%)', display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+                        <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(12,12,12,0.84)', backdropFilter: 'blur(10px)', border: `1px solid ${BORDER}`, color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms ease' }}>
                             <X size={16} />
                         </button>
-                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #ffffff', background: (dp && !dpError) ? '#e2e8f0' : 'linear-gradient(135deg, #9b6f50, #d7b48f)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '800', color: '#fff', boxShadow: '0 20px 40px rgba(15,23,42,0.14)' }}>
+                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #0c0c0c', background: (dp && !dpError) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #9333ea, #c084fc)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '800', color: '#fff', boxShadow: '0 20px 40px rgba(15,23,42,0.14)' }}>
                             {(dp && !dpError) ? <img src={dp} alt={profile?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setDpError(true)} /> : initials}
                         </div>
                     </div>
@@ -376,11 +376,11 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         <ExternalLink size={15} /> View Full Profile
                                     </a>
                                 )}
-                                <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(155,111,80,0.3)', transition: 'transform 200ms ease', fontFamily: 'inherit' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')} onMouseLeave={e => (e.currentTarget.style.transform = '')}>
+                                <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', background: 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(168,85,247,0.3)', transition: 'transform 200ms ease', fontFamily: 'inherit' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')} onMouseLeave={e => (e.currentTarget.style.transform = '')}>
                                     <Send size={15} /> Send Request
                                 </button>
                                 {handle && (
-                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ padding: '14px 20px', borderRadius: '16px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '14px', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 200ms ease' }} onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; }} onMouseLeave={e => { e.currentTarget.style.background = SURFACE_ALT; }}>
+                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ padding: '14px 20px', borderRadius: '16px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '14px', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 200ms ease' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }} onMouseLeave={e => { e.currentTarget.style.background = SURFACE_ALT; }}>
                                         <ExternalLink size={15} /> IG
                                     </a>
                                 )}
@@ -389,8 +389,8 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
                         {/* Right Column */}
                         <div style={{ flex: '1 1 300px' }}>
-                            <div style={{ padding: '18px', borderRadius: '20px', background: 'linear-gradient(145deg, #faf5ff, #eff6ff)', border: '1px solid rgba(155,111,80,0.14)', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(155,111,80,0.15)', border: '1px solid rgba(155,111,80,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#c084fc' }}>
+                            <div style={{ padding: '18px', borderRadius: '20px', background: 'linear-gradient(145deg, rgba(168,85,247,0.05), rgba(192,132,252,0.02))', border: '1px solid rgba(168,85,247,0.14)', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+                                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#c084fc' }}>
                                     <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', lineHeight: '1' }}>{fitScore ?? 0}</span>
                                     <span style={{ fontSize: '9px', color: MUTED, fontWeight: '600', marginTop: '2px' }}>/100</span>
                                 </div>
@@ -411,7 +411,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     </div>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT }}>{formatNum(followers)}</p>
                                 </div>
-                                <div style={{ padding: '14px', borderRadius: '16px', background: 'rgba(155,111,80,0.08)', border: '1px solid rgba(155,111,80,0.2)' }}>
+                                <div style={{ padding: '14px', borderRadius: '16px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c084fc', marginBottom: '8px' }}>
                                         <DollarSign size={13} /><span style={{ fontSize: '12px', fontWeight: '600' }}>Avg Cost</span>
                                     </div>
@@ -475,19 +475,19 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         <AreaChart data={derived.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                             <defs>
                                                 <linearGradient id="colorEng" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#d7b48f" stopOpacity={0.4}/>
-                                                    <stop offset="95%" stopColor="#d7b48f" stopOpacity={0}/>
+                                                    <stop offset="5%" stopColor="#c084fc" stopOpacity={0.4}/>
+                                                    <stop offset="95%" stopColor="#c084fc" stopOpacity={0}/>
                                                 </linearGradient>
                                                 <linearGradient id="colorTk" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3}/>
                                                     <stop offset="95%" stopColor="#f472b6" stopOpacity={0}/>
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.18)" />
-                                            <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={8} />
-                                            <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.08)" />
+                                            <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} dy={8} />
+                                            <YAxis stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} />
                                             <RechartsTooltip contentStyle={customTooltipStyle} itemStyle={{ color: TEXT }} formatter={(val: number) => val.toLocaleString()} />
-                                            <Area type="monotone" dataKey="totalEng" name="Total Engagement" stroke="#d7b48f" strokeWidth={3} fillOpacity={1} fill="url(#colorEng)" />
+                                            <Area type="monotone" dataKey="totalEng" name="Total Engagement" stroke="#c084fc" strokeWidth={3} fillOpacity={1} fill="url(#colorEng)" />
                                             <Area type="monotone" dataKey="likes" name="Likes" stroke="#f472b6" strokeWidth={2} fillOpacity={1} fill="url(#colorTk)" />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -508,11 +508,11 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     <div style={{ height: '220px', width: '100%' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={derived.chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.18)" />
-                                                <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} dy={8} />
-                                                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                                                <RechartsTooltip contentStyle={customTooltipStyle} cursor={{fill: 'rgba(148,163,184,0.08)'}} formatter={(val: number) => val.toLocaleString()} />
-                                                <Bar dataKey="likes" name="Likes" stackId="a" fill="#9b6f50" radius={[0, 0, 4, 4]} />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.08)" />
+                                                <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} dy={8} />
+                                                <YAxis stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} />
+                                                <RechartsTooltip contentStyle={customTooltipStyle} cursor={{fill: 'rgba(255,255,255,0.08)'}} formatter={(val: number) => val.toLocaleString()} />
+                                                <Bar dataKey="likes" name="Likes" stackId="a" fill="#9333ea" radius={[0, 0, 4, 4]} />
                                                 <Bar dataKey="comments" name="Comments" stackId="a" fill="#60d5f8" radius={[4, 4, 0, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
@@ -624,10 +624,10 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reel Price</p>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#60d5f8' }}>{reelCost > 0 ? `$${reelCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: MUTED }}>Pricing not published</span>}</p>
                                 </div>
-                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.12)' }}>
+                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.12)' }}>
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Cost Per Engagement</p>
                                     {cpeIsValid
-                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#9b6f50' }}>${costPerEngagement.toFixed(2)}</p>
+                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#a855f7' }}>${costPerEngagement.toFixed(2)}</p>
                                         : <p style={{ fontSize: '12px', color: MUTED, marginTop: '6px' }}>Not enough engagement data</p>
                                     }
                                     {cpeIsValid && <p style={{ fontSize: '10px', color: MUTED, marginTop: '4px' }}>Post cost ÷ avg engagement (likes+comments)</p>}

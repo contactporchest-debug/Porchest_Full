@@ -21,8 +21,8 @@ import {
 
 /* ─── Color palette ─────────────────────────────────────────── */
 const C = {
-    purple: '#9b6f50',
-    violet: '#d7b48f',
+    purple: '#a855f7',
+    violet: '#c084fc',
     pink: '#fb7185',
     amber: '#f59e0b',
     teal: '#14b8a6',
@@ -30,24 +30,24 @@ const C = {
     green: '#4ade80',
     red: '#f87171',
     indigo: '#6366f1',
-    lavender: '#9b6f50',
+    lavender: '#a855f7',
 };
 
-const SURFACE = '#ffffff';
-const SURFACE_ALT = '#f8fafc';
-const BORDER = 'rgba(148, 163, 184, 0.22)';
-const BORDER_STRONG = 'rgba(148, 163, 184, 0.34)';
-const TEXT = '#0f172a';
-const MUTED = '#64748b';
+const SURFACE = '#0c0c0c';
+const SURFACE_ALT = 'rgba(255, 255, 255, 0.02)';
+const BORDER = 'rgba(255, 255, 255, 0.08)';
+const BORDER_STRONG = 'rgba(255, 255, 255, 0.16)';
+const TEXT = '#ffffff';
+const MUTED = 'rgba(255, 255, 255, 0.5)';
 
 /* ─── Recharts custom tooltip ────────────────────────────────── */
 const ChartTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     return (
         <div style={{
-            background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(155,111,80,0.18)',
+            background: 'rgba(12,12,12,0.98)', border: '1px solid rgba(168,85,247,0.18)',
             borderRadius: 14, padding: '12px 16px', fontSize: 12, color: TEXT,
-            boxShadow: '0 20px 40px rgba(15,23,42,0.14)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
         }}>
             {label && <p style={{ color: MUTED, marginBottom: 6, fontSize: 11 }}>{label}</p>}
             {payload.map((e: any, i: number) => (
@@ -131,7 +131,7 @@ const makeMediaScatter = (mediaArr: any[]) =>
 
 const makeQualityGauge = (score: number) => [
     { name: 'Score', value: score, fill: score >= 75 ? C.green : score >= 50 ? C.violet : score >= 25 ? C.amber : C.red },
-    { name: 'Remaining', value: 100 - score, fill: 'rgba(148, 163, 184, 0.18)' },
+    { name: 'Remaining', value: 100 - score, fill: 'rgba(255, 255, 255, 0.06)' },
 ];
 
 /* ─── Types ─────────────────────────────────────────────────── */
@@ -171,7 +171,7 @@ const fmtK = (v: number | null | undefined) => {
 /* ─── Shared small components ────────────────────────────────── */
 const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, marginTop: 36 }}>
-            <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#d7b48f,#9b6f50)' }} />
+            <div style={{ width: 3, height: 20, borderRadius: 4, background: 'linear-gradient(180deg,#c084fc,#a855f7)' }} />
         <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: TEXT, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{children}</h3>
         {icon && <div style={{ marginLeft: 'auto', color: MUTED }}>{icon}</div>}
     </div>
@@ -179,7 +179,7 @@ const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: Re
 
 const ChartCard = ({ children, title, subtitle, style }: { children: React.ReactNode; title?: string; subtitle?: string; style?: React.CSSProperties }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 24, padding: 24, boxShadow: '0 18px 34px rgba(15,23,42,0.05)', ...style }}>
+        style={{ background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 24, padding: 24, boxShadow: '0 8px 30px rgba(0,0,0,0.2)', ...style }}>
         {title && <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 2 }}>{title}</p>}
         {subtitle && <p style={{ fontSize: 11, color: MUTED, marginBottom: 16 }}>{subtitle}</p>}
         {children}
@@ -196,16 +196,16 @@ const StatChip = ({ label, value, color = C.lavender }: { label: string; value: 
 const TimePill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
     <button onClick={onClick} style={{
         padding: '6px 16px', borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-        background: active ? 'linear-gradient(135deg,#9b6f50,#d7b48f)' : SURFACE_ALT,
+        background: active ? 'linear-gradient(135deg,#9333ea,#c084fc)' : SURFACE_ALT,
         border: active ? 'none' : `1px solid ${BORDER}`,
         color: active ? '#fff' : MUTED,
         fontFamily: 'inherit', transition: 'all 200ms ease',
-        boxShadow: active ? '0 14px 26px rgba(155,111,80,0.18)' : 'none',
+        boxShadow: active ? '0 14px 26px rgba(168,85,247,0.18)' : 'none',
     }}>{label}</button>
 );
 
 const InsightCard = ({ text, icon }: { text: string; icon?: React.ReactNode }) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>
         <div style={{ color: C.lavender, flexShrink: 0, marginTop: 1 }}>{icon || <Lightbulb size={14} />}</div>
         <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.6 }}>{text}</p>
     </div>
@@ -312,11 +312,11 @@ export default function AnalyticsPage() {
     if (!isConnected) return (
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
-                <div style={{ textAlign: 'center', padding: '80px 20px', background: SURFACE, borderRadius: 28, border: '1px solid rgba(168,85,247,0.15)', boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
+                <div style={{ textAlign: 'center', padding: '80px 20px', background: SURFACE, borderRadius: 28, border: '1px solid rgba(168,85,247,0.15)', boxShadow: '0 18px 34px rgba(0,0,0,0.2)' }}>
                     <Instagram size={48} style={{ color: C.lavender, margin: '0 auto 16px' }} />
                     <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '1.4rem', color: TEXT, marginBottom: 8 }}>Instagram Not Connected</h2>
                     <p style={{ color: MUTED, fontSize: 14, marginBottom: 24 }}>Connect your Instagram account to unlock all analytics and charts.</p>
-                    <a href="/dashboard/influencer/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 99, background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                    <a href="/dashboard/influencer/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 99, background: 'linear-gradient(135deg,#9333ea,#c084fc)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                         <Instagram size={14} /> Go to Profile → Connect
                     </a>
                 </div>
@@ -405,7 +405,7 @@ export default function AnalyticsPage() {
                                             paddingAngle={3} dataKey="value" startAngle={90} endAngle={-270}
                                         >
                                             <Cell fill={C.purple} />
-                                    <Cell fill="rgba(148,163,184,0.18)" />
+                                    <Cell fill="rgba(255,255,255,0.06)" />
                                         </Pie>
                                         <Tooltip content={<ChartTooltip />} />
                                     </PieChart>
@@ -413,7 +413,7 @@ export default function AnalyticsPage() {
                                 <div style={{ flex: 1 }}>
                                     {[
                                         { label: 'Analyzed', value: analytics?.postsAnalyzed ?? 0, color: C.purple },
-                                        { label: 'Pending', value: Math.max(0, (connection?.mediaCount ?? 0) - (analytics?.postsAnalyzed ?? 0)), color: 'rgba(148,163,184,0.28)' },
+                                        { label: 'Pending', value: Math.max(0, (connection?.mediaCount ?? 0) - (analytics?.postsAnalyzed ?? 0)), color: 'rgba(255,255,255,0.2)' },
                                     ].map(item => (
                                         <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                             <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, flexShrink: 0 }} />
@@ -438,7 +438,7 @@ export default function AnalyticsPage() {
                         {engagementData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={230}>
                                 <LineChart data={engagementData} margin={{ top: 4, right: 20, bottom: 0, left: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                     <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                                     <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} width={40} />
                                     <Tooltip content={<ChartTooltip />} />
@@ -457,7 +457,7 @@ export default function AnalyticsPage() {
                             {likesCommentsData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <ComposedChart data={likesCommentsData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                         <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                                         <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
                                         <Tooltip content={<ChartTooltip />} />
@@ -477,7 +477,7 @@ export default function AnalyticsPage() {
                                 <ResponsiveContainer width="100%" height={160}>
                                     <RadialBarChart cx="50%" cy="50%" innerRadius="55%" outerRadius="85%"
                                         data={radialData} startAngle={180} endAngle={0}>
-                                        <RadialBar dataKey="value" background={{ fill: 'rgba(148,163,184,0.14)' }} cornerRadius={8} />
+                                        <RadialBar dataKey="value" background={{ fill: 'rgba(255,255,255,0.06)' }} cornerRadius={8} />
                                         <Tooltip content={<ChartTooltip />} />
                                     </RadialBarChart>
                                 </ResponsiveContainer>
@@ -502,7 +502,7 @@ export default function AnalyticsPage() {
                                             <stop offset="95%" stopColor={C.blue} stopOpacity={0.02} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                     <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                                     <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={40} tickFormatter={fmtK} />
                                     <Tooltip content={<ChartTooltip />} />
@@ -526,7 +526,7 @@ export default function AnalyticsPage() {
                             {media.length > 0 ? (
                                 <ResponsiveContainer width="100%" height={200}>
                                     <BarChart data={cadenceData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                         <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} interval={Math.ceil(cadenceData.length / 6)} />
                                         <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} allowDecimals={false} width={24} />
                                         <Tooltip content={<ChartTooltip />} />
@@ -550,7 +550,7 @@ export default function AnalyticsPage() {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: MUTED, fontSize: 12 }}>{item.icon} {item.label}</div>
                                             <span style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 16, color: item.color }}>{item.value}</span>
                                         </div>
-                                        <div style={{ height: 8, borderRadius: 99, background: 'rgba(148,163,184,0.18)' }}>
+                                        <div style={{ height: 8, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
                                             <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(100, (item.value / item.max) * 100)}%`, background: `linear-gradient(90deg,${item.color},${item.color}99)`, transition: 'width 700ms ease' }} />
                                         </div>
                                     </div>
@@ -597,7 +597,7 @@ export default function AnalyticsPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: 160, gap: 8 }}>
                                 <div style={{ position: 'relative', width: 110, height: 110 }}>
                                     <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="10" />
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
                                         <circle cx="50" cy="50" r="40" fill="none" stroke={C.green} strokeWidth="10"
                                             strokeDasharray={`${(analytics?.topPostScore ?? 0) * 2.51} 251`}
                                             strokeLinecap="round" />
@@ -616,7 +616,7 @@ export default function AnalyticsPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: 160, gap: 8 }}>
                                 <div style={{ position: 'relative', width: 110, height: 110 }}>
                                     <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="10" />
+                                        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
                                         <circle cx="50" cy="50" r="40" fill="none" stroke={C.blue} strokeWidth="10"
                                             strokeDasharray={`${(analytics?.topReelScore ?? 0) * 2.51} 251`}
                                             strokeLinecap="round" />
@@ -685,10 +685,10 @@ export default function AnalyticsPage() {
                                 <ChartCard title="Likes vs Comments Scatter" subtitle="Each bubble = one post. Size = total engagement.">
                                     <ResponsiveContainer width="100%" height={250}>
                                         <ScatterChart margin={{ top: 4, right: 20, bottom: 20, left: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                                             <XAxis dataKey="likes" name="Likes" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={fmtK} label={{ value: 'Likes', position: 'insideBottom', offset: -10, fill: '#94a3b8', fontSize: 10 }} />
                                             <YAxis dataKey="comments" name="Comments" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} width={36} tickFormatter={fmtK} label={{ value: 'Comments', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 10 }} />
-                                            <Tooltip cursor={{ strokeDasharray: '3 3', stroke: 'rgba(148,163,184,0.3)' }} content={<ChartTooltip />} />
+                                            <Tooltip cursor={{ strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.15)' }} content={<ChartTooltip />} />
                                             <Scatter data={mediaScatter} fill={C.violet} opacity={0.75} />
                                         </ScatterChart>
                                     </ResponsiveContainer>
@@ -705,7 +705,7 @@ export default function AnalyticsPage() {
                                                 {(m.thumbnailUrl || m.mediaUrl) && (
                                                     <img src={m.thumbnailUrl || m.mediaUrl} alt="" style={{ width: '100%', height: 72, objectFit: 'cover', display: 'block' }} />
                                                 )}
-                                                <div style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.96)' }}>
+                                                <div style={{ padding: '6px 8px', background: 'rgba(12,12,12,0.96)' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                         <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: MUTED }}><Heart size={9} style={{ color: C.pink }} />{fmtK(m.likeCount)}</span>
                                                         <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: MUTED }}><MessageCircle size={9} style={{ color: C.blue }} />{fmtK(m.commentsCount)}</span>
@@ -735,7 +735,7 @@ export default function AnalyticsPage() {
                         SECTION 7 — POST ANALYTICS LOOKUP
                     ════════════════════════════════════════════════════════ */}
                     <SectionTitle icon={<Search size={14} />}>Post Analytics Lookup</SectionTitle>
-                    <div style={{ background: SURFACE, border: '1px solid rgba(155,111,80,0.16)', borderRadius: 24, padding: 28, marginBottom: 40, boxShadow: '0 18px 34px rgba(15,23,42,0.05)' }}>
+                    <div style={{ background: SURFACE, border: '1px solid rgba(168,85,247,0.2)', borderRadius: 24, padding: 28, marginBottom: 40, boxShadow: '0 18px 34px rgba(0,0,0,0.2)' }}>
                         <p style={{ fontSize: 13, color: MUTED, marginBottom: 16 }}>Paste any Instagram post URL from your account to view its detailed analytics.</p>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                             <input
@@ -745,7 +745,7 @@ export default function AnalyticsPage() {
                                 style={{ flex: 1, minWidth: 280, padding: '12px 16px', borderRadius: 12, background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
                             />
                             <button onClick={handleLookup} disabled={lookupLoading}
-                                style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: lookupLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', opacity: lookupLoading ? 0.7 : 1 }}>
+                                style={{ padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 14, cursor: lookupLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'inherit', opacity: lookupLoading ? 0.7 : 1 }}>
                                 {lookupLoading ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={14} />}
                                 {lookupLoading ? 'Looking up...' : 'Analyze Post'}
                             </button>
@@ -794,7 +794,7 @@ export default function AnalyticsPage() {
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
+                                    <div style={{ padding: 16, borderRadius: 16, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>
                                         <p style={{ fontSize: 11, color: C.lavender, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 12 }}>Calculated Metrics</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
                                             {[

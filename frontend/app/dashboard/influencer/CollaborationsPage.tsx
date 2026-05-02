@@ -19,15 +19,15 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
     accepted: { color: '#60d5f8', label: 'Accepted' },
     rejected: { color: '#f87171', label: 'Declined' },
     verified: { color: '#4ade80', label: 'Verified' },
-    paid: { color: '#9b6f50', label: 'Paid' },
+    paid: { color: '#a855f7', label: 'Paid' },
 };
 
-const SURFACE = '#ffffff';
-const SURFACE_ALT = '#f8fafc';
-const BORDER = 'rgba(148, 163, 184, 0.22)';
-const BORDER_STRONG = 'rgba(148, 163, 184, 0.34)';
-const TEXT = '#0f172a';
-const MUTED = '#64748b';
+const SURFACE = '#0c0c0c';
+const SURFACE_ALT = 'rgba(255,255,255,0.02)';
+const BORDER = 'rgba(255, 255, 255, 0.08)';
+const BORDER_STRONG = 'rgba(255, 255, 255, 0.16)';
+const TEXT = '#ffffff';
+const MUTED = 'rgba(255, 255, 255, 0.5)';
 
 function StatusBadge({ status }: { status: string }) {
     const cfg = STATUS_CONFIG[status] || { color: '#475569', label: status };
@@ -41,7 +41,7 @@ function StatusBadge({ status }: { status: string }) {
 function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
     return (
         <div className="glass-card" style={{ padding: '50px', borderRadius: '26px', textAlign: 'center' }}>
-            <div style={{ color: 'rgba(155,111,80,0.3)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>{icon}</div>
+            <div style={{ color: 'rgba(168,85,247,0.3)', display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>{icon}</div>
             <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '5px' }}>{title}</p>
             <p style={{ color: MUTED, fontSize: '13px' }}>{subtitle}</p>
         </div>
@@ -111,7 +111,7 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} /></div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#a855f7' }} /></div>;
 
     return (
         <div style={{ marginBottom: '40px' }}>
@@ -142,19 +142,19 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                         <motion.div key={c._id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.32 }}
                             className="glass-card" style={{ borderRadius: '24px', marginBottom: '12px', padding: '20px 24px', border: `1px solid ${BORDER}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginBottom: submitOpen === c._id ? '16px' : '0' }}>
-                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '17px', color: '#fff', flexShrink: 0 }}>{initials}</div>
+                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg,#9333ea,#c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '17px', color: '#fff', flexShrink: 0 }}>{initials}</div>
                                 <div style={{ flex: 1, minWidth: '120px' }}>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '14px', color: TEXT, marginBottom: '2px' }}>{c.campaignTitle}</p>
                                     <p style={{ fontSize: '12px', color: MUTED }}>{brand?.companyName || 'Brand'}</p>
                                 </div>
-                                <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#9b6f50' }}>${c.agreedPrice?.toLocaleString()}</div>
+                                <div style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#a855f7' }}>${c.agreedPrice?.toLocaleString()}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
                                     <Calendar size={11} style={{ color: '#60d5f8' }} />
                                     {new Date(c.postingDeadline).toLocaleDateString()}
                                 </div>
                                 <StatusBadge status={c.status} />
                                 <button onClick={() => { setSubmitOpen(submitOpen === c._id ? null : c._id); setPostUrl(''); }}
-                                    style={{ padding: '8px 14px', borderRadius: '10px', background: 'rgba(155,111,80,0.1)', border: '1px solid rgba(155,111,80,0.25)', color: '#9b6f50', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    style={{ padding: '8px 14px', borderRadius: '10px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Link2 size={12} /> Submit Post
                                 </button>
                             </div>
@@ -164,7 +164,7 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
                                         placeholder="https://instagram.com/p/..."
                                         style={{ flex: 1, padding: '10px 14px', borderRadius: '11px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
                                     <button onClick={() => submitVerification(c._id)} disabled={submitting}
-                                        style={{ padding: '10px 18px', borderRadius: '11px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: submitting ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: submitting ? 0.7 : 1 }}>
+                                        style={{ padding: '10px 18px', borderRadius: '11px', background: 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: submitting ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: submitting ? 0.7 : 1 }}>
                                         {submitting ? 'Submitting…' : 'Submit'}
                                     </button>
                                 </div>
@@ -211,7 +211,7 @@ function CompletedHistory() {
         return () => clearInterval(intervalId);
     }, []);
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} /></div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '30px', color: MUTED }}><Loader2 size={24} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#a855f7' }} /></div>;
 
     return (
         <div>
@@ -258,7 +258,7 @@ function CompletedHistory() {
                                             {req?.campaignTitle || '—'}
                                         </td>
                                         <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none' }}>
-                                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#9b6f50', fontSize: '13px' }}>${req?.agreedPrice?.toLocaleString() || '—'}</span>
+                                            <span style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#a855f7', fontSize: '13px' }}>${req?.agreedPrice?.toLocaleString() || '—'}</span>
                                         </td>
                                         <td style={{ padding: '14px 14px', border: `1px solid ${BORDER}`, borderLeft: 'none', borderRight: 'none' }}>
                                             <StatusBadge status={v.status === 'verified' ? 'verified' : v.status === 'pending_admin' ? 'pending' : v.status} />

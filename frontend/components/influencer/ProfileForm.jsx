@@ -64,11 +64,11 @@ export default function ProfileForm() {
         setTimeout(() => setSaved(false), 1800);
     }
 
-    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-stone-500/10';
+    const inputClass = 'w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 placeholder-white/30 transition-all';
 
     return (
         <div className="space-y-6">
-            <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-4">
                 <h3 className="text-sm font-medium text-white">Manual profile details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input className={inputClass} placeholder="Display name" value={form.displayName} onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))} />
@@ -79,13 +79,13 @@ export default function ProfileForm() {
                 <textarea className={`${inputClass} resize-none`} rows={3} placeholder="Bio" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} />
             </div>
 
-            <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-3">
                 <h3 className="text-sm font-medium text-white">Niche</h3>
                 <div className="flex flex-wrap gap-2">
                     {NICHES.map((n) => {
                         const value = n.toLowerCase();
                         return (
-                            <button key={n} type="button" onClick={() => toggleArray('niche', value)} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.niche.includes(value) ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-stone-500/10'}`}>
+                            <button key={n} type="button" onClick={() => toggleArray('niche', value)} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.niche.includes(value) ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-white/[0.04] border-white/[0.08] text-white/40 hover:text-white/70'}`}>
                                 {n}
                             </button>
                         );
@@ -93,13 +93,13 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-3">
                 <h3 className="text-sm font-medium text-white">Content style</h3>
                 <div className="flex flex-wrap gap-2">
                     {STYLES.map((s) => {
                         const value = s.toLowerCase();
                         return (
-                            <button key={s} type="button" onClick={() => toggleArray('contentStyleTags', value)} className={`px-3 py-1.5 rounded-full text-xs border transition-all ${form.contentStyleTags.includes(value) ? 'bg-teal-600 border-teal-500 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:border-teal-500/50'}`}>
+                            <button key={s} type="button" onClick={() => toggleArray('contentStyleTags', value)} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.contentStyleTags.includes(value) ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-white/[0.04] border-white/[0.08] text-white/40 hover:text-white/70'}`}>
                                 {s}
                             </button>
                         );
@@ -107,15 +107,15 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.07] space-y-4">
                 <h3 className="text-sm font-medium text-white">Languages and rates</h3>
                 <div className="flex gap-2">
                     <input className={inputClass} placeholder="Add language" value={languageInput} onChange={(e) => setLanguageInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addLanguage()} />
-                    <button type="button" onClick={addLanguage} className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm">Add</button>
+                    <button type="button" onClick={addLanguage} className="px-5 py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white transition-all font-bold text-sm">Add</button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {form.languages.map((lang) => (
-                        <span key={lang} className="px-3 py-1 rounded-full bg-white/10 text-gray-300 text-xs">{lang}</span>
+                        <span key={lang} className="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 font-bold text-xs">{lang}</span>
                     ))}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -129,7 +129,7 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <button onClick={handleSave} disabled={saving} className="w-full py-3 rounded-xl bg-stone-700 hover:bg-stone-500 text-white font-medium text-sm transition-all disabled:opacity-40">
+            <button onClick={handleSave} disabled={saving} className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:shadow-lg hover:shadow-purple-500/20 text-white font-bold text-sm transition-all disabled:opacity-40">
                 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save profile'}
             </button>
         </div>

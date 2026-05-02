@@ -52,42 +52,42 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         }, 1800);
     }
 
-    const inputClass = 'w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-stone-500/10';
+    const inputClass = 'w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 placeholder-white/30 transition-all';
 
     return (
         <>
-            <button onClick={() => setOpen(true)} className="w-full py-3 rounded-xl bg-stone-700 hover:bg-stone-500 text-white font-medium text-sm transition-all">
+            <button onClick={() => setOpen(true)} className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:shadow-lg hover:shadow-purple-500/20 text-white font-bold text-sm transition-all">
                 Request collaboration with @{influencerName || 'creator'}
             </button>
 
-            {sent && <div className="p-4 rounded-xl bg-green-900/20 border border-green-500/30 text-green-400 text-center text-sm">Collaboration request sent.</div>}
+            {sent && <div className="p-4 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12] text-green-400 text-center text-sm font-bold">Collaboration request sent.</div>}
 
             {open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-gray-900 border border-white/10 shadow-2xl">
-                        <div className="sticky top-0 bg-gray-900 border-b border-white/10 p-5 flex items-center justify-between">
+                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[#0c0c0c] border border-white/[0.08] shadow-2xl">
+                        <div className="sticky top-0 bg-[#0c0c0c] border-b border-white/[0.08] p-5 flex items-center justify-between">
                             <div>
-                                <p className="text-white font-medium">Request collaboration</p>
-                                <p className="text-xs text-gray-400">@{influencerName} - Step {step} of 3</p>
+                                <p className="text-white font-bold">Request collaboration</p>
+                                <p className="text-xs text-white/40 font-medium">@{influencerName} - Step {step} of 3</p>
                             </div>
-                            <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-white text-xl">x</button>
+                            <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white text-xl">x</button>
                         </div>
 
                         <div className="p-5 space-y-4">
                             {step === 1 && (
                                 <>
-                                    {rates && <p className="text-xs text-gray-500">Rates: Reel ${rates.reelPrice || '-'} | Story ${rates.storyPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
+                                    {rates && <p className="text-xs font-bold text-white/40">Rates: Reel ${rates.reelPrice || '-'} | Story ${rates.storyPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
                                     <input type="number" className={inputClass} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} />
                                     <div className="flex flex-wrap gap-2">
                                         {OBJECTIVES.map((objective) => (
-                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} className={`px-3 py-1.5 rounded-full text-xs border ${form.campaignObjective === objective ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.campaignObjective === objective ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-white/[0.04] border-white/[0.08] text-white/40 hover:text-white/70'}`}>
                                                 {objective}
                                             </button>
                                         ))}
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {CONTENT_TYPES.map((type) => (
-                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} className={`px-3 py-1.5 rounded-full text-xs border ${form.contentType.includes(type) ? 'bg-stone-700 border-stone-500 text-white' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.contentType.includes(type) ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-white/[0.04] border-white/[0.08] text-white/40 hover:text-white/70'}`}>
                                                 {type}
                                             </button>
                                         ))}
@@ -120,7 +120,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                         <textarea key={key} rows={2} className={`${inputClass} resize-none`} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
                                     ))}
                                     <input type="date" className={inputClass} value={form.postingDeadline} onChange={(e) => setForm((f) => ({ ...f, postingDeadline: e.target.value }))} />
-                                    <select className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-white/10 text-white text-sm" value={form.disclosureRequirements} onChange={(e) => setForm((f) => ({ ...f, disclosureRequirements: e.target.value }))}>
+                                    <select className="w-full px-4 py-3 rounded-xl bg-[#0c0c0c] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30" value={form.disclosureRequirements} onChange={(e) => setForm((f) => ({ ...f, disclosureRequirements: e.target.value }))}>
                                         <option>Ad</option>
                                         <option>Paid partnership</option>
                                         <option>Sponsored</option>
@@ -130,16 +130,16 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                             )}
                         </div>
 
-                        <div className="sticky bottom-0 bg-gray-900 border-t border-white/10 p-4 flex justify-between">
-                            <button onClick={() => (step > 1 ? setStep((s) => s - 1) : setOpen(false))} className="px-5 py-2.5 rounded-lg border border-white/10 text-gray-400 text-sm hover:text-white">
+                        <div className="sticky bottom-0 bg-[#0c0c0c] border-t border-white/[0.08] p-4 flex justify-between">
+                            <button onClick={() => (step > 1 ? setStep((s) => s - 1) : setOpen(false))} className="px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/60 text-sm font-bold hover:text-white hover:bg-white/[0.08] transition-all">
                                 {step === 1 ? 'Cancel' : 'Back'}
                             </button>
                             {step < 3 ? (
-                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} className="px-5 py-2.5 rounded-lg bg-stone-700 hover:bg-stone-500 text-white text-sm font-medium disabled:opacity-40">
+                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:shadow-lg hover:shadow-purple-500/20 text-white text-sm font-bold transition-all disabled:opacity-40">
                                     Next
                                 </button>
                             ) : (
-                                <button onClick={handleSend} disabled={sending} className="px-6 py-2.5 rounded-lg bg-stone-700 hover:bg-stone-500 text-white text-sm font-medium disabled:opacity-40">
+                                <button onClick={handleSend} disabled={sending} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:shadow-lg hover:shadow-purple-500/20 text-white text-sm font-bold transition-all disabled:opacity-40">
                                     {sending ? 'Sending...' : 'Send request'}
                                 </button>
                             )}

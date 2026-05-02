@@ -32,12 +32,12 @@ const COUNTRIES = [
 
 const SectionCard = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
     <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(148,163,184,0.18)', borderRadius: '28px', padding: '28px', marginBottom: '18px', boxShadow: '0 18px 40px rgba(15,23,42,0.06)' }}>
+        style={{ background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', padding: '28px', marginBottom: '18px', boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9b6f50' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a855f7' }}>
                 {icon}
             </div>
-            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033' }}>{title}</h3>
+            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#ffffff' }}>{title}</h3>
         </div>
         {children}
     </motion.div>
@@ -45,27 +45,27 @@ const SectionCard = ({ title, icon, children }: { title: string; icon: React.Rea
 
 const iStyle: React.CSSProperties = {
     width: '100%', padding: '11px 15px', borderRadius: '12px',
-    background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(148,163,184,0.24)',
-    color: '#172033', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
+    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+    color: '#ffffff', fontSize: '14px', fontFamily: 'inherit', outline: 'none',
     boxSizing: 'border-box', transition: 'border-color 200ms ease',
 };
 
 const fh = {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         e.target.style.borderColor = 'rgba(168,85,247,0.5)';
-        (e.target as HTMLElement).style.background = 'rgba(155,111,80,0.04)';
+        (e.target as HTMLElement).style.background = 'rgba(168,85,247,0.04)';
     },
     onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        e.target.style.borderColor = 'rgba(148,163,184,0.24)';
-        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.95)';
+        e.target.style.borderColor = 'rgba(255,255,255,0.08)';
+        (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
     },
 };
 
 const Label = ({ children, req, optional }: { children: React.ReactNode; req?: boolean; optional?: boolean }) => (
-    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#667085', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
         {children}
         {req && <span style={{ color: '#f87171', marginLeft: '3px' }}>*</span>}
-        {optional && <span style={{ color: '#94a3b8', textTransform: 'none', fontWeight: '400', fontSize: '10px', marginLeft: '4px' }}>(optional)</span>}
+        {optional && <span style={{ color: 'rgba(255,255,255,0.3)', textTransform: 'none', fontWeight: '400', fontSize: '10px', marginLeft: '4px' }}>(optional)</span>}
     </label>
 );
 
@@ -76,13 +76,13 @@ const FieldErr = ({ msg }: { msg?: string }) => msg
 const SyncField = ({ label, value }: { label: string; value?: string | number }) => (
     <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(236,253,245,0.95)', border: '1px solid rgba(74,222,128,0.15)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <p style={{ fontSize: '10px', color: '#667085', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '2px 7px', borderRadius: '5px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.18)' }}>
                 <Lock size={8} style={{ color: '#4ade80' }} />
                 <span style={{ fontSize: '9px', color: '#4ade80', fontWeight: '700' }}>API</span>
             </div>
         </div>
-        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#172033' }}>{value ?? '—'}</p>
+        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: '#ffffff' }}>{value ?? '—'}</p>
     </div>
 );
 
@@ -171,20 +171,20 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
                 ) : (
                     <motion.div key="conn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         {/* Profile preview row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)', marginBottom: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)', marginBottom: '14px' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                                 {conn?.profilePictureURL ? <img src={conn.profilePictureURL} alt="IG" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Instagram size={20} style={{ color: '#fff' }} />}
                             </div>
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: '#fff', fontSize: '15px' }}>@{conn?.username || '—'}</p>
-                                    {conn?.accountType && <span style={{ fontSize: '11px', color: '#9b6f50', background: 'rgba(155,111,80,0.15)', border: '1px solid rgba(155,111,80,0.3)', padding: '1px 8px', borderRadius: '6px' }}>{conn.accountType}</span>}
+                                    {conn?.accountType && <span style={{ fontSize: '11px', color: '#c084fc', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', padding: '1px 8px', borderRadius: '6px' }}>{conn.accountType}</span>}
                                 </div>
                                 {conn?.linkedPageName && <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>📄 {conn.linkedPageName}</p>}
                             </div>
                             {conn?.username && (
                                 <a href={`https://instagram.com/${conn.username}`} target="_blank" rel="noreferrer"
-                                    style={{ color: '#9b6f50', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', flexShrink: 0 }}>
+                                    style={{ color: '#a855f7', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', flexShrink: 0 }}>
                                     <ExternalLink size={13} /> View
                                 </a>
                             )}
@@ -205,7 +205,7 @@ function BrandInstagramSection({ conn, onRefresh }: { conn: IGConn | null; onRef
 
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             <button onClick={handleRefresh} disabled={refreshing}
-                                style={{ flex: 1, minWidth: '130px', padding: '10px 16px', borderRadius: '12px', background: 'rgba(155,111,80,0.12)', border: '1px solid rgba(155,111,80,0.25)', color: '#9b6f50', fontSize: '13px', fontWeight: '600', cursor: refreshing ? 'not-allowed' : 'pointer', opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontFamily: 'inherit' }}>
+                                style={{ flex: 1, minWidth: '130px', padding: '10px 16px', borderRadius: '12px', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', color: '#c084fc', fontSize: '13px', fontWeight: '600', cursor: refreshing ? 'not-allowed' : 'pointer', opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontFamily: 'inherit' }}>
                                 <RefreshCw size={13} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
                                 {refreshing ? 'Refreshing…' : 'Refresh Sync'}
                             </button>
@@ -353,7 +353,7 @@ export default function BrandProfilePage() {
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-                    <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
+                    <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#a855f7' }} />
                 </div>
             </DashboardLayout>
         </ProtectedRoute>
@@ -372,7 +372,7 @@ export default function BrandProfilePage() {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {!isEditing && score === 100 && (
-                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(155,111,80,0.1)', border: '1px solid rgba(155,111,80,0.3)', color: '#9b6f50', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                <button onClick={() => setIsEditing(true)} style={{ padding: '9px 18px', borderRadius: '99px', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', color: '#c084fc', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }}>
                                     Edit Profile
                                 </button>
                             )}
@@ -386,7 +386,7 @@ export default function BrandProfilePage() {
                     {/* Progress bar */}
                     <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden', marginBottom: '24px' }}>
                         <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-                            style={{ height: '100%', borderRadius: '2px', background: score === 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#9b6f50,#d7b48f)', boxShadow: `0 0 12px ${score === 100 ? 'rgba(74,222,128,0.4)' : 'rgba(155,111,80,0.4)'}` }} />
+                            style={{ height: '100%', borderRadius: '2px', background: score === 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#9333ea,#c084fc)', boxShadow: `0 0 12px ${score === 100 ? 'rgba(74,222,128,0.4)' : 'rgba(168,85,247,0.4)'}` }} />
                     </div>
 
                     <AnimatePresence>
@@ -530,7 +530,7 @@ export default function BrandProfilePage() {
                     {/* ── Save Button ── */}
                     {isEditing && (
                         <button onClick={handleSave} disabled={saving}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(155,111,80,0.4)' : 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(155,111,80,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', padding: '16px', borderRadius: '16px', background: saving ? 'rgba(168,85,247,0.4)' : 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 0 32px rgba(168,85,247,0.4)', transition: 'all 200ms', fontFamily: 'inherit' }}>
                             {saving ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving…</> : <><Save size={18} /> Save Brand Profile</>}
                         </button>
                     )}

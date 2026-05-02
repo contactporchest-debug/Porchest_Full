@@ -7,8 +7,8 @@ import { brandAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const NICHE_COLORS: Record<string, string> = {
-    Fashion: '#d7b48f', Fitness: '#4ade80', Tech: '#60d5f8', Food: '#fb923c',
-    Travel: '#facc15', Beauty: '#f472b6', Gaming: '#9b6f50', Lifestyle: '#e879f9',
+    Fashion: '#a855f7', Fitness: '#4ade80', Tech: '#38bdf8', Food: '#fbbf24',
+    Travel: '#facc15', Beauty: '#f472b6', Gaming: '#9333ea', Lifestyle: '#e879f9',
     Education: '#38bdf8', Entertainment: '#f97316', Finance: '#34d399', Business: '#818cf8',
 };
 
@@ -124,11 +124,11 @@ export default function AIMatchingComponent() {
                             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                 style={{ display: 'flex', gap: '12px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                                 {msg.role === 'ai' && (
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #9b6f50, #d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px rgba(155,111,80,0.3)' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #a855f7, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px rgba(168,85,247,0.3)' }}>
                                         <Bot size={16} color="#fff" />
                                     </div>
                                 )}
-                                <div style={{ padding: '14px 18px', borderRadius: '16px', background: msg.role === 'user' ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))' : 'rgba(155,111,80,0.1)', border: msg.role === 'user' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(155,111,80,0.2)', color: msg.role === 'user' ? '#fff' : '#e9d5ff', fontSize: '14px', lineHeight: '1.6', borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px', borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '16px' }}>
+                                <div style={{ padding: '14px 18px', borderRadius: '16px', background: msg.role === 'user' ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))' : 'rgba(168,85,247,0.1)', border: msg.role === 'user' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(168,85,247,0.2)', color: msg.role === 'user' ? '#fff' : '#e9d5ff', fontSize: '14px', lineHeight: '1.6', borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px', borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '16px' }}>
                                     {msg.text}
                                 </div>
                                 {msg.role === 'user' && (
@@ -140,11 +140,11 @@ export default function AIMatchingComponent() {
                         ))}
                         {loading && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #9b6f50, #d7b48f)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #a855f7, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <Bot size={16} color="#fff" />
                                 </div>
-                                <div style={{ padding: '12px 18px', borderRadius: '16px', background: 'rgba(155,111,80,0.05)', border: '1px solid rgba(155,111,80,0.1)' }}>
-                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
+                                <div style={{ padding: '12px 18px', borderRadius: '16px', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.1)' }}>
+                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', color: '#a855f7' }} />
                                 </div>
                             </motion.div>
                         )}
@@ -160,13 +160,13 @@ export default function AIMatchingComponent() {
                             onKeyDown={handleKeyDown}
                             placeholder="Type your requirements..."
                             style={{ width: '100%', padding: '14px 20px', paddingRight: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: '#fff', fontSize: '14px', outline: 'none', transition: 'border 0.2s' }}
-                            onFocus={(e) => e.target.style.border = '1px solid rgba(155,111,80,0.5)'}
+                            onFocus={(e) => e.target.style.border = '1px solid rgba(168,85,247,0.5)'}
                             onBlur={(e) => e.target.style.border = '1px solid rgba(255,255,255,0.1)'}
                         />
                         <button
                             onClick={handleSend}
                             disabled={loading || !input.trim()}
-                            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', padding: '8px', borderRadius: '10px', background: loading || !input.trim() ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #9b6f50, #d7b48f)', border: 'none', color: loading || !input.trim() ? 'rgba(255,255,255,0.2)' : '#fff', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
+                            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', padding: '8px', borderRadius: '10px', background: loading || !input.trim() ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #a855f7, #c084fc)', border: 'none', color: loading || !input.trim() ? 'rgba(255,255,255,0.2)' : '#fff', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}
                         >
                             <Send size={16} />
                         </button>
@@ -184,7 +184,7 @@ export default function AIMatchingComponent() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
                     <AnimatePresence>
                         {influencers.map((inf: any, i: number) => {
-                            const nc = NICHE_COLORS[inf.niche || ''] || '#9b6f50';
+                            const nc = NICHE_COLORS[inf.niche || ''] || '#a855f7';
                             const dp = inf.profilePictureUrl || inf.profileImageURL || inf.instagramDPURL || null;
                             const handle = inf.username || null;
                             const initials = (inf.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -224,7 +224,7 @@ export default function AIMatchingComponent() {
                                     <div style={{ padding: '24px 24px 16px', flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', marginBottom: '16px' }}>
                                             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                                <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #9b6f50, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
+                                                <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #a855f7, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
                                                     {(dp && !brokenImages.has(inf._id)) ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, inf._id]))} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
@@ -276,7 +276,7 @@ export default function AIMatchingComponent() {
 
                                         {(topCountry || genderSplit) && (
                                             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#9b6f50" /> {topCountry}</div>}
+                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a855f7" /> {topCountry}</div>}
                                                 {topCountry && genderSplit && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
                                                 {genderSplit && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={11} color="#f472b6" /> {genderSplit}</div>}
                                                 {topAge && <><div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div><div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} yrs</div></>}
@@ -284,13 +284,13 @@ export default function AIMatchingComponent() {
                                         )}
 
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
+                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Image size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Post</span>
                                                 </div>
                                                 <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgPostCostUSD > 0 ? `$${inf.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
+                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
                                                     <Film size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Reel</span>
                                                 </div>
@@ -307,9 +307,9 @@ export default function AIMatchingComponent() {
                                             View Profile
                                         </button>
                                         <button onClick={() => handleRequestCollaboration(inf)}
-                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#9b6f50,#d7b48f)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 16px rgba(155,111,80,0.2)' }}
-                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(155,111,80,0.3)'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(155,111,80,0.2)'; }}>
+                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#a855f7,#c084fc)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 16px rgba(168,85,247,0.2)' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(168,85,247,0.3)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(168,85,247,0.2)'; }}>
                                             <Send size={13} /> Request
                                         </button>
                                     </div>

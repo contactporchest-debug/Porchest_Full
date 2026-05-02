@@ -105,28 +105,28 @@ type AnalyticsDetail = {
 };
 
 const COLORS = {
-    purple: '#9b6f50',
-    violet: '#d7b48f',
+    purple: '#a855f7',
+    violet: '#c084fc',
     blue: '#60d5f8',
     teal: '#14b8a6',
     green: '#4ade80',
     amber: '#fbbf24',
     red: '#f87171',
     slate: '#94a3b8',
-    ink: '#172033',
-    muted: '#667085',
+    ink: '#ffffff',
+    muted: 'rgba(255,255,255,0.5)',
 };
 
-const PIE_COLORS = ['#9b6f50', '#60d5f8', '#4ade80', '#fbbf24', '#fb7185', '#94a3b8'];
+const PIE_COLORS = ['#a855f7', '#38bdf8', '#4ade80', '#fbbf24', '#f87171', 'rgba(255,255,255,0.3)'];
 
 const tooltipStyle = {
-    background: 'rgba(255,255,255,0.98)',
-    border: '1px solid rgba(155,111,80,0.18)',
+    background: 'rgba(12,12,12,0.98)',
+    border: '1px solid rgba(168,85,247,0.18)',
     borderRadius: '12px',
     fontSize: '12px',
-    color: '#172033',
+    color: 'white',
     padding: '10px 14px',
-    boxShadow: '0 12px 26px rgba(15,23,42,0.10)',
+    boxShadow: '0 12px 26px rgba(0,0,0,0.5)',
 };
 
 const hasChartData = (data?: Array<{ value?: number } | { followers?: number } | { engagementRate?: number }>) =>
@@ -174,7 +174,7 @@ const SectionCard = ({ title, subtitle, children, icon }: { title: string; subti
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-card"
-        style={{ padding: '24px', borderRadius: '26px' }}
+        style={{ padding: '24px', borderRadius: '26px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
     >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
             <div>
@@ -188,7 +188,7 @@ const SectionCard = ({ title, subtitle, children, icon }: { title: string; subti
 );
 
 const MetricCard = ({ label, value, tone, formula }: { label: string; value: string; tone: string; formula: string }) => (
-    <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(255,255,255,0.88)', border: '1px solid rgba(148,163,184,0.16)' }}>
+    <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.7rem', color: tone, letterSpacing: '-0.04em' }}>{value}</p>
         <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
             <FormulaLabel label={label} formula={formula} />
@@ -197,8 +197,8 @@ const MetricCard = ({ label, value, tone, formula }: { label: string; value: str
 );
 
 const EmptyState = ({ title, copy }: { title: string; copy: string }) => (
-    <div style={{ padding: '48px 24px', borderRadius: '22px', textAlign: 'center', background: 'rgba(255,255,255,0.7)', border: '1px dashed rgba(148,163,184,0.26)' }}>
-        <BarChart3 size={38} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 14px' }} />
+    <div style={{ padding: '48px 24px', borderRadius: '22px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+        <BarChart3 size={38} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 14px' }} />
         <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 17, color: COLORS.ink, marginBottom: 6 }}>{title}</p>
         <p style={{ fontSize: 13, color: COLORS.muted, maxWidth: 420, margin: '0 auto' }}>{copy}</p>
     </div>
@@ -372,8 +372,8 @@ export default function AnalyticsPage() {
                         gap: 8,
                         padding: '10px 16px',
                         borderRadius: 12,
-                        border: '1px solid rgba(155,111,80,0.18)',
-                        background: 'rgba(255,255,255,0.9)',
+                        border: '1px solid rgba(168,85,247,0.3)',
+                        background: 'rgba(168,85,247,0.1)',
                         color: COLORS.purple,
                         fontSize: 12,
                         fontWeight: 700,
@@ -402,8 +402,8 @@ export default function AnalyticsPage() {
                                 width: '100%',
                                 padding: '10px 12px 10px 34px',
                                 borderRadius: 12,
-                                border: '1px solid rgba(148,163,184,0.22)',
-                                background: 'rgba(255,255,255,0.95)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                background: 'rgba(255,255,255,0.04)',
                                 fontSize: 13,
                                 color: COLORS.ink,
                                 outline: 'none',
@@ -429,8 +429,8 @@ export default function AnalyticsPage() {
                                             textAlign: 'left',
                                             padding: '14px 16px',
                                             borderRadius: 16,
-                                            border: active ? '1px solid rgba(155,111,80,0.28)' : '1px solid rgba(148,163,184,0.14)',
-                                            background: active ? 'rgba(155,111,80,0.08)' : 'rgba(255,255,255,0.84)',
+                                            border: active ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                                            background: active ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
                                             cursor: 'pointer',
                                             fontFamily: 'inherit',
                                         }}
@@ -486,7 +486,7 @@ export default function AnalyticsPage() {
                                     {hasChartData(radarData) ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <RadarChart data={radarData}>
-                                                <PolarGrid stroke="rgba(148,163,184,0.22)" />
+                                                <PolarGrid stroke="rgba(255,255,255,0.08)" />
                                                 <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
                                                 <Radar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.28} />
                                                 <Tooltip contentStyle={tooltipStyle} />
@@ -512,7 +512,7 @@ export default function AnalyticsPage() {
                                     {hasChartData(followerGrowth) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <LineChart data={followerGrowth}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
                                                 <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                                 <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />
@@ -528,7 +528,7 @@ export default function AnalyticsPage() {
                                     {hasChartData(engagementTrend) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <LineChart data={engagementTrend}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
                                                 <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                                 <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />
@@ -546,7 +546,7 @@ export default function AnalyticsPage() {
                                     {hasChartData(engagementBreakdown) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <BarChart data={engagementBreakdown}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
                                                 <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                                 <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />

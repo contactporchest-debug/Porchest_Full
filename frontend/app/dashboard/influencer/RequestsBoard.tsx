@@ -11,20 +11,20 @@ import toast from 'react-hot-toast';
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     sent: { label: 'New', color: '#60d5f8', bg: 'rgba(96,213,248,0.08)', icon: <Send size={11} /> },
-    viewed: { label: 'Viewed', color: '#9b6f50', bg: 'rgba(155,111,80,0.08)', icon: <Eye size={11} /> },
+    viewed: { label: 'Viewed', color: '#a855f7', bg: 'rgba(168,85,247,0.08)', icon: <Eye size={11} /> },
     accepted: { label: 'Accepted', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', icon: <CheckCircle size={11} /> },
     rejected: { label: 'Declined', color: '#f87171', bg: 'rgba(248,113,113,0.08)', icon: <XCircle size={11} /> },
     negotiation: { label: 'Negotiation', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', icon: <MessageSquare size={11} /> },
     deal_closed: { label: 'Deal Closed', color: '#4ade80', bg: 'rgba(74,222,128,0.12)', icon: <Handshake size={11} /> },
-    expired: { label: 'Expired', color: '#667085', bg: 'rgba(148,163,184,0.12)', icon: <Clock size={11} /> },
-    cancelled: { label: 'Cancelled', color: '#667085', bg: 'rgba(148,163,184,0.12)', icon: <XCircle size={11} /> },
+    expired: { label: 'Expired', color: 'rgba(255,255,255,0.5)', bg: 'rgba(255,255,255,0.06)', icon: <Clock size={11} /> },
+    cancelled: { label: 'Cancelled', color: 'rgba(255,255,255,0.5)', bg: 'rgba(255,255,255,0.06)', icon: <XCircle size={11} /> },
 };
 
-const SURFACE = '#ffffff';
-const SURFACE_ALT = '#f8fafc';
-const BORDER = 'rgba(148, 163, 184, 0.22)';
-const TEXT = '#0f172a';
-const MUTED = '#64748b';
+const SURFACE = '#0c0c0c';
+const SURFACE_ALT = 'rgba(255,255,255,0.02)';
+const BORDER = 'rgba(255, 255, 255, 0.08)';
+const TEXT = '#ffffff';
+const MUTED = 'rgba(255, 255, 255, 0.5)';
 
 const escapeHtml = (value: unknown) =>
     String(value ?? '')
@@ -209,8 +209,8 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                                 <CheckCircle size={16} style={{ color: '#4ade80' }} />
                             </div>
                             <div>
-                                <p style={{ fontSize: '14px', fontWeight: '800', color: '#172033', fontFamily: 'Space Grotesk' }}>Submit for Verification</p>
-                                <p style={{ fontSize: '11px', color: '#667085' }}>Post the content on Instagram and paste the URL below to get paid.</p>
+                                <p style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', fontFamily: 'Space Grotesk' }}>Submit for Verification</p>
+                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>Post the content on Instagram and paste the URL below to get paid.</p>
                             </div>
                         </div>
                         <form onSubmit={handleVerifySubmit} style={{ display: 'flex', gap: '10px' }}>
@@ -226,15 +226,15 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                 )}
 
                 {request.brandMessage && (
-                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(155,111,80,0.06)', border: '1px solid rgba(155,111,80,0.15)' }}>
-                        <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Message from Brand</p>
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)' }}>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Message from Brand</p>
                         <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7' }}>{request.brandMessage}</p>
                     </div>
                 )}
 
                 {request.campaignDescription && (
                     <div>
-                        <p style={{ fontSize: '11px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Campaign Description</p>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Campaign Description</p>
                         <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7' }}>{request.campaignDescription}</p>
                     </div>
                 )}
@@ -242,8 +242,8 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '8px' }}>
                     {fields.map((field) => (
                         <div key={field.label} style={{ padding: '10px 14px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-                            <p style={{ fontSize: '10px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{field.label}</p>
-                            <p style={{ fontSize: '13px', color: '#172033', fontWeight: '600', textTransform: 'capitalize' }}>{field.val}</p>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{field.label}</p>
+                            <p style={{ fontSize: '13px', color: '#ffffff', fontWeight: '600', textTransform: 'capitalize' }}>{field.val}</p>
                         </div>
                     ))}
                 </div>
@@ -254,9 +254,9 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                         style={{
                             padding: '11px 16px',
                             borderRadius: '12px',
-                            background: 'rgba(155,111,80,0.1)',
-                            border: '1px solid rgba(155,111,80,0.22)',
-                            color: '#9b6f50',
+                            background: 'rgba(168,85,247,0.15)',
+                            border: '1px solid rgba(168,85,247,0.3)',
+                            color: '#c084fc',
                             fontSize: '12px',
                             fontWeight: '700',
                             cursor: 'pointer',
@@ -272,7 +272,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
 
                 {request.contentGuidelines && (
                     <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(96,213,248,0.05)', border: '1px solid rgba(96,213,248,0.12)' }}>
-                        <p style={{ fontSize: '10px', color: '#7a8798', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Content Guidelines</p>
+                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>Content Guidelines</p>
                         <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>{request.contentGuidelines}</p>
                     </div>
                 )}
@@ -281,7 +281,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                     <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
                         <p style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '700', marginBottom: '6px' }}>Current Counter Offer</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>${request.counterOfferPrice.toLocaleString()}</p>
-                        {request.counterOfferMessage && <p style={{ fontSize: '12px', color: '#667085', marginTop: '4px' }}>{request.counterOfferMessage}</p>}
+                        {request.counterOfferMessage && <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>{request.counterOfferMessage}</p>}
                     </div>
                 )}
 
@@ -311,7 +311,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                         <AnimatePresence>
                             {showNegotiate && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                                    <div style={{ padding: '18px', borderRadius: '16px', background: '#fffbeb', border: '1px solid rgba(251,191,36,0.18)' }}>
+                                    <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.18)' }}>
                                         <p style={{ fontSize: '12px', color: '#fbbf24', fontWeight: '700', marginBottom: '12px' }}>Send a Counter Offer</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px', marginBottom: '12px' }}>
                                             <div>
@@ -340,7 +340,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                         <AnimatePresence>
                             {showReject && (
                                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                                    <div style={{ padding: '18px', borderRadius: '16px', background: '#fff1f2', border: '1px solid rgba(248,113,113,0.18)' }}>
+                                    <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(248,113,113,0.05)', border: '1px solid rgba(248,113,113,0.18)' }}>
                                         <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '700', marginBottom: '12px' }}>Decline Request</p>
                                         <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Reason (optional)</label>
                                         <input value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)}
@@ -404,7 +404,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
     };
 
     const FILTERS = [
-        { key: 'all', label: 'All', color: '#9b6f50' },
+        { key: 'all', label: 'All', color: '#a855f7' },
         { key: 'sent,viewed', label: 'New', color: '#60d5f8' },
         { key: 'accepted', label: 'Accepted', color: '#4ade80' },
         { key: 'negotiation', label: 'Negotiation', color: '#fbbf24' },
@@ -421,7 +421,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
     if (loading) {
         return (
             <div style={{ textAlign: 'center', padding: '50px 0' }}>
-                <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#9b6f50' }} />
+                <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#a855f7' }} />
             </div>
         );
     }
@@ -448,7 +448,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
             {filtered.length === 0 && (
                 <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-                    <Inbox size={48} style={{ color: 'rgba(155,111,80,0.3)', margin: '0 auto 16px' }} />
+                    <Inbox size={48} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 16px' }} />
                     <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '6px' }}>
                         {requests.length === 0 ? 'No collaborations yet' : 'No matching collaboration items'}
                     </p>
@@ -479,10 +479,10 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
                                     style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
                                     <div style={{
                                         width: '44px', height: '44px', borderRadius: '14px',
-                                        background: request.brandLogoUrl ? 'transparent' : 'linear-gradient(135deg, #9b6f50, #d7b48f)',
+                                        background: request.brandLogoUrl ? 'transparent' : 'linear-gradient(135deg, #9333ea, #c084fc)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: '800', fontSize: '15px', color: '#fff', flexShrink: 0,
-                                        overflow: 'hidden', border: '1px solid rgba(155,111,80,0.2)',
+                                        overflow: 'hidden', border: '1px solid rgba(168,85,247,0.3)',
                                     }}>
                                         {request.brandLogoUrl ? (
                                             <img src={request.brandLogoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

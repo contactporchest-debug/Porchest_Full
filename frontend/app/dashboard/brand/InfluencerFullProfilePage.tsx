@@ -234,32 +234,32 @@ type DistributionItem = {
 };
 
 const COLORS = {
-    ink: '#172033',
-    text: '#24324a',
-    muted: '#64748b',
-    slate: '#94a3b8',
-    panel: 'rgba(255,255,255,0.9)',
-    border: 'rgba(148,163,184,0.18)',
-    purple: '#9b6f50',
-    violet: '#d7b48f',
-    blue: '#4f8dfd',
-    sky: '#60d5f8',
-    teal: '#14b8a6',
-    green: '#22c55e',
-    amber: '#f59e0b',
-    rose: '#fb7185',
+    ink: '#ffffff',
+    text: '#f8fafc',
+    muted: 'rgba(255,255,255,0.5)',
+    slate: 'rgba(255,255,255,0.3)',
+    panel: 'rgba(12,12,12,0.95)',
+    border: 'rgba(255,255,255,0.08)',
+    purple: '#a855f7',
+    violet: '#c084fc',
+    blue: '#38bdf8',
+    sky: '#bae6fd',
+    teal: '#2dd4bf',
+    green: '#4ade80',
+    amber: '#fbbf24',
+    rose: '#f87171',
 };
 
-const PIE_COLORS = ['#9b6f50', '#4f8dfd', '#14b8a6', '#22c55e', '#f59e0b', '#fb7185', '#94a3b8'];
+const PIE_COLORS = ['#a855f7', '#38bdf8', '#2dd4bf', '#4ade80', '#fbbf24', '#f87171', 'rgba(255,255,255,0.3)'];
 
 const tooltipStyle = {
-    background: 'rgba(255,255,255,0.98)',
-    border: '1px solid rgba(155,111,80,0.16)',
+    background: 'rgba(12,12,12,0.95)',
+    border: '1px solid rgba(168,85,247,0.16)',
     borderRadius: '14px',
     color: COLORS.ink,
     fontSize: '12px',
     padding: '10px 14px',
-    boxShadow: '0 18px 44px rgba(15,23,42,0.14)',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
 };
 
 const fmtNumber = (value: number | null | undefined, digits = 0) => {
@@ -357,9 +357,9 @@ const ratingTone = (tier?: string) => {
 const cardStyle = {
     padding: '22px',
     borderRadius: '28px',
-    background: 'rgba(255,255,255,0.88)',
+    background: '#0c0c0c',
     border: `1px solid ${COLORS.border}`,
-    boxShadow: '0 20px 60px rgba(15,23,42,0.08)',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
 };
 
 function SectionCard({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
@@ -379,7 +379,7 @@ function SectionCard({ title, subtitle, icon, children }: { title: string; subti
 
 function MetricTile({ label, value, tone = COLORS.ink, note, icon }: { label: string; value: string; tone?: string; note?: string; icon?: React.ReactNode }) {
     return (
-        <div style={{ padding: '18px', borderRadius: 22, background: 'rgba(248,250,252,0.95)', border: `1px solid ${COLORS.border}` }}>
+        <div style={{ padding: '18px', borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: `1px solid ${COLORS.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, color: COLORS.muted, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {icon}
                 <span>{label}</span>
@@ -392,7 +392,7 @@ function MetricTile({ label, value, tone = COLORS.ink, note, icon }: { label: st
 
 function EmptyChart({ copy }: { copy: string }) {
     return (
-        <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 20, border: `1px dashed ${COLORS.border}`, background: 'rgba(248,250,252,0.9)' }}>
+        <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 20, border: `1px dashed ${COLORS.border}`, background: 'rgba(255,255,255,0.02)' }}>
             <p style={{ maxWidth: 360, textAlign: 'center', color: COLORS.muted, fontSize: 13, lineHeight: 1.7 }}>{copy}</p>
         </div>
     );
@@ -589,7 +589,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                         <div style={{ flex: 1, minWidth: 260 }}>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
                                 <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{profile?.platform || 'Instagram'}</span>
-                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(155,111,80,0.22)', fontSize: 12, fontWeight: 800 }}>{profile.niche}</span>}
+                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(168,85,247,0.22)', fontSize: 12, fontWeight: 800 }}>{profile.niche}</span>}
                                 {analyticsMetrics?.ratingTier && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', fontSize: 12, fontWeight: 800 }}>{analyticsMetrics.ratingTier}</span>}
                             </div>
                             <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 34, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: 10 }}>{displayName}</h1>
@@ -650,7 +650,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <ComposedChart data={snapshotTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis yAxisId="left" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                 <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -670,7 +670,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                                     engagementRate: analytics?.charts?.engagementTrend?.[index]?.engagementRate || 0,
                                 }))}
                             >
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis yAxisId="left" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                 <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -689,7 +689,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <AreaChart data={snapshotTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                 <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
@@ -709,7 +709,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {recentMedia.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <BarChart data={recentMedia}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                 <XAxis dataKey="shortLabel" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
@@ -747,7 +747,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {radarData.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <RadarChart data={radarData}>
-                                <PolarGrid stroke="rgba(148,163,184,0.22)" />
+                                <PolarGrid stroke="rgba(255,255,255,0.08)" />
                                 <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
                                 <RechartsRadar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.25} />
                                 <Tooltip contentStyle={tooltipStyle} />
@@ -762,7 +762,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {engagementBreakdown.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <BarChart data={engagementBreakdown}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                 <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
                                 <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
@@ -800,7 +800,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             {topCountries.length ? (
                                 <ResponsiveContainer width="100%" height={240}>
                                     <BarChart data={topCountries} layout="vertical">
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" horizontal={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" horizontal={false} />
                                         <XAxis type="number" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <YAxis dataKey="name" type="category" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} width={78} />
                                         <Tooltip contentStyle={tooltipStyle} />
@@ -859,7 +859,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             {languageDistribution.length ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <BarChart data={languageDistribution}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                         <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <Tooltip contentStyle={tooltipStyle} />
@@ -875,7 +875,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             {onlineFollowerHeatmap.length ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <BarChart data={onlineFollowerHeatmap}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
                                         <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
                                         <Tooltip contentStyle={tooltipStyle} />
@@ -904,9 +904,9 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 <SectionCard title="Recent Media Facts" subtitle="The latest stored posts and reels summarized for quick review." icon={<ImageIcon size={16} />}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
                         {recentMedia.slice().reverse().slice(0, 6).map((item) => (
-                            <div key={item.id} style={{ padding: 16, borderRadius: 22, background: 'rgba(248,250,252,0.95)', border: `1px solid ${COLORS.border}` }}>
+                            <div key={item.id} style={{ padding: 16, borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: `1px solid ${COLORS.border}` }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                                    <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(155,111,80,0.08)', color: COLORS.purple, fontSize: 11, fontWeight: 800 }}>{item.mediaType}</span>
+                                    <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(168,85,247,0.08)', color: COLORS.purple, fontSize: 11, fontWeight: 800 }}>{item.mediaType}</span>
                                     <span style={{ fontSize: 11, color: COLORS.muted }}>{item.label}</span>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
