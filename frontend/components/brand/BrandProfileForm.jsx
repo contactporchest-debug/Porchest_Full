@@ -166,7 +166,8 @@ export default function BrandProfileForm() {
         }
     }
 
-    const inputClass = 'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#c79b6a]/50 focus:bg-white/[0.06]';
+    const inputClass = 'w-full rounded-2xl border border-white/15 bg-[#121212] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 shadow-inner shadow-black/20 focus:border-[#c79b6a]/60 focus:ring-1 focus:ring-[#c79b6a]/25 focus:bg-[#171717]';
+    const selectClass = `${inputClass} appearance-none pr-10`;
     const pillClass = 'rounded-full border px-4 py-2 text-xs font-semibold transition-colors';
 
     return (
@@ -216,12 +217,19 @@ export default function BrandProfileForm() {
                     <input className={inputClass} placeholder="Porchest pixel ID" value={form.pixelId} onChange={(event) => setForm((current) => ({ ...current, pixelId: event.target.value }))} />
                     <div className="md:col-span-2">
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Industry</label>
-                        <select className={inputClass} value={form.industry} onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))}>
-                            <option value="">Select an industry</option>
-                            {INDUSTRIES.map((industry) => (
-                                <option key={industry} value={industry.toLowerCase()}>{industry}</option>
-                            ))}
-                        </select>
+                        <div className="relative">
+                            <select className={selectClass} value={form.industry} onChange={(event) => setForm((current) => ({ ...current, industry: event.target.value }))}>
+                                <option value="">Select an industry</option>
+                                {INDUSTRIES.map((industry) => (
+                                    <option key={industry} value={industry.toLowerCase()}>{industry}</option>
+                                ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/40">
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                     <textarea
                         className={`${inputClass} min-h-[124px] md:col-span-2`}
@@ -327,7 +335,7 @@ export default function BrandProfileForm() {
                                         addToNested('countries', countryInput);
                                         setCountryInput('');
                                     }}
-                                    className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                                className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.12]"
                                 >
                                     Add
                                 </button>
@@ -363,7 +371,7 @@ export default function BrandProfileForm() {
                                         addToNested('interests', interestInput);
                                         setInterestInput('');
                                     }}
-                                    className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                                className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.12]"
                                 >
                                     Add
                                 </button>

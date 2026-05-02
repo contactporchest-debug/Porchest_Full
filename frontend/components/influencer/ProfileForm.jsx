@@ -113,7 +113,7 @@ export default function ProfileForm() {
         }
     }
 
-    const inputClass = 'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-[#c79b6a]/50 focus:bg-white/[0.06]';
+    const inputClass = 'w-full rounded-2xl border border-white/15 bg-[#121212] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 shadow-inner shadow-black/20 focus:border-[#c79b6a]/60 focus:ring-1 focus:ring-[#c79b6a]/25 focus:bg-[#171717]';
     const pillClass = 'rounded-full border px-4 py-2 text-xs font-semibold transition-colors';
 
     return (
@@ -229,7 +229,7 @@ export default function ProfileForm() {
                             <button
                                 type="button"
                                 onClick={addLanguage}
-                                className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                                className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.12]"
                             >
                                 Add
                             </button>

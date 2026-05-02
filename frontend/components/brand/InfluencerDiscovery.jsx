@@ -61,22 +61,32 @@ export default function InfluencerDiscovery() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {influencers.map((inf, i) => {
                     const primaryNiche = inf.niche?.[0] || 'lifestyle';
+                    const avatar = inf.avatar || inf.profilePictureURL || inf.igProfileUrl;
+                    const followerCount = inf.followersCount || inf.igFollowersCount || inf.audienceSize || 0;
+                    const engagementRate = inf.avgEngagementRate || inf.engagementRate || inf.overallEngagementRate;
                     return (
                         <motion.div key={inf._id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} 
-                            className="p-6 rounded-[20px] bg-white/[0.03] border border-white/[0.07] space-y-4 hover:border-white/[0.14] hover:bg-white/[0.05] transition-all flex flex-col justify-between">
+                            className="overflow-hidden rounded-[24px] border border-white/[0.08] bg-white/[0.03] shadow-[0_22px_60px_rgba(0,0,0,0.22)] transition-all hover:border-white/[0.14] hover:bg-white/[0.05] flex flex-col justify-between">
+                            <div className="h-1 bg-gradient-to-r from-purple-500 via-fuchsia-400 to-amber-300" />
+                            <div className="space-y-4 p-6">
                             
                             {/* Card Header */}
                             <div className="flex items-start gap-4">
-                                {inf.igProfileUrl ? (
-                                    <img src={inf.igProfileUrl} alt="" className="w-14 h-14 rounded-[14px] object-cover border border-white/[0.08]" />
+                                {avatar ? (
+                                    <img src={avatar} alt="" className="w-16 h-16 rounded-[18px] object-cover border border-white/[0.12] shadow-lg shadow-black/20" />
                                 ) : (
-                                    <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-lg">
+                                    <div className="w-16 h-16 rounded-[18px] bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-black/20">
                                         {(inf.displayName || inf.igUsername || 'C')[0].toUpperCase()}
                                     </div>
                                 )}
                                 <div className="flex-1 min-w-0 pt-1">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-white font-bold text-base truncate">{inf.displayName || inf.igUsername || 'Creator'}</p>
+                                        {inf.followerTier && (
+                                            <span className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-[10px] font-bold uppercase tracking-wide text-white/70">
+                                                {inf.followerTier}
+                                            </span>
+                                        )}
                                         <div className="w-4 h-4 bg-green-500/15 rounded-full flex items-center justify-center text-green-400">
                                             <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                                         </div>
@@ -84,40 +94,55 @@ export default function InfluencerDiscovery() {
                                     <p className="text-xs text-white/40 mt-0.5">@{inf.igUsername} <span className="mx-1">•</span> {inf.country || 'Global'}</p>
                                 </div>
                                 <div className="text-right pt-1">
-                                    <div className="flex items-center justify-end gap-1 mb-0.5">
-                                        {[...Array(5)].map((_, i) => (
-                                            <svg key={i} className={`w-3 h-3 ${i < 4 ? 'text-yellow-400' : 'text-white/10'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                        ))}
-                                    </div>
                                     <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide">Fit Score</p>
+                                    <p className="text-2xl font-bold text-purple-300">4.8</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-white/30">Followers</p>
+                                    <p className="mt-1 text-lg font-bold text-white">{Number(followerCount).toLocaleString()}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-white/30">ER</p>
+                                    <p className="mt-1 text-lg font-bold text-white">{engagementRate != null ? `${Number(engagementRate).toFixed(1)}%` : '—'}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-white/30">Tier</p>
+                                    <p className="mt-1 text-lg font-bold text-white capitalize">{inf.followerTier || '—'}</p>
                                 </div>
                             </div>
 
                             {/* Bio / Description */}
-                            <p className="text-sm text-white/40 leading-relaxed line-clamp-2">
+                            <p className="text-sm text-white/60 leading-relaxed line-clamp-2">
                                 {inf.bio || `Creative ${primaryNiche} influencer focusing on authentic content and engaging storytelling.`}
                             </p>
 
-                            {/* Niche Pill */}
-                            <div>
+                            <div className="flex flex-wrap gap-2">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getPillColor(primaryNiche)}`}>
                                     {primaryNiche}
                                 </span>
+                                {inf.city && (
+                                    <span className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/[0.08] text-[10px] font-bold uppercase tracking-wide text-white/60">
+                                        {inf.city}
+                                    </span>
+                                )}
                             </div>
 
                             {/* Rates Grid */}
                             <div className="grid grid-cols-2 gap-3 mt-4">
-                                <div className="p-3.5 rounded-2xl bg-purple-500/[0.06] border border-purple-500/[0.12]">
+                                <div className="p-3.5 rounded-2xl bg-purple-500/[0.08] border border-purple-500/[0.16]">
                                     <div className="flex items-center gap-1.5 mb-1.5">
                                         <svg className="w-3.5 h-3.5 text-purple-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                        <span className="text-[10px] font-bold text-purple-400/60 uppercase tracking-wide">IG POST</span>
+                                        <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wide">IG POST</span>
                                     </div>
                                     <p className="text-white font-bold text-lg">${inf.rates?.postPrice || inf.avgPostPrice || 250}</p>
                                 </div>
-                                <div className="p-3.5 rounded-2xl bg-blue-500/[0.06] border border-blue-500/[0.12]">
+                                <div className="p-3.5 rounded-2xl bg-blue-500/[0.08] border border-blue-500/[0.16]">
                                     <div className="flex items-center gap-1.5 mb-1.5">
                                         <svg className="w-3.5 h-3.5 text-blue-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                                        <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-wide">IG REEL</span>
+                                        <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">IG REEL</span>
                                     </div>
                                     <p className="text-white font-bold text-lg">${inf.rates?.reelPrice || inf.avgReelPrice || 350}</p>
                                 </div>
@@ -147,6 +172,7 @@ export default function InfluencerDiscovery() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                            </div>
                         </motion.div>
                     );
                 })}
