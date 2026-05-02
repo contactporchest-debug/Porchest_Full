@@ -1,116 +1,262 @@
 const express = require('express');
-const authMiddleware = require('../middleware/authMiddleware');
-const roleMiddleware = require('../middleware/roleMiddleware');
-const InfluencerProfile = require('../models/InfluencerProfile');
-const BrandProfile = require('../models/BrandProfile');
-const { generateUniqueCode } = require('../utils/generateCode');
-
 const router = express.Router();
 
-function numberOrUndefined(value) {
-    if (value === '' || value == null) return undefined;
-    const num = Number(value);
-    return Number.isFinite(num) ? num : undefined;
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
+const BrandProfile = require('../models/BrandProfile');
+const InfluencerProfile = require('../models/InfluencerProfile');
+const User = require('../models/User');
+const { generateUniqueCode } = require('../utils/generateCode');
+
+function hasOwn(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj || {}, key);
+}
+
+function toNumber(value) {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function toBoolean(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return Boolean(value);
+}
+
+function toStringArray(value) {
+    if (!Array.isArray(value)) return undefined;
+    return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function toNumberArray(value) {
+    if (!Array.isArray(value)) return undefined;
+    return value
+        .map((item) => toNumber(item))
+        .filter((item) => item !== undefined);
+}
+
+function stripSecrets(profile) {
+    if (!profile) return profile;
+    const plain = typeof profile.toObject === 'function' ? profile.toObject({ depopulate: true }) : { ...profile };
+
+    if (plain.sync) {
+        delete plain.sync.accessToken;
+        delete plain.sync.longLivedToken;
+    }
+
+    return plain;
+}
+
+function applyIfPresent(target, source, key, transform = (value) => value) {
+    if (!hasOwn(source, key)) return;
+    const value = transform(source[key]);
+    if (value !== undefined) target[key] = value;
+}
+
+function buildBrandUpdates(body) {
+    const updates = {};
+
+    applyIfPresent(updates, body, 'businessName', (value) => value ?? '');
+    applyIfPresent(updates, body, 'brandName', (value) => value ?? '');
+    applyIfPresent(updates, body, 'logo', (value) => value ?? '');
+    applyIfPresent(updates, body, 'logoUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'industry', (value) => value ?? '');
+    applyIfPresent(updates, body, 'website', (value) => value ?? '');
+    applyIfPresent(updates, body, 'description', (value) => value ?? '');
+    applyIfPresent(updates, body, 'bio', (value) => value ?? '');
+    applyIfPresent(updates, body, 'contactEmail', (value) => value ?? '');
+    applyIfPresent(updates, body, 'pixelId', (value) => value ?? '');
+    applyIfPresent(updates, body, 'usageRightsDefault', toBoolean);
+
+    if (hasOwn(body, 'preferredNiches')) {
+        const list = toStringArray(body.preferredNiches);
+        if (list !== undefined) updates.preferredNiches = list;
+    }
+
+    if (hasOwn(body, 'preferredTiers')) {
+        const list = toStringArray(body.preferredTiers);
+        if (list !== undefined) updates.preferredTiers = list;
+    }
+
+    if (hasOwn(body, 'targetAudience')) {
+        const input = body.targetAudience || {};
+        const targetAudience = {};
+
+        if (hasOwn(input, 'ageRange')) {
+            const ageRange = toNumberArray(input.ageRange);
+            if (ageRange !== undefined) targetAudience.ageRange = ageRange.slice(0, 2);
+        }
+        if (hasOwn(input, 'genders')) {
+            const genders = toStringArray(input.genders);
+            if (genders !== undefined) targetAudience.genders = genders;
+        }
+        if (hasOwn(input, 'countries')) {
+            const countries = toStringArray(input.countries);
+            if (countries !== undefined) targetAudience.countries = countries;
+        }
+        if (hasOwn(input, 'interests')) {
+            const interests = toStringArray(input.interests);
+            if (interests !== undefined) targetAudience.interests = interests;
+        }
+
+        if (Object.keys(targetAudience).length > 0) {
+            updates.targetAudience = targetAudience;
+        }
+    }
+
+    if (hasOwn(body, 'budgetRange')) {
+        const input = body.budgetRange || {};
+        const budgetRange = {
+            min: hasOwn(input, 'min') ? toNumber(input.min) : undefined,
+            max: hasOwn(input, 'max') ? toNumber(input.max) : undefined,
+        };
+        if (Object.values(budgetRange).some((value) => value !== undefined)) {
+            updates.budgetRange = budgetRange;
+        }
+    }
+
+    return updates;
+}
+
+function buildInfluencerUpdates(body) {
+    const updates = {};
+
+    applyIfPresent(updates, body, 'fullName', (value) => value ?? '');
+    applyIfPresent(updates, body, 'displayName', (value) => value ?? '');
+    applyIfPresent(updates, body, 'avatar', (value) => value ?? '');
+    applyIfPresent(updates, body, 'profilePictureUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'bio', (value) => value ?? '');
+    applyIfPresent(updates, body, 'country', (value) => value ?? '');
+    applyIfPresent(updates, body, 'city', (value) => value ?? '');
+    applyIfPresent(updates, body, 'contactEmail', (value) => value ?? '');
+    applyIfPresent(updates, body, 'phoneNumber', (value) => value ?? '');
+
+    if (hasOwn(body, 'niche')) {
+        const niche = toStringArray(body.niche);
+        if (niche !== undefined) updates.niche = niche;
+    }
+
+    if (hasOwn(body, 'languages')) {
+        const languages = toStringArray(body.languages);
+        if (languages !== undefined) updates.languages = languages;
+    }
+
+    if (hasOwn(body, 'contentStyleTags')) {
+        const contentStyleTags = toStringArray(body.contentStyleTags);
+        if (contentStyleTags !== undefined) updates.contentStyleTags = contentStyleTags;
+    }
+
+    if (hasOwn(body, 'rates')) {
+        const input = body.rates || {};
+        const rates = {
+            storyPrice: hasOwn(input, 'storyPrice') ? toNumber(input.storyPrice) : undefined,
+            reelPrice: hasOwn(input, 'reelPrice') ? toNumber(input.reelPrice) : undefined,
+            postPrice: hasOwn(input, 'postPrice') ? toNumber(input.postPrice) : undefined,
+        };
+        if (Object.values(rates).some((value) => value !== undefined)) {
+            updates.rates = rates;
+        }
+    }
+
+    return updates;
+}
+
+async function finalizeUserProfile(userId, role, profileId, profileComplete) {
+    const update = { profileCompletionStatus: profileComplete };
+
+    if (role === 'brand') update.brandProfileId = profileId;
+    if (role === 'influencer') update.influencerProfileId = profileId;
+
+    await User.findByIdAndUpdate(userId, update, { new: true });
+}
+
+async function upsertProfile(Model, codePrefix, codeField, userId, updates, role) {
+    const existing = await Model.findOne({ userId });
+    const profileCode = existing?.[codeField] || await generateUniqueCode(codePrefix, Model, codeField);
+    const merged = {
+        userId,
+        [codeField]: profileCode,
+        ...updates,
+    };
+
+    const profile = await Model.findOneAndUpdate(
+        { userId },
+        {
+            $set: merged,
+            $setOnInsert: {
+                userId,
+                [codeField]: profileCode,
+            },
+        },
+        {
+            new: true,
+            upsert: true,
+            runValidators: true,
+            setDefaultsOnInsert: true,
+        }
+    );
+
+    return profile;
 }
 
 router.get('/influencer/me', authMiddleware, roleMiddleware('influencer'), async (req, res) => {
     try {
-        const profile = await InfluencerProfile.findOne({ userId: req.user._id }).lean();
-        if (!profile) return res.status(404).json({ success: false, error: 'Influencer profile not found' });
-        return res.json(profile);
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id }).select('-sync.accessToken -sync.longLivedToken');
+        if (!profile) {
+            return res.json({ userId: String(req.user._id), profileComplete: false });
+        }
+        return res.json(stripSecrets(profile));
     } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ message: 'Failed to load influencer profile' });
     }
 });
 
 router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (req, res) => {
     try {
-        const rates = req.body?.rates || {};
-        const update = {
-            displayName: req.body.displayName,
-            bio: req.body.bio,
-            niche: Array.isArray(req.body.niche) ? req.body.niche : [],
-            country: req.body.country,
-            city: req.body.city,
-            contactEmail: req.body.contactEmail,
-            languages: Array.isArray(req.body.languages) ? req.body.languages : [],
-            contentStyleTags: Array.isArray(req.body.contentStyleTags) ? req.body.contentStyleTags : [],
-            rates: {
-                storyPrice: numberOrUndefined(rates.storyPrice),
-                reelPrice: numberOrUndefined(rates.reelPrice),
-                postPrice: numberOrUndefined(rates.postPrice),
-            },
-            avgReelPrice: numberOrUndefined(rates.reelPrice),
-            avgPostPrice: numberOrUndefined(rates.postPrice),
-            profileComplete: true,
-            profileCompletionStatus: true,
-        };
+        const updates = buildInfluencerUpdates(req.body || {});
+        const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
+        const complete = !!(profile.displayName && Array.isArray(profile.niche) && profile.niche.length > 0);
 
-        let profile = await InfluencerProfile.findOne({ userId: req.user._id });
-        if (!profile) {
-            profile = await InfluencerProfile.create({
-                userId: req.user._id,
-                influencerProfileId: await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId'),
-                fullName: req.user.fullName || req.user.email?.split('@')[0] || 'Influencer',
-                displayName: update.displayName || req.user.fullName || req.user.email?.split('@')[0] || 'Influencer',
-            });
-        }
+        profile.profileComplete = complete;
+        profile.profileCompletionStatus = complete;
+        await profile.save();
 
-        const updated = await InfluencerProfile.findOneAndUpdate(
-            { userId: req.user._id },
-            { $set: update },
-            { new: true, upsert: true, strict: false }
-        ).lean();
+        await finalizeUserProfile(req.user._id, 'influencer', profile._id, complete);
 
-        return res.json(updated);
+        return res.json(stripSecrets(profile));
     } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ message: 'Failed to save influencer profile' });
     }
 });
 
 router.get('/brand/me', authMiddleware, roleMiddleware('brand'), async (req, res) => {
     try {
-        const profile = await BrandProfile.findOne({ userId: req.user._id }).lean();
-        if (!profile) return res.status(404).json({ success: false, error: 'Brand profile not found' });
-        return res.json(profile);
+        const profile = await BrandProfile.findOne({ userId: req.user._id }).select('-sync.accessToken -sync.longLivedToken');
+        if (!profile) {
+            return res.json({ userId: String(req.user._id), profileComplete: false });
+        }
+        return res.json(stripSecrets(profile));
     } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ message: 'Failed to load brand profile' });
     }
 });
 
 router.put('/brand', authMiddleware, roleMiddleware('brand'), async (req, res) => {
     try {
-        let profile = await BrandProfile.findOne({ userId: req.user._id });
-        if (!profile) {
-            profile = await BrandProfile.create({
-                userId: req.user._id,
-                brandProfileId: await generateUniqueCode('BRD', BrandProfile, 'brandProfileId'),
-                businessName: req.body.businessName || req.user.companyName || req.user.email?.split('@')[0] || 'Brand',
-                brandName: req.body.businessName || req.user.companyName || req.user.email?.split('@')[0] || 'Brand',
-            });
-        }
+        const updates = buildBrandUpdates(req.body || {});
+        const profile = await upsertProfile(BrandProfile, 'BRD', 'brandProfileId', req.user._id, updates, 'brand');
+        const complete = !!profile.businessName;
 
-        const update = {
-            businessName: req.body.businessName,
-            brandName: req.body.businessName,
-            industry: req.body.industry,
-            website: req.body.website,
-            bio: req.body.description,
-            description: req.body.description,
-            budgetRange: req.body.budgetRange || {},
-            targetAudience: req.body.targetAudience || {},
-            profileComplete: true,
-        };
+        profile.profileComplete = complete;
+        profile.profileCompletionStatus = complete;
+        await profile.save();
 
-        const updated = await BrandProfile.findOneAndUpdate(
-            { userId: req.user._id },
-            { $set: update },
-            { new: true, upsert: true, strict: false }
-        ).lean();
+        await finalizeUserProfile(req.user._id, 'brand', profile._id, complete);
 
-        return res.json(updated);
+        return res.json(stripSecrets(profile));
     } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ message: 'Failed to save brand profile' });
     }
 });
 

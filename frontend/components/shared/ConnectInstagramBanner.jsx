@@ -2,9 +2,25 @@
 
 import { motion } from 'framer-motion';
 
+function getToken() {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('porchest_token') || localStorage.getItem('token') || '';
+}
+
 export default function ConnectInstagramBanner({ role = 'influencer' }) {
-    function handleConnect() {
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/meta/connect`;
+    async function handleConnect() {
+        try {
+            const endpoint = role === 'brand' ? '/brand/instagram/connect' : '/influencer/instagram/connect';
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+                headers: { Authorization: `Bearer ${getToken()}` },
+            });
+            const data = await res.json().catch(() => null);
+            if (data?.authURL) {
+                window.location.href = data.authURL;
+            }
+        } catch {
+            // Keep the banner simple; the surrounding page handles broader error feedback.
+        }
     }
 
     return (

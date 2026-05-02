@@ -36,6 +36,7 @@ const brandProfileSchema = new mongoose.Schema(
         logo: { type: String },
         industry: { type: String },
         website: { type: String },
+        contactEmail: { type: String },
         country: { type: String },
         bio: { type: String },
         tone: { type: String, enum: ['luxury', 'casual', 'professional', 'fun'] },
@@ -44,9 +45,19 @@ const brandProfileSchema = new mongoose.Schema(
         igUserId: { type: String, index: true },
         igUsername: { type: String },
         igFollowers: { type: Number, default: 0 },
+        igFollowingCount: { type: Number, default: 0 },
         igProfileUrl: { type: String },
+        igReach: { type: Number, default: 0 },
+        igImpressions: { type: Number, default: 0 },
+        igProfileViews: { type: Number, default: 0 },
+        igWebsiteClicks: { type: Number, default: 0 },
         pixelId: { type: String },
         igLastSyncedAt: { type: Date },
+        audienceDemographics: {
+            ageGender: { type: mongoose.Schema.Types.Mixed },
+            topCountries: { type: [mongoose.Schema.Types.Mixed], default: [] },
+            topCities: { type: [mongoose.Schema.Types.Mixed], default: [] },
+        },
 
         // Target audience
         targetAudience: {
@@ -59,10 +70,15 @@ const brandProfileSchema = new mongoose.Schema(
         // Campaign preferences
         preferredNiches: [{ type: String }],
         preferredTiers: [{ type: String, enum: ['nano', 'micro', 'macro', 'mega'] }],
+        budgetRange: {
+            min: { type: Number },
+            max: { type: Number },
+        },
         typicalBudget: { type: Number },
         usageRightsDefault: { type: Boolean, default: false },
 
         // Porchest internal
+        assignedEmployee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         assignedEmployeeFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         profileComplete: { type: Boolean, default: false },
         verified: { type: Boolean, default: false },
@@ -90,7 +106,6 @@ const brandProfileSchema = new mongoose.Schema(
             enum: ['disconnected', 'connected', 'token_expired', 'failed'],
             default: 'disconnected',
         },
-        budgetRange: { type: String },
         approxBudgetUSD: { type: Number },
         instagramUserId: { type: String },
         instagramUsername: { type: String },
@@ -140,6 +155,11 @@ const MIRROR_PAIRS = [
     ['igUsername', 'instagramUsername'],
     ['igProfileUrl', 'instagramDPURL'],
     ['igFollowers', 'followersCount'],
+    ['igFollowingCount', 'followsCount'],
+    ['igReach', 'accountReach'],
+    ['igImpressions', 'accountImpressions'],
+    ['igProfileViews', 'profileViews'],
+    ['igWebsiteClicks', 'websiteClicks'],
     ['igLastSyncedAt', 'lastSyncedAt'],
     ['profileComplete', 'profileCompletionStatus'],
 ];
@@ -156,6 +176,10 @@ function syncDerivedBrandState(doc) {
     if (!doc.industry && doc.category) doc.industry = doc.category;
     if (!doc.category && doc.industry) doc.category = doc.industry;
 
+    if (!doc.contactEmail && doc.contactDetails?.officialEmail) doc.contactEmail = doc.contactDetails.officialEmail;
+    if (!doc.contactDetails) doc.contactDetails = {};
+    if (!doc.contactDetails.officialEmail && doc.contactEmail) doc.contactDetails.officialEmail = doc.contactEmail;
+
     if (!doc.bio && doc.description) doc.bio = doc.description;
     if (!doc.description && doc.bio) doc.description = doc.bio;
 
@@ -170,6 +194,21 @@ function syncDerivedBrandState(doc) {
 
     if (doc.igFollowers == null && doc.followersCount != null) doc.igFollowers = doc.followersCount;
     if (doc.followersCount == null && doc.igFollowers != null) doc.followersCount = doc.igFollowers;
+
+    if (doc.igFollowingCount == null && doc.followsCount != null) doc.igFollowingCount = doc.followsCount;
+    if (doc.followsCount == null && doc.igFollowingCount != null) doc.followsCount = doc.igFollowingCount;
+
+    if (doc.igReach == null && doc.accountReach != null) doc.igReach = doc.accountReach;
+    if (doc.accountReach == null && doc.igReach != null) doc.accountReach = doc.igReach;
+
+    if (doc.igImpressions == null && doc.accountImpressions != null) doc.igImpressions = doc.accountImpressions;
+    if (doc.accountImpressions == null && doc.igImpressions != null) doc.accountImpressions = doc.igImpressions;
+
+    if (doc.igProfileViews == null && doc.profileViews != null) doc.igProfileViews = doc.profileViews;
+    if (doc.profileViews == null && doc.igProfileViews != null) doc.profileViews = doc.igProfileViews;
+
+    if (doc.igWebsiteClicks == null && doc.websiteClicks != null) doc.igWebsiteClicks = doc.websiteClicks;
+    if (doc.websiteClicks == null && doc.igWebsiteClicks != null) doc.websiteClicks = doc.igWebsiteClicks;
 
     if (!doc.igLastSyncedAt && doc.lastSyncedAt) doc.igLastSyncedAt = doc.lastSyncedAt;
     if (!doc.lastSyncedAt && doc.igLastSyncedAt) doc.lastSyncedAt = doc.igLastSyncedAt;

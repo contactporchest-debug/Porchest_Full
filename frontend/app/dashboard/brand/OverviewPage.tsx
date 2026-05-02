@@ -15,12 +15,13 @@ const STATUS_COLORS: Record<string, string> = {
     canceled: '#f87171',
 };
 
-export default function OverviewPage() {
+export default function OverviewPage({ profileCompleteOverride }: { profileCompleteOverride?: boolean } = {}) {
     const router = useRouter();
     const { user, token, loading: authLoading } = useAuth();
     const [requests, setRequests] = useState<any[]>([]);
     const [verifications, setVerifications] = useState<any[]>([]);
-    const [profileComplete, setProfileComplete] = useState<boolean>(true);
+    const [profileComplete, setProfileComplete] = useState<boolean>(profileCompleteOverride ?? true);
+    const showInternalProfilePrompt = profileCompleteOverride === undefined ? !profileComplete : false;
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -34,10 +35,12 @@ export default function OverviewPage() {
         ]).then(([reqRes, verRes, dashRes]) => {
             setRequests(reqRes.data.requests || []);
             setVerifications(verRes.data.verifications || []);
-            setProfileComplete(dashRes.data.dashboard.profileComplete);
+            if (profileCompleteOverride === undefined) {
+                setProfileComplete(dashRes.data.dashboard.profileComplete);
+            }
         }).catch(() => toast.error('Failed to load dashboard'))
             .finally(() => setLoading(false));
-    }, [authLoading, token, user?.role]);
+    }, [authLoading, token, user?.role, profileCompleteOverride]);
 
     // Derive campaign states from actual stored request statuses
     const pending = requests.filter(r => ['sent', 'viewed', 'negotiation'].includes(r.status));
@@ -70,7 +73,7 @@ export default function OverviewPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* ── Profile Incomplete Banner ── */}
-            {!profileComplete && (
+            {showInternalProfilePrompt && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderRadius: '18px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', flexWrap: 'wrap', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

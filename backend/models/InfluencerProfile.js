@@ -139,6 +139,7 @@ const influencerProfileSchema = new mongoose.Schema(
         city: { type: String },
         niche: [{ type: String }],
         languages: [{ type: String }],
+        contentStyleTags: [{ type: String }],
         contactEmail: { type: String },
         phoneNumber: { type: String },
 
@@ -160,6 +161,11 @@ const influencerProfileSchema = new mongoose.Schema(
         avgSavesPerPost: { type: Number, default: 0 },
         avgSharesPerPost: { type: Number, default: 0 },
         postingFrequency: { type: Number, default: 0 },
+        totalReach90d: { type: Number, default: 0 },
+        totalImpressions90d: { type: Number, default: 0 },
+        totalProfileViews90d: { type: Number, default: 0 },
+        totalWebsiteClicks90d: { type: Number, default: 0 },
+        followerGrowth90d: { type: Number, default: 0 },
 
         // Computed scores
         avgEngagementRate: { type: Number, default: 0 },
@@ -179,6 +185,11 @@ const influencerProfileSchema = new mongoose.Schema(
         totalEarnings: { type: Number, default: 0 },
         avgCampaignRating: { type: Number, default: 0 },
         preferredRate: { type: Number, default: 0 },
+        rates: {
+            storyPrice: { type: Number },
+            reelPrice: { type: Number },
+            postPrice: { type: Number },
+        },
 
         // Payment info
         bankDetails: {
@@ -188,6 +199,7 @@ const influencerProfileSchema = new mongoose.Schema(
         },
 
         // Porchest internal
+        assignedEmployee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         assignedEmployeeFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         profileComplete: { type: Boolean, default: false },
         verified: { type: Boolean, default: false },

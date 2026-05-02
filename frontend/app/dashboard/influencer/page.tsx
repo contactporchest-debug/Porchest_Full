@@ -9,20 +9,17 @@ import OverviewPage from './OverviewPage';
 import ProfileCompletionBanner from './ProfileCompletionBanner';
 import InstagramAnalytics from '@/components/influencer/InstagramAnalytics';
 import ConnectInstagramBanner from '@/components/shared/ConnectInstagramBanner';
+import { useApi } from '@/hooks/useApi';
 import { influencerAPI } from '@/lib/api';
-import {
-    Instagram, CheckCircle, AlertCircle,
-} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InfluencerPortal() {
     const { user } = useAuth();
+    const { data: profile } = useApi('/profile/influencer/me');
     const [igConnected, setIgConnected] = useState(false);
     const [dashStats, setDashStats] = useState<any>(null);
     const [profileCompletion, setProfileCompletion] = useState<any>(null);
-    const instagramConnected = igConnected || !!(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
-
-    const displayName = user?.fullName || user?.email?.split('@')[0] || 'Influencer';
+    const instagramConnected = igConnected || !!(profile?.igUsername || user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -42,10 +39,18 @@ export default function InfluencerPortal() {
             .then(res => {
                 setDashStats(res.data.dashboard);
                 setIgConnected(!!res.data.dashboard?.instagramConnection?.isConnected);
-                setProfileCompletion(res.data.dashboard?.profileCompletion || null);
             })
             .catch(() => { });
     }, []);
+
+    useEffect(() => {
+        if (!profile) return;
+        setProfileCompletion(
+            profile.profileComplete
+                ? { percentage: 100, isComplete: true, checklist: [] }
+                : { percentage: 0, isComplete: false, checklist: [] }
+        );
+    }, [profile]);
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
