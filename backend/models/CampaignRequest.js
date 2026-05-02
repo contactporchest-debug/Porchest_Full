@@ -32,6 +32,7 @@ function hydrateLegacyShapes(doc) {
     doc.brief = doc.brief || {};
     if (!doc.brief.brandIntro && doc.brandMessage) doc.brief.brandIntro = doc.brandMessage;
     if (!doc.brief.campaignObjective && doc.campaignType) doc.brief.campaignObjective = doc.campaignType;
+    if (!doc.brief.targetAudienceDesc && doc.brief.targetAudience) doc.brief.targetAudienceDesc = doc.brief.targetAudience;
     if (!doc.brief.deliverables && doc.deliverables) {
         doc.brief.deliverables = Array.isArray(doc.deliverables)
             ? doc.deliverables
@@ -44,10 +45,20 @@ function hydrateLegacyShapes(doc) {
             ? doc.hashtags
             : String(doc.hashtags).split(',').map((item) => item.trim()).filter(Boolean);
     }
+    if (!doc.brief.hashtags && doc.brief.requiredHashtags) doc.brief.hashtags = doc.brief.requiredHashtags;
+    if (!doc.brief.contentType && doc.brief.contentTypes) doc.brief.contentType = doc.brief.contentTypes;
+    if (!doc.brief.mandatoryPoints && doc.brief.mandatoryTalkingPoints) doc.brief.mandatoryPoints = doc.brief.mandatoryTalkingPoints.join(', ');
+    if (!doc.brief.dosAndDonts && (doc.brief.dos || doc.brief.donts)) {
+        const dos = Array.isArray(doc.brief.dos) ? doc.brief.dos.join(', ') : doc.brief.dos || '';
+        const donts = Array.isArray(doc.brief.donts) ? doc.brief.donts.join(', ') : doc.brief.donts || '';
+        doc.brief.dosAndDonts = [dos, donts].filter(Boolean).join('\n');
+    }
+    if (!doc.brief.approvalProcess && doc.revisionRounds != null) doc.brief.approvalProcess = `${doc.revisionRounds} revision round(s)`;
     if (!doc.brief.disclosureRequired && doc.disclosureRequirements) doc.brief.disclosureRequired = doc.disclosureRequirements;
     if (!doc.brief.postingSchedule && doc.postingDeadline) doc.brief.postingSchedule = doc.postingDeadline;
 
     doc.financials = doc.financials || {};
+    doc.pricing = doc.pricing || {};
     if (doc.brandOfferedFee == null && doc.agreedPrice != null) doc.brandOfferedFee = doc.agreedPrice;
     if (doc.agreedFee == null && doc.agreedPrice != null) doc.agreedFee = doc.agreedPrice;
     if (doc.financials.brandOfferedFee == null && doc.brandOfferedFee != null) doc.financials.brandOfferedFee = doc.brandOfferedFee;
@@ -56,10 +67,23 @@ function hydrateLegacyShapes(doc) {
     if (doc.financials.porchestCommission == null && doc.porchestCommission != null) doc.financials.porchestCommission = doc.porchestCommission;
     if (doc.financials.influencerPayable == null && doc.influencerPayable != null) doc.financials.influencerPayable = doc.influencerPayable;
     if (doc.financials.currency == null && doc.currency) doc.financials.currency = doc.currency;
+    if (doc.pricing.brandOffer == null && doc.brandOfferedFee != null) doc.pricing.brandOffer = doc.brandOfferedFee;
+    if (doc.pricing.influencerCounter == null && doc.influencerCounterFee != null) doc.pricing.influencerCounter = doc.influencerCounterFee;
+    if (doc.pricing.agreedFee == null && doc.agreedFee != null) doc.pricing.agreedFee = doc.agreedFee;
+    if (doc.pricing.currency == null && doc.currency) doc.pricing.currency = doc.currency;
 
     doc.payment = doc.payment || {};
     doc.payment.tranche1 = doc.payment.tranche1 || {};
     doc.payment.tranche2 = doc.payment.tranche2 || {};
+    if (!doc.payment.status && doc.paymentStatus) doc.payment.status = doc.paymentStatus;
+    if (!doc.payment.portion1) doc.payment.portion1 = {};
+    if (!doc.payment.portion2) doc.payment.portion2 = {};
+    if (doc.payment.portion1.amount == null && doc.payment.tranche1.amount != null) doc.payment.portion1.amount = doc.payment.tranche1.amount;
+    if (doc.payment.portion1.releasedAt == null && doc.payment.tranche1.releasedAt != null) doc.payment.portion1.releasedAt = doc.payment.tranche1.releasedAt;
+    if (doc.payment.portion1.status == null && doc.payment.tranche1.status != null) doc.payment.portion1.status = doc.payment.tranche1.status;
+    if (doc.payment.portion2.amount == null && doc.payment.tranche2.amount != null) doc.payment.portion2.amount = doc.payment.tranche2.amount;
+    if (doc.payment.portion2.releasedAt == null && doc.payment.tranche2.releasedAt != null) doc.payment.portion2.releasedAt = doc.payment.tranche2.releasedAt;
+    if (doc.payment.portion2.status == null && doc.payment.tranche2.status != null) doc.payment.portion2.status = doc.payment.tranche2.status;
 
     doc.metrics = doc.metrics || {};
     if (doc.metrics.reach == null && doc.accountReach != null) doc.metrics.reach = doc.accountReach;
@@ -116,25 +140,41 @@ const campaignRequestSchema = new mongoose.Schema(
             campaignObjective: { type: String },
             productDetails: { type: String },
             targetAudience: { type: String },
+            targetAudienceDesc: { type: String },
             keyMessage: { type: String },
             contentTypes: [{ type: String }],
+            contentType: [{ type: String }],
             creativeDirection: { type: String },
             mandatoryTalkingPoints: [{ type: String }],
+            mandatoryPoints: { type: String },
             dos: [{ type: String }],
             donts: [{ type: String }],
+            dosAndDonts: { type: String },
             captionGuidelines: { type: String },
             requiredHashtags: [{ type: String }],
+            hashtags: [{ type: String }],
             requiredTags: [{ type: String }],
             callToAction: { type: String },
             trackingLink: { type: String },
             promoCode: { type: String },
             visualRequirements: { type: String },
             postingSchedule: { type: Date },
+            postingDeadline: { type: Date },
             revisionRounds: { type: Number },
+            approvalProcess: { type: String },
             deliverables: [{ type: String }],
             usageRights: { type: Boolean },
+            usageRightsText: { type: String },
             disclosureRequired: { type: String },
+            disclosureRequirements: { type: String },
             porchestContact: { type: String },
+        },
+
+        pricing: {
+            brandOffer: { type: Number },
+            influencerCounter: { type: Number },
+            agreedFee: { type: Number },
+            currency: { type: String, default: 'USD' },
         },
 
         financials: {
@@ -164,6 +204,12 @@ const campaignRequestSchema = new mongoose.Schema(
         campaignEndDate: { type: Date },
         gracePeriodDays: { type: Number, default: 3 },
 
+        timeline: {
+            campaignStartDate: { type: Date },
+            campaignEndDate: { type: Date },
+            gracePeriodDays: { type: Number, default: 3 },
+        },
+
         // Content submission
         draftDriveLink: { type: String },
         draftSubmittedAt: { type: Date },
@@ -180,8 +226,34 @@ const campaignRequestSchema = new mongoose.Schema(
         adminVerifiedAt: { type: Date },
         adminVerifiedByFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
+        content: {
+            driveLink: { type: String },
+            driveSubmittedAt: { type: Date },
+            brandApprovedDrive: { type: Boolean, default: false },
+            brandApprovedAt: { type: Date },
+            revisionsUsed: { type: Number, default: 0 },
+            postLink: { type: String },
+            postSubmittedAt: { type: Date },
+            brandVerifiedPost: { type: Boolean, default: false },
+            brandVerifiedAt: { type: Date },
+            adminVerified: { type: Boolean, default: false },
+            adminVerifiedAt: { type: Date },
+            adminVerifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        },
+
         // Payment tranches
         payment: {
+            status: { type: String, enum: ['pending', 'partial', 'released'], default: 'pending' },
+            portion1: {
+                amount: { type: Number },
+                releasedAt: { type: Date },
+                status: { type: String, enum: ['pending', 'released', 'held'], default: 'pending' },
+            },
+            portion2: {
+                amount: { type: Number },
+                releasedAt: { type: Date },
+                status: { type: String, enum: ['pending', 'released', 'held'], default: 'pending' },
+            },
             tranche1: {
                 amount: { type: Number },
                 releasedAt: { type: Date },

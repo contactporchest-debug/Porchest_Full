@@ -33,9 +33,11 @@ router.post('/purchase', async (req, res) => {
         }
 
         const now = new Date();
+        const campaignStart = collab.campaignStartDate ? new Date(collab.campaignStartDate) : null;
+        const campaignEnd = collab.campaignEndDate ? new Date(collab.campaignEndDate) : null;
         const graceDays = Number(collab.gracePeriodDays || 3);
-        const windowEnd = collab.campaignEndDate ? new Date(new Date(collab.campaignEndDate).getTime() + graceDays * 24 * 60 * 60 * 1000) : null;
-        const withinWindow = !windowEnd || now <= windowEnd;
+        const windowEnd = campaignEnd ? new Date(campaignEnd.getTime() + graceDays * 24 * 60 * 60 * 1000) : null;
+        const withinWindow = (!campaignStart || now >= campaignStart) && (!windowEnd || now <= windowEnd);
 
         try {
             await PurchaseEvent.create({

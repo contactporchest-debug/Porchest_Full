@@ -10,7 +10,7 @@ export default function PostVerificationQueue() {
 
     async function verify(id) {
         setVerifying(id);
-        await apiPatch(`/collaborations/${id}/verify-post`, {});
+        await apiPatch(`/collaborations/${id}/verify-admin`, {});
         await refetch();
         setVerifying(null);
     }

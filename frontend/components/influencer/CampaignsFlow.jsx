@@ -46,6 +46,34 @@ export default function CampaignsFlow() {
     const inputClass = 'flex-1 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 placeholder-white/30 transition-all';
     const cardClass = 'p-6 rounded-[20px] bg-white/[0.03] border border-white/[0.07] space-y-5 hover:border-white/[0.14] hover:bg-white/[0.05] transition-all';
 
+    function getBriefProgress(collab) {
+        const fields = [
+            collab.brief?.brandIntro,
+            collab.brief?.campaignObjective,
+            collab.brief?.productDetails,
+            collab.brief?.targetAudienceDesc,
+            collab.brief?.keyMessage,
+            collab.brief?.contentType?.length,
+            collab.brief?.creativeDirection,
+            collab.brief?.mandatoryPoints,
+            collab.brief?.dosAndDonts,
+            collab.brief?.captionGuidelines,
+            collab.brief?.hashtags?.length,
+            collab.brief?.callToAction,
+            collab.brief?.trackingLink,
+            collab.brief?.promoCode,
+            collab.brief?.visualRequirements,
+            collab.brief?.postingDeadline,
+            collab.brief?.approvalProcess,
+            collab.brief?.deliverables,
+            collab.brief?.usageRights,
+            collab.brief?.disclosureRequirements,
+            collab.brief?.porchestContact,
+        ];
+        const filled = fields.filter(Boolean).length;
+        return { filled, total: fields.length, pct: Math.round((filled / fields.length) * 100) };
+    }
+
     return (
         <div className="space-y-6">
             {/* Tab switcher */}
@@ -107,6 +135,19 @@ export default function CampaignsFlow() {
                                 Deadline: {new Date(c.brief.postingSchedule).toLocaleDateString()}
                             </span>
                         )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-white/30">
+                            <span>Brief completeness</span>
+                            <span>{getBriefProgress(c).filled}/{getBriefProgress(c).total} fields</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                            <div
+                                className="h-full rounded-full bg-gradient-to-r from-purple-600 to-purple-400"
+                                style={{ width: `${getBriefProgress(c).pct}%` }}
+                            />
+                        </div>
                     </div>
 
                     {/* Toggle full brief */}

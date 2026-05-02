@@ -24,7 +24,7 @@ router.get('/r', async (req, res) => {
             const now = new Date();
             if (collab.campaignStartDate && now < new Date(collab.campaignStartDate)) return;
 
-            const graceDays = Number(collab.gracePeriodDays || 7);
+            const graceDays = Number(collab.gracePeriodDays || 3);
             const campaignEnd = collab.campaignEndDate ? new Date(collab.campaignEndDate) : null;
             if (campaignEnd && now > new Date(campaignEnd.getTime() + graceDays * 24 * 60 * 60 * 1000)) return;
 

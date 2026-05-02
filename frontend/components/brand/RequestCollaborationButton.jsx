@@ -30,6 +30,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         deliverables: '',
         usageRights: '',
         disclosureRequirements: 'Ad',
+        revisionRoundsAllowed: 1,
     });
 
     function toggle(field, value) {
@@ -40,7 +41,11 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         setSending(true);
         await apiPost('/collaborations', {
             influencerId,
-            brief: { ...form, hashtags: form.hashtags.split(' ').filter(Boolean) },
+            brief: {
+                ...form,
+                hashtags: form.hashtags.split(' ').filter(Boolean),
+                revisionRoundsAllowed: Number(form.revisionRoundsAllowed || 1),
+            },
             pricing: { brandOffer: Number(form.brandOffer) },
         });
         setSending(false);
@@ -119,6 +124,15 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                     ].map(([label, key]) => (
                                         <textarea key={key} rows={2} className={`${inputClass} resize-none`} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
                                     ))}
+                                    {form.hashtags ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {form.hashtags.split(' ').filter(Boolean).map((tag) => (
+                                                <span key={tag} className="px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/70 text-xs font-bold">
+                                                    #{tag.replace(/^#/, '')}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : null}
                                     <input type="date" className={inputClass} value={form.postingDeadline} onChange={(e) => setForm((f) => ({ ...f, postingDeadline: e.target.value }))} />
                                     <select className="w-full px-4 py-3 rounded-xl bg-[#0c0c0c] border border-white/[0.08] text-white text-sm focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30" value={form.disclosureRequirements} onChange={(e) => setForm((f) => ({ ...f, disclosureRequirements: e.target.value }))}>
                                         <option>Ad</option>
@@ -126,6 +140,14 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                         <option>Sponsored</option>
                                         <option>Collaboration</option>
                                     </select>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        className={inputClass}
+                                        placeholder="Revision rounds allowed"
+                                        value={form.revisionRoundsAllowed}
+                                        onChange={(e) => setForm((f) => ({ ...f, revisionRoundsAllowed: e.target.value }))}
+                                    />
                                 </>
                             )}
                         </div>
