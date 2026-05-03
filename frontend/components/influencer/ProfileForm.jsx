@@ -113,25 +113,40 @@ export default function ProfileForm() {
         }
     }
 
-    const inputClass = 'w-full rounded-2xl border border-white/15 bg-[#121212] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/35 shadow-inner shadow-black/20 focus:border-[#c79b6a]/60 focus:ring-1 focus:ring-[#c79b6a]/25 focus:bg-[#171717]';
+    const inputClass = 'w-full rounded-2xl border border-[#e5dccf] bg-white px-4 py-3 text-sm text-[#2a241c] outline-none transition placeholder:text-[#a1927e] shadow-sm focus:border-[#c79b6a]/70 focus:ring-2 focus:ring-[#c79b6a]/15';
+    const selectClass = `${inputClass} appearance-none pr-10`;
     const pillClass = 'rounded-full border px-4 py-2 text-xs font-semibold transition-colors';
+    const sectionCard = 'rounded-[28px] border border-[#e9e1d4] bg-[#fbf8f1] p-5 md:p-6 shadow-[0_18px_48px_rgba(0,0,0,0.10)]';
 
     return (
         <div className="space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)]">
-                <div className="mb-5 flex items-center justify-between gap-3">
+            <div className={sectionCard}>
+                <div className="mb-5 flex flex-col gap-3 border-b border-[#ece3d6] pb-4 md:flex-row md:items-start md:justify-between">
                     <div>
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Influencer profile</p>
-                        <h3 className="mt-1 text-lg font-semibold text-white">Manual profile details</h3>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8e7d64]">Profile setup</p>
+                        <h3 className="mt-1 text-xl font-semibold text-[#241d15]">Manual profile details</h3>
+                        <p className="mt-1 text-sm text-[#7f6f5a]">
+                            These details are visible to brands and help us match you with the right collaboration requests.
+                        </p>
                     </div>
-                    <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${profile?.profileComplete ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}>
+                    <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${profile?.profileComplete ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-700' : 'border-amber-400/30 bg-amber-400/10 text-amber-700'}`}>
                         {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Avatar</label>
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2 rounded-[24px] border border-[#ece3d6] bg-white p-4">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a8a73]">Avatar</p>
+                                <p className="text-sm text-[#7b6a55]">Use a clear photo or brand image that represents your profile.</p>
+                            </div>
+                            {form.avatar && (
+                                <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                                    Preview ready
+                                </span>
+                            )}
+                        </div>
                         <div className="grid gap-3 md:grid-cols-[1fr_auto]">
                             <input
                                 className={inputClass}
@@ -139,7 +154,7 @@ export default function ProfileForm() {
                                 value={form.avatar}
                                 onChange={(event) => setForm((current) => ({ ...current, avatar: event.target.value }))}
                             />
-                            <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]">
+                            <label className="flex cursor-pointer items-center justify-center rounded-2xl border border-[#e5dccf] bg-[#fffaf4] px-4 py-3 text-sm font-semibold text-[#6f5a42] transition hover:bg-[#f7f0e6]">
                                 Upload
                                 <input
                                     type="file"
@@ -150,44 +165,73 @@ export default function ProfileForm() {
                             </label>
                         </div>
                         {form.avatar && (
-                            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                                <img src={form.avatar} alt="Avatar preview" className="h-14 w-14 rounded-xl object-cover" />
-                                <p className="text-sm text-white/55">Preview of the avatar you will save with your profile.</p>
+                            <div className="mt-4 overflow-hidden rounded-[24px] border border-[#ece3d6] bg-[#fdfaf5]">
+                                <div className="flex items-center gap-3 border-b border-[#ece3d6] p-3">
+                                    <div className="h-11 w-11 overflow-hidden rounded-full border border-[#e8ddcd] bg-white">
+                                        <img src={form.avatar} alt="Avatar preview" className="h-full w-full object-cover" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-[#241d15]">Avatar preview</p>
+                                        <p className="text-xs text-[#7f6f5a]">This is what brands will see.</p>
+                                    </div>
+                                </div>
+                                <img src={form.avatar} alt="Avatar preview large" className="h-72 w-full object-contain bg-[#f4f0ea]" />
                             </div>
                         )}
                     </div>
 
-                    <input className={inputClass} placeholder="Full name" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} />
-                    <input className={inputClass} placeholder="Display name" value={form.displayName} onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))} />
-                    <input className={inputClass} placeholder="Contact email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))} />
-                    <input className={inputClass} placeholder="Phone number" value={form.phoneNumber} onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))} />
-                    <input className={inputClass} placeholder="Country" value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))} />
-                    <input className={inputClass} placeholder="City" value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))} />
-                    <textarea
-                        className={`${inputClass} min-h-[124px] md:col-span-2`}
-                        placeholder="Short bio"
-                        value={form.bio}
-                        onChange={(event) => setForm((current) => ({ ...current, bio: event.target.value }))}
-                    />
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Full name</label>
+                        <input className={inputClass} placeholder="Full name" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Display name</label>
+                        <input className={inputClass} placeholder="Display name" value={form.displayName} onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Contact email</label>
+                        <input className={inputClass} placeholder="Contact email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Phone number</label>
+                        <input className={inputClass} placeholder="Phone number" value={form.phoneNumber} onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Country</label>
+                        <input className={inputClass} placeholder="Country" value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">City</label>
+                        <input className={inputClass} placeholder="City" value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Bio</label>
+                        <textarea
+                            className={`${inputClass} min-h-[132px] resize-y`}
+                            placeholder="Short bio"
+                            value={form.bio}
+                            onChange={(event) => setForm((current) => ({ ...current, bio: event.target.value }))}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)]">
+            <div className={sectionCard}>
                 <div className="mb-5">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Positioning</p>
-                    <h3 className="mt-1 text-lg font-semibold text-white">Niche, languages, and content style</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8e7d64]">Positioning</p>
+                    <h3 className="mt-1 text-xl font-semibold text-[#241d15]">Niche, languages, and content style</h3>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-6">
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Niche</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Niche</label>
                         <div className="flex flex-wrap gap-2">
                             {NICHES.map((niche) => (
                                 <button
                                     key={niche}
                                     type="button"
                                     onClick={() => toggleArray('niche', niche)}
-                                    className={`${pillClass} ${form.niche.includes(niche) ? 'border-[#c79b6a]/40 bg-[#c79b6a]/15 text-[#f0d6bf]' : 'border-white/10 bg-white/[0.03] text-white/45 hover:border-white/20 hover:text-white'}`}
+                                    className={`${pillClass} ${form.niche.includes(niche) ? 'border-[#c79b6a]/40 bg-[#c79b6a]/15 text-[#6b4d2f]' : 'border-[#e5dccf] bg-white text-[#6c5f4f] hover:bg-[#faf6ef]'}`}
                                 >
                                     {niche}
                                 </button>
@@ -196,14 +240,14 @@ export default function ProfileForm() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Content style tags</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Content style tags</label>
                         <div className="flex flex-wrap gap-2">
                             {CONTENT_STYLES.map((style) => (
                                 <button
                                     key={style}
                                     type="button"
                                     onClick={() => toggleArray('contentStyleTags', style)}
-                                    className={`${pillClass} ${form.contentStyleTags.includes(style) ? 'border-[#c79b6a]/40 bg-[#c79b6a]/15 text-[#f0d6bf]' : 'border-white/10 bg-white/[0.03] text-white/45 hover:border-white/20 hover:text-white'}`}
+                                    className={`${pillClass} ${form.contentStyleTags.includes(style) ? 'border-[#c79b6a]/40 bg-[#c79b6a]/15 text-[#6b4d2f]' : 'border-[#e5dccf] bg-white text-[#6c5f4f] hover:bg-[#faf6ef]'}`}
                                 >
                                     {style}
                                 </button>
@@ -212,7 +256,7 @@ export default function ProfileForm() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-white/40">Languages</label>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Languages</label>
                         <div className="flex gap-2">
                             <input
                                 className={inputClass}
@@ -229,14 +273,14 @@ export default function ProfileForm() {
                             <button
                                 type="button"
                                 onClick={addLanguage}
-                                className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.12]"
+                                className="rounded-2xl border border-[#e5dccf] bg-white px-4 py-3 text-sm font-semibold text-[#6f5a42] transition hover:bg-[#faf6ef]"
                             >
                                 Add
                             </button>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {form.languages.map((language) => (
-                                <span key={language} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-white/70">
+                                <span key={language} className="rounded-full border border-[#e5dccf] bg-white px-3 py-1 text-xs font-semibold text-[#6f5a42]">
                                     {language}
                                 </span>
                             ))}
@@ -245,34 +289,43 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[0_30px_80px_rgba(0,0,0,0.18)]">
+            <div className={sectionCard}>
                 <div className="mb-5">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-white/40">Rates</p>
-                    <h3 className="mt-1 text-lg font-semibold text-white">Set your collaboration pricing</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8e7d64]">Rates</p>
+                    <h3 className="mt-1 text-xl font-semibold text-[#241d15]">Set your collaboration pricing</h3>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <input
-                        type="number"
-                        className={inputClass}
-                        placeholder="Story price"
-                        value={form.rates.storyPrice}
-                        onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, storyPrice: event.target.value } }))}
-                    />
-                    <input
-                        type="number"
-                        className={inputClass}
-                        placeholder="Reel price"
-                        value={form.rates.reelPrice}
-                        onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))}
-                    />
-                    <input
-                        type="number"
-                        className={inputClass}
-                        placeholder="Post price"
-                        value={form.rates.postPrice}
-                        onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } }))}
-                    />
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Story price</label>
+                        <input
+                            type="number"
+                            className={inputClass}
+                            placeholder="Story price"
+                            value={form.rates.storyPrice}
+                            onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, storyPrice: event.target.value } }))}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Reel price</label>
+                        <input
+                            type="number"
+                            className={inputClass}
+                            placeholder="Reel price"
+                            value={form.rates.reelPrice}
+                            onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8e7d64]">Post price</label>
+                        <input
+                            type="number"
+                            className={inputClass}
+                            placeholder="Post price"
+                            value={form.rates.postPrice}
+                            onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } }))}
+                        />
+                    </div>
                 </div>
             </div>
 
