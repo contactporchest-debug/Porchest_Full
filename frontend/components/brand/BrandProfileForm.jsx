@@ -15,7 +15,6 @@ const NICHES = [
 
 const GENDERS = ['female', 'male', 'both'];
 const COUNTRIES = ['Pakistan', 'United States', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'India'];
-const CITIES = ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
 
 function unique(values) {
     return [...new Set(values)];
@@ -68,7 +67,7 @@ export default function BrandProfileForm() {
         contactEmail: '',
         marketingGoals: '',
         budgetRange: { min: '', max: '' },
-        targetAudience: { ageRange: [18, 35], genders: [], countries: [], cities: [] },
+        targetAudience: { ageRange: [18, 35], genders: [], countries: [] },
         preferredNiches: [],
     });
 
@@ -91,7 +90,6 @@ export default function BrandProfileForm() {
                 ageRange: Array.isArray(profile.targetAudience?.ageRange) && profile.targetAudience.ageRange.length === 2 ? profile.targetAudience.ageRange : [18, 35],
                 genders: parseList(profile.targetAudience?.genders),
                 countries: parseList(profile.targetAudience?.countries),
-                cities: parseList(profile.targetAudience?.cities),
             },
             preferredNiches: parseList(profile.preferredNiches),
         });
@@ -124,7 +122,7 @@ export default function BrandProfileForm() {
     }
 
     function handleMultiSelect(field, event) {
-        const values = Array.from(event.target.selectedOptions, (option) => option.value);
+        const values = Array.from(event.target.selectedOptions, (option) => option.value).slice(0, 3);
         setForm((current) => ({
             ...current,
             targetAudience: { ...current.targetAudience, [field]: unique(values) },
@@ -340,34 +338,31 @@ export default function BrandProfileForm() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Countries</label>
-                        <select multiple className={`${inputClass} min-h-[144px] py-3`} value={form.targetAudience.countries} onChange={(event) => handleMultiSelect('countries', event)}>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+                            Countries
+                        </label>
+                        <select
+                            multiple
+                            className={`${inputClass} min-h-[180px] py-3`}
+                            value={form.targetAudience.countries}
+                            onChange={(event) => handleMultiSelect('countries', event)}
+                        >
                             {COUNTRIES.map((country) => (
-                                <option key={country} value={country}>{country}</option>
+                                <option key={country} value={country}>
+                                    {country}
+                                </option>
                             ))}
                         </select>
-                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple countries.</p>
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                            <p className="text-xs text-gray-500">Select up to 3 countries from the list.</p>
+                            <p className="text-xs font-semibold text-gray-400">
+                                {form.targetAudience.countries.length}/3 selected
+                            </p>
+                        </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {form.targetAudience.countries.map((country) => (
                                 <span key={country} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
                                     {country}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Cities</label>
-                        <select multiple className={`${inputClass} min-h-[144px] py-3`} value={form.targetAudience.cities} onChange={(event) => handleMultiSelect('cities', event)}>
-                            {CITIES.map((city) => (
-                                <option key={city} value={city}>{city}</option>
-                            ))}
-                        </select>
-                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple cities.</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {form.targetAudience.cities.map((city) => (
-                                <span key={city} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
-                                    {city}
                                 </span>
                             ))}
                         </div>

@@ -89,11 +89,7 @@ function buildBrandUpdates(body) {
         }
         if (hasOwn(input, 'countries')) {
             const countries = toStringArray(input.countries);
-            if (countries !== undefined) targetAudience.countries = countries;
-        }
-        if (hasOwn(input, 'cities')) {
-            const cities = toStringArray(input.cities);
-            if (cities !== undefined) targetAudience.cities = cities;
+            if (countries !== undefined) targetAudience.countries = countries.slice(0, 3);
         }
 
         if (Object.keys(targetAudience).length > 0) {
@@ -247,8 +243,7 @@ router.put('/brand', authMiddleware, roleMiddleware('brand'), async (req, res) =
             profile.contactEmail &&
             hasAgeRange &&
             Array.isArray(targetAudience.genders) && targetAudience.genders.length > 0 &&
-            Array.isArray(targetAudience.countries) && targetAudience.countries.length > 0 &&
-            Array.isArray(targetAudience.cities) && targetAudience.cities.length > 0 &&
+            Array.isArray(targetAudience.countries) && targetAudience.countries.length > 0 && targetAudience.countries.length <= 3 &&
             Array.isArray(profile.preferredNiches) && profile.preferredNiches.length > 0 &&
             profile.budgetRange &&
             typeof profile.budgetRange.min === 'number' &&

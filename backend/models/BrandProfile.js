@@ -50,7 +50,6 @@ const brandProfileSchema = new mongoose.Schema(
             ageRange: [{ type: Number }],
             genders: [{ type: String }],
             countries: [{ type: String }],
-            cities: [{ type: String }],
         },
 
         // Campaign preferences
@@ -103,6 +102,10 @@ const MIRROR_PAIRS = [
 function syncDerivedBrandState(doc) {
     if (!doc) return;
 
+    if (doc.targetAudience && typeof doc.targetAudience === 'object') {
+        delete doc.targetAudience.cities;
+    }
+
     if (!doc.businessName && doc.brandName) doc.businessName = doc.brandName;
     if (!doc.brandName && doc.businessName) doc.brandName = doc.businessName;
 
@@ -137,6 +140,13 @@ brandProfileSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function
 
     if (update.$set) syncDerivedBrandState(update.$set);
     else syncDerivedBrandState(update);
+
+    if (update.$set && update.$set.targetAudience && typeof update.$set.targetAudience === 'object') {
+        delete update.$set.targetAudience.cities;
+    }
+    if (update.targetAudience && typeof update.targetAudience === 'object') {
+        delete update.targetAudience.cities;
+    }
 
     this.setUpdate(update);
     next();
