@@ -121,12 +121,31 @@ export default function BrandProfileForm() {
         }));
     }
 
-    function handleMultiSelect(field, event) {
-        const values = Array.from(event.target.selectedOptions, (option) => option.value).slice(0, 3);
-        setForm((current) => ({
-            ...current,
-            targetAudience: { ...current.targetAudience, [field]: unique(values) },
-        }));
+    function toggleCountry(value) {
+        setForm((current) => {
+            const selected = current.targetAudience.countries.includes(value);
+            if (selected) {
+                return {
+                    ...current,
+                    targetAudience: {
+                        ...current.targetAudience,
+                        countries: current.targetAudience.countries.filter((item) => item !== value),
+                    },
+                };
+            }
+
+            if (current.targetAudience.countries.length >= 3) {
+                return current;
+            }
+
+            return {
+                ...current,
+                targetAudience: {
+                    ...current.targetAudience,
+                    countries: unique([...current.targetAudience.countries, value]),
+                },
+            };
+        });
     }
 
     async function handleSave() {
@@ -341,18 +360,23 @@ export default function BrandProfileForm() {
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
                             Countries
                         </label>
-                        <select
-                            multiple
-                            className={`${inputClass} min-h-[180px] py-3`}
-                            value={form.targetAudience.countries}
-                            onChange={(event) => handleMultiSelect('countries', event)}
-                        >
-                            {COUNTRIES.map((country) => (
-                                <option key={country} value={country}>
-                                    {country}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="flex flex-wrap gap-2">
+                            {COUNTRIES.map((country) => {
+                                const selected = form.targetAudience.countries.includes(country);
+                                const disabled = !selected && form.targetAudience.countries.length >= 3;
+                                return (
+                                    <button
+                                        key={country}
+                                        type="button"
+                                        onClick={() => toggleCountry(country)}
+                                        disabled={disabled}
+                                        className={`${chipClass(selected)} ${disabled ? 'cursor-not-allowed opacity-40 hover:bg-[#202025]' : ''}`}
+                                    >
+                                        {country}
+                                    </button>
+                                );
+                            })}
+                        </div>
                         <div className="mt-2 flex items-center justify-between gap-3">
                             <p className="text-xs text-gray-500">Select up to 3 countries from the list.</p>
                             <p className="text-xs font-semibold text-gray-400">
