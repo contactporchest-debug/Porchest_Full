@@ -9,10 +9,11 @@ import { UserX, ArrowRight, Loader2 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { GlassCard } from '@/components/ui';
 
 const AIMatchingComponent = dynamic(() => import('./AIMatchingComponent'), {
     loading: () => (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', color: '#64748b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', color: '#7A5030', fontSize: '14px', fontWeight: 500 }}>
             Loading recommendations...
         </div>
     ),
@@ -49,33 +50,30 @@ export default function AiMatchingPage() {
             <DashboardLayout>
                 {loading ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#a855f7' }} />
+                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#C2340A' }} />
                     </div>
                 ) : profileComplete ? (
                     <AIMatchingComponent />
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#ffffff', letterSpacing: '-0.03em', marginBottom: '4px' }}>Smart Matching</h1>
-                            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Discover suitable influencers for your brand</p>
+                            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1A0A00', letterSpacing: '-0.02em', marginBottom: '4px' }}>Smart Matching</h1>
+                            <p style={{ fontSize: '14px', color: '#7A5030' }}>Discover suitable influencers for your brand</p>
                         </div>
 
-                        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}
-                            className="glass-card" style={{ padding: '80px 40px', borderRadius: '36px', textAlign: 'center', border: '1px solid rgba(168,85,247,0.15)', position: 'relative', overflow: 'hidden' }}>
-                            {/* Glow */}
-                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(168,85,247,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                            <div style={{ position: 'relative' }}>
-                                <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 0 40px rgba(168,85,247,0.2)' }}>
-                                    <UserX size={40} style={{ color: '#a855f7' }} />
+                        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+                            <GlassCard style={{ padding: '80px 40px', textAlign: 'center' }}>
+                                <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(255,107,26,0.15)', border: '1px solid rgba(255,107,26,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                                    <UserX size={32} style={{ color: '#E8400A' }} />
                                 </div>
-                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: '#ffffff', marginBottom: '10px' }}>Action Required: Complete Your Profile</p>
-                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', maxWidth: '420px', margin: '0 auto 28px', lineHeight: '1.7' }}>
+                                <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#1A0A00', marginBottom: '10px', letterSpacing: '-0.01em' }}>Action Required: Complete Your Profile</h2>
+                                <p style={{ color: '#7A5030', fontSize: '14px', maxWidth: '420px', margin: '0 auto 28px', lineHeight: 1.65 }}>
                                     Complete your brand profile to unlock tailored creator recommendations and discovery tools.
                                 </p>
-                                <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 28px', borderRadius: '99px', background: 'linear-gradient(135deg,#a855f7,#c084fc)', color: '#fff', fontSize: '14px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 0 30px rgba(168,85,247,0.4)', transition: 'all 200ms ease' }}>
+                                <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 28px', borderRadius: '8px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s' }}>
                                     Go to Profile <ArrowRight size={15} />
                                 </Link>
-                            </div>
+                            </GlassCard>
                         </motion.div>
                     </div>
                 )}

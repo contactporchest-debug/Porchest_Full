@@ -14,9 +14,9 @@ const ENGAGEMENT_RANGES = ['Any', '> 1%', '> 3%', '> 5%', '> 10%'];
 const COST_RANGES = ['Any', '< $50', '< $100', '< $500', '< $1000'];
 
 const NICHE_COLORS: Record<string, string> = {
-    Fashion: '#c084fc', Fitness: '#4ade80', Tech: '#38bdf8', Food: '#fb923c',
-    Travel: '#facc15', Beauty: '#f472b6', Gaming: '#a855f7', Lifestyle: '#e879f9',
-    Education: '#60a5fa', Entertainment: '#f97316', Finance: '#34d399', Business: '#818cf8',
+    Fashion: '#C2340A', Fitness: '#059669', Tech: '#0284c7', Food: '#d97706',
+    Travel: '#b45309', Beauty: '#be185d', Gaming: '#C2340A', Lifestyle: '#be185d',
+    Education: '#0369a1', Entertainment: '#c2410c', Finance: '#047857', Business: '#4338ca',
 };
 
 const InfluencerProfileModal = dynamic(() => import('./InfluencerProfileModal'));
@@ -133,13 +133,13 @@ export default function InfluencerSearch() {
 
     const Pill = ({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) => (
         <button onClick={onClick} style={{
-            padding: '6px 14px', borderRadius: '99px',
-            border: `1px solid ${active ? 'rgba(168,85,247,0.6)' : 'rgba(255,255,255,0.08)'}`,
-            background: active ? 'rgba(168,85,247,0.18)' : 'rgba(255,255,255,0.03)',
-            color: active ? '#c084fc' : 'rgba(255,255,255,0.4)',
-            fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 180ms ease',
-            boxShadow: active ? '0 0 16px rgba(168,85,247,0.25)' : 'none',
-            whiteSpace: 'nowrap'
+            padding: '8px 16px', borderRadius: '99px',
+            border: `1px solid ${active ? '#C2340A' : '#EDD9BC'}`,
+            background: active ? '#C2340A' : 'rgba(255,255,255,0.6)',
+            color: active ? '#fff' : '#7A5030',
+            fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+            whiteSpace: 'nowrap',
+            fontFamily: 'inherit'
         }}>{label}</button>
     );
 
@@ -179,52 +179,54 @@ export default function InfluencerSearch() {
     return (
         <div>
             <div style={{ marginBottom: '24px' }}>
-                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: '#fff', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+                        <h2 style={{ fontWeight: 800, fontSize: '24px', color: '#1A0A00', letterSpacing: '-0.02em', marginBottom: '8px' }}>
                     Discover Influencers
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.35)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <p style={{ fontSize: '14px', color: '#7A5030', fontWeight: 500 }}>
                         {authLoading || !hasAttemptedInitialLoad || loading ? 'Loading creator profiles…' : `Showing ${filtered.length} curated matches`}
                     </p>
-                    <div style={{ padding: '3px 10px', borderRadius: '6px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <ShieldCheck size={10} style={{ color: '#4ade80' }} />
-                        <span style={{ fontSize: '10px', color: '#4ade80', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Verified Profiles</span>
+                    <div style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ShieldCheck size={12} style={{ color: '#059669' }} />
+                        <span style={{ fontSize: '11px', color: '#059669', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verified Profiles</span>
                     </div>
                 </div>
             </div>
 
 
             {/* Search Top Bar */}
-            <div style={{ position: 'relative', marginBottom: '18px' }}>
-                <Search size={15} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', marginBottom: '24px' }}>
+                <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
                 <input value={query} onChange={e => setQuery(e.target.value)} type="text"
                     placeholder="Search by influencer name, niche, or keywords…"
-                    className="input-dark" style={{ paddingLeft: '46px', height: '50px', fontSize: '14px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                    style={{ paddingLeft: '52px', height: '56px', fontSize: '15px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', width: '100%', color: '#1A0A00', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit' }}
+                    onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
+                />
             </div>
 
             {/* Filters Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
                 <div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '700' }}>Niche</p>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '11px', color: '#7A5030', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Niche</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {NICHES.map(n => <Pill key={n} label={n} active={niche === n} onClick={() => setNiche(n)} />)}
                     </div>
                 </div>
                 <div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '700' }}>Followers</p>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '11px', color: '#7A5030', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Followers</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {FOLLOWER_RANGES.map(f => <Pill key={f} label={f} active={followerRange === f} onClick={() => setFollowerRange(f)} />)}
                     </div>
                 </div>
                 <div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '700' }}>Engagement</p>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '11px', color: '#7A5030', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Engagement</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {ENGAGEMENT_RANGES.map(f => <Pill key={f} label={f} active={engagementRange === f} onClick={() => setEngagementRange(f)} />)}
                     </div>
                 </div>
                 <div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '700' }}>Country</p>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '11px', color: '#7A5030', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Country</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {COUNTRIES.map(f => <Pill key={f} label={f} active={country === f} onClick={() => setCountry(f)} />)}
                     </div>
                 </div>
@@ -232,20 +234,20 @@ export default function InfluencerSearch() {
 
             {/* Loading */}
             {(authLoading || !hasAttemptedInitialLoad || loading) && (
-                <div style={{ textAlign: 'center', padding: '80px', color: 'rgba(255,255,255,0.3)' }}>
-                    <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#a855f7' }} />
-                    <p style={{ fontSize: '14px' }}>Finding matching profiles…</p>
+                <div style={{ textAlign: 'center', padding: '80px', color: '#C4A882' }}>
+                    <Loader2 size={32} style={{ margin: '0 auto 16px', animation: 'spin 1s linear infinite', color: '#C2340A' }} />
+                    <p style={{ fontSize: '15px', fontWeight: 500, color: '#7A5030' }}>Finding matching profiles…</p>
                 </div>
             )}
 
             {/* Empty state */}
             {!authLoading && hasAttemptedInitialLoad && !loading && filtered.length === 0 && (
-                <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                    <UserX size={44} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 16px' }} />
-                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: '#fff', marginBottom: '8px' }}>
+                <div style={{ padding: '64px 20px', borderRadius: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.4)', border: '1px dashed #EDD9BC' }}>
+                    <UserX size={48} style={{ color: '#C4A882', margin: '0 auto 16px' }} />
+                    <p style={{ fontWeight: 800, fontSize: '20px', color: '#1A0A00', marginBottom: '8px' }}>
                         No Matches Found
                     </p>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', maxWidth: '380px', margin: '0 auto', lineHeight: '1.6' }}>
+                    <p style={{ color: '#7A5030', fontSize: '15px', maxWidth: '400px', margin: '0 auto', lineHeight: '1.6' }}>
                         We could not find an exact match yet. Try broadening your criteria or exploring another niche.
                     </p>
                 </div>
@@ -253,11 +255,11 @@ export default function InfluencerSearch() {
 
             {/* Results Grid */}
             {!authLoading && hasAttemptedInitialLoad && !loading && filtered.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '24px' }}>
                     <AnimatePresence>
                         {filtered.map((inf: any, i: number) => {
                             // All fields are flat on the card object (built by brandController.buildInfluencerCard)
-                            const nc = NICHE_COLORS[inf.niche || ''] || '#a855f7';
+                            const nc = NICHE_COLORS[inf.niche || ''] || '#C2340A';
 
                             // DP priority: profilePictureUrl (API) > profileImageURL (flat) > instagramDPURL > fallback to initials
                             const dp       = inf.profilePictureUrl || inf.profileImageURL || inf.instagramDPURL || null;
@@ -297,106 +299,109 @@ export default function InfluencerSearch() {
                             return (
                                 <motion.div key={inf._id || i} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: i * 0.04, duration: 0.35 }}
-                                    className="glass-card flex-col" style={{ borderRadius: '26px', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255,255,255,0.06)', background: `linear-gradient(180deg, rgba(20,18,34,0.7) 0%, rgba(14,12,26,0.95) 100%)`, overflow: 'hidden' }}>
-
-                                    <div style={{ padding: '24px 24px 16px', flex: 1 }}>
+                                    style={{ borderRadius: '24px', display: 'flex', flexDirection: 'column', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)', overflow: 'hidden', boxShadow: '0 4px 20px rgba(26,10,0,0.02)', transition: 'border-color 0.2s', position: 'relative' }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(194,52,10,0.3)'}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = '#EDD9BC'}
+                                >
+                                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: `linear-gradient(90deg, #C2340A, ${nc})`, opacity: 0.8 }} />
+                                    <div style={{ padding: '28px 24px 20px', flex: 1 }}>
                                         {/* Header Row */}
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', marginBottom: '16px' }}>
-                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '20px' }}>
+                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                                                 {/* DP */}
-                                                <div style={{ width: '56px', height: '56px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: `linear-gradient(135deg, #a855f7, ${nc})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '18px', color: '#fff', boxShadow: `0 0 20px ${nc}40` }}>
+                                                <div style={{ width: '64px', height: '64px', borderRadius: '16px', flexShrink: 0, overflow: 'hidden', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', color: '#fff', border: '1px solid #EDD9BC' }}>
                                                     {(dp && !brokenImages.has(inf._id)) ? <img src={dp} alt={inf.fullName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, inf._id]))} /> : initials}
                                                 </div>
                                                 <div style={{ minWidth: 0 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                                                        <p style={{ fontWeight: 800, color: '#1A0A00', fontSize: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>
                                                             {inf.fullName || 'Influencer'}
                                                         </p>
-                                                        <ShieldCheck size={14} style={{ color: '#4ade80', flexShrink: 0 }} />
+                                                        <ShieldCheck size={16} style={{ color: '#059669', flexShrink: 0 }} />
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                         {handle && (
-                                                            <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#d8b4fe', textDecoration: 'none' }} onClick={e => e.stopPropagation()}>
-                                                                <Instagram size={10} /> @{handle}
+                                                            <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#C2340A', textDecoration: 'none', fontWeight: 500 }} onClick={e => e.stopPropagation()}>
+                                                                <Instagram size={12} /> @{handle}
                                                             </a>
                                                         )}
                                                         {inf.country && (
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                <Globe size={10} style={{ color: 'rgba(255,255,255,0.3)' }} />
-                                                                <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'capitalize' }}>{inf.country}</p>
+                                                                <Globe size={12} style={{ color: '#C4A882' }} />
+                                                                <p style={{ fontSize: '12px', color: '#7A5030', textTransform: 'capitalize', fontWeight: 500 }}>{inf.country}</p>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
                                             {/* Fit Score Stars */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inf.qualityLabel}</p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                                                <p style={{ fontSize: '10px', color: '#C4A882', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inf.qualityLabel}</p>
                                                 <div style={{ display: 'flex', gap: '2px' }}>
                                                     {[1, 2, 3, 4, 5].map(star => (
-                                                        <Star key={star} size={11} fill={star <= (inf.starRating || 1) ? '#facc15' : 'transparent'} color={star <= (inf.starRating || 1) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                                        <Star key={star} size={14} fill={star <= (inf.starRating || 1) ? '#d97706' : 'transparent'} color={star <= (inf.starRating || 1) ? '#d97706' : '#EDD9BC'} />
                                                     ))}
                                                 </div>
-                                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '600' }}>Fit {inf.fitScore || 0}/100</p>
+                                                <p style={{ fontSize: '11px', color: '#7A5030', fontWeight: 700 }}>Fit {inf.fitScore || 0}/100</p>
                                             </div>
                                         </div>
 
                                         {/* Bio */}
-                                        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '42px' }}>
+                                        <p style={{ fontSize: '14px', color: '#1A0A00', lineHeight: 1.6, marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '44px' }}>
                                             {inf.bio || 'No biography available.'}
                                         </p>
 
                                         {/* Tags: Niche + Followers + ER */}
-                                        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                                            {inf.niche && <span style={{ padding: '4px 12px', borderRadius: '99px', background: `${nc}12`, border: `1px solid ${nc}25`, color: nc, fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>{inf.niche}</span>}
-                                            <span style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <TrendingUp size={10} /> {formatNum(followers)} Followers
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                                            {inf.niche && <span style={{ padding: '6px 14px', borderRadius: '99px', background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.2)', color: '#C2340A', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{inf.niche}</span>}
+                                            <span style={{ padding: '6px 14px', borderRadius: '99px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <TrendingUp size={12} /> {formatNum(followers)} Followers
                                             </span>
-                                            <span style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <BarChart3 size={10} /> {engagement}% ER
+                                            <span style={{ padding: '6px 14px', borderRadius: '99px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <BarChart3 size={12} /> {engagement}% ER
                                             </span>
                                         </div>
 
                                         {/* Demographics Row — only shown when data exists */}
                                         {(topCountry || genderSplit) && (
-                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.04)', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                {topCountry && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={11} color="#a855f7" /> {topCountry}</div>}
-                                                {topCountry && genderSplit && <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>}
-                                                {genderSplit && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={11} color="#f472b6" /> {genderSplit}</div>}
-                                                {topAge && <><div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div><div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{topAge} yrs</div></>}
+                                            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', padding: '12px 16px', background: 'rgba(255,255,255,0.6)', borderRadius: '12px', border: '1px solid #EDD9BC', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                {topCountry && <div style={{ fontSize: '12px', color: '#1A0A00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}><Globe size={14} color="#C2340A" /> {topCountry}</div>}
+                                                {topCountry && genderSplit && <div style={{ width: '1px', height: '16px', background: '#EDD9BC' }}></div>}
+                                                {genderSplit && <div style={{ fontSize: '12px', color: '#1A0A00', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}><Users size={14} color="#C2340A" /> {genderSplit}</div>}
+                                                {topAge && <><div style={{ width: '1px', height: '16px', background: '#EDD9BC' }}></div><div style={{ fontSize: '12px', color: '#1A0A00', fontWeight: 500 }}>{topAge} yrs</div></>}
                                             </div>
                                         )}
 
                                         {/* Rates */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
-                                                    <Image size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Post</span>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                            <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7A5030', marginBottom: '8px' }}>
+                                                    <Image size={14} /><span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Post</span>
                                                 </div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgPostCostUSD > 0 ? `$${inf.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
+                                                <p style={{ fontWeight: 800, fontSize: '18px', color: '#1A0A00' }}>{inf.avgPostCostUSD > 0 ? `$${inf.avgPostCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
-                                            <div style={{ padding: '12px 14px', borderRadius: '14px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', marginBottom: '4px' }}>
-                                                    <Film size={11} /><span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Reel</span>
+                                            <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#7A5030', marginBottom: '8px' }}>
+                                                    <Film size={14} /><span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Reel</span>
                                                 </div>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#e9d5ff' }}>{inf.avgReelCostUSD > 0 ? `$${inf.avgReelCostUSD.toLocaleString()}` : 'Negotiable'}</p>
+                                                <p style={{ fontWeight: 800, fontSize: '18px', color: '#1A0A00' }}>{inf.avgReelCostUSD > 0 ? `$${inf.avgReelCostUSD.toLocaleString()}` : 'Negotiable'}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Action Row */}
-                                    <div style={{ background: 'rgba(0,0,0,0.15)', borderTop: '1px solid rgba(255,255,255,0.04)', padding: '16px 24px', display: 'flex', gap: '10px' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.6)', borderTop: '1px solid #EDD9BC', padding: '20px 24px', display: 'flex', gap: '12px' }}>
                                         <button onClick={() => handleOpenProfile(inf)}
-                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 200ms ease' }}
-                                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}>
+                                            style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', color: '#1A0A00', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit' }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = '#C4A882'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = '#EDD9BC'}>
                                             View Profile
                                         </button>
                                         <button onClick={() => handleRequestCollaboration(inf)}
-                                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 200ms ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 16px rgba(168,85,247,0.2)' }}
-                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(168,85,247,0.3)'; }}
-                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(168,85,247,0.2)'; }}>
-                                            <Send size={13} /> Request
+                                            style={{ flex: 1, padding: '14px', borderRadius: '12px', background: '#C2340A', border: 'none', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 16px rgba(194,52,10,0.2)', fontFamily: 'inherit' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(194,52,10,0.3)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(194,52,10,0.2)'; }}>
+                                            <Send size={16} /> Request
                                         </button>
                                     </div>
                                 </motion.div>

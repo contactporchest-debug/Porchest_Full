@@ -57,42 +57,45 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         }, 1800);
     }
 
-    const inputClass = 'w-full px-4 py-3 rounded-xl bg-[#202025] border border-[#2A2A30] text-white text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500 transition-all';
+    const IS = {
+        width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC',
+        color: '#1A0A00', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit'
+    };
 
     return (
         <>
-            <button onClick={() => setOpen(true)} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold text-sm transition-all">
+            <button onClick={() => setOpen(true)} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => e.currentTarget.style.background = '#E8400A'} onMouseLeave={e => e.currentTarget.style.background = '#C2340A'}>
                 Request collaboration with @{influencerName || 'creator'}
             </button>
 
-            {sent && <div className="p-4 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12] text-green-400 text-center text-sm font-bold">Collaboration request sent.</div>}
+            {sent && <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669', textAlign: 'center', fontSize: '14px', fontWeight: 700 }}>Collaboration request sent.</div>}
 
             {open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-                    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1A1A1E] border border-[#2A2A30] shadow-2xl">
-                        <div className="sticky top-0 bg-[#1A1A1E] border-b border-[#2A2A30] p-5 flex items-center justify-between">
+                <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(26,10,0,0.5)', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ width: '100%', maxWidth: '640px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '24px', background: '#FDF6EE', border: '1px solid #EDD9BC', boxShadow: '0 16px 40px rgba(26,10,0,0.1)' }}>
+                        <div style={{ position: 'sticky', top: 0, background: 'rgba(253,246,238,0.95)', borderBottom: '1px solid #EDD9BC', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, backdropFilter: 'blur(8px)' }}>
                             <div>
-                                <p className="text-white font-bold">Request collaboration</p>
-                                <p className="text-xs text-white/40 font-medium">@{influencerName} - Step {step} of 3</p>
+                                <p style={{ fontWeight: 700, fontSize: '18px', color: '#1A0A00' }}>Request collaboration</p>
+                                <p style={{ fontSize: '12px', color: '#7A5030', fontWeight: 500, marginTop: '2px' }}>@{influencerName} - Step {step} of 3</p>
                             </div>
-                            <button onClick={() => setOpen(false)} className="text-white/40 hover:text-white text-xl">x</button>
+                            <button onClick={() => setOpen(false)} style={{ color: '#C4A882', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} onMouseEnter={e => { e.currentTarget.style.color = '#1A0A00'; e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }} onMouseLeave={e => { e.currentTarget.style.color = '#C4A882'; e.currentTarget.style.background = 'transparent' }}>x</button>
                         </div>
 
-                        <div className="p-5 space-y-4">
+                        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {step === 1 && (
                                 <>
-                                    {rates && <p className="text-xs font-bold text-gray-400">Rates: Reel ${rates.reelPrice || '-'} | Story ${rates.storyPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
-                                    <input type="number" className={inputClass} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} />
-                                    <div className="flex flex-wrap gap-2">
+                                    {rates && <p style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Rates: Reel ${rates.reelPrice || '-'} | Story ${rates.storyPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
+                                    <input type="number" style={IS} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {OBJECTIVES.map((objective) => (
-                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.campaignObjective === objective ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-[#202025] border-[#2A2A30] text-gray-400 hover:text-white'}`}>
+                                            <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, border: `1px solid ${form.campaignObjective === objective ? '#C2340A' : '#EDD9BC'}`, background: form.campaignObjective === objective ? 'rgba(194,52,10,0.1)' : 'rgba(255,255,255,0.6)', color: form.campaignObjective === objective ? '#C2340A' : '#7A5030', transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => { if (form.campaignObjective !== objective) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#1A0A00'; } }} onMouseLeave={e => { if (form.campaignObjective !== objective) { e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#7A5030'; } }}>
                                                 {objective}
                                             </button>
                                         ))}
                                     </div>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {CONTENT_TYPES.map((type) => (
-                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${form.contentType.includes(type) ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-[#202025] border-[#2A2A30] text-gray-400 hover:text-white'}`}>
+                                            <button key={type} type="button" onClick={() => toggle('contentType', type)} style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, border: `1px solid ${form.contentType.includes(type) ? '#C2340A' : '#EDD9BC'}`, background: form.contentType.includes(type) ? 'rgba(194,52,10,0.1)' : 'rgba(255,255,255,0.6)', color: form.contentType.includes(type) ? '#C2340A' : '#7A5030', transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => { if (!form.contentType.includes(type)) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#1A0A00'; } }} onMouseLeave={e => { if (!form.contentType.includes(type)) { e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#7A5030'; } }}>
                                                 {type}
                                             </button>
                                         ))}
@@ -109,7 +112,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                 ['Mandatory talking points', 'mandatoryPoints'],
                                 ["Do's and don'ts", 'dosAndDonts'],
                             ].map(([label, key]) => (
-                                <textarea key={key} rows={2} className={`${inputClass} resize-none`} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+                                <textarea key={key} rows={2} style={{ ...IS, resize: 'vertical' }} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                             ))}
 
                             {step === 3 && (
@@ -122,19 +125,19 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                         ['Deliverables', 'deliverables'],
                                         ['Usage rights', 'usageRights'],
                                     ].map(([label, key]) => (
-                                        <textarea key={key} rows={2} className={`${inputClass} resize-none`} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} />
+                                        <textarea key={key} rows={2} style={{ ...IS, resize: 'vertical' }} placeholder={label} value={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                                     ))}
                                     {form.hashtags ? (
-                                        <div className="flex flex-wrap gap-2">
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                             {form.hashtags.split(' ').filter(Boolean).map((tag) => (
-                                                <span key={tag} className="px-3 py-1 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/70 text-xs font-bold">
+                                                <span key={tag} style={{ padding: '4px 12px', borderRadius: '99px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', color: '#1A0A00', fontSize: '12px', fontWeight: 700 }}>
                                                     #{tag.replace(/^#/, '')}
                                                 </span>
                                             ))}
                                         </div>
                                     ) : null}
-                                    <input type="date" className={inputClass} value={form.postingDeadline} onChange={(e) => setForm((f) => ({ ...f, postingDeadline: e.target.value }))} />
-                                    <select className="w-full px-4 py-3 rounded-xl bg-[#202025] border border-[#2A2A30] text-white text-sm focus:outline-none focus:border-blue-500" value={form.disclosureRequirements} onChange={(e) => setForm((f) => ({ ...f, disclosureRequirements: e.target.value }))}>
+                                    <input type="date" style={IS} value={form.postingDeadline} onChange={(e) => setForm((f) => ({ ...f, postingDeadline: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                                    <select style={{ ...IS, cursor: 'pointer' }} value={form.disclosureRequirements} onChange={(e) => setForm((f) => ({ ...f, disclosureRequirements: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}>
                                         <option>Ad</option>
                                         <option>Paid partnership</option>
                                         <option>Sponsored</option>
@@ -143,25 +146,26 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                     <input
                                         type="number"
                                         min="1"
-                                        className={inputClass}
+                                        style={IS}
                                         placeholder="Revision rounds allowed"
                                         value={form.revisionRoundsAllowed}
                                         onChange={(e) => setForm((f) => ({ ...f, revisionRoundsAllowed: e.target.value }))}
+                                        onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
                                     />
                                 </>
                             )}
                         </div>
 
-                        <div className="sticky bottom-0 bg-[#1A1A1E] border-t border-[#2A2A30] p-4 flex justify-between">
-                            <button onClick={() => (step > 1 ? setStep((s) => s - 1) : setOpen(false))} className="px-5 py-2.5 rounded-xl border border-[#2A2A30] bg-[#202025] text-gray-300 text-sm font-bold hover:bg-[#2A2A30] transition-all">
+                        <div style={{ position: 'sticky', bottom: 0, background: 'rgba(253,246,238,0.95)', borderTop: '1px solid #EDD9BC', padding: '16px', display: 'flex', justifyContent: 'space-between', backdropFilter: 'blur(8px)' }}>
+                            <button onClick={() => (step > 1 ? setStep((s) => s - 1) : setOpen(false))} style={{ padding: '10px 20px', borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', color: '#7A5030', fontSize: '14px', fontWeight: 700, transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#1A0A00'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#7A5030'; }}>
                                 {step === 1 ? 'Cancel' : 'Back'}
                             </button>
                             {step < 3 ? (
-                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 text-white text-sm font-bold transition-all disabled:opacity-40">
+                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} style={{ padding: '10px 24px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: (step === 1 && (!form.brandOffer || !form.campaignObjective)) ? 'not-allowed' : 'pointer', opacity: (step === 1 && (!form.brandOffer || !form.campaignObjective)) ? 0.5 : 1, fontFamily: 'inherit' }} onMouseEnter={e => { if (!(step === 1 && (!form.brandOffer || !form.campaignObjective))) e.currentTarget.style.background = '#E8400A' }} onMouseLeave={e => { if (!(step === 1 && (!form.brandOffer || !form.campaignObjective))) e.currentTarget.style.background = '#C2340A' }}>
                                     Next
                                 </button>
                             ) : (
-                                <button onClick={handleSend} disabled={sending} className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 text-white text-sm font-bold transition-all disabled:opacity-40">
+                                <button onClick={handleSend} disabled={sending} style={{ padding: '10px 24px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.5 : 1, fontFamily: 'inherit' }} onMouseEnter={e => { if (!sending) e.currentTarget.style.background = '#E8400A' }} onMouseLeave={e => { if (!sending) e.currentTarget.style.background = '#C2340A' }}>
                                     {sending ? 'Sending...' : 'Send request'}
                                 </button>
                             )}

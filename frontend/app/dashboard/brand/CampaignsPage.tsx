@@ -15,43 +15,35 @@ import CollaborationMetrics from '@/components/brand/CollaborationMetrics';
 type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
 
 const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
-    { key: 'all', label: 'All', color: '#a855f7' },
-    { key: 'pending', label: 'Pending / Viewed', color: '#fbbf24' },
-    { key: 'negotiation', label: 'Negotiation', color: '#facc15' },
-    { key: 'accepted', label: 'Active', color: '#4ade80' },
-    { key: 'rejected', label: 'Rejected / Canceled', color: '#f87171' },
+    { key: 'all', label: 'All', color: '#1A0A00' },
+    { key: 'pending', label: 'Pending / Viewed', color: '#C4A882' },
+    { key: 'negotiation', label: 'Negotiation', color: '#d97706' },
+    { key: 'accepted', label: 'Active', color: '#059669' },
+    { key: 'rejected', label: 'Rejected / Canceled', color: '#dc2626' },
 ];
 
-const STATUS_CFG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    sent: { label: 'Pending', color: '#fbbf24', icon: <Clock size={11} /> },
-    viewed: { label: 'Viewed', color: '#a855f7', icon: <Eye size={11} /> },
-    negotiation: { label: 'Negotiation', color: '#facc15', icon: <AlertCircle size={11} /> },
-    accepted: { label: 'In-Process', color: '#60d5f8', icon: <PlayCircle size={11} /> },
-    deal_closed: { label: 'Closed ✓', color: '#4ade80', icon: <CheckCircle size={11} /> },
-    rejected: { label: 'Rejected', color: '#f87171', icon: <XCircle size={11} /> },
+const STATUS_CFG: Record<string, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
+    sent: { label: 'Pending', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Clock size={11} /> },
+    viewed: { label: 'Viewed', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Eye size={11} /> },
+    negotiation: { label: 'Negotiation', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <AlertCircle size={11} /> },
+    accepted: { label: 'In-Process', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
+    deal_closed: { label: 'Closed ✓', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <CheckCircle size={11} /> },
+    rejected: { label: 'Rejected', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)', color: '#dc2626', icon: <XCircle size={11} /> },
 };
-
-const SURFACE = '#0c0c0c';
-const SURFACE_ALT = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(255, 255, 255, 0.08)';
-const BORDER_STRONG = 'rgba(255, 255, 255, 0.16)';
-const TEXT = '#ffffff';
-const MUTED = 'rgba(255,255,255,0.5)';
 
 function CampaignDetail({ request, verifications }: { request: any; verifications: any[] }) {
     const [counterPrice, setCounterPrice] = useState(request.counterOfferPrice ? String(request.counterOfferPrice) : '');
     const [counterMessage, setCounterMessage] = useState('');
     const [submittingCounter, setSubmittingCounter] = useState(false);
     const verification = verifications.find(v => {
-        // Standardize: handle both ObjectId and string formats from backend
         const vId = typeof v.campaignRequestId === 'object' ? v.campaignRequestId?._id : v.campaignRequestId;
         return vId === request._id;
     });
 
     const VER_CFG: Record<string, { label: string; color: string }> = {
-        pending: { label: 'Pending Admin Review', color: '#fbbf24' },
-        verified: { label: 'Verified ✓', color: '#4ade80' },
-        rejected: { label: 'Rejected', color: '#f87171' },
+        pending: { label: 'Pending Admin Review', color: '#d97706' },
+        verified: { label: 'Verified ✓', color: '#059669' },
+        rejected: { label: 'Rejected', color: '#dc2626' },
     };
     const verSt = VER_CFG[verification?.status || ''];
 
@@ -85,48 +77,51 @@ function CampaignDetail({ request, verifications }: { request: any; verification
         }
     };
 
+    const IS = {
+        width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC',
+        color: '#1A0A00', fontSize: '13px', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit'
+    };
+
     return (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }} style={{ overflow: 'hidden', borderTop: `1px solid ${BORDER}` }}>
-            <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            transition={{ duration: 0.3 }} style={{ overflow: 'hidden', borderTop: '1px solid #EDD9BC' }}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                 {/* Response specific panels */}
                 {request.status === 'rejected' && request.rejectionReason && (
-                    <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
-                        <p style={{ fontSize: '11px', color: '#f87171', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Rejection Reason</p>
-                        <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.6' }}>{request.rejectionReason}</p>
+                    <div style={{ padding: '16px', borderRadius: '14px', background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.2)' }}>
+                        <p style={{ fontSize: '11px', color: '#dc2626', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Rejection Reason</p>
+                        <p style={{ fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>{request.rejectionReason}</p>
                     </div>
                 )}
                 {request.status === 'negotiation' && (
-                    <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}>
-                        <p style={{ fontSize: '11px', color: '#facc15', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Counter Offer Received</p>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px' }}>
-                            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.22)' }}>
-                                <p style={{ fontSize: '10px', color: MUTED, marginBottom: '2px' }}>Original Ask</p>
-                                <p style={{ fontSize: '13px', color: TEXT, fontWeight: '700', textDecoration: 'line-through' }}>${request.agreedPrice?.toLocaleString()}</p>
+                    <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                        <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Counter Offer Received</p>
+                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '16px' }}>
+                            <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                <p style={{ fontSize: '10px', color: '#7A5030', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Original Ask</p>
+                                <p style={{ fontSize: '14px', color: '#1A0A00', fontWeight: 700, textDecoration: 'line-through' }}>${request.agreedPrice?.toLocaleString()}</p>
                             </div>
-                            <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
-                                <p style={{ fontSize: '10px', color: MUTED, marginBottom: '2px' }}>Counter Ask</p>
-                                <p style={{ fontSize: '16px', color: '#4ade80', fontWeight: '800' }}>${request.counterOfferPrice?.toLocaleString()}</p>
+                            <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                                <p style={{ fontSize: '10px', color: '#059669', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Counter Ask</p>
+                                <p style={{ fontSize: '18px', color: '#059669', fontWeight: 800 }}>${request.counterOfferPrice?.toLocaleString()}</p>
                             </div>
                         </div>
                         {request.counterOfferMessage && (
-                            <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.6' }}>"{request.counterOfferMessage}"</p>
+                            <p style={{ fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>"{request.counterOfferMessage}"</p>
                         )}
-                        <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                        <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
                             <button
                                 onClick={async () => {
                                     try {
                                         await brandAPI.updateRequest(request._id, { status: 'deal_closed', agreedPrice: request.counterOfferPrice });
                                         toast.success('Counter accepted! Deal closed.');
-                                        // Refetch requests without page reload
                                         const res = await brandAPI.getRequests();
-                                        // This should trigger re-render - you may need to add a refetch callback to parent
                                     } catch (err) {
                                         toast.error('Failed to accept counter');
                                     }
                                 }}
-                                style={{ flex: 1, padding: '10px', borderRadius: '10px', background: '#4ade80', color: '#141222', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                                style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#059669', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
                                 Accept Counter
                             </button>
                             <button
@@ -134,39 +129,36 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                                     try {
                                         await brandAPI.updateRequest(request._id, { status: 'rejected', rejectionReason: 'Cannot meet counter offer terms' });
                                         toast.success('Counter rejected.');
-                                        // Refetch requests without page reload
                                         const res = await brandAPI.getRequests();
                                     } catch (err) {
                                         toast.error('Failed to reject counter');
                                     }
                                 }}
-                                style={{ padding: '10px 16px', borderRadius: '10px', background: 'rgba(248,113,113,0.1)', color: '#f87171', border: '1px solid rgba(248,113,113,0.2)', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}>
+                                style={{ padding: '12px 24px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
                                 Reject
                             </button>
                         </div>
-                        <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(250,204,21,0.16)' }}>
-                            <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Send New Counter Offer</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 160px) minmax(0, 1fr)', gap: '10px', marginBottom: '10px' }}>
+                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(245,158,11,0.2)' }}>
+                            <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: 700 }}>Send New Counter Offer</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 160px) minmax(0, 1fr)', gap: '12px', marginBottom: '12px' }}>
                                 <input
-                                    className="input-dark"
                                     value={counterPrice}
                                     onChange={(e) => setCounterPrice(e.target.value)}
                                     placeholder="Counter amount"
-                                    style={{ height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px' }}
+                                    style={IS} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
                                 />
                                 <input
-                                    className="input-dark"
                                     value={counterMessage}
                                     onChange={(e) => setCounterMessage(e.target.value)}
                                     placeholder="Add a message for the influencer"
-                                    style={{ height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px' }}
+                                    style={IS} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
                                 />
                             </div>
                             <button
                                 onClick={submitBrandCounter}
                                 disabled={submittingCounter}
-                                style={{ padding: '10px 16px', borderRadius: '10px', background: '#facc15', color: '#3b2f05', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
-                                {submittingCounter ? <Loader2 size={14} className="spin" /> : <AlertCircle size={14} />}
+                                style={{ padding: '12px 24px', borderRadius: '12px', background: '#d97706', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', transition: 'opacity 0.15s', opacity: submittingCounter ? 0.6 : 1 }}>
+                                {submittingCounter ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <AlertCircle size={16} />}
                                 Send Counter
                             </button>
                         </div>
@@ -175,22 +167,22 @@ function CampaignDetail({ request, verifications }: { request: any; verification
 
 
                 {/* Request document */}
-                <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Campaign Request Document</p>
-                <div style={{ padding: '14px', borderRadius: '14px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, marginBottom: '4px' }}>
-                    <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.7', marginBottom: '12px' }}>{request.campaignDescription}</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '10px' }}>
+                <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Campaign Request Document</p>
+                <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.4)', border: '1px solid #EDD9BC' }}>
+                    <p style={{ fontSize: '14px', color: '#1A0A00', lineHeight: 1.6, marginBottom: '20px' }}>{request.campaignDescription}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '16px' }}>
                         {fields.map(f => (
-                            <div key={f.label} style={{ padding: '10px 12px', borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}` }}>
-                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{f.label}</p>
-                                <p style={{ fontSize: '12px', color: TEXT }}>{f.val}</p>
+                            <div key={f.label} style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                <p style={{ fontSize: '10px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', fontWeight: 700 }}>{f.label}</p>
+                                <p style={{ fontSize: '14px', color: '#1A0A00', fontWeight: 500 }}>{f.val}</p>
                             </div>
                         ))}
                     </div>
-                    <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.14)' }}>
-                        <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Content Guidelines</p>
-                        <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>{request.contentGuidelines}</p>
+                    <div style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                        <p style={{ fontSize: '10px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', fontWeight: 700 }}>Content Guidelines</p>
+                        <p style={{ fontSize: '14px', color: '#1A0A00', lineHeight: 1.6 }}>{request.contentGuidelines}</p>
                     </div>
-                    <div style={{ marginTop: '4px' }}>
+                    <div style={{ marginTop: '16px' }}>
                         <CollaborationMetrics collaborationId={request._id} />
                     </div>
                 </div>
@@ -198,41 +190,41 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                 {/* Verification block */}
                 {(request.status === 'accepted' || request.status === 'deal_closed') && (
                     <>
-                        <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Verification Status</p>
+                        <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Verification Status</p>
                         {!verification ? (
-                            <div style={{ padding: '16px', borderRadius: '14px', background: SURFACE_ALT, border: `1px dashed ${BORDER_STRONG}`, textAlign: 'center' }}>
-                                <p style={{ fontSize: '13px', color: MUTED }}>
+                            <div style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.4)', border: '1px dashed #EDD9BC', textAlign: 'center' }}>
+                                <p style={{ fontSize: '14px', color: '#7A5030', fontWeight: 500 }}>
                                     Waiting for influencer to submit post URL.
                                 </p>
                             </div>
                         ) : (
-                            <div style={{ padding: '16px 18px', borderRadius: '14px', background: `${verSt?.color || '#888'}08`, border: `1px solid ${verSt?.color || '#888'}22` }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: verSt?.color || '#888', boxShadow: `0 0 8px ${verSt?.color}` }} />
-                                    <p style={{ fontSize: '12px', color: verSt?.color, fontWeight: '700' }}>{verSt?.label}</p>
+                            <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: verSt?.color || '#888' }} />
+                                    <p style={{ fontSize: '14px', color: verSt?.color, fontWeight: 700 }}>{verSt?.label}</p>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: verification.adminNote ? '8px' : 0 }}>
-                                    <Link2 size={11} style={{ color: '#60d5f8', flexShrink: 0 }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: verification.adminNote ? '12px' : 0 }}>
+                                    <Link2 size={16} style={{ color: '#0284c7', flexShrink: 0 }} />
                                     <a href={verification.postUrl} target="_blank" rel="noopener noreferrer"
-                                        style={{ fontSize: '12px', color: '#60d5f8', textDecoration: 'none', wordBreak: 'break-all' }}>
+                                        style={{ fontSize: '14px', color: '#0284c7', textDecoration: 'underline', wordBreak: 'break-all', fontWeight: 500 }}>
                                         {verification.postUrl}
                                     </a>
                                 </div>
                                 {verification.adminNote && (
-                                    <p style={{ fontSize: '11px', color: MUTED, marginTop: '6px' }}>Admin note: {verification.adminNote}</p>
+                                    <p style={{ fontSize: '13px', color: '#7A5030', marginTop: '8px' }}>Admin note: {verification.adminNote}</p>
                                 )}
                                 {/* Performance (if verified) */}
                                 {verification.status === 'verified' && verification.performance && (
-                                    <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(90px,1fr))', gap: '8px' }}>
+                                    <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(100px,1fr))', gap: '12px' }}>
                                         {[
                                             { label: 'Views', val: verification.performance.views },
                                             { label: 'Likes', val: verification.performance.likes },
                                             { label: 'Comments', val: verification.performance.comments },
                                             { label: 'Shares', val: verification.performance.shares },
                                         ].filter(m => m.val > 0).map(m => (
-                                            <div key={m.label} style={{ padding: '8px', borderRadius: '9px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.12)', textAlign: 'center' }}>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: '#4ade80' }}>{m.val.toLocaleString()}</p>
-                                                <p style={{ fontSize: '10px', color: MUTED, marginTop: '2px' }}>{m.label}</p>
+                                            <div key={m.label} style={{ padding: '12px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', textAlign: 'center' }}>
+                                                <p style={{ fontWeight: 800, fontSize: '18px', color: '#059669' }}>{m.val.toLocaleString()}</p>
+                                                <p style={{ fontSize: '11px', color: '#059669', marginTop: '4px', textTransform: 'uppercase', fontWeight: 700 }}>{m.label}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -321,7 +313,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
 
     if (authLoading || loading) return (
         <div style={{ textAlign: 'center', padding: '80px' }}>
-            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#a855f7' }} />
+            <Loader2 size={32} style={{ margin: '0 auto', animation: 'spin 1s linear infinite', color: '#C2340A' }} />
         </div>
     );
 
@@ -329,58 +321,60 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         <div>
             {/* Header */}
             {!hideHeader && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                        <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px', color: TEXT, letterSpacing: '-0.03em', marginBottom: '4px' }}>Campaigns & Collaborations</h1>
-                        <p style={{ fontSize: '13px', color: MUTED }}>{filtered.length} requests{filtered.length !== 1 ? 's' : ''}</p>
+                        <h1 style={{ fontWeight: 800, fontSize: '24px', color: '#1A0A00', letterSpacing: '-0.02em', marginBottom: '4px' }}>Campaigns & Collaborations</h1>
+                        <p style={{ fontSize: '14px', color: '#7A5030' }}>{filtered.length} requests{filtered.length !== 1 ? 's' : ''}</p>
                     </div>
-                    {lastUpdated && <p style={{ fontSize: '11px', color: MUTED }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
+                    {lastUpdated && <p style={{ fontSize: '12px', color: '#C4A882', fontWeight: 500 }}>Updated: {lastUpdated.toLocaleTimeString()}</p>}
                 </div>
             )}
 
             {/* Error banner */}
             {error && (
-                <div style={{ padding: '14px 18px', borderRadius: '14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <AlertCircle size={18} style={{ color: '#f87171', flexShrink: 0 }} />
+                <div style={{ padding: '16px 20px', borderRadius: '16px', background: 'rgba(232,64,10,0.06)', border: '1px solid rgba(232,64,10,0.15)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <AlertCircle size={20} style={{ color: '#E8400A', flexShrink: 0 }} />
                     <div>
-                        <p style={{ fontSize: '12px', color: '#f87171', fontWeight: '600' }}>Data Load Error</p>
-                        <p style={{ fontSize: '11px', color: MUTED, marginTop: '2px' }}>{error}</p>
+                        <p style={{ fontSize: '14px', color: '#E8400A', fontWeight: 700 }}>Data Load Error</p>
+                        <p style={{ fontSize: '13px', color: '#7A5030', marginTop: '4px' }}>{error}</p>
                     </div>
                 </div>
             )}
 
             {/* Filter tabs + search */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '4px', background: SURFACE_ALT, borderRadius: '12px', padding: '4px', border: `1px solid ${BORDER}` }}>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.6)', borderRadius: '16px', padding: '6px', border: '1px solid #EDD9BC' }}>
                     {FILTER_TABS.map(t => (
                         <button key={t.key} onClick={() => setFilter(t.key)}
-                            style={{ padding: '7px 14px', borderRadius: '9px', border: 'none', fontFamily: 'inherit', fontSize: '12px', fontWeight: '600', cursor: 'pointer', transition: 'all 180ms ease', whiteSpace: 'nowrap', background: filter === t.key ? `${t.color}18` : 'transparent', color: filter === t.key ? t.color : MUTED }}>
+                            style={{ padding: '8px 16px', borderRadius: '12px', border: 'none', fontFamily: 'inherit', fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap', background: filter === t.key ? '#C2340A' : 'transparent', color: filter === t.key ? '#fff' : '#7A5030' }}>
                             {t.label}
                         </button>
                     ))}
                 </div>
-                <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
-                    <Search size={13} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: MUTED, pointerEvents: 'none' }} />
+                <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
                     <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tracking…"
-                        className="input-dark" style={{ paddingLeft: '36px', height: '38px', fontSize: '13px', borderRadius: '11px', width: '100%', boxSizing: 'border-box', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
+                        style={{ paddingLeft: '44px', height: '44px', fontSize: '14px', borderRadius: '12px', width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', color: '#1A0A00', outline: 'none', transition: 'border-color 0.15s' }}
+                        onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
+                    />
                 </div>
             </div>
 
             {/* Empty */}
             {filtered.length === 0 && (
-                <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-                    <FileText size={44} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 16px' }} />
-                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '6px' }}>
+                <div style={{ padding: '64px 20px', borderRadius: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.4)', border: '1px dashed #EDD9BC' }}>
+                    <FileText size={48} style={{ color: '#C4A882', margin: '0 auto 16px' }} />
+                    <p style={{ fontWeight: 700, fontSize: '18px', color: '#1A0A00', marginBottom: '8px' }}>
                         {error ? 'Unable to Load Campaigns' : requests.length === 0 ? 'No campaigns yet' : 'No results'}
                     </p>
-                    <p style={{ color: MUTED, fontSize: '13px' }}>
+                    <p style={{ color: '#7A5030', fontSize: '14px' }}>
                         {error ? 'Please check your connection and try again.' : requests.length === 0 ? 'Go to the Brand Overview, find an influencer, and send your first campaign request.' : 'Try adjusting filters or search.'}
                     </p>
                 </div>
             )}
 
             {/* Campaign cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <AnimatePresence>
                     {filtered.map((r: any, i: number) => {
                         const sc = STATUS_CFG[r.status] || STATUS_CFG.sent;
@@ -393,32 +387,37 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                         return (
                             <motion.div key={r._id} layout initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05, duration: 0.3 }}
-                                className="glass-card" style={{ borderRadius: '22px', overflow: 'hidden', border: isClosed ? '1px solid rgba(74,222,128,0.15)' : r.status === 'negotiation' ? '1px solid rgba(250,204,21,0.2)' : `1px solid ${BORDER}` }}>
+                                style={{ borderRadius: '24px', overflow: 'hidden', border: `1px solid ${isOpen ? '#C2340A' : '#EDD9BC'}`, background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)', transition: 'border-color 0.2s', boxShadow: '0 4px 20px rgba(26,10,0,0.02)' }}
+                                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.borderColor = 'rgba(194,52,10,0.4)' }}
+                                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.borderColor = '#EDD9BC' }}
+                            >
 
                                 {/* Card row */}
                                 <div onClick={() => setExpanded(isOpen ? null : r._id)}
-                                    style={{ padding: '18px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg,#a855f7,#c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px', color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                                    style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', cursor: 'pointer' }}>
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', color: '#fff', flexShrink: 0, overflow: 'hidden', border: '1px solid #EDD9BC' }}>
                                         {r.influencerProfilePic && !brokenImages.has(r._id) ? <img src={r.influencerProfilePic} alt="DP" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setBrokenImages(prev => new Set([...prev, r._id]))} /> : initials}
                                     </div>
-                                    <div style={{ flex: 1, minWidth: '120px' }}>
-                                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', color: TEXT, fontSize: '14px', marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                        <p style={{ fontSize: '12px', color: MUTED }}>{r.influencerName || '—'} · {r.influencerNiche || '—'}</p>
+                                    <div style={{ flex: 1, minWidth: '160px' }}>
+                                        <p style={{ fontWeight: 700, color: '#1A0A00', fontSize: '16px', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.campaignTitle}</p>
+                                        <p style={{ fontSize: '13px', color: '#7A5030', fontWeight: 500 }}>{r.influencerName || '—'} <span style={{ margin: '0 4px' }}>•</span> {r.influencerNiche || '—'}</p>
                                     </div>
-                                    <span style={{ fontSize: '12px', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Calendar size={11} style={{ color: '#a855f7' }} />
+                                    <span style={{ fontSize: '13px', color: '#7A5030', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                                        <Calendar size={14} style={{ color: '#C4A882' }} />
                                         {new Date(r.postingDeadline).toLocaleDateString()}
                                     </span>
                                     {ver && (
-                                        <span style={{ fontSize: '11px', color: ver.status === 'verified' ? '#4ade80' : ver.status === 'rejected' ? '#f87171' : '#fbbf24', background: ver.status === 'verified' ? 'rgba(74,222,128,0.08)' : ver.status === 'rejected' ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)', border: `1px solid ${ver.status === 'verified' ? 'rgba(74,222,128,0.2)' : ver.status === 'rejected' ? 'rgba(248,113,113,0.2)' : 'rgba(251,191,36,0.2)'}`, padding: '3px 11px', borderRadius: '99px', fontWeight: '700' }}>
+                                        <span style={{ fontSize: '11px', color: ver.status === 'verified' ? '#059669' : ver.status === 'rejected' ? '#dc2626' : '#d97706', background: ver.status === 'verified' ? 'rgba(16,185,129,0.1)' : ver.status === 'rejected' ? 'rgba(220,38,38,0.1)' : 'rgba(245,158,11,0.1)', border: `1px solid ${ver.status === 'verified' ? 'rgba(16,185,129,0.2)' : ver.status === 'rejected' ? 'rgba(220,38,38,0.2)' : 'rgba(245,158,11,0.2)'}`, padding: '4px 12px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             Post {ver.status === 'verified' ? 'Verified ✓' : ver.status === 'rejected' ? 'Rejected' : 'Pending Review'}
                                         </span>
                                     )}
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '15px', color: '#a855f7' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '99px', background: `${displayStatus.color}12`, border: `1px solid ${displayStatus.color}28`, color: displayStatus.color, fontSize: '11px', fontWeight: '700' }}>
+                                    <p style={{ fontWeight: 800, fontSize: '20px', color: '#1A0A00' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '99px', background: displayStatus.bg, border: `1px solid ${displayStatus.border}`, color: displayStatus.color, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                         {displayStatus.icon} {displayStatus.label}
                                     </span>
-                                    {isOpen ? <ChevronUp size={14} style={{ color: MUTED, flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: MUTED, flexShrink: 0 }} />}
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: isOpen ? '#C2340A' : 'rgba(255,255,255,0.6)', border: isOpen ? '1px solid #C2340A' : '1px solid #EDD9BC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isOpen ? '#fff' : '#7A5030', transition: 'all 0.15s' }}>
+                                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                    </div>
                                 </div>
 
                                 <AnimatePresence>

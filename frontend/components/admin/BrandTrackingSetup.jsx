@@ -34,51 +34,78 @@ export default function BrandTrackingSetup() {
         setTimeout(() => setCopied(null), 1800);
     }
 
-    const blockClass = 'rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5 space-y-4';
-    const copyClass = 'inline-flex items-center gap-2 rounded-lg border border-[#2A2A30] bg-[#202025] px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-[#2A2A30]';
+    const blockStyle = {
+        borderRadius: '16px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.6)',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '16px',
+        boxShadow: '0 4px 12px rgba(26,10,0,0.02)'
+    };
+    
+    const copyStyle = {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        borderRadius: '8px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.8)',
+        padding: '6px 12px',
+        fontSize: '12px',
+        fontWeight: 600,
+        color: '#1A0A00',
+        cursor: 'pointer',
+        transition: 'all 0.15s'
+    };
 
     return (
-        <div className="space-y-5">
-            <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200/70">Brand tracking setup</p>
-                <h3 className="mt-2 text-lg font-semibold text-white">Share these integration options with brands</h3>
-                <p className="mt-2 text-sm text-gray-300">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ borderRadius: '16px', border: '1px solid rgba(194,52,10,0.2)', background: 'rgba(194,52,10,0.06)', padding: '20px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#C2340A' }}>Brand tracking setup</p>
+                <h3 style={{ marginTop: '8px', fontSize: '18px', fontWeight: 700, color: '#1A0A00' }}>Share these integration options with brands</h3>
+                <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>
                     Use the webhook if the brand can send server-side purchase events. Use the pixel if they can only add a script tag to a confirmation page.
                 </p>
             </div>
 
-            <div className={blockClass}>
-                <div className="flex items-start justify-between gap-4">
+            <div style={blockStyle}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                     <div>
-                        <p className="text-sm font-semibold text-white">Webhook tracking</p>
-                        <p className="mt-1 text-xs text-gray-400">Recommended for the most accurate purchase attribution.</p>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>Webhook tracking</p>
+                        <p style={{ marginTop: '4px', fontSize: '12px', color: '#7A5030' }}>Recommended for the most accurate purchase attribution.</p>
                     </div>
-                    <button onClick={() => copy(webhookCode, 'webhook')} className={copyClass}>
-                        {copied === 'webhook' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    <button onClick={() => copy(webhookCode, 'webhook')} style={copyStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}>
+                        {copied === 'webhook' ? <Check size={14} /> : <Copy size={14} />}
                         {copied === 'webhook' ? 'Copied' : 'Copy'}
                     </button>
                 </div>
-                <pre className="overflow-x-auto rounded-lg border border-[#2A2A30] bg-black/40 p-4 text-xs leading-6 text-gray-300">
+                <pre style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '16px', fontSize: '12px', lineHeight: 1.6, color: '#1A0A00', fontFamily: 'monospace' }}>
                     {webhookCode}
                 </pre>
             </div>
 
-            <div className={blockClass}>
-                <div className="flex items-start justify-between gap-4">
+            <div style={blockStyle}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                     <div>
-                        <p className="text-sm font-semibold text-white">Browser pixel</p>
-                        <p className="mt-1 text-xs text-gray-400">Fallback option for brands that cannot wire webhooks.</p>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>Browser pixel</p>
+                        <p style={{ marginTop: '4px', fontSize: '12px', color: '#7A5030' }}>Fallback option for brands that cannot wire webhooks.</p>
                     </div>
-                    <button onClick={() => copy(pixelCode, 'pixel')} className={copyClass}>
-                        {copied === 'pixel' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                    <button onClick={() => copy(pixelCode, 'pixel')} style={copyStyle}
+                        onMouseEnter={e => e.currentTarget.style.background = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}>
+                        {copied === 'pixel' ? <Check size={14} /> : <Copy size={14} />}
                         {copied === 'pixel' ? 'Copied' : 'Copy'}
                     </button>
                 </div>
-                <pre className="overflow-x-auto rounded-lg border border-[#2A2A30] bg-black/40 p-4 text-xs leading-6 text-gray-300">
+                <pre style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '16px', fontSize: '12px', lineHeight: 1.6, color: '#1A0A00', fontFamily: 'monospace' }}>
                     {pixelCode}
                 </pre>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <ExternalLink className="h-3.5 w-3.5" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#7A5030', fontWeight: 500 }}>
+                    <ExternalLink size={14} />
                     <span>Pixel script URL: https://www.porchest.com/pixel.js</span>
                 </div>
             </div>

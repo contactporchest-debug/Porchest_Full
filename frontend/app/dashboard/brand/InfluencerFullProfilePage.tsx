@@ -234,32 +234,32 @@ type DistributionItem = {
 };
 
 const COLORS = {
-    ink: '#ffffff',
-    text: '#f8fafc',
-    muted: 'rgba(255,255,255,0.5)',
-    slate: 'rgba(255,255,255,0.3)',
-    panel: 'rgba(12,12,12,0.95)',
-    border: 'rgba(255,255,255,0.08)',
-    purple: '#a855f7',
-    violet: '#c084fc',
-    blue: '#38bdf8',
+    ink: '#1A0A00',
+    text: '#7A5030',
+    muted: '#C4A882',
+    slate: '#C4A882',
+    panel: 'rgba(255,255,255,0.4)',
+    border: '#EDD9BC',
+    purple: '#C2340A',
+    violet: '#d97706',
+    blue: '#0284c7',
     sky: '#bae6fd',
-    teal: '#2dd4bf',
-    green: '#4ade80',
-    amber: '#fbbf24',
-    rose: '#f87171',
+    teal: '#0d9488',
+    green: '#166534',
+    amber: '#b45309',
+    rose: '#b91c1c',
 };
 
-const PIE_COLORS = ['#a855f7', '#38bdf8', '#2dd4bf', '#4ade80', '#fbbf24', '#f87171', 'rgba(255,255,255,0.3)'];
+const PIE_COLORS = ['#C2340A', '#E8400A', '#FF6B1A', '#C4A882', '#EDD9BC', 'rgba(26,10,0,0.1)'];
 
 const tooltipStyle = {
-    background: 'rgba(12,12,12,0.95)',
-    border: '1px solid rgba(168,85,247,0.16)',
-    borderRadius: '14px',
+    background: 'rgba(255,255,255,0.98)',
+    border: '1px solid #EDD9BC',
+    borderRadius: '12px',
     color: COLORS.ink,
     fontSize: '12px',
     padding: '10px 14px',
-    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+    boxShadow: '0 8px 30px rgba(26,10,0,0.1)',
 };
 
 const fmtNumber = (value: number | null | undefined, digits = 0) => {
@@ -355,11 +355,11 @@ const ratingTone = (tier?: string) => {
 };
 
 const cardStyle = {
-    padding: '22px',
-    borderRadius: '28px',
-    background: '#0c0c0c',
+    padding: '24px',
+    borderRadius: '24px',
+    background: 'rgba(255,255,255,0.4)',
     border: `1px solid ${COLORS.border}`,
-    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+    backdropFilter: 'blur(12px)',
 };
 
 function SectionCard({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
@@ -367,8 +367,8 @@ function SectionCard({ title, subtitle, icon, children }: { title: string; subti
         <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} style={cardStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
                 <div>
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 18, color: COLORS.ink, letterSpacing: '-0.03em' }}>{title}</h2>
-                    {subtitle && <p style={{ marginTop: 5, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>{subtitle}</p>}
+                    <h2 style={{ fontWeight: 800, fontSize: 18, color: COLORS.ink, letterSpacing: '-0.02em' }}>{title}</h2>
+                    {subtitle && <p style={{ marginTop: 5, fontSize: 13, color: COLORS.text, lineHeight: 1.6 }}>{subtitle}</p>}
                 </div>
                 {icon && <div style={{ color: COLORS.slate }}>{icon}</div>}
             </div>
@@ -379,21 +379,21 @@ function SectionCard({ title, subtitle, icon, children }: { title: string; subti
 
 function MetricTile({ label, value, tone = COLORS.ink, note, icon }: { label: string; value: string; tone?: string; note?: string; icon?: React.ReactNode }) {
     return (
-        <div style={{ padding: '18px', borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: `1px solid ${COLORS.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, color: COLORS.muted, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ padding: '20px', borderRadius: 16, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: COLORS.text, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {icon}
                 <span>{label}</span>
             </div>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 28, color: tone, letterSpacing: '-0.05em' }}>{value}</p>
-            {note && <p style={{ marginTop: 8, fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>{note}</p>}
+            <p style={{ fontWeight: 800, fontSize: 24, color: tone, letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</p>
+            {note && <p style={{ marginTop: 8, fontSize: 12, color: COLORS.text, lineHeight: 1.5 }}>{note}</p>}
         </div>
     );
 }
 
 function EmptyChart({ copy }: { copy: string }) {
     return (
-        <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 20, border: `1px dashed ${COLORS.border}`, background: 'rgba(255,255,255,0.02)' }}>
-            <p style={{ maxWidth: 360, textAlign: 'center', color: COLORS.muted, fontSize: 13, lineHeight: 1.7 }}>{copy}</p>
+        <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 20, border: `1px dashed ${COLORS.border}`, background: 'rgba(255,255,255,0.4)' }}>
+            <p style={{ maxWidth: 360, textAlign: 'center', color: COLORS.text, fontSize: 13, lineHeight: 1.7 }}>{copy}</p>
         </div>
     );
 }
@@ -532,8 +532,8 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: COLORS.muted }}>
-                <Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#C2340A' }}>
+                <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
             </div>
         );
     }
@@ -542,7 +542,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
         return (
             <SectionCard title="Profile Unavailable" subtitle={error || 'This influencer profile could not be loaded right now.'} icon={<ShieldCheck size={16} />}>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <a href="/dashboard/brand/influencers" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 14, background: COLORS.ink, color: '#fff', textDecoration: 'none', fontWeight: 700 }}>
+                    <a href="/dashboard/brand/influencers" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 14, background: '#C2340A', color: '#fff', textDecoration: 'none', fontWeight: 700 }}>
                         <ArrowLeft size={15} /> Back to Search
                     </a>
                 </div>
@@ -551,7 +551,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <motion.section
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -559,64 +559,62 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     ...cardStyle,
                     padding: 0,
                     overflow: 'hidden',
-                    background: 'linear-gradient(135deg, rgba(18,25,45,0.98) 0%, rgba(51,37,99,0.98) 45%, rgba(14,165,233,0.92) 100%)',
-                    color: '#fff',
                 }}
             >
-                <div style={{ padding: '28px 30px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <a href="/dashboard/brand/influencers" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#dbeafe', textDecoration: 'none', fontWeight: 700 }}>
+                <div style={{ padding: '24px 30px', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: 'rgba(255,255,255,0.6)' }}>
+                    <a href="/dashboard/brand/influencers" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#C2340A', textDecoration: 'none', fontWeight: 700 }}>
                         <ArrowLeft size={15} /> Influencer Search
                     </a>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         {handle && (
-                            <a href={`https://instagram.com/${handle}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+                            <a href={`https://instagram.com/${handle}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, background: 'rgba(194,52,10,0.1)', color: '#C2340A', textDecoration: 'none', fontWeight: 700, fontSize: 13, border: '1px solid rgba(194,52,10,0.2)' }}>
                                 <Instagram size={14} /> @{handle}
                             </a>
                         )}
                         {profile?.instagramProfileURL && (
-                            <a href={profile.instagramProfileURL} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+                            <a href={profile.instagramProfileURL} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', color: COLORS.ink, textDecoration: 'none', fontWeight: 700, fontSize: 13, border: `1px solid ${COLORS.border}` }}>
                                 <ExternalLink size={14} /> Open Instagram
                             </a>
                         )}
                     </div>
                 </div>
 
-                <div style={{ padding: '30px', display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(320px,0.8fr)', gap: 24 }}>
-                    <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                        <div style={{ width: 96, height: 96, borderRadius: 30, overflow: 'hidden', background: 'rgba(255,255,255,0.14)', border: '2px solid rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 28 }}>
+                <div style={{ padding: '30px', display: 'grid', gridTemplateColumns: 'minmax(0,1.2fr) minmax(320px,0.8fr)', gap: 32 }}>
+                    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        <div style={{ width: 120, height: 120, borderRadius: 32, overflow: 'hidden', background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 32, color: '#C2340A' }}>
                             {avatar ? <img src={avatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.slice(0, 2).toUpperCase()}
                         </div>
                         <div style={{ flex: 1, minWidth: 260 }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
-                                <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{profile?.platform || 'Instagram'}</span>
-                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(168,85,247,0.22)', fontSize: 12, fontWeight: 800 }}>{profile.niche}</span>}
-                                {analyticsMetrics?.ratingTier && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', fontSize: 12, fontWeight: 800 }}>{analyticsMetrics.ratingTier}</span>}
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+                                <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: COLORS.text }}>{profile?.platform || 'Instagram'}</span>
+                                {profile?.niche && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.2)', fontSize: 11, fontWeight: 700, color: '#C2340A' }}>{profile.niche}</span>}
+                                {analyticsMetrics?.ratingTier && <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', fontSize: 11, fontWeight: 700, color: '#059669' }}>{analyticsMetrics.ratingTier}</span>}
                             </div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 34, lineHeight: 1.05, letterSpacing: '-0.05em', marginBottom: 10 }}>{displayName}</h1>
-                            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 12 }}>
+                            <h1 style={{ fontWeight: 800, fontSize: 32, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 12, color: COLORS.ink }}>{displayName}</h1>
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: COLORS.text, marginBottom: 16, fontWeight: 500 }}>
                                 {(profile?.city || profile?.country) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><MapPin size={14} /> {profile?.city ? `${profile.city}, ` : ''}{profile?.country}</span>}
                                 {!!profile?.languages?.length && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Globe2 size={14} /> {profile.languages.join(', ')}</span>}
                                 {profile?.age ? <span>Age {profile.age}</span> : null}
                             </div>
-                            <p style={{ maxWidth: 720, fontSize: 14, lineHeight: 1.75, color: 'rgba(255,255,255,0.84)' }}>{bio}</p>
+                            <p style={{ maxWidth: 720, fontSize: 14, lineHeight: 1.6, color: COLORS.ink }}>{bio}</p>
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 12 }}>
-                        <MetricTile label="Followers" value={fmtCompact(profile.followersCount)} tone="#fff" icon={<Users size={14} />} />
-                        <MetricTile label="Final Score" value={fmtNumber(analyticsMetrics?.finalScore ?? profile.influencerScore ?? profile.fitScore)} tone="#fef08a" icon={<Sparkles size={14} />} />
-                        <MetricTile label="Engagement" value={fmtPercent(analyticsMetrics?.engagementRate ?? profile.engagementRate)} tone="#bfdbfe" icon={<Heart size={14} />} />
-                        <MetricTile label="Avg Post Rate" value={fmtCurrency(analyticsMetrics?.estimatedCostPerPost ?? profile.avgPostPrice, currency)} tone="#bbf7d0" icon={<BadgeDollarSign size={14} />} />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>
+                        <MetricTile label="Followers" value={fmtCompact(profile.followersCount)} tone={COLORS.ink} icon={<Users size={14} />} />
+                        <MetricTile label="Final Score" value={fmtNumber(analyticsMetrics?.finalScore ?? profile.influencerScore ?? profile.fitScore)} tone={COLORS.ink} icon={<Sparkles size={14} />} />
+                        <MetricTile label="Engagement" value={fmtPercent(analyticsMetrics?.engagementRate ?? profile.engagementRate)} tone={COLORS.blue} icon={<Heart size={14} />} />
+                        <MetricTile label="Avg Post Rate" value={fmtCurrency(analyticsMetrics?.estimatedCostPerPost ?? profile.avgPostPrice, currency)} tone={COLORS.green} icon={<BadgeDollarSign size={14} />} />
                     </div>
                 </div>
             </motion.section>
 
-            <div style={{ padding: '0 30px 24px' }}>
+            <div style={{ padding: '0 8px' }}>
                 <InfluencerProfileMetrics influencerId={profile?._id || influencerUserId} />
             </div>
 
             <SectionCard title="Complete KPI Snapshot" subtitle="Stored profile facts plus Porchest-calculated benchmark metrics." icon={<Target size={16} />}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
                     <MetricTile label="Followers" value={fmtCompact(profile.followersCount)} icon={<Users size={14} />} />
                     <MetricTile label="Following" value={fmtCompact(profile.followingCount)} icon={<Users size={14} />} />
                     <MetricTile label="Media Posted" value={fmtNumber(profile.mediaCount)} icon={<Camera size={14} />} />
@@ -645,20 +643,20 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 </div>
             </SectionCard>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 24 }}>
                 <SectionCard title="Audience & Score Trends" subtitle="Follower growth, engagement change, reach, impressions, and score across historical performance points." icon={<LineChartIcon size={16} />}>
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <ComposedChart data={snapshotTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <YAxis yAxisId="left" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                <XAxis dataKey="label" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis yAxisId="left" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                                 <Area yAxisId="left" type="monotone" dataKey="followers" stroke={COLORS.blue} fill={COLORS.sky} fillOpacity={0.18} />
-                                <Line yAxisId="right" type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 3 }} />
-                                <Line yAxisId="right" type="monotone" dataKey="score" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 3 }} />
+                                <Line yAxisId="right" type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 3, fill: COLORS.green, strokeWidth: 0 }} />
+                                <Line yAxisId="right" type="monotone" dataKey="score" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 3, fill: COLORS.purple, strokeWidth: 0 }} />
                             </ComposedChart>
                         </ResponsiveContainer>
                     ) : analytics?.charts?.followerGrowth?.length || analytics?.charts?.engagementTrend?.length ? (
@@ -670,14 +668,14 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                                     engagementRate: analytics?.charts?.engagementTrend?.[index]?.engagementRate || 0,
                                 }))}
                             >
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <YAxis yAxisId="left" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                <XAxis dataKey="label" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis yAxisId="left" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis yAxisId="right" orientation="right" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                                 <Area yAxisId="left" type="monotone" dataKey="followers" stroke={COLORS.blue} fill={COLORS.sky} fillOpacity={0.18} />
-                                <Line yAxisId="right" type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 3 }} />
+                                <Line yAxisId="right" type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 3, fill: COLORS.green, strokeWidth: 0 }} />
                             </ComposedChart>
                         </ResponsiveContainer>
                     ) : (
@@ -689,11 +687,11 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {snapshotTrend.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <AreaChart data={snapshotTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                <XAxis dataKey="label" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                                 <Area type="monotone" dataKey="reach" stroke={COLORS.teal} fill={COLORS.teal} fillOpacity={0.16} />
                                 <Area type="monotone" dataKey="impressions" stroke={COLORS.amber} fill={COLORS.amber} fillOpacity={0.16} />
                             </AreaChart>
@@ -704,16 +702,16 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 </SectionCard>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 24 }}>
                 <SectionCard title="Recent Content Performance" subtitle="Latest posts and reels with engagement and view depth across the recent media history." icon={<BarChart3 size={16} />}>
                     {recentMedia.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <BarChart data={recentMedia}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                <XAxis dataKey="shortLabel" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                <XAxis dataKey="shortLabel" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                                 <Bar dataKey="engagements" fill={COLORS.purple} radius={[8, 8, 0, 0]} />
                                 <Bar dataKey="views" fill={COLORS.sky} radius={[8, 8, 0, 0]} />
                             </BarChart>
@@ -733,7 +731,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                                     ))}
                                 </Pie>
                                 <Tooltip contentStyle={tooltipStyle} />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600 }} />
                             </PieChart>
                         </ResponsiveContainer>
                     ) : (
@@ -742,13 +740,13 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 </SectionCard>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 24 }}>
                 <SectionCard title="Scoring Radar" subtitle="Multi-factor performance profile using Porchest scoring signals." icon={<Radar size={16} />}>
                     {radarData.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <RadarChart data={radarData}>
-                                <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                                <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
+                                <PolarGrid stroke="#EDD9BC" />
+                                <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 600 }} />
                                 <RechartsRadar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.25} />
                                 <Tooltip contentStyle={tooltipStyle} />
                             </RadarChart>
@@ -762,9 +760,9 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     {engagementBreakdown.length ? (
                         <ResponsiveContainer width="100%" height={320}>
                             <BarChart data={engagementBreakdown}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: COLORS.text, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                 <Tooltip contentStyle={tooltipStyle} />
                                 <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                                     {engagementBreakdown.map((entry, index) => (
@@ -780,7 +778,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
             </div>
 
             <SectionCard title="Commercial Intelligence" subtitle="Pricing, cost efficiency, media value, and commercial decision-making signals." icon={<BadgeDollarSign size={16} />}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
                     <MetricTile label="Avg Post Price" value={fmtCurrency(profile.avgPostPrice || analyticsMetrics?.estimatedCostPerPost, currency)} tone={COLORS.green} icon={<BadgeDollarSign size={14} />} />
                     <MetricTile label="Avg Reel Price" value={fmtCurrency(profile.avgReelPrice || analyticsMetrics?.estimatedCostPerReel, currency)} tone={COLORS.green} icon={<BadgeDollarSign size={14} />} />
                     <MetricTile label="Cost Per View" value={fmtCurrency(analyticsMetrics?.costPerView, currency)} tone={COLORS.amber} icon={<Eye size={14} />} />
@@ -792,17 +790,17 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 </div>
             </SectionCard>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 24 }}>
                 <SectionCard title="Audience Demographics" subtitle="Country, age, and gender distributions from the stored audience analytics." icon={<Users size={16} />}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 16 }}>
                         <div>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Top Countries</p>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Countries</p>
                             {topCountries.length ? (
                                 <ResponsiveContainer width="100%" height={240}>
                                     <BarChart data={topCountries} layout="vertical">
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" horizontal={false} />
-                                        <XAxis type="number" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis dataKey="name" type="category" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} width={78} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" horizontal={false} />
+                                        <XAxis type="number" tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                        <YAxis dataKey="name" type="category" tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} width={78} />
                                         <Tooltip contentStyle={tooltipStyle} />
                                         <Bar dataKey="value" fill={COLORS.blue} radius={[0, 8, 8, 0]} />
                                     </BarChart>
@@ -812,7 +810,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             )}
                         </div>
                         <div>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Age Split</p>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Age Split</p>
                             {ageDistribution.length ? (
                                 <ResponsiveContainer width="100%" height={240}>
                                     <PieChart>
@@ -829,7 +827,7 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             )}
                         </div>
                         <div>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Gender Split</p>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Gender Split</p>
                             {genderDistribution.length ? (
                                 <ResponsiveContainer width="100%" height={240}>
                                     <PieChart>
@@ -849,19 +847,19 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                 </SectionCard>
 
                 <SectionCard title="Audience Behavior" subtitle="Best times, language mix, and score-breakdown details where stored." icon={<Globe2 size={16} />}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 14, marginBottom: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16, marginBottom: 16 }}>
                         <MetricTile label="Audience Type" value={profile.demographics?.audienceType || '—'} icon={<Users size={14} />} />
                         <MetricTile label="Last Synced" value={formatDate(profile.lastSyncAt)} icon={<ShieldCheck size={14} />} />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 14 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>
                         <div>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Top Languages</p>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Languages</p>
                             {languageDistribution.length ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <BarChart data={languageDistribution}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                        <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                         <Tooltip contentStyle={tooltipStyle} />
                                         <Bar dataKey="value" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
                                     </BarChart>
@@ -871,13 +869,13 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                             )}
                         </div>
                         <div>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Online Followers Pattern</p>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Online Followers Pattern</p>
                             {onlineFollowerHeatmap.length ? (
                                 <ResponsiveContainer width="100%" height={220}>
                                     <BarChart data={onlineFollowerHeatmap}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.08)" vertical={false} />
-                                        <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                                        <YAxis tick={{ fill: COLORS.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                        <XAxis dataKey="name" tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                        <YAxis tick={{ fill: COLORS.text, fontSize: 10, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                         <Tooltip contentStyle={tooltipStyle} />
                                         <Bar dataKey="value" fill={COLORS.violet} radius={[8, 8, 0, 0]} />
                                     </BarChart>
@@ -888,9 +886,9 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                         </div>
                     </div>
                     {!!scoreBreakdown.length && (
-                        <div style={{ marginTop: 14 }}>
-                            <p style={{ fontSize: 12, color: COLORS.muted, fontWeight: 700, marginBottom: 10 }}>Stored Score Breakdown</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
+                        <div style={{ marginTop: 16 }}>
+                            <p style={{ fontSize: 11, color: COLORS.text, fontWeight: 700, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stored Score Breakdown</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
                                 {scoreBreakdown.map((item) => (
                                     <MetricTile key={item.name} label={item.name} value={fmtNumber(item.value)} icon={<Sparkles size={14} />} />
                                 ))}
@@ -902,14 +900,14 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
 
             {!!recentMedia.length && (
                 <SectionCard title="Recent Media Facts" subtitle="The latest stored posts and reels summarized for quick review." icon={<ImageIcon size={16} />}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
                         {recentMedia.slice().reverse().slice(0, 6).map((item) => (
-                            <div key={item.id} style={{ padding: 16, borderRadius: 22, background: 'rgba(255,255,255,0.02)', border: `1px solid ${COLORS.border}` }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                                    <span style={{ padding: '5px 10px', borderRadius: 999, background: 'rgba(168,85,247,0.08)', color: COLORS.purple, fontSize: 11, fontWeight: 800 }}>{item.mediaType}</span>
-                                    <span style={{ fontSize: 11, color: COLORS.muted }}>{item.label}</span>
+                            <div key={item.id} style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}` }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                                    <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(194,52,10,0.1)', color: COLORS.purple, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.mediaType}</span>
+                                    <span style={{ fontSize: 12, color: COLORS.text, fontWeight: 500 }}>{item.label}</span>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 12 }}>
                                     <MetricTile label="Likes" value={fmtCompact(item.likes)} icon={<Heart size={14} />} />
                                     <MetricTile label="Comments" value={fmtCompact(item.comments)} icon={<MessageCircle size={14} />} />
                                     <MetricTile label="Shares" value={fmtCompact(item.shares)} icon={<Share2 size={14} />} />

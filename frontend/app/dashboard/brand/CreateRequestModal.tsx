@@ -9,15 +9,18 @@ interface Influencer { _id: string; fullName: string; email: string; niche: stri
 interface Props { influencer: Influencer | null; onClose: () => void; onSuccess: () => void; }
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
-    <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-bold text-white/50 uppercase tracking-wide">
-            {label}{required && <span className="text-red-500 ml-1">*</span>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ fontSize: '11px', fontWeight: 600, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {label}{required && <span style={{ color: '#E8400A', marginLeft: '4px' }}>*</span>}
         </label>
         {children}
     </div>
 );
 
-const inputClass = "w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-500/30 focus:ring-2 focus:ring-purple-500/30 transition-all placeholder-white/30";
+const IS: React.CSSProperties = {
+    width: '100%', padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC',
+    color: '#1A0A00', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit'
+};
 
 export default function CreateRequestModal({ influencer, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
@@ -65,62 +68,63 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
     return (
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[300] bg-slate-900/40 backdrop-blur-sm overflow-y-auto p-6 flex items-center justify-center">
+                style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(26,10,0,0.5)', backdropFilter: 'blur(8px)', overflowY: 'auto', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
                 
                 <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                    className="w-full max-w-[700px] bg-[#0c0c0c] border border-white/10 rounded-[36px] shadow-[0_8px_30px_rgba(0,0,0,0.2)] overflow-hidden my-auto">
+                    style={{ width: '100%', maxWidth: '700px', background: '#FDF6EE', border: '1px solid #EDD9BC', borderRadius: '24px', boxShadow: '0 16px 40px rgba(26,10,0,0.1)', overflow: 'hidden', margin: 'auto' }}>
 
                     {/* Header */}
-                    <div className="px-8 py-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+                    <div style={{ padding: '24px 32px', borderBottom: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div>
-                            <h2 className="font-bold text-xl text-white mb-1">
+                            <h2 style={{ fontWeight: 700, fontSize: '20px', color: '#1A0A00', marginBottom: '4px' }}>
                                 New Campaign Request
                             </h2>
-                            <p className="text-xs font-medium text-white/50">
-                                To: <strong className="text-white">{influencer.fullName}</strong> · {influencer.niche}
+                            <p style={{ fontSize: '13px', fontWeight: 500, color: '#7A5030' }}>
+                                To: <strong style={{ color: '#1A0A00' }}>{influencer.fullName}</strong> · {influencer.niche}
                             </p>
                         </div>
-                        <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors flex items-center justify-center shadow-sm">
+                        <button onClick={onClose} style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.8)', border: '1px solid #EDD9BC', color: '#1A0A00', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }} onMouseEnter={e => { e.currentTarget.style.background = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.8)'; }}>
                             <X size={18} />
                         </button>
                     </div>
 
                     {/* Important note */}
-                    <div className="mx-8 mt-6 p-4 rounded-xl bg-amber-900/20 border border-amber-500/20 flex gap-3 items-start">
-                        <AlertCircle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-xs text-amber-200 leading-relaxed font-medium">
-                            All terms are <strong className="text-amber-400">locked once submitted</strong>. The agreed price cannot be renegotiated. If the influencer rejects, you must create a new request.
+                    <div style={{ margin: '24px 32px 0', padding: '16px', borderRadius: '12px', background: 'rgba(255,107,26,0.1)', border: '1px solid rgba(255,107,26,0.3)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                        <AlertCircle size={16} style={{ color: '#E8400A', flexShrink: 0, marginTop: '2px' }} />
+                        <p style={{ fontSize: '13px', color: '#7A5030', lineHeight: 1.65, fontWeight: 500 }}>
+                            All terms are <strong style={{ color: '#C2340A' }}>locked once submitted</strong>. The agreed price cannot be renegotiated. If the influencer rejects, you must create a new request.
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6">
+                    <form onSubmit={handleSubmit} style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         {/* Row 1 */}
                         <Field label="Campaign Title" required>
                             <input required value={form.campaignTitle} onChange={set('campaignTitle')}
-                                placeholder="e.g. Smart Gadgets Review Series" className={inputClass} />
+                                placeholder="e.g. Smart Gadgets Review Series" style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
 
                         <Field label="Campaign Description" required>
                             <textarea required value={form.campaignDescription} onChange={set('campaignDescription')}
                                 placeholder="Describe the campaign goal, product, and target message…"
-                                rows={3} className={`${inputClass} resize-y`} />
+                                rows={3} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <Field label="Deliverables" required>
                                 <textarea required value={form.deliverables} onChange={set('deliverables')}
-                                    placeholder="e.g. 1 × 60s Reel, 3 × Stories" rows={2} className={`${inputClass} resize-y`} />
+                                    placeholder="e.g. 1 × 60s Reel, 3 × Stories" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                             </Field>
                             <Field label="Required Elements" required>
                                 <textarea required value={form.requiredElements} onChange={set('requiredElements')}
-                                    placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} className={`${inputClass} resize-y`} />
+                                    placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                             </Field>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <Field label="Video Length" required>
-                                <select required value={form.videoLength} onChange={set('videoLength')} className={`${inputClass} cursor-pointer`}>
+                                <select required value={form.videoLength} onChange={set('videoLength')} style={{ ...IS, cursor: 'pointer' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')}>
                                     <option value="">Select duration</option>
                                     {['15 seconds', '30 seconds', '60 seconds', '90 seconds', '2 minutes', '3–5 minutes'].map(v =>
                                         <option key={v} value={v}>{v}</option>)}
@@ -128,59 +132,62 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                             </Field>
                             <Field label="Posting Deadline" required>
                                 <input required type="date" value={form.postingDeadline} onChange={set('postingDeadline')}
-                                    min={new Date().toISOString().split('T')[0]} className={inputClass} />
+                                    min={new Date().toISOString().split('T')[0]} style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                             </Field>
                         </div>
 
                         <Field label="Content Guidelines" required>
                             <textarea required value={form.contentGuidelines} onChange={set('contentGuidelines')}
                                 placeholder="Brand tone, what to avoid, specific talking points, CTA wording…"
-                                rows={3} className={`${inputClass} resize-y`} />
+                                rows={3} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <Field label="Hashtags">
                                 <input value={form.hashtags} onChange={set('hashtags')}
-                                    placeholder="#YourBrand #Sponsored" className={inputClass} />
+                                    placeholder="#YourBrand #Sponsored" style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                             </Field>
                             <Field label="Disclosure Requirements">
                                 <input value={form.disclosureRequirements} onChange={set('disclosureRequirements')}
-                                    placeholder="#Ad #Sponsored" className={inputClass} />
+                                    placeholder="#Ad #Sponsored" style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                             </Field>
                         </div>
 
                         {/* Price & Fixed Terms Block */}
-                        <div className="p-6 rounded-[24px] bg-purple-900/10 border border-purple-500/20">
+                        <div style={{ padding: '24px', borderRadius: '16px', background: 'rgba(194,52,10,0.05)', border: '1px solid rgba(194,52,10,0.15)' }}>
                             <Field label="Agreed Price (USD)" required>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 font-bold text-lg pointer-events-none">$</span>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', fontWeight: 700, fontSize: '18px', pointerEvents: 'none' }}>$</span>
                                     <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
-                                        placeholder="0.00" className={`${inputClass} pl-9 font-bold text-lg text-white border-white/10 shadow-sm`} />
+                                        placeholder="0.00" style={{ ...IS, paddingLeft: '36px', fontWeight: 700, fontSize: '18px', color: '#1A0A00' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                                 </div>
                             </Field>
-                            <div className="mt-5 p-4 rounded-xl bg-white/5 border border-white/10 shadow-sm">
-                                <p className="text-xs font-bold text-white mb-2">Standard Payment Terms</p>
-                                <ul className="list-disc pl-5 text-xs text-white/60 font-medium space-y-1">
+                            <div style={{ marginTop: '20px', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                <p style={{ fontSize: '13px', fontWeight: 700, color: '#1A0A00', marginBottom: '8px' }}>Standard Payment Terms</p>
+                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#7A5030', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <li>50% advance before campaign starts</li>
                                     <li>50% after deliverables are verified</li>
                                 </ul>
-                                <p className="text-[11px] font-bold text-white/40 mt-3 uppercase tracking-wide">
+                                <p style={{ fontSize: '11px', fontWeight: 600, color: '#C4A882', marginTop: '12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                     By sending this request, you agree to Porchest standard payment terms.
                                 </p>
                             </div>
                         </div>
 
                         {/* Terms checkbox */}
-                        <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${agreedToTerms ? 'bg-green-900/20 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
-                            <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-green-600 cursor-pointer" />
-                            <span className={`text-sm font-medium ${agreedToTerms ? 'text-green-400' : 'text-white/60'}`}>
-                                I agree to the <a href="#" onClick={e => e.preventDefault()} className="text-white hover:text-white/80 underline font-bold">Porchest Terms & Conditions</a> and Payment Policy
+                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', borderRadius: '12px', border: `1px solid ${agreedToTerms ? 'rgba(74,222,128,0.3)' : '#EDD9BC'}`, background: agreedToTerms ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.15s' }}>
+                            <input type="checkbox" required checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} style={{ marginTop: '2px', accentColor: '#4ade80', width: '16px', height: '16px', flexShrink: 0, cursor: 'pointer' }} />
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: agreedToTerms ? '#166534' : '#7A5030', lineHeight: 1.5 }}>
+                                I agree to the <a href="#" onClick={e => e.preventDefault()} style={{ color: agreedToTerms ? '#166534' : '#1A0A00', textDecoration: 'underline', fontWeight: 700 }}>Porchest Terms & Conditions</a> and Payment Policy
                             </span>
                         </label>
 
                         {/* Submit */}
                         <button type="submit" disabled={loading || !agreedToTerms}
-                            className={`w-full py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg ${loading || !agreedToTerms ? 'bg-white/10 text-white/30 cursor-not-allowed shadow-none' : 'bg-[#a855f7] text-white hover:bg-[#c084fc] shadow-purple-500/20'}`}>
+                            style={{ width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s', background: loading || !agreedToTerms ? 'rgba(194,52,10,0.3)' : '#C2340A', color: loading || !agreedToTerms ? 'rgba(255,255,255,0.6)' : '#fff', border: 'none', cursor: loading || !agreedToTerms ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            onMouseEnter={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#E8400A'; }}
+                            onMouseLeave={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#C2340A'; }}
+                        >
                             <Send size={18} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
                         </button>
                     </form>

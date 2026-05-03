@@ -8,6 +8,7 @@ import { ArrowRight, AlertTriangle, Megaphone, Clock, CheckCircle2, XCircle, Fil
 import { brandAPI } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { StatCard, GlassCard, BadgeStatus } from '@/components/ui';
 
 export default function OverviewPage({ profileCompleteOverride }: { profileCompleteOverride?: boolean } = {}) {
     const router = useRouter();
@@ -38,115 +39,109 @@ export default function OverviewPage({ profileCompleteOverride }: { profileCompl
     const totalAllocated = accepted.reduce((sum, r) => sum + (r.agreedPrice || 0), 0);
 
     if (authLoading || loading) {
-        return <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6 text-sm text-gray-400">Loading brand dashboard...</div>;
+        return <div style={{ padding: '24px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(12px)', fontSize: '14px', color: '#7A5030' }}>Loading brand dashboard...</div>;
     }
 
     const statCards = [
-        { label: 'Running', value: accepted.length, tone: 'text-emerald-300', icon: Megaphone },
-        { label: 'In Process', value: pending.length, tone: 'text-blue-300', icon: Clock },
-        { label: 'Completed', value: completed.length, tone: 'text-violet-300', icon: CheckCircle2 },
-        { label: 'Canceled', value: rejected.length, tone: 'text-red-300', icon: XCircle },
+        { label: 'Running', value: accepted.length, icon: <Megaphone size={20} /> },
+        { label: 'In Process', value: pending.length, icon: <Clock size={20} /> },
+        { label: 'Completed', value: completed.length, icon: <CheckCircle2 size={20} /> },
+        { label: 'Canceled', value: rejected.length, icon: <XCircle size={20} /> },
     ];
 
     const runningPreview = [...accepted, ...completed].slice(0, 5);
 
     return (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {showInternalProfilePrompt && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-5">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-400/20 bg-[#202025] text-amber-300">
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ borderRadius: '14px', border: '1px solid rgba(255,107,26,0.3)', background: 'rgba(255,107,26,0.1)', padding: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="md:flex-row md:items-center md:justify-between">
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ display: 'flex', width: '40px', height: '40px', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', background: 'rgba(255,107,26,0.15)', color: '#E8400A', flexShrink: 0 }}>
                                 <AlertTriangle size={18} />
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-amber-200/80">Action required</p>
-                                <h2 className="mt-1 text-xl font-semibold text-white">Complete your brand profile first</h2>
-                                <p className="mt-2 max-w-2xl text-sm leading-7 text-gray-300">
+                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#E8400A', fontWeight: 600 }}>Action required</p>
+                                <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00', marginTop: '2px' }}>Complete your brand profile first</h2>
+                                <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.65, maxWidth: '600px' }}>
                                     You need a complete brand profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
                                 </p>
                             </div>
                         </div>
-                        <Link href="/dashboard/brand/profile" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500">
-                            Complete profile <ArrowRight size={15} />
+                        <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', borderRadius: '8px', background: '#C2340A', color: '#fff', padding: '11px 24px', fontSize: '13px', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s' }}>
+                            Complete profile <ArrowRight size={14} />
                         </Link>
                     </div>
                 </motion.div>
             )}
 
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                {statCards.map((card) => (
-                    <div key={card.label} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
-                        <card.icon className={`mb-4 ${card.tone}`} size={18} />
-                        <p className={`text-3xl font-bold ${card.tone}`}>{card.value}</p>
-                        <p className="mt-2 text-sm text-gray-400">{card.label} campaigns</p>
-                    </div>
+            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                {statCards.map((card, i) => (
+                    <StatCard key={card.label} title={`${card.label} campaigns`} value={card.value} icon={card.icon} delay={i * 0.05} />
                 ))}
             </div>
 
-            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
-                <div className="mb-4 flex items-center justify-between">
+            <GlassCard padding="28px">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <div>
-                        <p className="text-xs uppercase tracking-wider text-gray-400">Budget summary</p>
-                        <h3 className="mt-1 text-lg font-semibold text-white">Campaign spend</h3>
+                        <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Budget summary</p>
+                        <h3 style={{ marginTop: '6px', fontSize: '18px', fontWeight: 600, color: '#1A0A00', letterSpacing: '-0.01em' }}>Campaign spend</h3>
                     </div>
-                    <button onClick={() => router.push('/dashboard/brand/collaborations')} className="text-sm font-medium text-blue-300 hover:text-blue-200">
+                    <button onClick={() => router.push('/dashboard/brand/collaborations')} style={{ fontSize: '13px', fontWeight: 500, color: '#C2340A', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                         View all
                     </button>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-xs uppercase tracking-wider text-gray-400">Total committed</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{totalAllocated > 0 ? `$${totalAllocated.toLocaleString()}` : '—'}</p>
+                <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                    <div style={{ borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)', padding: '20px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Total committed</p>
+                        <p style={{ marginTop: '10px', fontSize: '24px', fontWeight: 600, color: '#1A0A00' }}>{totalAllocated > 0 ? `$${totalAllocated.toLocaleString()}` : '—'}</p>
                     </div>
-                    <div className="rounded-lg border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-xs uppercase tracking-wider text-gray-400">Active collaborations</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{accepted.length}</p>
+                    <div style={{ borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)', padding: '20px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Active collaborations</p>
+                        <p style={{ marginTop: '10px', fontSize: '24px', fontWeight: 600, color: '#1A0A00' }}>{accepted.length}</p>
                     </div>
-                    <div className="rounded-lg border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-xs uppercase tracking-wider text-gray-400">Pending decisions</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{pending.length}</p>
+                    <div style={{ borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)', padding: '20px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Pending decisions</p>
+                        <p style={{ marginTop: '10px', fontSize: '24px', fontWeight: 600, color: '#1A0A00' }}>{pending.length}</p>
                     </div>
                 </div>
-            </div>
+            </GlassCard>
 
-            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
-                <div className="mb-4 flex items-center justify-between">
+            <GlassCard padding="28px">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <div>
-                        <p className="text-xs uppercase tracking-wider text-gray-400">Active campaigns</p>
-                        <h3 className="mt-1 text-lg font-semibold text-white">Running collaboration snapshot</h3>
+                        <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Active campaigns</p>
+                        <h3 style={{ marginTop: '6px', fontSize: '18px', fontWeight: 600, color: '#1A0A00', letterSpacing: '-0.01em' }}>Running collaboration snapshot</h3>
                     </div>
-                    <button onClick={() => router.push('/dashboard/brand/influencers')} className="text-sm font-medium text-blue-300 hover:text-blue-200">
+                    <button onClick={() => router.push('/dashboard/brand/influencers')} style={{ fontSize: '13px', fontWeight: 500, color: '#C2340A', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                         Find creators
                     </button>
                 </div>
 
                 {runningPreview.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-[#2A2A30] bg-[#202025] p-10 text-center">
-                        <FileText size={36} className="mx-auto mb-3 text-gray-500" />
-                        <p className="text-sm font-medium text-white">No campaigns yet</p>
-                        <p className="mt-2 text-sm text-gray-400">Create your first campaign request from the influencers page.</p>
+                    <div style={{ borderRadius: '10px', border: '1px dashed #EDD9BC', background: 'rgba(255,255,255,0.40)', padding: '40px', textAlign: 'center' }}>
+                        <FileText size={36} style={{ margin: '0 auto 12px', color: '#C4A882' }} />
+                        <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A0A00' }}>No campaigns yet</p>
+                        <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030' }}>Create your first campaign request from the influencers page.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {runningPreview.map((r: any) => (
-                            <div key={r._id} className="flex flex-wrap items-center gap-3 rounded-lg border border-[#2A2A30] bg-[#202025] px-4 py-3">
-                                <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#2A2A30] bg-[#1A1A1E] text-xs font-bold text-white">
-                                    {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt="" className="h-full w-full object-cover" /> : 'PR'}
+                            <div key={r._id} style={{ display: 'flex', alignItems: 'center', gap: '12px', borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.60)', padding: '12px 16px', flexWrap: 'wrap' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: '12px', fontWeight: 600, color: '#C2340A', flexShrink: 0 }}>
+                                    {r.influencerProfilePic ? <img src={r.influencerProfilePic} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : 'PR'}
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-white">{r.campaignTitle}</p>
-                                    <p className="truncate text-xs text-gray-400">{r.influencerName || 'Influencer'}</p>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#1A0A00', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.campaignTitle}</p>
+                                    <p style={{ fontSize: '12px', color: '#7A5030', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.influencerName || 'Influencer'}</p>
                                 </div>
-                                <span className="rounded-full border border-[#2A2A30] bg-[#1A1A1E] px-3 py-1 text-[11px] font-semibold text-gray-300">
-                                    {r.status === 'deal_closed' ? 'Completed' : 'Running'}
-                                </span>
-                                <p className="text-sm font-semibold text-blue-300">${r.agreedPrice?.toLocaleString()}</p>
+                                <BadgeStatus status={r.status === 'deal_closed' ? 'completed' : 'active'} />
+                                <p style={{ fontSize: '14px', fontWeight: 600, color: '#1A0A00' }}>${r.agreedPrice?.toLocaleString()}</p>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </GlassCard>
         </div>
     );
 }

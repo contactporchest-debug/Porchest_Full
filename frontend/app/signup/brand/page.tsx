@@ -6,13 +6,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { authAPI } from '@/lib/api';
-import { GlowButton } from '@/components/ui';
 import toast from 'react-hot-toast';
 import { Building2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import OTPVerify from '@/components/auth/OTPVerify';
 import { GoogleLogin } from '@react-oauth/google';
 
-const inputClass = 'w-full rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-blue-500';
+const IS: React.CSSProperties = {
+    width: '100%', background: 'rgba(255,255,255,0.40)', border: '1px solid #EDD9BC',
+    borderRadius: '8px', padding: '11px 14px', fontSize: '14px', color: '#1A0A00',
+    outline: 'none', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s',
+};
 
 export default function BrandSignupPage() {
     const router = useRouter();
@@ -21,14 +24,8 @@ export default function BrandSignupPage() {
     const [form, setForm] = useState({ email: '', password: '' });
     const [showOTP, setShowOTP] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState('');
-
-    const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
-
-    const onVerifySuccess = async () => {
-        toast.success('Welcome to Porchest!');
-        router.push('/dashboard/brand');
-    };
-
+    const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+    const onVerifySuccess = async () => { toast.success('Welcome to Porchest!'); router.push('/dashboard/brand'); };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.email || !form.password) return toast.error('Please fill all required fields');
@@ -36,100 +33,83 @@ export default function BrandSignupPage() {
         setLoading(true);
         try {
             await authAPI.register({ email: form.email, password: form.password, role: 'brand' });
-            setRegisteredEmail(form.email);
-            setShowOTP(true);
+            setRegisteredEmail(form.email); setShowOTP(true);
             toast.success('Account created! Please verify your email.');
         } catch (err: unknown) {
-            toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Registration failed');
-        } finally {
-            setLoading(false);
-        }
+            toast.error((err as any)?.response?.data?.message || 'Registration failed');
+        } finally { setLoading(false); }
     };
-
     const handleGoogleSuccess = async (credentialResponse: any) => {
         const idToken = credentialResponse.credential;
         if (!idToken) return toast.error('Google signup did not return a valid credential.');
         try {
             setLoading(true);
             const { data } = await authAPI.googleAuth({ idToken, role: 'brand' });
-            if (data.success) {
-                localStorage.setItem('porchest_token', data.token);
-                localStorage.setItem('porchest_user', JSON.stringify(data.user));
-                window.location.href = '/dashboard/brand';
-            } else {
-                toast.error(data.message || 'Google Auth failed');
-            }
-        } catch (err: any) {
-            const message = err?.response?.data?.message || err?.message || 'Google auth error';
-            toast.error(message);
-        } finally {
-            setLoading(false);
-        }
+            if (data.success) { localStorage.setItem('porchest_token', data.token); localStorage.setItem('porchest_user', JSON.stringify(data.user)); window.location.href = '/dashboard/brand'; }
+            else toast.error(data.message || 'Google Auth failed');
+        } catch (err: any) { toast.error(err?.response?.data?.message || err?.message || 'Google auth error'); }
+        finally { setLoading(false); }
     };
 
     return (
-        <main className="min-h-screen bg-[#0A0A0B] px-4 py-10 text-white">
-            <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl items-center justify-center">
-                <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="w-full overflow-hidden rounded-2xl border border-[#2A2A30] bg-[#1A1A1E]">
-                    {showOTP ? (
-                        <div className="p-6 md:p-8">
-                            <OTPVerify email={registeredEmail} onSuccess={onVerifySuccess} />
+        <main style={{ minHeight: '100vh', background: '#FDF6EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', maxWidth: '920px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(12px)', overflow: 'hidden' }}>
+                {showOTP ? (
+                    <div style={{ padding: '40px' }}><OTPVerify email={registeredEmail} onSuccess={onVerifySuccess} /></div>
+                ) : (
+                    <div style={{ display: 'grid' }} className="lg:grid-cols-[0.95fr_1.05fr]">
+                        {/* Left */}
+                        <div style={{ padding: '40px', borderRight: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)' }}>
+                            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '32px' }}>
+                                <Image src="/porchest-logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '5px', objectFit: 'contain' }} />
+                                <span style={{ fontSize: '16px', fontWeight: 600, color: '#1A0A00' }}>Porchest</span>
+                            </Link>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '999px', background: '#FFE5CC', color: '#C2340A', fontSize: '11px', fontWeight: 500, marginBottom: '20px' }}>
+                                <Building2 size={12} /> Brand account
+                            </span>
+                            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1A0A00', letterSpacing: '-0.02em', marginBottom: '10px' }}>Create your brand account</h1>
+                            <p style={{ fontSize: '14px', color: '#7A5030', lineHeight: 1.65 }}>Start with secure login details. You can finish your profile after signup.</p>
                         </div>
-                    ) : (
-                        <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-                            <div className="border-b border-[#2A2A30] bg-[#202025] p-8 lg:border-b-0 lg:border-r">
-                                <Link href="/" className="inline-flex items-center gap-3 rounded-full border border-[#2A2A30] bg-[#1A1A1E] px-4 py-2">
-                                    <Image src="/logo.png" alt="Porchest" width={26} height={26} className="rounded-md" />
-                                    <span className="text-sm font-semibold tracking-wide">PORCHEST</span>
-                                </Link>
-                                <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-300">
-                                    <Building2 size={14} />
-                                    Brand account
+
+                        {/* Right: form */}
+                        <div style={{ padding: '40px' }}>
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#7A5030', letterSpacing: '0.03em', marginBottom: '6px' }}>Email</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Mail size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
+                                        <input style={{ ...IS, paddingLeft: '40px' }} type="email" placeholder="you@email.com" value={form.email} onChange={e => set('email', e.target.value)} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                                    </div>
                                 </div>
-                                <h1 className="mt-6 text-3xl font-bold tracking-tight text-white">Create your brand account</h1>
-                                <p className="mt-3 text-sm leading-7 text-gray-400">Start with secure login details. You can finish your profile after signup.</p>
-                            </div>
-
-                            <div className="p-8">
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div>
-                                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Email</label>
-                                        <div className="relative">
-                                            <Mail size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                            <input className={`${inputClass} pl-11`} type="email" placeholder="you@email.com" value={form.email} onChange={(e) => set('email', e.target.value)} />
-                                        </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#7A5030', letterSpacing: '0.03em', marginBottom: '6px' }}>Password</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Lock size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
+                                        <input style={{ ...IS, paddingLeft: '40px', paddingRight: '40px' }} type={showPass ? 'text' : 'password'} placeholder="Minimum 6 characters" value={form.password} onChange={e => set('password', e.target.value)} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                                        <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                            {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                                        </button>
                                     </div>
-
-                                    <div>
-                                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Password</label>
-                                        <div className="relative">
-                                            <Lock size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                                            <input className={`${inputClass} pl-11 pr-11`} type={showPass ? 'text' : 'password'} placeholder="Minimum 6 characters" value={form.password} onChange={(e) => set('password', e.target.value)} />
-                                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                                                {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <GlowButton type="submit" fullWidth loading={loading} size="lg">
-                                        Create Brand Account
-                                    </GlowButton>
-
-                                    <div className="flex items-center gap-3 py-2">
-                                        <div className="h-px flex-1 bg-[#2A2A30]" />
-                                        <span className="text-[11px] uppercase tracking-[0.14em] text-gray-500">or sign up with</span>
-                                        <div className="h-px flex-1 bg-[#2A2A30]" />
-                                    </div>
-
-                                    <div className="flex justify-center">
-                                        <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error('Google registration failed')} useOneTap />
-                                    </div>
-                                </form>
-                            </div>
+                                </div>
+                                <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: '8px', background: loading ? 'rgba(194,52,10,0.40)' : '#C2340A', color: '#fff', fontSize: '13px', fontWeight: 500, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '0.01em', fontFamily: 'inherit' }}>
+                                    {loading ? 'Creating account…' : 'Create Brand Account'}
+                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ flex: 1, height: '1px', background: '#EDD9BC' }} />
+                                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.10em' }}>or sign up with</span>
+                                    <div style={{ flex: 1, height: '1px', background: '#EDD9BC' }} />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error('Google registration failed')} useOneTap />
+                                </div>
+                            </form>
+                            <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: '#7A5030' }}>
+                                Already have an account? <Link href="/login" style={{ color: '#C2340A', fontWeight: 500, textDecoration: 'none' }}>Sign in</Link>
+                            </p>
                         </div>
-                    )}
-                </motion.div>
-            </div>
+                    </div>
+                )}
+            </motion.div>
         </main>
     );
 }

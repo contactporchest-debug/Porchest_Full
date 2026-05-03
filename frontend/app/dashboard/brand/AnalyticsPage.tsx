@@ -105,28 +105,28 @@ type AnalyticsDetail = {
 };
 
 const COLORS = {
-    purple: '#a855f7',
-    violet: '#c084fc',
-    blue: '#60d5f8',
-    teal: '#14b8a6',
-    green: '#4ade80',
-    amber: '#fbbf24',
-    red: '#f87171',
-    slate: '#94a3b8',
-    ink: '#ffffff',
-    muted: 'rgba(255,255,255,0.5)',
+    purple: '#7A5030', // Re-mapped to match warm cream tokens where appropriate
+    violet: '#C4A882',
+    blue: '#0284c7',
+    teal: '#0d9488',
+    green: '#166534',
+    amber: '#b45309',
+    red: '#b91c1c',
+    slate: '#C4A882',
+    ink: '#1A0A00',
+    muted: '#7A5030',
 };
 
-const PIE_COLORS = ['#a855f7', '#38bdf8', '#4ade80', '#fbbf24', '#f87171', 'rgba(255,255,255,0.3)'];
+const PIE_COLORS = ['#C2340A', '#E8400A', '#FF6B1A', '#C4A882', '#EDD9BC', 'rgba(26,10,0,0.1)'];
 
 const tooltipStyle = {
-    background: 'rgba(12,12,12,0.98)',
-    border: '1px solid rgba(168,85,247,0.18)',
+    background: 'rgba(255,255,255,0.98)',
+    border: '1px solid #EDD9BC',
     borderRadius: '12px',
     fontSize: '12px',
-    color: 'white',
+    color: '#1A0A00',
     padding: '10px 14px',
-    boxShadow: '0 12px 26px rgba(0,0,0,0.5)',
+    boxShadow: '0 12px 26px rgba(26,10,0,0.1)',
 };
 
 const hasChartData = (data?: Array<{ value?: number } | { followers?: number } | { engagementRate?: number }>) =>
@@ -173,13 +173,12 @@ const SectionCard = ({ title, subtitle, children, icon }: { title: string; subti
     <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card"
-        style={{ padding: '24px', borderRadius: '26px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+        style={{ padding: '24px', borderRadius: '24px', background: 'rgba(255,255,255,0.4)', border: '1px solid #EDD9BC', backdropFilter: 'blur(12px)' }}
     >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
             <div>
-                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 14, color: COLORS.ink }}>{title}</p>
-                {subtitle && <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{subtitle}</p>}
+                <p style={{ fontWeight: 700, fontSize: 16, color: COLORS.ink }}>{title}</p>
+                {subtitle && <p style={{ fontSize: 13, color: COLORS.muted, marginTop: 4 }}>{subtitle}</p>}
             </div>
             {icon && <div style={{ color: COLORS.slate }}>{icon}</div>}
         </div>
@@ -188,19 +187,19 @@ const SectionCard = ({ title, subtitle, children, icon }: { title: string; subti
 );
 
 const MetricCard = ({ label, value, tone, formula }: { label: string; value: string; tone: string; formula: string }) => (
-    <div style={{ padding: '18px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '1.7rem', color: tone, letterSpacing: '-0.04em' }}>{value}</p>
-        <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
+    <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+        <p style={{ fontWeight: 800, fontSize: '24px', color: tone, letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</p>
+        <p style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <FormulaLabel label={label} formula={formula} />
         </p>
     </div>
 );
 
 const EmptyState = ({ title, copy }: { title: string; copy: string }) => (
-    <div style={{ padding: '48px 24px', borderRadius: '22px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-        <BarChart3 size={38} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 14px' }} />
-        <p style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: 17, color: COLORS.ink, marginBottom: 6 }}>{title}</p>
-        <p style={{ fontSize: 13, color: COLORS.muted, maxWidth: 420, margin: '0 auto' }}>{copy}</p>
+    <div style={{ padding: '48px 24px', borderRadius: '20px', textAlign: 'center', background: 'rgba(255,255,255,0.4)', border: '1px dashed #EDD9BC' }}>
+        <BarChart3 size={38} style={{ color: COLORS.slate, margin: '0 auto 14px' }} />
+        <p style={{ fontWeight: 700, fontSize: 18, color: COLORS.ink, marginBottom: 6 }}>{title}</p>
+        <p style={{ fontSize: 14, color: COLORS.muted, maxWidth: 420, margin: '0 auto' }}>{copy}</p>
     </div>
 );
 
@@ -284,7 +283,7 @@ export default function AnalyticsPage() {
         {
             label: 'Final Score',
             value: fmtNumber(metrics.finalScore),
-            tone: COLORS.purple,
+            tone: COLORS.ink,
             formula: 'Weighted score = Engagement 30% + View Rate 20% + Authenticity 20% + Growth 10% + Cost Efficiency 10% + Consistency 10%',
         },
         {
@@ -308,7 +307,7 @@ export default function AnalyticsPage() {
         {
             label: 'Posts Analyzed (60d)',
             value: fmtNumber(metrics.postsAnalyzed ?? metrics.totalPosts),
-            tone: COLORS.slate,
+            tone: COLORS.ink,
             formula: 'Every available post within the last 60 days is included in the analytics calculation.',
         },
         {
@@ -332,7 +331,7 @@ export default function AnalyticsPage() {
         {
             label: 'Cost Per Engagement',
             value: fmtCurrency(metrics.costPerEngagement, 4),
-            tone: COLORS.violet,
+            tone: COLORS.amber,
             formula: 'postRate / totalEngagements',
         },
     ] : [];
@@ -353,13 +352,13 @@ export default function AnalyticsPage() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
                 <div>
-                    <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 22, color: COLORS.ink, letterSpacing: '-0.03em', marginBottom: 4 }}>
+                    <h1 style={{ fontWeight: 800, fontSize: 24, color: COLORS.ink, letterSpacing: '-0.02em', marginBottom: 4 }}>
                         Analytics
                     </h1>
-                    <p style={{ fontSize: 13, color: COLORS.muted }}>
+                    <p style={{ fontSize: 14, color: COLORS.muted }}>
                         Evaluate influencer performance using engagement, authenticity, growth, and cost efficiency signals.
                     </p>
                 </div>
@@ -372,25 +371,28 @@ export default function AnalyticsPage() {
                         gap: 8,
                         padding: '10px 16px',
                         borderRadius: 12,
-                        border: '1px solid rgba(168,85,247,0.3)',
-                        background: 'rgba(168,85,247,0.1)',
-                        color: COLORS.purple,
-                        fontSize: 12,
+                        border: '1px solid #EDD9BC',
+                        background: 'rgba(255,255,255,0.6)',
+                        color: '#C2340A',
+                        fontSize: 13,
                         fontWeight: 700,
                         cursor: !selectedId || recalculating ? 'not-allowed' : 'pointer',
                         opacity: !selectedId || recalculating ? 0.7 : 1,
                         fontFamily: 'inherit',
+                        transition: 'all 0.15s'
                     }}
+                    onMouseEnter={e => { if (!(!selectedId || recalculating)) e.currentTarget.style.background = '#fff' }}
+                    onMouseLeave={e => { if (!(!selectedId || recalculating)) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}
                 >
-                    {recalculating ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <RefreshCw size={14} />}
+                    {recalculating ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <RefreshCw size={16} />}
                     Recalculate
                 </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '300px minmax(0,1fr)', gap: 18, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
                 <SectionCard title="Influencer Selector" subtitle="Choose a creator to inspect the latest analytics snapshot." icon={<Users size={16} />}>
-                    <div style={{ position: 'relative', marginBottom: 14 }}>
-                        <Search size={14} style={{ position: 'absolute', left: 12, top: 11, color: COLORS.slate }} />
+                    <div style={{ position: 'relative', marginBottom: 16 }}>
+                        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: COLORS.slate }} />
                         <input
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
@@ -400,25 +402,28 @@ export default function AnalyticsPage() {
                             placeholder="Search influencer"
                             style={{
                                 width: '100%',
-                                padding: '10px 12px 10px 34px',
+                                padding: '12px 14px 12px 40px',
                                 borderRadius: 12,
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(255,255,255,0.04)',
-                                fontSize: 13,
+                                border: '1px solid #EDD9BC',
+                                background: 'rgba(255,255,255,0.6)',
+                                fontSize: 14,
                                 color: COLORS.ink,
                                 outline: 'none',
                                 fontFamily: 'inherit',
+                                transition: 'border-color 0.15s'
                             }}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'}
+                            onBlur={e => e.target.style.borderColor = '#EDD9BC'}
                         />
                     </div>
                     {loadingList ? (
                         <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                            <Loader2 size={26} style={{ color: COLORS.purple, animation: 'spin 1s linear infinite' }} />
+                            <Loader2 size={26} style={{ color: '#C2340A', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                         </div>
                     ) : influencers.length === 0 ? (
                         <EmptyState title="No influencers found" copy="Profiles will appear here once influencer data is available in the platform." />
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 680, overflowY: 'auto', paddingRight: 4 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 680, overflowY: 'auto', paddingRight: 4 }}>
                             {influencers.map((item) => {
                                 const active = item.influencerId === selectedId;
                                 return (
@@ -427,27 +432,30 @@ export default function AnalyticsPage() {
                                         onClick={() => setSelectedId(item.influencerId)}
                                         style={{
                                             textAlign: 'left',
-                                            padding: '14px 16px',
+                                            padding: '16px',
                                             borderRadius: 16,
-                                            border: active ? '1px solid rgba(168,85,247,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                                            background: active ? 'rgba(168,85,247,0.1)' : 'rgba(255,255,255,0.02)',
+                                            border: active ? '1px solid #C2340A' : '1px solid #EDD9BC',
+                                            background: active ? 'rgba(194,52,10,0.05)' : 'rgba(255,255,255,0.6)',
                                             cursor: 'pointer',
                                             fontFamily: 'inherit',
+                                            transition: 'all 0.15s'
                                         }}
+                                        onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#fff' }}
+                                        onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                                             <div>
-                                                <p style={{ fontSize: 13, fontWeight: 700, color: COLORS.ink }}>{item.fullName}</p>
-                                                <p style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>
+                                                <p style={{ fontSize: 14, fontWeight: 700, color: COLORS.ink }}>{item.fullName}</p>
+                                                <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>
                                                     {item.username ? `@${item.username}` : 'No username'} {item.niche ? `• ${item.niche}` : ''}
                                                 </p>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
-                                                <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: 18, color: COLORS.purple }}>{fmtNumber(item.metrics.finalScore)}</p>
-                                                <p style={{ fontSize: 10, color: ratingColor(item.metrics.ratingTier), fontWeight: 700 }}>{item.metrics.ratingTier}</p>
+                                                <p style={{ fontWeight: 800, fontSize: 20, color: COLORS.ink }}>{fmtNumber(item.metrics.finalScore)}</p>
+                                                <p style={{ fontSize: 10, color: ratingColor(item.metrics.ratingTier), fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.metrics.ratingTier}</p>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 11, color: COLORS.muted }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 12, color: COLORS.muted, fontWeight: 500 }}>
                                             <span>{fmtNumber(item.followers)} followers</span>
                                             <span>{fmtPercent(item.metrics.engagementRate)}</span>
                                         </div>
@@ -458,12 +466,12 @@ export default function AnalyticsPage() {
                     )}
                 </SectionCard>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                     {error ? (
                         <EmptyState title="Analytics unavailable" copy={error} />
                     ) : loadingDetail && !detail ? (
                         <SectionCard title="Loading Analytics" subtitle="Pulling the latest influencer metrics." icon={<Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}>
-                            <div style={{ textAlign: 'center', padding: '56px 0', color: COLORS.muted, fontSize: 14 }}>Loading influencer analytics...</div>
+                            <div style={{ textAlign: 'center', padding: '56px 0', color: COLORS.muted, fontSize: 14, fontWeight: 500 }}>Loading influencer analytics...</div>
                         </SectionCard>
                     ) : !selectedInfluencer || !metrics ? (
                         <EmptyState title="Select an influencer" copy="Choose a creator from the list to review their analytics profile, scoring, and cost efficiency." />
@@ -472,23 +480,23 @@ export default function AnalyticsPage() {
                             <SectionCard
                                 title={selectedInfluencer.fullName}
                                 subtitle={`${selectedInfluencer.username ? `@${selectedInfluencer.username}` : 'No username'}${selectedInfluencer.country ? ` • ${selectedInfluencer.country}` : ''}`}
-                                icon={<ShieldCheck size={16} />}
+                                icon={<ShieldCheck size={18} />}
                             >
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
                                     {summaryCards.map((card) => (
                                         <MetricCard key={card.label} label={card.label} value={card.value} tone={card.tone} formula={card.formula} />
                                     ))}
                                 </div>
                             </SectionCard>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 24 }}>
                                 <SectionCard title="Influencer Score Radar" subtitle="Normalized 0–100 scoring breakdown." icon={<Target size={16} />}>
                                     {hasChartData(radarData) ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <RadarChart data={radarData}>
-                                                <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                                                <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11 }} />
-                                                <Radar dataKey="value" stroke={COLORS.purple} fill={COLORS.purple} fillOpacity={0.28} />
+                                                <PolarGrid stroke="#EDD9BC" />
+                                                <PolarAngleAxis dataKey="metric" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 600 }} />
+                                                <Radar dataKey="value" stroke="#C2340A" fill="#C2340A" fillOpacity={0.2} />
                                                 <Tooltip contentStyle={tooltipStyle} />
                                             </RadarChart>
                                         </ResponsiveContainer>
@@ -498,25 +506,25 @@ export default function AnalyticsPage() {
                                 </SectionCard>
 
                                 <SectionCard title="ROI / EMV" subtitle="Predicted return based on estimated media value and current pricing." icon={<TrendingUp size={16} />}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 16 }}>
                                         <MetricCard label="Predicted ROI" value={fmtPercent(roi?.predictedROI)} tone={COLORS.green} formula='((estimatedMediaValue - postRate) / postRate) × 100' />
                                         <MetricCard label="Estimated Media Value" value={fmtCurrency(roi?.estimatedMediaValue)} tone={COLORS.blue} formula="Weighted estimate from views, engagements, followers, and final score." />
-                                        <MetricCard label="Final Score" value={fmtNumber(roi?.finalScore)} tone={COLORS.purple} formula="Weighted intelligence score." />
+                                        <MetricCard label="Final Score" value={fmtNumber(roi?.finalScore)} tone={COLORS.ink} formula="Weighted intelligence score." />
                                         <MetricCard label="Rating Tier" value={roi?.ratingTier || '—'} tone={ratingColor(roi?.ratingTier || '')} formula="Elite / Strong / Average / Poor" />
                                     </div>
                                 </SectionCard>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 24 }}>
                                 <SectionCard title="Follower Growth" subtitle="Historical snapshot trend from stored analytics recalculations." icon={<LineChartIcon size={16} />}>
                                     {hasChartData(followerGrowth) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <LineChart data={followerGrowth}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />
-                                                <Line type="monotone" dataKey="followers" stroke={COLORS.blue} strokeWidth={3} dot={{ r: 4 }} />
+                                                <Line type="monotone" dataKey="followers" stroke="#C2340A" strokeWidth={3} dot={{ r: 4, fill: '#C2340A', strokeWidth: 0 }} />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -528,11 +536,11 @@ export default function AnalyticsPage() {
                                     {hasChartData(engagementTrend) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <LineChart data={engagementTrend}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />
-                                                <Line type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 4 }} />
+                                                <Line type="monotone" dataKey="engagementRate" stroke={COLORS.green} strokeWidth={3} dot={{ r: 4, fill: COLORS.green, strokeWidth: 0 }} />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -541,14 +549,14 @@ export default function AnalyticsPage() {
                                 </SectionCard>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 24 }}>
                                 <SectionCard title="Engagement Breakdown" subtitle="Current likes, comments, shares, and saves totals." icon={<BarChart3 size={16} />}>
                                     {hasChartData(engagementBreakdown) ? (
                                         <ResponsiveContainer width="100%" height={260}>
                                             <BarChart data={engagementBreakdown}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
-                                                <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 10 }} axisLine={false} tickLine={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                                <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
                                                 <Tooltip contentStyle={tooltipStyle} />
                                                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                                                     {engagementBreakdown.map((entry, index) => (
@@ -572,7 +580,7 @@ export default function AnalyticsPage() {
                                                     ))}
                                                 </Pie>
                                                 <Tooltip contentStyle={tooltipStyle} />
-                                                <Legend />
+                                                <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: COLORS.ink }} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -582,9 +590,9 @@ export default function AnalyticsPage() {
                             </div>
 
                             <SectionCard title="Cost Efficiency" subtitle="Estimated creator pricing and unit economics." icon={<TrendingUp size={16} />}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
                                     <MetricCard label="Cost Per View" value={fmtCurrency(metrics.costPerView, 4)} tone={COLORS.amber} formula="postRate / averageViews" />
-                                    <MetricCard label="Cost Per Engagement" value={fmtCurrency(metrics.costPerEngagement, 4)} tone={COLORS.violet} formula="postRate / totalEngagements" />
+                                    <MetricCard label="Cost Per Engagement" value={fmtCurrency(metrics.costPerEngagement, 4)} tone={COLORS.amber} formula="postRate / totalEngagements" />
                                     <MetricCard label="Estimated Cost Per Post" value={fmtCurrency(metrics.estimatedCostPerPost)} tone={COLORS.blue} formula="Profile post rate with campaign pricing fallback." />
                                     <MetricCard label="Estimated Cost Per Reel" value={fmtCurrency(metrics.estimatedCostPerReel)} tone={COLORS.teal} formula="Profile reel rate with campaign pricing fallback." />
                                     <MetricCard label="Estimated Cost Per Story" value={fmtCurrency(metrics.estimatedCostPerStory)} tone={COLORS.green} formula="Story estimate derived from post or reel pricing when not explicitly stored." />

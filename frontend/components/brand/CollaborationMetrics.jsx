@@ -12,8 +12,8 @@ export default function CollaborationMetrics({ collaborationId }) {
     const loading = metrics.loading || clicks.loading || followers.loading;
     const error = metrics.error || clicks.error || followers.error;
 
-    if (loading) return <div className="p-6 text-sm font-bold text-white/40 bg-white/[0.03] rounded-[20px] text-center border border-white/[0.07]">Loading campaign data...</div>;
-    if (error) return <div className="p-6 text-sm font-bold text-red-400 bg-red-500/[0.06] rounded-[20px] text-center border border-red-500/[0.12]">Could not load campaign data: {error}</div>;
+    if (loading) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#C4A882', background: 'rgba(255,255,255,0.4)', borderRadius: '16px', textAlign: 'center', border: '1px solid #EDD9BC' }}>Loading campaign data...</div>;
+    if (error) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#E8400A', background: 'rgba(232,64,10,0.06)', borderRadius: '16px', textAlign: 'center', border: '1px solid rgba(232,64,10,0.15)' }}>Could not load campaign data: {error}</div>;
 
     const m = metrics.data;
     const c = clicks.data;
@@ -24,35 +24,37 @@ export default function CollaborationMetrics({ collaborationId }) {
     const fmtX = (n) => (n == null ? '—' : `${Number(n).toFixed(2)}x`);
     const windowStatus = m?.windowStatus || 'active';
     const statusColors = {
-        active: 'bg-green-500/10 text-green-400 border-green-500/20',
-        grace_period: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        completed: 'bg-white/[0.06] text-white/60 border-white/[0.1]',
+        active: { bg: 'rgba(16,185,129,0.1)', color: '#059669', border: 'rgba(16,185,129,0.2)' },
+        grace_period: { bg: 'rgba(245,158,11,0.1)', color: '#d97706', border: 'rgba(245,158,11,0.2)' },
+        completed: { bg: 'rgba(255,255,255,0.6)', color: '#7A5030', border: '#EDD9BC' },
     };
 
+    const st = statusColors[windowStatus] || statusColors.active;
+
     return (
-        <div className="space-y-8 pt-4 border-t border-white/[0.06]">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingTop: '16px', borderTop: '1px solid #EDD9BC' }}>
             {m ? (
-                <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5 md:flex-row md:items-center md:justify-between">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '20px' }} className="md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p className="font-bold text-white text-sm">Campaign Window</p>
-                        <p className="mt-1 text-xs font-medium text-white/50">
+                        <p style={{ fontWeight: 700, color: '#1A0A00', fontSize: '14px' }}>Campaign Window</p>
+                        <p style={{ marginTop: '4px', fontSize: '12px', fontWeight: 500, color: '#7A5030' }}>
                             {m.campaignStartDate ? new Date(m.campaignStartDate).toLocaleDateString() : '—'} → {m.campaignEndDate ? new Date(m.campaignEndDate).toLocaleDateString() : '—'}
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {m.daysRemaining > 0 ? <span className="text-xs font-bold text-white/70">{m.daysRemaining} days left</span> : null}
-                        <span className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${statusColors[windowStatus] || statusColors.active}`}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {m.daysRemaining > 0 ? <span style={{ fontSize: '12px', fontWeight: 700, color: '#C2340A' }}>{m.daysRemaining} days left</span> : null}
+                        <span style={{ borderRadius: '99px', border: `1px solid ${st.border}`, background: st.bg, color: st.color, padding: '4px 12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             {windowStatus.replace('_', ' ')}
                         </span>
                     </div>
                 </div>
             ) : null}
 
-            {m ? <p className="text-xs italic text-white/40 font-medium">{m.dataLabel}</p> : null}
+            {m ? <p style={{ fontSize: '12px', fontStyle: 'italic', color: '#C4A882', fontWeight: 500 }}>{m.dataLabel}</p> : null}
 
             <div>
-                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">Traffic</p>
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Traffic</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                     <MetricCard index={0} label="Total clicks" value={fmt(c?.totalClicks)} sub="on tracking link" />
                     <MetricCard index={1} label="Unique visitors" value={fmt(c?.uniqueVisitors)} />
                     <MetricCard index={2} label="Click-through rate" value={c?.ctr != null ? `${Number(c.ctr).toFixed(1)}%` : '—'} />
@@ -61,8 +63,8 @@ export default function CollaborationMetrics({ collaborationId }) {
 
             {m?.metrics?.conversions > 0 ? (
                 <div>
-                    <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">Revenue & ROI</p>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Revenue & ROI</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         <MetricCard index={3} label="Orders" value={fmt(m.metrics.conversions)} accent />
                         <MetricCard index={4} label="Total revenue" value={fmtMoney(m.metrics.revenue)} accent />
                         <MetricCard index={5} label="ROAS" value={fmtX(m.metrics.roas)} sub="revenue / influencer cost" />
@@ -70,17 +72,17 @@ export default function CollaborationMetrics({ collaborationId }) {
                     </div>
                 </div>
             ) : (
-                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 text-center">
-                    <svg className="w-8 h-8 text-white/20 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <p className="text-sm font-bold text-white/80">No promo code purchases recorded yet</p>
-                    <p className="mt-1 text-xs font-medium text-white/50">Make sure your checkout is calling the Porchest purchase webhook</p>
+                <div style={{ borderRadius: '16px', border: '1px dashed #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>
+                    <svg width="32" height="32" style={{ color: '#C4A882', margin: '0 auto 8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>No promo code purchases recorded yet</p>
+                    <p style={{ marginTop: '4px', fontSize: '12px', fontWeight: 500, color: '#7A5030' }}>Make sure your checkout is calling the Porchest purchase webhook</p>
                 </div>
             )}
 
             {m?.metrics?.reach > 0 ? (
                 <div>
-                    <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">Post performance</p>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Post performance</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         <MetricCard index={7} label="Post reach" value={fmt(m.metrics.reach)} />
                         <MetricCard index={8} label="Impressions" value={fmt(m.metrics.impressions)} />
                         <MetricCard index={9} label="Engagement rate" value={m.metrics.engagementRate != null ? `${Number(m.metrics.engagementRate).toFixed(1)}%` : '—'} />
@@ -90,15 +92,15 @@ export default function CollaborationMetrics({ collaborationId }) {
 
             {f ? (
                 <div>
-                    <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40">Follower growth</p>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Follower growth</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         <MetricCard index={10} label="Baseline followers" value={fmt(f.baseline)} sub={f.baselineDate ? new Date(f.baselineDate).toLocaleDateString() : ''} />
                         <MetricCard index={11} label="Current followers" value={fmt(f.currentCount)} />
                         <MetricCard index={12} label="Net new followers" value={`${Number(f.netNewFollowers || 0) >= 0 ? '+' : ''}${fmt(f.netNewFollowers)}`} accent={Number(f.netNewFollowers) > 0} />
                         <MetricCard index={13} label="Growth rate" value={f.growthRate != null ? `${Number(f.growthRate).toFixed(2)}%` : '—'} />
                     </div>
-                    <p className="mt-3 text-[11px] font-bold text-white/40 flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.07] p-2.5 rounded-lg">
-                        <svg className="w-3.5 h-3.5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <p style={{ marginTop: '12px', fontSize: '11px', fontWeight: 700, color: '#C4A882', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.4)', border: '1px solid #EDD9BC', padding: '10px', borderRadius: '8px' }}>
+                        <svg width="14" height="14" style={{ color: '#C4A882' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Follower growth is measured from campaign start to now. Attribution is inferred, not exact.
                     </p>
 
@@ -107,10 +109,10 @@ export default function CollaborationMetrics({ collaborationId }) {
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.35 }}
-                            className="mt-5 rounded-[24px] border border-white/[0.07] bg-white/[0.03] p-6 shadow-none"
+                            style={{ marginTop: '20px', borderRadius: '24px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px' }}
                         >
-                            <p className="mb-4 text-[11px] font-bold uppercase tracking-wide text-white/40">Daily follower count</p>
-                            <div className="flex h-24 items-end gap-1">
+                            <p style={{ marginBottom: '16px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7A5030' }}>Daily follower count</p>
+                            <div style={{ display: 'flex', height: '96px', alignItems: 'flex-end', gap: '4px' }}>
                                 {(() => {
                                     const readings = f.dailyReadings;
                                     const min = Math.min(...readings.map((r) => Number(r.count || 0)));
@@ -119,14 +121,15 @@ export default function CollaborationMetrics({ collaborationId }) {
                                     return readings.map((r, index) => (
                                         <div
                                             key={`${r.date || index}-${index}`}
-                                            className="min-h-[4px] flex-1 rounded-sm bg-purple-500/50 hover:bg-purple-400 transition-colors cursor-pointer"
-                                            style={{ height: `${Math.round(((Number(r.count || 0) - min) / range) * 80) + 4}px` }}
+                                            style={{ minHeight: '4px', flex: 1, borderRadius: '2px', background: 'rgba(194,52,10,0.5)', cursor: 'pointer', transition: 'background 0.15s', height: `${Math.round(((Number(r.count || 0) - min) / range) * 80) + 4}px` }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,52,10,0.8)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(194,52,10,0.5)'}
                                             title={`${new Date(r.date).toLocaleDateString()}: ${Number(r.count || 0).toLocaleString()}`}
                                         />
                                     ));
                                 })()}
                             </div>
-                            <div className="mt-2 flex justify-between text-[10px] font-bold text-white/40 uppercase">
+                            <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: 700, color: '#C4A882', textTransform: 'uppercase' }}>
                                 <span>{new Date(f.dailyReadings[0].date).toLocaleDateString()}</span>
                                 <span>{new Date(f.dailyReadings[f.dailyReadings.length - 1].date).toLocaleDateString()}</span>
                             </div>

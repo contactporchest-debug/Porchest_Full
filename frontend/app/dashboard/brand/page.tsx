@@ -6,6 +6,7 @@ import OverviewPage from './OverviewPage';
 import { useApi } from '@/hooks/useApi';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
 
 type BrandProfileResponse = {
     profileComplete?: boolean;
@@ -20,28 +21,43 @@ export default function BrandPortalOverview() {
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
                 {loading ? (
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-sm text-white/50">
+                    <div style={{ padding: '24px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(12px)', fontSize: '14px', color: '#7A5030' }}>
                         Loading brand profile...
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         {!profileComplete && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.16)]"
+                                style={{
+                                    borderRadius: '14px',
+                                    border: '1px solid rgba(255,107,26,0.3)',
+                                    background: 'rgba(255,107,26,0.1)',
+                                    padding: '24px',
+                                }}
                             >
-                                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="md:flex-row md:items-center md:justify-between">
                                     <div>
-                                        <p className="text-[11px] uppercase tracking-[0.18em] text-amber-200/70">Action required</p>
-                                        <h2 className="mt-1 text-xl font-semibold text-white">Complete your brand profile first</h2>
-                                        <p className="mt-2 max-w-2xl text-sm text-white/60">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <AlertCircle size={14} style={{ color: '#E8400A' }} />
+                                            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#E8400A', fontWeight: 600 }}>Action required</p>
+                                        </div>
+                                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00' }}>Complete your brand profile first</h2>
+                                        <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.65, maxWidth: '600px' }}>
                                             You need a complete brand profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
                                         </p>
                                     </div>
                                     <Link
                                         href="/dashboard/brand/profile"
-                                        className="inline-flex items-center justify-center rounded-2xl border border-amber-200/30 bg-amber-200/10 px-5 py-3 text-sm font-semibold text-amber-100 transition hover:bg-amber-200/15"
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                            borderRadius: '8px', background: '#C2340A', color: '#fff',
+                                            padding: '11px 24px', fontSize: '13px', fontWeight: 500,
+                                            textDecoration: 'none', transition: 'all 0.15s',
+                                        }}
+                                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#E8400A'; }}
+                                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#C2340A'; }}
                                     >
                                         Complete profile
                                     </Link>

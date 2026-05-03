@@ -120,15 +120,14 @@ const buildModalDemographics = (analytics: any, profile: any) => {
     return { countries, ageRanges, gender };
 };
 
-const COLORS = ['#a855f7', '#c084fc', '#f472b6', '#38bdf8', '#34d399', '#facc15'];
-const SURFACE = '#0c0c0c';
-const SURFACE_ALT = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(255, 255, 255, 0.08)';
-const BORDER_STRONG = 'rgba(255, 255, 255, 0.16)';
-const TEXT = '#ffffff';
-const MUTED = 'rgba(255,255,255,0.5)';
+const COLORS = ['#C2340A', '#E8400A', '#FF6B1A', '#C4A882', '#7A5030', '#1A0A00'];
+const SURFACE = 'rgba(255,255,255,0.4)';
+const SURFACE_ALT = 'rgba(255,255,255,0.6)';
+const BORDER = '#EDD9BC';
+const BORDER_STRONG = 'rgba(194,52,10,0.2)';
+const TEXT = '#1A0A00';
+const MUTED = '#7A5030';
 
-// ── Gauge Component for Cost Efficiency ──
 function GaugeChart({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
     const radius = 60;
     const circumference = Math.PI * radius;
@@ -138,32 +137,15 @@ function GaugeChart({ value, max, label, color }: { value: number; max: number; 
     return (
         <div style={{ textAlign: 'center' }}>
             <svg width="140" height="80" viewBox="0 0 140 80">
-                <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="8" strokeLinecap="round" />
+                <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="8" strokeLinecap="round" />
                 <path d="M 10 70 A 60 60 0 0 1 130 70" fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
                     strokeDasharray={`${strokeDash} ${circumference}`}
                     style={{ transition: 'stroke-dasharray 1s ease' }} />
             </svg>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: TEXT, marginTop: '-20px' }}>
+            <p style={{ fontSize: '20px', fontWeight: 700, color: TEXT, marginTop: '-20px' }}>
                 {value > 0 ? `$${value.toFixed(2)}` : '—'}
             </p>
-            <p style={{ fontSize: '10px', color: MUTED, marginTop: '4px' }}>{label}</p>
-        </div>
-    );
-}
-
-// ── Insight Chip Component ──
-function InsightChip({ icon, label, value, color, description }: { icon: React.ReactNode; label: string; value: string; color: string; description?: string }) {
-    return (
-        <div style={{
-            padding: '16px', borderRadius: '16px', background: `${color}08`,
-            border: `1px solid ${color}20`, flex: '1 1 200px', minWidth: '200px',
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <div style={{ color, flexShrink: 0 }}>{icon}</div>
-                <span style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '600' }}>{label}</span>
-            </div>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: TEXT, marginBottom: description ? '6px' : 0 }}>{value}</p>
-            {description && <p style={{ fontSize: '11px', color: MUTED, lineHeight: '1.5' }}>{description}</p>}
+            <p style={{ fontSize: '11px', color: MUTED, marginTop: '4px' }}>{label}</p>
         </div>
     );
 }
@@ -176,7 +158,6 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
     const { profile, instagram, fitScore, starRating, qualityLabel, analytics, recentPosts } = influencer;
     
-    // Priority: backend profilePictureUrl (from Instagram API) > manual instagramDPURL > fallback
     const dp       = profile?.profilePictureUrl || profile?.instagramDPURL   || profile?.profileImageURL  || instagram?.profilePictureURL;
     const handle   = profile?.instagramUsername || instagram?.username;
     const initials = (profile?.fullName || '?').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -189,11 +170,9 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const country  = profile?.countryOfResidence || null;
     const city     = profile?.city || null;
 
-    // Pricing — read flat card fields first, fall back to nested profile
     const postCost = profile?.avgPostCostUSD || profile?.avgPostPrice || 0;
     const reelCost = profile?.avgReelCostUSD || profile?.avgReelPrice || 0;
 
-    // Avatar: try DP URL with an img error fallback via state
     const safeRecentPosts: Media[] = Array.isArray(recentPosts) ? recentPosts : [];
 
     const filteredPosts = useMemo(() => {
@@ -236,93 +215,66 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
     const displayAvgComments = derived.postsCount > 0 ? derived.avgComments : (profile?.avgComments || analytics?.avgCommentsPerPost || 0);
     const normalizedDemographics = useMemo(() => buildModalDemographics(analytics, profile), [analytics, profile]);
 
-    // ─ Commercial Metrics (corrected formulas) ──────────────────────────────
-    // Engagement defined as: likes + comments per post (consistent across all screens)
     const avgEngPerPost = derived.postsCount > 0
         ? derived.totalEngagement / derived.postsCount
         : (displayAvgLikes + displayAvgComments);
 
-    // Cost Per Engagement: use post cost; fall back to reel cost if post cost missing
     const activeCost = postCost > 0 ? postCost : reelCost;
-    const costPerEngagement = activeCost > 0 && avgEngPerPost > 0
-        ? activeCost / avgEngPerPost : 0;
-    // >$500 CPE is unrealistic — flag as out-of-range
+    const costPerEngagement = activeCost > 0 && avgEngPerPost > 0 ? activeCost / avgEngPerPost : 0;
     const cpeIsValid = costPerEngagement > 0 && costPerEngagement < 500;
 
-    // CPM: Cost Per 1,000 estimated organic impressions.
-    // Instagram organic reach is ~15–30% of followers. Use 20% as conservative floor.
-    // This prevents near-zero engagement rates from inflating CPM to $15,000+.
     const ORGANIC_REACH_RATE = 0.20;
     const estimatedImpressions = Math.max(
         followers * ORGANIC_REACH_RATE,
         followers * (displayEngagement / 100) * 5
     );
-    const rawCPM = activeCost > 0 && estimatedImpressions > 0
-        ? (activeCost / estimatedImpressions) * 1000 : 0;
+    const rawCPM = activeCost > 0 && estimatedImpressions > 0 ? (activeCost / estimatedImpressions) * 1000 : 0;
     const cpmIsValid = rawCPM > 0 && rawCPM <= 200;
     const cpm = cpmIsValid ? rawCPM : 0;
     const cpmLabel = rawCPM > 200 ? 'Insufficient reach data' : null;
 
-    // ─ AI Insights ───────────────────────────────────────────────────────────
-    const bestFormat = derived.reelCount > derived.imageCount ? 'Reels / Video' : derived.imageCount > derived.reelCount ? 'Static Posts' : 'Mixed';
-    const engagementHealth = displayEngagement >= 5 ? 'Excellent' : displayEngagement >= 3 ? 'Strong' : displayEngagement >= 1.5 ? 'Average' : displayEngagement > 0 ? 'Below Average' : 'Unknown';
-    const engagementHealthColor = displayEngagement >= 5 ? '#4ade80' : displayEngagement >= 3 ? '#60d5f8' : displayEngagement >= 1.5 ? '#fbbf24' : '#f87171';
-    const audienceQuality = followers >= 50000 && displayEngagement >= 2 ? 'High' : followers >= 10000 && displayEngagement >= 1.5 ? 'Medium' : 'Standard';
-    // Recommendation mirrors backend strict thresholds (35 / 50 / 65 / 80)
-    const currentFitScore = fitScore || 0;
-    const recommendationScore =
-        currentFitScore >= 80 ? 'Strongly Recommended' :
-        currentFitScore >= 65 ? 'Recommended' :
-        currentFitScore >= 50 ? 'Moderate Fit' :
-        currentFitScore >= 35 ? 'Worth Considering' : 'Low Fit';
-    const recommendationColor =
-        currentFitScore >= 80 ? '#4ade80' :
-        currentFitScore >= 65 ? '#60d5f8' :
-        currentFitScore >= 50 ? '#fbbf24' :
-        currentFitScore >= 35 ? '#f87171' : MUTED;
-    // Scoring reasons surfaced from backend card object
-    const scoringReasons: string[] = (influencer as any)?.scoringReasons || [];
-
     const TimeButton = ({ days, label }: { days: any, label: string }) => (
         <button onClick={() => setTimeRange(days)} style={{
             padding: '6px 14px', borderRadius: '99px',
-            border: `1px solid ${timeRange === days ? 'rgba(168,85,247,0.6)' : BORDER}`,
-            background: timeRange === days ? 'rgba(168,85,247,0.14)' : SURFACE_ALT,
-            color: timeRange === days ? '#c084fc' : MUTED,
-            fontSize: '11px', fontWeight: '700', cursor: 'pointer', transition: 'all 180ms ease', whiteSpace: 'nowrap',
+            border: `1px solid ${timeRange === days ? '#C2340A' : BORDER}`,
+            background: timeRange === days ? 'rgba(194,52,10,0.1)' : SURFACE_ALT,
+            color: timeRange === days ? '#C2340A' : MUTED,
+            fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 150ms ease', whiteSpace: 'nowrap', fontFamily: 'inherit'
         }}>{label}</button>
     );
 
     const EmptyChartState = ({ message }: { message: string }) => (
-        <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: SURFACE_ALT, borderRadius: '16px', border: `1px dashed ${BORDER_STRONG}` }}>
+        <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: SURFACE_ALT, borderRadius: '14px', border: `1px dashed ${BORDER_STRONG}` }}>
             <p style={{ color: MUTED, fontSize: '13px', textAlign: 'center', maxWidth: '80%' }}>{message}</p>
         </div>
     );
 
     const customTooltipStyle = {
-        backgroundColor: 'rgba(12,12,12,0.95)',
-        border: '1px solid rgba(168,85,247,0.16)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        border: '1px solid #EDD9BC',
         borderRadius: '12px',
         color: TEXT,
         fontSize: '12px',
         padding: '10px 14px',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.2)'
+        boxShadow: '0 8px 30px rgba(0,0,0,0.1)'
     };
 
     return (
         <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(14px)', overflowY: 'auto', padding: '24px' }}>
+                style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(26,10,0,0.5)', backdropFilter: 'blur(8px)', overflowY: 'auto', padding: '24px' }}
+                onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            >
                 <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-                    className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '36px', boxShadow: '0 16px 40px rgba(0,0,0,0.4)', overflow: 'hidden', paddingBottom: '30px' }}>
+                    style={{ maxWidth: '900px', margin: '0 auto', background: '#FDF6EE', border: '1px solid #EDD9BC', borderRadius: '24px', boxShadow: '0 16px 40px rgba(26,10,0,0.1)', overflow: 'hidden', paddingBottom: '30px' }}>
 
                     {/* Gradient Header Banner */}
-                    <div style={{ position: 'relative', height: '140px', background: 'linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(192,132,252,0.1) 45%, rgba(12,12,12,0) 100%)', display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
-                        <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(12,12,12,0.84)', backdropFilter: 'blur(10px)', border: `1px solid ${BORDER}`, color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms ease' }}>
+                    <div style={{ position: 'relative', height: '140px', background: 'linear-gradient(135deg, rgba(194,52,10,0.15) 0%, rgba(232,64,10,0.05) 100%)', display: 'flex', justifyContent: 'flex-end', padding: '16px' }}>
+                        <button onClick={onClose} style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.8)', border: `1px solid ${BORDER}`, color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms ease' }}>
                             <X size={16} />
                         </button>
-                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #0c0c0c', background: (dp && !dpError) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #9333ea, #c084fc)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '800', color: '#fff', boxShadow: '0 20px 40px rgba(15,23,42,0.14)' }}>
+                        <div style={{ position: 'absolute', bottom: '-45px', left: '36px', width: '110px', height: '110px', borderRadius: '50%', border: '4px solid #FDF6EE', background: (dp && !dpError) ? 'rgba(0,0,0,0.05)' : '#C2340A', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 700, color: '#fff', boxShadow: '0 10px 20px rgba(26,10,0,0.1)' }}>
                             {(dp && !dpError) ? <img src={dp} alt={profile?.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => setDpError(true)} /> : initials}
                         </div>
                     </div>
@@ -330,17 +282,17 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                     <div style={{ padding: '60px 36px 0', display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
                         {/* Left Column */}
                         <div style={{ flex: '1 1 300px' }}>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '26px', color: TEXT, letterSpacing: '-0.02em', marginBottom: '6px' }}>
+                            <h1 style={{ fontSize: '26px', fontWeight: 700, color: TEXT, letterSpacing: '-0.02em', marginBottom: '6px' }}>
                                 {profile?.fullName || 'Influencer Profile'}
                             </h1>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
                                 {handle && (
-                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#c084fc', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>
+                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#E8400A', textDecoration: 'none', fontSize: '13px', fontWeight: 500 }}>
                                         <Instagram size={14} /> @{handle}
                                     </a>
                                 )}
                                 {profile?.niche && (
-                                    <span style={{ padding: '3px 10px', borderRadius: '99px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', color: '#d8b4fe', fontSize: '11px', fontWeight: '700' }}>{profile.niche}</span>
+                                    <span style={{ padding: '3px 10px', borderRadius: '99px', background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.2)', color: '#C2340A', fontSize: '11px', fontWeight: 600 }}>{profile.niche}</span>
                                 )}
                                 {country && (
                                     <span style={{ fontSize: '13px', color: MUTED, display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -348,7 +300,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     </span>
                                 )}
                             </div>
-                            <p style={{ fontSize: '14px', color: MUTED, lineHeight: '1.7', marginBottom: '24px' }}>{bio}</p>
+                            <p style={{ fontSize: '14px', color: MUTED, lineHeight: 1.65, marginBottom: '24px' }}>{bio}</p>
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                 {fullProfileHref && (
                                     <a
@@ -356,32 +308,31 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         style={{
-                                            padding: '14px 20px',
-                                            borderRadius: '16px',
-                                            background: '#172033',
-                                            border: '1px solid rgba(23,32,51,0.1)',
+                                            padding: '12px 20px',
+                                            borderRadius: '8px',
+                                            background: '#1A0A00',
                                             color: '#fff',
-                                            fontSize: '14px',
-                                            fontWeight: '700',
+                                            fontSize: '13px',
+                                            fontWeight: 500,
                                             textDecoration: 'none',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '8px',
-                                            transition: 'transform 200ms ease',
+                                            transition: 'transform 150ms ease',
                                         }}
                                         onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
                                         onMouseLeave={e => (e.currentTarget.style.transform = '')}
                                     >
-                                        <ExternalLink size={15} /> View Full Profile
+                                        <ExternalLink size={14} /> View Full Profile
                                     </a>
                                 )}
-                                <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', background: 'linear-gradient(135deg,#9333ea,#c084fc)', border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(168,85,247,0.3)', transition: 'transform 200ms ease', fontFamily: 'inherit' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')} onMouseLeave={e => (e.currentTarget.style.transform = '')}>
-                                    <Send size={15} /> Send Request
+                                <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '12px 20px', borderRadius: '8px', background: '#C2340A', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 150ms ease', fontFamily: 'inherit' }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#E8400A'; }} onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.background = '#C2340A'; }}>
+                                    <Send size={14} /> Send Request
                                 </button>
                                 {handle && (
-                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ padding: '14px 20px', borderRadius: '16px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '14px', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 200ms ease' }} onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }} onMouseLeave={e => { e.currentTarget.style.background = SURFACE_ALT; }}>
-                                        <ExternalLink size={15} /> IG
+                                    <a href={igLink} target="_blank" rel="noopener noreferrer" style={{ padding: '12px 16px', borderRadius: '8px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '13px', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 150ms ease' }} onMouseEnter={e => { e.currentTarget.style.background = '#fff'; }} onMouseLeave={e => { e.currentTarget.style.background = SURFACE_ALT; }}>
+                                        <ExternalLink size={14} /> IG
                                     </a>
                                 )}
                             </div>
@@ -389,33 +340,33 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
                         {/* Right Column */}
                         <div style={{ flex: '1 1 300px' }}>
-                            <div style={{ padding: '18px', borderRadius: '20px', background: 'linear-gradient(145deg, rgba(168,85,247,0.05), rgba(192,132,252,0.02))', border: '1px solid rgba(168,85,247,0.14)', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#c084fc' }}>
-                                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', lineHeight: '1' }}>{fitScore ?? 0}</span>
-                                    <span style={{ fontSize: '9px', color: MUTED, fontWeight: '600', marginTop: '2px' }}>/100</span>
+                            <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(194,52,10,0.05)', border: '1px solid rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+                                <div style={{ width: '60px', height: '60px', borderRadius: '14px', background: '#fff', border: '1px solid #EDD9BC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#C2340A' }}>
+                                    <span style={{ fontWeight: 700, fontSize: '20px', lineHeight: 1 }}>{fitScore ?? 0}</span>
+                                    <span style={{ fontSize: '10px', color: MUTED, fontWeight: 500, marginTop: '2px' }}>/100</span>
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Brand Fit Score</p>
-                                    <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '4px' }}>{qualityLabel || 'Low Fit'}</h3>
+                                    <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px', fontWeight: 500 }}>Brand Fit Score</p>
+                                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: TEXT, marginBottom: '4px' }}>{qualityLabel || 'Low Fit'}</h3>
                                     <div style={{ display: 'flex', gap: '2px' }}>
                                         {[1, 2, 3, 4, 5].map(star => (
-                                            <Star key={star} size={13} fill={star <= (starRating || 1) ? '#facc15' : 'transparent'} color={star <= (starRating || 1) ? '#facc15' : 'rgba(255,255,255,0.2)'} />
+                                            <Star key={star} size={12} fill={star <= (starRating || 1) ? '#FF6B1A' : 'transparent'} color={star <= (starRating || 1) ? '#FF6B1A' : '#EDD9BC'} />
                                         ))}
                                     </div>
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                <div style={{ padding: '14px', borderRadius: '16px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
+                                <div style={{ padding: '14px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: MUTED, marginBottom: '8px' }}>
-                                        <TrendingUp size={13} /><span style={{ fontSize: '12px', fontWeight: '600' }}>Subscribers</span>
+                                        <TrendingUp size={13} /><span style={{ fontSize: '12px', fontWeight: 500 }}>Subscribers</span>
                                     </div>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: TEXT }}>{formatNum(followers)}</p>
+                                    <p style={{ fontSize: '18px', fontWeight: 700, color: TEXT }}>{formatNum(followers)}</p>
                                 </div>
-                                <div style={{ padding: '14px', borderRadius: '16px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c084fc', marginBottom: '8px' }}>
-                                        <DollarSign size={13} /><span style={{ fontSize: '12px', fontWeight: '600' }}>Avg Cost</span>
+                                <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(194,52,10,0.05)', border: '1px solid rgba(194,52,10,0.1)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C2340A', marginBottom: '8px' }}>
+                                        <DollarSign size={13} /><span style={{ fontSize: '12px', fontWeight: 500 }}>Avg Cost</span>
                                     </div>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '18px', color: '#e9d5ff' }}>
+                                    <p style={{ fontSize: '18px', fontWeight: 700, color: '#C2340A' }}>
                                         {postCost > 0 ? `$${postCost.toLocaleString()}` : 'Negotiable'}
                                     </p>
                                 </div>
@@ -426,7 +377,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                     {/* Analytics Header with Time Selector */}
                     <div style={{ padding: '36px 36px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px', borderBottom: `1px solid ${BORDER}`, marginBottom: '24px' }}>
                         <div>
-                            <h2 style={{ fontFamily: 'Space Grotesk', fontSize: '20px', fontWeight: '800', color: TEXT, marginBottom: '6px' }}>Performance Analytics</h2>
+                            <h2 style={{ fontSize: '18px', fontWeight: 700, color: TEXT, marginBottom: '4px' }}>Performance Analytics</h2>
                             <p style={{ fontSize: '13px', color: MUTED }}>Visualized metrics based on real historical data.</p>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -441,21 +392,21 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                     {/* Dynamic Analytics Overview */}
                     <div style={{ padding: '0 36px', marginBottom: '32px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
-                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '16px', border: `1px solid ${BORDER}` }}>
-                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><BarChart3 size={13}/> Est. Engagement Rate</p>
-                                <p style={{ fontFamily: 'Space Grotesk', fontSize: '24px', fontWeight: '800', color: TEXT }}>{displayEngagement > 0 ? `${displayEngagement}%` : '—'}</p>
+                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '12px', border: `1px solid ${BORDER}` }}>
+                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><BarChart3 size={13}/> Est. Engagement Rate</p>
+                                <p style={{ fontSize: '24px', fontWeight: 700, color: TEXT }}>{displayEngagement > 0 ? `${displayEngagement}%` : '—'}</p>
                             </div>
-                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '16px', border: `1px solid ${BORDER}` }}>
-                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Heart size={13}/> Average Likes</p>
-                                <p style={{ fontFamily: 'Space Grotesk', fontSize: '24px', fontWeight: '800', color: TEXT }}>{formatNum(displayAvgLikes)}</p>
+                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '12px', border: `1px solid ${BORDER}` }}>
+                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Heart size={13}/> Average Likes</p>
+                                <p style={{ fontSize: '24px', fontWeight: 700, color: TEXT }}>{formatNum(displayAvgLikes)}</p>
                             </div>
-                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '16px', border: `1px solid ${BORDER}` }}>
-                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><MessageCircle size={13}/> Average Comments</p>
-                                <p style={{ fontFamily: 'Space Grotesk', fontSize: '24px', fontWeight: '800', color: TEXT }}>{formatNum(displayAvgComments)}</p>
+                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '12px', border: `1px solid ${BORDER}` }}>
+                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><MessageCircle size={13}/> Average Comments</p>
+                                <p style={{ fontSize: '24px', fontWeight: 700, color: TEXT }}>{formatNum(displayAvgComments)}</p>
                             </div>
-                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '16px', border: `1px solid ${BORDER}` }}>
-                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={13}/> Posting Frequency</p>
-                                <p style={{ fontFamily: 'Space Grotesk', fontSize: '24px', fontWeight: '800', color: TEXT }}>{derived.postsCount} <span style={{ fontSize:'14px', color:MUTED, fontWeight:'500'}}>posts</span></p>
+                            <div style={{ padding: '16px', background: SURFACE_ALT, borderRadius: '12px', border: `1px solid ${BORDER}` }}>
+                                <p style={{ fontSize: '12px', color: MUTED, fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={13}/> Posting Frequency</p>
+                                <p style={{ fontSize: '24px', fontWeight: 700, color: TEXT }}>{derived.postsCount} <span style={{ fontSize:'14px', color:MUTED, fontWeight:500}}>posts</span></p>
                             </div>
                         </div>
                     </div>
@@ -464,10 +415,10 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                     <div style={{ padding: '0 36px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         
                         {/* Engagement Trend */}
-                        <div style={{ background: SURFACE_ALT, borderRadius: '24px', padding: '24px', border: `1px solid ${BORDER}` }}>
+                        <div style={{ background: SURFACE_ALT, borderRadius: '16px', padding: '24px', border: `1px solid ${BORDER}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                <BarChart3 size={16} color="#c084fc" />
-                                <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Engagement & Reach Trend</h3>
+                                <BarChart3 size={16} color="#E8400A" />
+                                <h3 style={{ fontSize: '15px', fontWeight: 600, color: TEXT }}>Engagement & Reach Trend</h3>
                             </div>
                             {derived.chartData.length > 1 ? (
                                 <div style={{ height: '240px', width: '100%' }}>
@@ -475,20 +426,20 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         <AreaChart data={derived.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                             <defs>
                                                 <linearGradient id="colorEng" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#c084fc" stopOpacity={0.4}/>
-                                                    <stop offset="95%" stopColor="#c084fc" stopOpacity={0}/>
+                                                    <stop offset="5%" stopColor="#C2340A" stopOpacity={0.4}/>
+                                                    <stop offset="95%" stopColor="#C2340A" stopOpacity={0}/>
                                                 </linearGradient>
                                                 <linearGradient id="colorTk" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3}/>
-                                                    <stop offset="95%" stopColor="#f472b6" stopOpacity={0}/>
+                                                    <stop offset="5%" stopColor="#FF6B1A" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#FF6B1A" stopOpacity={0}/>
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.08)" />
-                                            <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} dy={8} />
-                                            <YAxis stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} />
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(26, 10, 0, 0.05)" />
+                                            <XAxis dataKey="date" stroke={MUTED} fontSize={11} tickLine={false} axisLine={false} dy={8} />
+                                            <YAxis stroke={MUTED} fontSize={11} tickLine={false} axisLine={false} />
                                             <RechartsTooltip contentStyle={customTooltipStyle} itemStyle={{ color: TEXT }} formatter={(val: number) => val.toLocaleString()} />
-                                            <Area type="monotone" dataKey="totalEng" name="Total Engagement" stroke="#c084fc" strokeWidth={3} fillOpacity={1} fill="url(#colorEng)" />
-                                            <Area type="monotone" dataKey="likes" name="Likes" stroke="#f472b6" strokeWidth={2} fillOpacity={1} fill="url(#colorTk)" />
+                                            <Area type="monotone" dataKey="totalEng" name="Total Engagement" stroke="#C2340A" strokeWidth={2} fillOpacity={1} fill="url(#colorEng)" />
+                                            <Area type="monotone" dataKey="likes" name="Likes" stroke="#FF6B1A" strokeWidth={2} fillOpacity={1} fill="url(#colorTk)" />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -499,21 +450,21 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
                             {/* Likes vs Comments */}
-                            <div style={{ background: SURFACE_ALT, borderRadius: '24px', padding: '24px', border: `1px solid ${BORDER}` }}>
+                            <div style={{ background: SURFACE_ALT, borderRadius: '16px', padding: '24px', border: `1px solid ${BORDER}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                    <MessageCircle size={16} color="#38bdf8" />
-                                    <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Post Performance Composition</h3>
+                                    <MessageCircle size={16} color="#C4A882" />
+                                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: TEXT }}>Post Performance Composition</h3>
                                 </div>
                                 {derived.chartData.length > 0 ? (
                                     <div style={{ height: '220px', width: '100%' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={derived.chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255, 255, 255, 0.08)" />
-                                                <XAxis dataKey="date" stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} dy={8} />
-                                                <YAxis stroke="rgba(255, 255, 255, 0.5)" fontSize={11} tickLine={false} axisLine={false} />
-                                                <RechartsTooltip contentStyle={customTooltipStyle} cursor={{fill: 'rgba(255,255,255,0.08)'}} formatter={(val: number) => val.toLocaleString()} />
-                                                <Bar dataKey="likes" name="Likes" stackId="a" fill="#9333ea" radius={[0, 0, 4, 4]} />
-                                                <Bar dataKey="comments" name="Comments" stackId="a" fill="#60d5f8" radius={[4, 4, 0, 0]} />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(26, 10, 0, 0.05)" />
+                                                <XAxis dataKey="date" stroke={MUTED} fontSize={11} tickLine={false} axisLine={false} dy={8} />
+                                                <YAxis stroke={MUTED} fontSize={11} tickLine={false} axisLine={false} />
+                                                <RechartsTooltip contentStyle={customTooltipStyle} cursor={{fill: 'rgba(26,10,0,0.04)'}} formatter={(val: number) => val.toLocaleString()} />
+                                                <Bar dataKey="likes" name="Likes" stackId="a" fill="#C2340A" radius={[0, 0, 4, 4]} />
+                                                <Bar dataKey="comments" name="Comments" stackId="a" fill="#E8400A" radius={[4, 4, 0, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -523,10 +474,10 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                             </div>
 
                             {/* Content Type */}
-                            <div style={{ background: SURFACE_ALT, borderRadius: '24px', padding: '24px', border: `1px solid ${BORDER}` }}>
+                            <div style={{ background: SURFACE_ALT, borderRadius: '16px', padding: '24px', border: `1px solid ${BORDER}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                    <Film size={16} color="#4ade80" />
-                                    <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Best Performing Content Type</h3>
+                                    <Film size={16} color="#7A5030" />
+                                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: TEXT }}>Best Performing Content Type</h3>
                                 </div>
                                 {derived.chartData.length > 0 ? (() => {
                                     const byType = { reels: 0, posts: 0 };
@@ -562,10 +513,10 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                             </div>
 
                             {/* Audience Demographics */}
-                            <div style={{ background: SURFACE_ALT, borderRadius: '24px', padding: '24px', border: `1px solid ${BORDER}` }}>
+                            <div style={{ background: SURFACE_ALT, borderRadius: '16px', padding: '24px', border: `1px solid ${BORDER}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                                    <Users size={16} color="#facc15" />
-                                    <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Audience Demographics</h3>
+                                    <Users size={16} color="#FF6B1A" />
+                                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: TEXT }}>Audience Demographics</h3>
                                 </div>
                                 {normalizedDemographics.countries.length || normalizedDemographics.gender.length || normalizedDemographics.ageRanges.length ? (() => {
                                     const demoData = normalizedDemographics.countries.length
@@ -596,7 +547,7 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[i % COLORS.length] }}></div>
                                                             <p style={{ fontSize: '11px', color: MUTED }}>{d.name.split(',')[0]}</p>
                                                         </div>
-                                                        <p style={{ fontSize: '11px', fontWeight: '700', color: TEXT }}>{d.value.toFixed(1)}%</p>
+                                                        <p style={{ fontSize: '11px', fontWeight: 600, color: TEXT }}>{d.value.toFixed(1)}%</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -609,33 +560,33 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                         </div>
 
                             {/* ── COMMERCIAL INTELLIGENCE ── */}
-                        <div style={{ background: SURFACE_ALT, borderRadius: '24px', padding: '28px', border: '1px solid rgba(74,222,128,0.12)' }}>
+                        <div style={{ background: SURFACE_ALT, borderRadius: '16px', padding: '28px', border: `1px solid ${BORDER}` }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-                                <DollarSign size={16} color="#4ade80" />
-                                <h3 style={{ fontSize: '15px', fontWeight: '700', color: TEXT }}>Commercial Intelligence</h3>
-                                <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: '99px', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', fontSize: '10px', color: '#4ade80', fontWeight: '700' }}>ROI Metrics</span>
+                                <DollarSign size={16} color="#C2340A" />
+                                <h3 style={{ fontSize: '15px', fontWeight: 600, color: TEXT }}>Commercial Intelligence</h3>
+                                <span style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: '99px', background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.2)', fontSize: '10px', color: '#C2340A', fontWeight: 600 }}>ROI Metrics</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.12)' }}>
+                                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Post Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#4ade80' }}>{postCost > 0 ? `$${postCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: MUTED }}>Pricing not published</span>}</p>
+                                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#C2340A' }}>{postCost > 0 ? `$${postCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: MUTED }}>Pricing not published</span>}</p>
                                 </div>
-                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(96,213,248,0.06)', border: '1px solid rgba(96,213,248,0.12)' }}>
+                                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reel Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#60d5f8' }}>{reelCost > 0 ? `$${reelCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: MUTED }}>Pricing not published</span>}</p>
+                                    <p style={{ fontSize: '20px', fontWeight: 700, color: '#E8400A' }}>{reelCost > 0 ? `$${reelCost.toLocaleString()}` : <span style={{ fontSize: '13px', color: MUTED }}>Pricing not published</span>}</p>
                                 </div>
-                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.12)' }}>
+                                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Cost Per Engagement</p>
                                     {cpeIsValid
-                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#a855f7' }}>${costPerEngagement.toFixed(2)}</p>
+                                        ? <p style={{ fontSize: '20px', fontWeight: 700, color: '#FF6B1A' }}>${costPerEngagement.toFixed(2)}</p>
                                         : <p style={{ fontSize: '12px', color: MUTED, marginTop: '6px' }}>Not enough engagement data</p>
                                     }
                                     {cpeIsValid && <p style={{ fontSize: '10px', color: MUTED, marginTop: '4px' }}>Post cost ÷ avg engagement (likes+comments)</p>}
                                 </div>
-                                <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.12)' }}>
+                                <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
                                     <p style={{ fontSize: '11px', color: MUTED, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Est. CPM (by Reach)</p>
                                     {cpm > 0
-                                        ? <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>${cpm.toFixed(2)}</p>
+                                        ? <p style={{ fontSize: '20px', fontWeight: 700, color: '#C4A882' }}>${cpm.toFixed(2)}</p>
                                         : <p style={{ fontSize: '12px', color: MUTED, marginTop: '6px' }}>{cpmLabel || 'Insufficient delivery data'}</p>
                                     }
                                     {cpm > 0 && <p style={{ fontSize: '10px', color: MUTED, marginTop: '4px' }}>Cost per 1,000 estimated impressions (20% reach baseline)</p>}
@@ -648,11 +599,11 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                         value={costPerEngagement}
                                         max={5}
                                         label="Cost per Engagement — lower is better"
-                                        color={costPerEngagement < 0.5 ? '#4ade80' : costPerEngagement < 1.5 ? '#fbbf24' : '#f87171'}
+                                        color={costPerEngagement < 0.5 ? '#C2340A' : costPerEngagement < 1.5 ? '#FF6B1A' : '#7A5030'}
                                     />
                                 </div>
                             ) : (
-                                <div style={{ textAlign: 'center', padding: '16px', background: SURFACE, borderRadius: '12px', border: `1px dashed ${BORDER_STRONG}` }}>
+                                <div style={{ textAlign: 'center', padding: '16px', background: 'rgba(255,255,255,0.4)', borderRadius: '12px', border: `1px dashed ${BORDER_STRONG}` }}>
                                     <p style={{ fontSize: '12px', color: MUTED }}>Cost efficiency visualization requires both pricing and engagement data.</p>
                                 </div>
                             )}
@@ -663,23 +614,23 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                     {/* Recent Posts Grid */}
                     {safeRecentPosts.length > 0 && (
                         <div style={{ padding: '36px 36px 0', marginTop: '20px', borderTop: `1px solid ${BORDER}` }}>
-                            <p style={{ fontSize: '15px', color: TEXT, fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <p style={{ fontSize: '15px', color: TEXT, fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <Instagram size={16} /> Recent Content Feed
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                                 {safeRecentPosts.slice(0, 3).map((post: Media) => (
-                                    <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block', borderRadius: '20px', overflow: 'hidden', background: SURFACE_ALT, border: `1px solid ${BORDER}`, position: 'relative', aspectRatio: '4/5' }}>
-                                        <img src={post.mediaUrl} alt="Instagram Media" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9, transition: 'transform 400ms ease, opacity 400ms ease' }} onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.opacity = '1'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '0.9'; }} />
-                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)', padding: '30px 16px 16px', pointerEvents: 'none' }}>
+                                    <a key={post.id} href={post.permalink} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', display: 'block', borderRadius: '16px', overflow: 'hidden', background: SURFACE_ALT, border: `1px solid ${BORDER}`, position: 'relative', aspectRatio: '4/5' }}>
+                                        <img src={post.mediaUrl} alt="Instagram Media" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9, transition: 'transform 300ms ease, opacity 300ms ease' }} onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.opacity = '1'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '0.9'; }} />
+                                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)', padding: '30px 16px 16px', pointerEvents: 'none' }}>
                                             {(post.mediaType === 'VIDEO' || post.mediaType === 'REELS') && (
-                                                <div style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', padding: '6px', borderRadius: '50%' }}>
-                                                    <Play size={14} color="#fff" fill="#fff" />
+                                                <div style={{ position: 'absolute', top: '16px', right: '16px', background: 'rgba(255,255,255,0.8)', padding: '6px', borderRadius: '50%' }}>
+                                                    <Play size={14} color="#C2340A" fill="#C2340A" />
                                                 </div>
                                             )}
-                                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.72)', marginBottom: '8px', display: 'block' }}>{formatDateShort(post.timestamp)}</p>
+                                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginBottom: '8px', display: 'block' }}>{formatDateShort(post.timestamp)}</p>
                                             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#fff', fontSize: '13px', fontWeight: '700' }}><Heart size={14} fill="#f472b6" color="#f472b6" /> {formatNum(post.likeCount)}</span>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#fff', fontSize: '13px', fontWeight: '700' }}><MessageCircle size={14} fill="#60d5f8" color="#60d5f8" /> {formatNum(post.commentsCount)}</span>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#fff', fontSize: '13px', fontWeight: 600 }}><Heart size={14} fill="#FF6B1A" color="#FF6B1A" /> {formatNum(post.likeCount)}</span>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#fff', fontSize: '13px', fontWeight: 600 }}><MessageCircle size={14} fill="#C4A882" color="#C4A882" /> {formatNum(post.commentsCount)}</span>
                                             </div>
                                         </div>
                                     </a>

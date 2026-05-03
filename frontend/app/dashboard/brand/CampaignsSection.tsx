@@ -6,15 +6,16 @@ import { brandAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-    pending: { color: '#fbbf24', label: 'Pending', icon: <Clock size={11} /> },
-    accepted: { color: '#4ade80', label: 'Accepted', icon: <CheckCircle size={11} /> },
-    rejected: { color: '#f87171', label: 'Rejected', icon: <XCircle size={11} /> },
+    pending: { color: '#d97706', label: 'Pending', icon: <Clock size={12} /> },
+    accepted: { color: '#059669', label: 'Accepted', icon: <CheckCircle size={12} /> },
+    rejected: { color: '#be185d', label: 'Rejected', icon: <XCircle size={12} /> },
 };
-const SURFACE = '#0c0c0c';
-const SURFACE_ALT = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(255, 255, 255, 0.08)';
-const TEXT = '#ffffff';
-const MUTED = 'rgba(255,255,255,0.5)';
+const SURFACE = 'rgba(255,255,255,0.4)';
+const SURFACE_ALT = 'rgba(255,255,255,0.6)';
+const BORDER = '#EDD9BC';
+const TEXT = '#1A0A00';
+const MUTED = '#7A5030';
+const PRIMARY = '#C2340A';
 
 export default function CampaignsSection() {
     const [requests, setRequests] = useState<any[]>([]);
@@ -30,28 +31,28 @@ export default function CampaignsSection() {
 
     if (loading) return (
         <div style={{ textAlign: 'center', padding: '60px', color: MUTED }}>
-            <Loader2 size={32} style={{ margin: '0 auto 12px', animation: 'spin 1s linear infinite', color: '#a855f7' }} />
+            <Loader2 size={32} style={{ margin: '0 auto 16px', animation: 'spin 1s linear infinite', color: PRIMARY }} />
         </div>
     );
 
     if (requests.length === 0) return (
-        <div className="glass-card" style={{ padding: '60px', borderRadius: '28px', textAlign: 'center' }}>
-            <FileText size={44} style={{ color: 'rgba(168,85,247,0.3)', margin: '0 auto 16px' }} />
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '16px', color: TEXT, marginBottom: '6px' }}>No Campaign Requests Yet</p>
-            <p style={{ color: MUTED, fontSize: '13px' }}>Go to "Discover" to find influencers and send your first request.</p>
+        <div style={{ padding: '64px', borderRadius: '24px', textAlign: 'center', background: SURFACE, border: `1px solid ${BORDER}` }}>
+            <FileText size={48} style={{ color: '#C4A882', margin: '0 auto 20px' }} />
+            <p style={{ fontWeight: 800, fontSize: '18px', color: TEXT, marginBottom: '8px' }}>No Campaign Requests Yet</p>
+            <p style={{ color: MUTED, fontSize: '14px' }}>Go to "Discover" to find influencers and send your first request.</p>
         </div>
     );
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
                 <div>
-                    <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: TEXT, marginBottom: '4px' }}>Campaign Requests</h2>
-                    <p style={{ fontSize: '13px', color: MUTED }}>{requests.length} sent · {requests.filter(r => r.status === 'accepted').length} accepted</p>
+                    <h2 style={{ fontWeight: 800, fontSize: '20px', color: TEXT, marginBottom: '4px' }}>Campaign Requests</h2>
+                    <p style={{ fontSize: '14px', color: MUTED, fontWeight: 500 }}>{requests.length} sent · {requests.filter(r => r.status === 'accepted').length} accepted</p>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {requests.map((r, i) => {
                     const sc = STATUS_CONFIG[r.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending;
                     const inf = r.influencerId;
@@ -60,34 +61,36 @@ export default function CampaignsSection() {
 
                     return (
                         <motion.div key={r._id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.35 }}
-                            className="glass-card" style={{ borderRadius: '24px', overflow: 'hidden', border: r.status === 'accepted' ? '1px solid rgba(74,222,128,0.2)' : `1px solid ${BORDER}` }}>
+                            style={{ borderRadius: '20px', overflow: 'hidden', background: SURFACE, backdropFilter: 'blur(12px)', border: r.status === 'accepted' ? '1px solid rgba(5,150,105,0.3)' : `1px solid ${BORDER}`, boxShadow: '0 4px 20px rgba(26,10,0,0.02)', transition: 'border-color 0.2s' }}>
 
                             {/* Summary row */}
-                            <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', cursor: 'pointer' }}
-                                onClick={() => setExpanded(isOpen ? null : r._id)}>
-                                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'linear-gradient(135deg,#9333ea,#c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '15px', color: '#fff', boxShadow: '0 0 16px rgba(168,85,247,0.4)', flexShrink: 0 }}>{initials}</div>
-                                <div style={{ flex: 1, minWidth: '140px' }}>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '15px', color: TEXT, marginBottom: '2px' }}>{r.campaignTitle}</p>
-                                    <p style={{ fontSize: '12px', color: MUTED }}>{inf?.fullName || 'Unknown'} · {inf?.niche || '—'}</p>
+                            <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', cursor: 'pointer', background: isOpen ? SURFACE_ALT : 'transparent' }}
+                                onClick={() => setExpanded(isOpen ? null : r._id)}
+                                onMouseEnter={e => { if (!isOpen) e.currentTarget.style.background = 'rgba(255,255,255,0.5)' }}
+                                onMouseLeave={e => { if (!isOpen) e.currentTarget.style.background = 'transparent' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px', color: '#fff', flexShrink: 0, border: `1px solid ${BORDER}` }}>{initials}</div>
+                                <div style={{ flex: 1, minWidth: '160px' }}>
+                                    <p style={{ fontWeight: 800, fontSize: '16px', color: TEXT, marginBottom: '4px' }}>{r.campaignTitle}</p>
+                                    <p style={{ fontSize: '13px', color: MUTED, fontWeight: 500 }}>{inf?.fullName || 'Unknown'} · {inf?.niche || '—'}</p>
                                 </div>
-                                <div style={{ textAlign: 'center', padding: '8px 14px', borderRadius: '12px', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.18)' }}>
-                                    <p style={{ fontSize: '10px', color: MUTED, marginBottom: '1px' }}>Agreed Price</p>
-                                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px', color: '#a855f7' }}>${r.agreedPrice?.toLocaleString()}</p>
+                                <div style={{ textAlign: 'center', padding: '10px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
+                                    <p style={{ fontSize: '10px', color: MUTED, marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Agreed Price</p>
+                                    <p style={{ fontWeight: 800, fontSize: '18px', color: PRIMARY }}>${r.agreedPrice?.toLocaleString()}</p>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: MUTED }}>
-                                    <Calendar size={12} style={{ color: '#60d5f8' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: MUTED, fontWeight: 500 }}>
+                                    <Calendar size={14} style={{ color: '#C4A882' }} />
                                     {new Date(r.postingDeadline).toLocaleDateString()}
                                 </div>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 13px', borderRadius: '99px', background: `${sc.color}15`, border: `1px solid ${sc.color}30`, color: sc.color, fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '99px', background: `${sc.color}15`, border: `1px solid ${sc.color}30`, color: sc.color, fontSize: '12px', fontWeight: 700, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                     {sc.icon} {sc.label}
                                 </span>
-                                <span style={{ fontSize: '11px', color: MUTED }}>{isOpen ? '▲' : '▼'}</span>
+                                <span style={{ fontSize: '12px', color: MUTED, padding: '0 8px' }}>{isOpen ? '▲' : '▼'}</span>
                             </div>
 
                             {/* Expanded details */}
                             {isOpen && (
-                                <div style={{ padding: '0 24px 20px', display: 'flex', flexDirection: 'column', gap: '10px', borderTop: `1px solid ${BORDER}` }}>
-                                    <div style={{ paddingTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '10px' }}>
+                                <div style={{ padding: '0 24px 24px', display: 'flex', flexDirection: 'column', gap: '16px', borderTop: `1px solid ${BORDER}`, background: SURFACE_ALT }}>
+                                    <div style={{ paddingTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '16px' }}>
                                         {[
                                             { label: 'Deliverables', val: r.deliverables },
                                             { label: 'Required Elements', val: r.requiredElements },
@@ -96,19 +99,19 @@ export default function CampaignsSection() {
                                             { label: 'Hashtags', val: r.hashtags || '—' },
                                             { label: 'Disclosure', val: r.disclosureRequirements },
                                         ].map(f => (
-                                            <div key={f.label} style={{ padding: '10px 12px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-                                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>{f.label}</p>
-                                                <p style={{ fontSize: '13px', color: TEXT }}>{f.val}</p>
+                                            <div key={f.label} style={{ padding: '14px 16px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
+                                                <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', fontWeight: 700 }}>{f.label}</p>
+                                                <p style={{ fontSize: '14px', color: TEXT, fontWeight: 500 }}>{f.val}</p>
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{ padding: '12px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}` }}>
-                                        <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Content Guidelines</p>
-                                        <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.6' }}>{r.contentGuidelines}</p>
+                                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: `1px solid ${BORDER}` }}>
+                                        <p style={{ fontSize: '11px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px', fontWeight: 700 }}>Content Guidelines</p>
+                                        <p style={{ fontSize: '14px', color: TEXT, lineHeight: 1.6 }}>{r.contentGuidelines}</p>
                                     </div>
                                     {r.rejectionReason && (
-                                        <div style={{ padding: '10px 14px', borderRadius: '12px', background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.18)' }}>
-                                            <p style={{ fontSize: '11px', color: '#f87171' }}>Rejection reason: {r.rejectionReason}</p>
+                                        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(190,24,93,0.1)', border: '1px solid rgba(190,24,93,0.2)' }}>
+                                            <p style={{ fontSize: '13px', color: '#be185d', fontWeight: 500 }}><strong>Rejection reason:</strong> {r.rejectionReason}</p>
                                         </div>
                                     )}
                                 </div>
