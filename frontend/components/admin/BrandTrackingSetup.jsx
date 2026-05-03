@@ -40,7 +40,7 @@ export default function BrandTrackingSetup() {
         background: 'rgba(255,255,255,0.6)',
         padding: '20px',
         display: 'flex',
-        flexDirection: 'column' as const,
+        flexDirection: 'column',
         gap: '16px',
         boxShadow: '0 4px 12px rgba(26,10,0,0.02)'
     };
