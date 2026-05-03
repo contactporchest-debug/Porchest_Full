@@ -22,7 +22,7 @@ function CircleProgress({ pct }: { pct: number }) {
                 </linearGradient>
             </defs>
             <text x="70" y="66" textAnchor="middle" fill="#1A0A00" fontSize="20" fontWeight="800" fontFamily="Space Grotesk, sans-serif">{pct}%</text>
-            <text x="70" y="84" textAnchor="middle" fill="#7A5030" fontSize="10" fontWeight="600" textTransform="uppercase" letterSpacing="0.05em">allocated</text>
+            <text x="70" y="84" textAnchor="middle" fill="#7A5030" fontSize="10" fontWeight="600" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>allocated</text>
         </svg>
     );
 }
