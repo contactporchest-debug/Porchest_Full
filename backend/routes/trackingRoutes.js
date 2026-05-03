@@ -11,8 +11,29 @@ const router = express.Router();
 
 router.get('/r', async (req, res) => {
     const { cid, iid, dest } = req.query;
-    const destination = dest ? decodeURIComponent(dest) : 'https://porchest.com';
-    res.redirect(302, destination);
+    const decodedDestination = dest ? decodeURIComponent(dest) : 'https://porchest.com';
+
+    res.cookie('porchest_attribution', encodeURIComponent(JSON.stringify({
+        cid,
+        iid,
+        timestamp: Date.now(),
+    })), {
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+    });
+
+    try {
+        const destinationUrl = new URL(decodedDestination);
+        destinationUrl.searchParams.set('pcid', cid || '');
+        destinationUrl.searchParams.set('piid', iid || '');
+
+        res.redirect(302, destinationUrl.toString());
+    } catch (error) {
+        res.redirect(302, decodedDestination);
+    }
 
     setImmediate(async () => {
         try {

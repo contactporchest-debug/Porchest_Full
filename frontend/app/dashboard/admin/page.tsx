@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PostVerificationQueue from '@/components/admin/PostVerificationQueue';
+import BrandTrackingSetup from '@/components/admin/BrandTrackingSetup';
 import { adminAPI } from '@/lib/api';
 import { USER_ROLES, isAdminRole } from '@/lib/accessRoles';
 import toast from 'react-hot-toast';
@@ -460,6 +461,10 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                 <div style={{ marginBottom: 24 }}>
                                     <PostVerificationQueue />
+                                </div>
+
+                                <div style={{ marginBottom: 24 }}>
+                                    <BrandTrackingSetup />
                                 </div>
 
                                 {/* Filters */}

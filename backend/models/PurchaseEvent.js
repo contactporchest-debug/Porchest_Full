@@ -9,6 +9,7 @@ const purchaseEventSchema = new mongoose.Schema(
         orderId: { type: String, required: true },
         orderValue: { type: Number, required: true },
         currency: { type: String, default: 'USD' },
+        source: { type: String, enum: ['webhook', 'pixel'], default: 'webhook' },
         timestamp: { type: Date, default: Date.now, index: true },
         withinWindow: { type: Boolean, default: true },
     },

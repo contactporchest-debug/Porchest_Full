@@ -160,7 +160,7 @@ router.get('/collaboration/:collaborationId/metrics', authMiddleware, async (req
         const graceEndTime = endTime + (gracePeriodDays * 24 * 60 * 60 * 1000);
 
         let windowStatus = 'completed';
-        if (now < startTime) windowStatus = 'active';
+        if (now < startTime) windowStatus = 'pending';
         else if (now <= endTime) windowStatus = 'active';
         else if (now <= graceEndTime) windowStatus = 'grace_period';
 

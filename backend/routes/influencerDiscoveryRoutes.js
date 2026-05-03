@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
+const { requireCompleteProfile } = require('../middleware/profileCompleteCheck');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const { computeAudienceBrandFitScore } = require('../services/metricsService');
@@ -23,7 +24,7 @@ function buildRateFilter(maxRate) {
     };
 }
 
-router.get('/influencers', async (req, res) => {
+router.get('/influencers', requireCompleteProfile, async (req, res) => {
     try {
         const page = Math.max(1, Number(req.query.page || 1));
         const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
@@ -69,7 +70,7 @@ router.get('/influencers', async (req, res) => {
     }
 });
 
-router.get('/influencers/:influencerId', async (req, res) => {
+router.get('/influencers/:influencerId', requireCompleteProfile, async (req, res) => {
     try {
         const influencer = await InfluencerProfile.findById(req.params.influencerId).lean()
             || await InfluencerProfile.findOne({ userId: req.params.influencerId }).lean();

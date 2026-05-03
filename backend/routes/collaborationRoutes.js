@@ -14,6 +14,7 @@ const {
 } = require('../services/trackingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
 const { isAdminRole } = require('../utils/accessRoles');
+const { requireCompleteProfile } = require('../middleware/profileCompleteCheck');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -372,7 +373,7 @@ async function finalizeAcceptance(collabId, collab) {
     return updated;
 }
 
-router.post('/', roleMiddleware('brand'), async (req, res) => {
+router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const brandProfile = await BrandProfile.findOne({ userId: req.user._id }).lean();
         if (!brandProfile) {
@@ -500,7 +501,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.patch('/:id/accept', roleMiddleware('influencer'), async (req, res) => {
+router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -518,7 +519,7 @@ router.patch('/:id/accept', roleMiddleware('influencer'), async (req, res) => {
     }
 });
 
-router.patch('/:id/counter', roleMiddleware('influencer'), async (req, res) => {
+router.patch('/:id/counter', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -549,7 +550,7 @@ router.patch('/:id/counter', roleMiddleware('influencer'), async (req, res) => {
     }
 });
 
-router.patch('/:id/accept-counter', roleMiddleware('brand'), async (req, res) => {
+router.patch('/:id/accept-counter', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -593,7 +594,7 @@ router.patch('/:id/decline', async (req, res) => {
     }
 });
 
-router.patch('/:id/submit-drive', roleMiddleware('influencer'), async (req, res) => {
+router.patch('/:id/submit-drive', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -619,7 +620,7 @@ router.patch('/:id/submit-drive', roleMiddleware('influencer'), async (req, res)
     }
 });
 
-router.patch('/:id/approve-drive', roleMiddleware('brand'), async (req, res) => {
+router.patch('/:id/approve-drive', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -644,7 +645,7 @@ router.patch('/:id/approve-drive', roleMiddleware('brand'), async (req, res) => 
     }
 });
 
-router.patch('/:id/reject-drive', roleMiddleware('brand'), async (req, res) => {
+router.patch('/:id/reject-drive', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -669,7 +670,7 @@ router.patch('/:id/reject-drive', roleMiddleware('brand'), async (req, res) => {
     }
 });
 
-router.patch('/:id/submit-post', roleMiddleware('influencer'), async (req, res) => {
+router.patch('/:id/submit-post', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -703,7 +704,7 @@ router.patch('/:id/submit-post', roleMiddleware('influencer'), async (req, res) 
     }
 });
 
-router.patch('/:id/verify-brand', roleMiddleware('brand'), async (req, res) => {
+router.patch('/:id/verify-brand', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
