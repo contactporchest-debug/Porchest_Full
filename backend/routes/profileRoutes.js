@@ -123,14 +123,10 @@ function buildInfluencerUpdates(body) {
     const updates = {};
 
     applyIfPresent(updates, body, 'fullName', (value) => value ?? '');
-    applyIfPresent(updates, body, 'displayName', (value) => value ?? '');
-    applyIfPresent(updates, body, 'avatar', (value) => value ?? '');
-    applyIfPresent(updates, body, 'profilePictureUrl', (value) => value ?? '');
     applyIfPresent(updates, body, 'bio', (value) => value ?? '');
     applyIfPresent(updates, body, 'country', (value) => value ?? '');
     applyIfPresent(updates, body, 'city', (value) => value ?? '');
     applyIfPresent(updates, body, 'contactEmail', (value) => value ?? '');
-    applyIfPresent(updates, body, 'phoneNumber', (value) => value ?? '');
 
     if (hasOwn(body, 'niche')) {
         const niche = toStringArray(body.niche);
@@ -216,7 +212,7 @@ router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (r
     try {
         const updates = buildInfluencerUpdates(req.body || {});
         const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
-        const complete = !!(profile.displayName && Array.isArray(profile.niche) && profile.niche.length > 0);
+        const complete = !!(profile.fullName && Array.isArray(profile.niche) && profile.niche.length > 0);
 
         profile.profileComplete = complete;
         profile.profileCompletionStatus = complete;

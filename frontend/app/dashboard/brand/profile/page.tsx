@@ -14,7 +14,7 @@ export default function BrandProfilePage() {
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div>
                                 <p className="text-[11px] uppercase tracking-[0.2em] text-white/35">Brand profile</p>
-                                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">My Profile</h1>
+                                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">Profile Setup</h1>
                                 <p className="mt-2 max-w-2xl text-sm text-white/45">
                                     Connect Instagram first, then complete your business, audience, and campaign preferences so Porchest can match you with the right creators.
                                 </p>

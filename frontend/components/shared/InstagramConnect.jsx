@@ -9,7 +9,7 @@ function token() {
 }
 
 export default function InstagramConnect({ role = 'influencer' }) {
-    const { metrics, loading, syncing, triggerSync, refetch } = useInstagramMetrics();
+    const { metrics, loading, refetch } = useInstagramMetrics();
     const [connecting, setConnecting] = useState(false);
 
     async function handleConnect() {
@@ -28,14 +28,6 @@ export default function InstagramConnect({ role = 'influencer' }) {
         }
     }
 
-    async function handleSync() {
-        try {
-            await triggerSync();
-        } catch {
-            // Higher-level UI handles any sync errors.
-        }
-    }
-
     async function handleDisconnect() {
         try {
             const endpoint = role === 'brand' ? '/brand/instagram/disconnect' : '/influencer/instagram/disconnect';
@@ -51,8 +43,6 @@ export default function InstagramConnect({ role = 'influencer' }) {
 
     const connected = Boolean(metrics?.igUsername || metrics?.isConnected);
     const followerCount = Number(metrics?.igFollowersCount ?? metrics?.followersCount ?? 0);
-    const engagementValue = metrics?.avgEngagementRate ?? metrics?.engagementRate;
-    const porchestScore = metrics?.porchestScore ?? metrics?.influencerScore ?? 0;
     const lastSyncedAt = metrics?.igLastSyncedAt ?? metrics?.lastSyncedAt;
     const profileImage = metrics?.igProfileUrl ?? metrics?.profilePictureURL ?? metrics?.profilePictureUrl;
 
@@ -117,29 +107,12 @@ export default function InstagramConnect({ role = 'influencer' }) {
                     </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Engagement</p>
-                        <p className="mt-1 text-lg font-semibold text-white">{engagementValue != null ? `${Number(engagementValue).toFixed(1)}%` : '0.0%'}</p>
-                    </div>
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Porchest score</p>
-                        <p className="mt-1 text-lg font-semibold text-white">{porchestScore}</p>
-                    </div>
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Status</p>
-                        <p className="mt-1 text-lg font-semibold text-white">Ready</p>
-                    </div>
+                <div className="mt-4 rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Sync status</p>
+                    <p className="mt-1 text-sm font-medium text-gray-300">Everything is refreshed in 24hrs.</p>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                    <button
-                        onClick={handleSync}
-                        disabled={syncing}
-                        className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {syncing ? 'Syncing...' : 'Refresh Sync'}
-                    </button>
                     <button
                         onClick={handleDisconnect}
                         disabled={connecting}
