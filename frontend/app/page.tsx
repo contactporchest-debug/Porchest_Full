@@ -1,269 +1,158 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Plus, Mail, Linkedin, Instagram, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { Mail, Linkedin, Instagram, ExternalLink, Plus, LayoutDashboard, Users, BarChart3, Briefcase, Sparkles } from 'lucide-react';
 
-/* ───── Scroll Reveal Hook ───── */
-function useReveal(threshold = 0.15) {
+const fadeUp = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } };
+const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
+
+function SectionReveal({ children }: { children: ReactNode }) {
     const ref = useRef<HTMLDivElement>(null);
-    const inView = useInView(ref, { once: true, amount: threshold });
-    return { ref, inView };
+    const inView = useInView(ref, { once: true, amount: 0.15 });
+    return (
+        <div ref={ref}>
+            <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={stagger}>
+                {children}
+            </motion.div>
+        </div>
+    );
 }
 
-const fadeUp = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } };
-const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
-
-/* ───── NAV ───── */
 function LandingNav() {
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [open, setOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
-        const h = () => setScrolled(window.scrollY > 40);
-        window.addEventListener('scroll', h, { passive: true });
-        return () => window.removeEventListener('scroll', h);
+        const onScroll = () => setScrolled(window.scrollY > 12);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const scrollTo = (id: string) => {
-        setMenuOpen(false);
-        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 100);
-    };
+    const links = [
+        { label: 'Features', href: '#features' },
+        { label: 'Workflow', href: '#workflow' },
+        { label: 'FAQ', href: '#faq' },
+        { label: 'Contact', href: '#contact' },
+    ];
 
     return (
-        <>
-            <header style={{
-                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '16px 24px',
-                background: scrolled ? 'rgba(12,12,12,0.85)' : 'transparent',
-                backdropFilter: scrolled ? 'blur(20px)' : 'none',
-                borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-                transition: 'all 400ms cubic-bezier(0.23,1,0.32,1)',
-            }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', padding: '8px 16px', borderRadius: '999px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Image src="/logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '8px' }} />
-                        <span style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '15px', color: '#fff' }}>Porchest</span>
-                    </Link>
+        <header className={`fixed inset-x-0 top-0 z-50 border-b transition-colors ${scrolled ? 'border-[#2A2A30] bg-[#0A0A0B]/95' : 'border-transparent bg-transparent'}`}>
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                <Link href="/" className="flex items-center gap-3 rounded-full border border-[#2A2A30] bg-[#1A1A1E] px-4 py-2">
+                    <Image src="/logo.png" alt="Porchest" width={26} height={26} className="rounded-md" />
+                    <span className="text-sm font-semibold tracking-wide text-white">PORCHEST</span>
+                </Link>
 
-                    <button onClick={() => setMenuOpen(!menuOpen)} style={{ width: '44px', height: '44px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', transition: 'all 300ms ease' }}
-                        aria-label="Menu">
-                        {menuOpen ? <Plus size={20} style={{ transform: 'rotate(45deg)' }} /> : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <div style={{ width: '18px', height: '2px', background: '#fff', borderRadius: '1px' }} />
-                                <div style={{ width: '14px', height: '2px', background: '#fff', borderRadius: '1px' }} />
-                            </div>
-                        )}
-                    </button>
+                <nav className="hidden items-center gap-2 md:flex">
+                    {links.map((item) => (
+                        <a key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm text-gray-400 transition hover:bg-[#1A1A1E] hover:text-white">
+                            {item.label}
+                        </a>
+                    ))}
+                </nav>
+
+                <div className="hidden items-center gap-2 md:flex">
+                    <Link href="/login" className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-[#202025]">
+                        Sign in
+                    </Link>
+                    <Link href="/signup" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500">
+                        Get started
+                    </Link>
                 </div>
-            </header>
+
+                <button onClick={() => setOpen((v) => !v)} className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] p-2 text-gray-300 md:hidden">
+                    <Plus size={18} className={open ? 'rotate-45 transition-transform' : 'transition-transform'} />
+                </button>
+            </div>
 
             <AnimatePresence>
-                {menuOpen && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{ position: 'fixed', inset: 0, zIndex: 45, background: 'rgba(12,12,12,0.97)', backdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <motion.nav initial="hidden" animate="visible" exit="hidden" variants={stagger}
-                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                            {[
-                                { label: 'Features', id: 'features' },
-                                { label: 'Process', id: 'how-it-works' },
-                                { label: 'FAQ', id: 'faq' },
-                                { label: 'Contact', id: 'contact' },
-                            ].map(item => (
-                                <motion.button key={item.id} variants={fadeUp} onClick={() => scrollTo(item.id)}
-                                    style={{ background: 'none', border: 'none', fontFamily: 'Space Grotesk', fontSize: '36px', fontWeight: 600, color: '#fff', cursor: 'pointer', padding: '12px 24px', transition: 'color 300ms ease' }}
-                                    onMouseEnter={e => (e.currentTarget.style.color = '#A855F7')}
-                                    onMouseLeave={e => (e.currentTarget.style.color = '#fff')}>
+                {open && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="border-t border-[#2A2A30] bg-[#0A0A0B] md:hidden">
+                        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6">
+                            {links.map((item) => (
+                                <a key={item.href} href={item.href} className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] px-4 py-3 text-sm text-gray-300">
                                     {item.label}
-                                </motion.button>
+                                </a>
                             ))}
-                            <motion.div variants={fadeUp} style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                                <Link href="/login" className="outline-btn" style={{ fontSize: '14px', padding: '12px 24px' }}>Sign In</Link>
-                                <Link href="/signup" className="glow-btn" style={{ fontSize: '14px', padding: '12px 24px' }}>Sign Up</Link>
-                            </motion.div>
-                            <motion.div variants={fadeUp} style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
-                                {[Mail, Instagram, Linkedin].map((Icon, i) => (
-                                    <a key={i} className="social-icon" href="#"><Icon size={18} /></a>
-                                ))}
-                            </motion.div>
-                        </motion.nav>
+                            <Link href="/login" className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] px-4 py-3 text-sm font-medium text-gray-300">
+                                Sign in
+                            </Link>
+                            <Link href="/signup" className="rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white">
+                                Get started
+                            </Link>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </>
+        </header>
     );
 }
 
-/* ───── HERO ───── */
+function Metric({ label, value, tone = 'text-white' }: { label: string; value: string; tone?: string }) {
+    return (
+        <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+            <p className="text-xs uppercase tracking-wider text-gray-400">{label}</p>
+            <p className={`mt-3 text-3xl font-bold ${tone}`}>{value}</p>
+        </div>
+    );
+}
+
 function Hero() {
     return (
-        <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '120px 24px 80px', overflow: 'hidden' }}>
-            <div className="hero-glow" />
-            <div className="top-beam" />
-
-            <div style={{ maxWidth: '900px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 16px', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', marginBottom: '32px' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }} />
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>Available to work</span>
+        <section className="mx-auto max-w-7xl px-4 pb-20 pt-28 sm:px-6 lg:px-8 lg:pt-32">
+            <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-6">
+                    <motion.div variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-[#2A2A30] bg-[#1A1A1E] px-3 py-1 text-xs font-medium text-gray-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        Available for brands and creators
+                    </motion.div>
+                    <motion.h1 variants={fadeUp} className="max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                        A cleaner workspace for influencer campaigns, analytics, and collaboration flow.
+                    </motion.h1>
+                    <motion.p variants={fadeUp} className="max-w-2xl text-base leading-8 text-gray-400 sm:text-lg">
+                        Porchest brings creator discovery, profile scoring, request workflows, and campaign tracking into one dark, focused dashboard.
+                    </motion.p>
+                    <motion.div variants={fadeUp} className="flex flex-wrap gap-3">
+                        <Link href="/signup" className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500">
+                            Get started
+                        </Link>
+                        <a href="#features" className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] px-5 py-3 text-sm font-medium text-gray-300 transition hover:bg-[#202025]">
+                            Explore features
+                        </a>
+                    </motion.div>
                 </motion.div>
 
-                <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.7 }}
-                    className="display-text" style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', marginBottom: '24px', color: '#fff' }}>
-                    Smart <span style={{ color: 'rgba(255,255,255,0.4)' }}>creator</span> collaboration that fuels real growth.
-                </motion.h1>
-
-                <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }}
-                    style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, maxWidth: '600px', margin: '0 auto 40px' }}>
-                    Discover authentic creators, review profile quality, and run brand collaborations from one workspace built for clarity.
-                </motion.p>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65, duration: 0.6 }}
-                    style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <Link href="/signup" className="dark-btn" style={{ gap: '10px' }}>
-                        <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ArrowRight size={14} />
-                        </span>
-                        Get Started <ArrowRight size={16} />
-                    </Link>
-                    <a href="#features" className="outline-btn" style={{ color: 'rgba(255,255,255,0.6)' }}>See Features</a>
-                </motion.div>
-            </div>
-        </section>
-    );
-}
-
-/* ───── FEATURES ───── */
-function Features() {
-    const { ref, inView } = useReveal();
-    const features = [
-        { title: 'Audience Analytics', desc: 'Understand demographics, engagement, and quality signals before reaching out.' },
-        { title: 'Influencer Discovery', desc: 'Filter creators by niche, location, pricing, and credibility scores.' },
-        { title: 'Request Workflows', desc: 'Send structured collaboration requests. Keep negotiations in one inbox.' },
-        { title: 'Campaign Monitoring', desc: 'Track statuses, approvals, verification, and deliverables live.' },
-        { title: 'Profile Completion', desc: 'Help users fill the right details so profiles are readable and useful.' },
-        { title: 'Admin Oversight', desc: 'Manage users and activity from a central control panel.' },
-    ];
-
-    return (
-        <section id="features" ref={ref} style={{ padding: '80px 24px 100px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={stagger}>
-                    <motion.p variants={fadeUp} className="section-label" style={{ marginBottom: '16px' }}>Features</motion.p>
-                    <motion.h2 variants={fadeUp} className="display-text" style={{ fontSize: 'clamp(2rem, 4.5vw, 3rem)', maxWidth: '600px', marginBottom: '60px' }}>
-                        Built for organized brand-creator collaboration
-                    </motion.h2>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1px', background: 'rgba(255,255,255,0.06)', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        {features.map((f, i) => (
-                            <motion.div key={f.title} variants={fadeUp}
-                                style={{ padding: '36px', background: '#0c0c0c', transition: 'all 400ms ease', cursor: 'default' }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = '#0c0c0c'; }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(123,63,242,0.1)', border: '1px solid rgba(123,63,242,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a78bfa', fontWeight: 800, marginBottom: '20px', fontSize: '16px' }}>
-                                    {f.title.charAt(0)}
-                                </div>
-                                <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '20px', color: '#fff', marginBottom: '10px', letterSpacing: '-0.02em' }}>{f.title}</h3>
-                                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{f.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </motion.div>
-            </div>
-        </section>
-    );
-}
-
-/* ───── HOW IT WORKS ───── */
-function HowItWorks() {
-    const { ref, inView } = useReveal();
-    const steps = [
-        { n: '1', title: 'Discover', desc: 'Define campaign objectives, audience fit, and collaboration scope.' },
-        { n: '2', title: 'Request', desc: 'Share terms clearly so brands and influencers see the same details.' },
-        { n: '3', title: 'Create', desc: 'Check profile strength, pricing, and audience quality in one place.' },
-        { n: '4', title: 'Activate', desc: 'Follow collaboration progress, verification, and platform activity.' },
-    ];
-
-    return (
-        <section id="how-it-works" ref={ref} style={{ padding: '40px 24px 100px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={stagger}>
-                    <motion.p variants={fadeUp} className="section-label" style={{ marginBottom: '16px' }}>Our Process</motion.p>
-                    <motion.h2 variants={fadeUp} className="display-text" style={{ fontSize: 'clamp(2rem, 4.5vw, 3rem)', maxWidth: '550px', marginBottom: '60px' }}>
-                        A simple workflow, explained
-                    </motion.h2>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-                        {steps.map(s => (
-                            <motion.div key={s.n} variants={fadeUp} className="hover-lift"
-                                style={{ padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                                <div style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '48px', color: 'rgba(255,255,255,0.08)', lineHeight: 1, marginBottom: '16px' }}>{s.n}</div>
-                                <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '22px', color: '#fff', marginBottom: '10px' }}>{s.title}</h3>
-                                <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{s.desc}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </motion.div>
-            </div>
-        </section>
-    );
-}
-
-/* ───── MARQUEE ───── */
-function MarqueeTicker() {
-    const tags = ['Audience Analytics', 'Smart Matching', 'Campaign Tracking', 'Profile Scoring', 'Content Verification', 'Brand Discovery', 'ROI Monitoring', 'Influencer Vetting'];
-    const doubled = [...tags, ...tags];
-
-    return (
-        <section style={{ padding: '40px 0', overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-            <div className="marquee-container">
-                <div className="marquee-track">
-                    {doubled.map((tag, i) => (
-                        <span key={i} className="marquee-item">
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#a78bfa' }} />
-                            {tag}
-                        </span>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ───── FAQ ───── */
-function FAQ() {
-    const { ref, inView } = useReveal();
-    const [openIdx, setOpenIdx] = useState<number | null>(null);
-    const items = [
-        { q: 'How does influencer matching work?', a: 'Porchest uses audience demographics, engagement patterns, and content quality signals to surface creators that are a strong fit for your campaign goals.' },
-        { q: 'What metrics can I track?', a: 'Track follower growth, engagement rate, post reach, impressions, link clicks, conversions, and ROAS — all from one dashboard.' },
-        { q: 'Is there a free trial?', a: 'Yes — you can create an account and explore the platform for free. Premium features unlock with a paid plan.' },
-        { q: 'How fast is the turnaround on requests?', a: 'Most collaboration requests receive a response within 24-48 hours. The platform notifies both parties in real-time.' },
-        { q: 'Can I manage multiple campaigns?', a: 'Absolutely. The platform supports unlimited concurrent campaigns with separate tracking and analytics for each.' },
-    ];
-
-    return (
-        <section id="faq" ref={ref} style={{ padding: '80px 24px 100px' }}>
-            <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-                <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={stagger}>
-                    <motion.p variants={fadeUp} className="section-label" style={{ marginBottom: '16px' }}>FAQ</motion.p>
-                    <motion.h2 variants={fadeUp} className="display-text" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', marginBottom: '48px' }}>
-                        Have more questions?
-                    </motion.h2>
-
-                    <motion.div variants={fadeUp}>
-                        {items.map((item, i) => (
-                            <div key={i} className="faq-item">
-                                <button className="faq-trigger" data-open={openIdx === i ? 'true' : 'false'} onClick={() => setOpenIdx(openIdx === i ? null : i)}>
-                                    {item.q}
-                                    <Plus size={18} />
-                                </button>
-                                <div className="faq-answer" data-open={openIdx === i ? 'true' : 'false'}>
-                                    <p>{item.a}</p>
-                                </div>
+                <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-4">
+                    <motion.div variants={fadeUp} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+                        <div className="mb-4 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-gray-400">Platform snapshot</p>
+                                <h2 className="mt-1 text-lg font-semibold text-white">Campaign dashboard</h2>
                             </div>
-                        ))}
+                            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-blue-300">Live</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Metric label="Creators" value="12.4K" tone="text-blue-300" />
+                            <Metric label="Campaigns" value="1.8K" tone="text-emerald-300" />
+                            <Metric label="Clicks" value="94.2K" tone="text-orange-300" />
+                            <Metric label="Revenue" value="$2.4M" tone="text-yellow-300" />
+                        </div>
+                    </motion.div>
+                    <motion.div variants={fadeUp} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+                        <div className="mb-4 flex items-center justify-between">
+                            <p className="text-sm font-medium text-white">Signal quality</p>
+                            <span className="text-xs text-emerald-400">+14% this month</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-2">
+                            {[44, 58, 49, 74, 61, 82].map((h, i) => (
+                                <div key={i} className="flex h-36 items-end rounded-lg border border-[#2A2A30] bg-[#202025] p-2">
+                                    <div className="w-full rounded-md bg-gradient-to-t from-blue-500 to-cyan-300" style={{ height: `${h}%` }} />
+                                </div>
+                            ))}
+                        </div>
                     </motion.div>
                 </motion.div>
             </div>
@@ -271,51 +160,134 @@ function FAQ() {
     );
 }
 
-/* ───── CONTACT ───── */
-function Contact() {
-    const { ref, inView } = useReveal();
+function FeatureGrid() {
+    const items = [
+        { icon: LayoutDashboard, title: 'Dashboard clarity', desc: 'Clean surfaces, strong hierarchy, and readable metrics across every portal.' },
+        { icon: Users, title: 'Creator discovery', desc: 'Filter influencers by audience, niche, pricing, and trust signals.' },
+        { icon: Briefcase, title: 'Collaboration workflow', desc: 'Structured requests, approvals, posting, verification, and payout tracking.' },
+        { icon: BarChart3, title: 'Analytics first', desc: 'Follower growth, engagement, traffic, and ROI are surfaced with simple charts.' },
+        { icon: Sparkles, title: 'Smart matching', desc: 'Brand and creator fit is easier to understand with profile completeness and scoring.' },
+        { icon: ExternalLink, title: 'Actionable links', desc: 'Campaign links, promo codes, and tracking are always visible when needed.' },
+    ];
+
     return (
-        <section id="contact" ref={ref} style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(123,63,242,0.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
-            <motion.div initial="hidden" animate={inView ? 'visible' : 'hidden'} variants={stagger} style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                <motion.div variants={fadeUp} style={{ display: 'inline-flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
-                    <div style={{ height: '1px', width: '60px', background: 'rgba(255,255,255,0.15)' }} />
-                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>Available to work</span>
-                    <div style={{ height: '1px', width: '60px', background: 'rgba(255,255,255,0.15)' }} />
+        <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <SectionReveal>
+                <motion.div variants={fadeUp} className="mb-8">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Features</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-white">Everything in one dark dashboard</h2>
                 </motion.div>
-
-                <motion.h2 variants={fadeUp} className="display-text" style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', marginBottom: '20px' }}>
-                    Let&apos;s <span style={{ color: 'rgba(255,255,255,0.35)' }}>Connect</span>
-                </motion.h2>
-
-                <motion.p variants={fadeUp} style={{ fontSize: '16px', color: 'rgba(255,255,255,0.45)', maxWidth: '480px', margin: '0 auto 36px', lineHeight: 1.7 }}>
-                    Reach the Porchest team for onboarding, product questions, or help planning your creator operations.
-                </motion.p>
-
-                <motion.div variants={fadeUp} style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <a href="https://wa.me/923477437615" target="_blank" rel="noopener noreferrer" className="dark-btn">
-                        <span style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>💬</span>
-                        Chat on WhatsApp <ArrowRight size={16} />
-                    </a>
-                    <a href="mailto:info@porchest.com" className="outline-btn" style={{ color: 'rgba(255,255,255,0.6)' }}>Send Email</a>
-                </motion.div>
-            </motion.div>
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {items.map((item) => (
+                        <motion.div key={item.title} variants={fadeUp} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
+                            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2A30] bg-[#202025] text-blue-300">
+                                <item.icon size={18} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                            <p className="mt-2 text-sm leading-7 text-gray-400">{item.desc}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </SectionReveal>
         </section>
     );
 }
 
-/* ───── FOOTER ───── */
+function Workflow() {
+    const steps = [
+        ['Discover', 'Find creators with matching audiences and reliable signals.'],
+        ['Request', 'Send a structured brief with offer, requirements, and deadlines.'],
+        ['Track', 'Monitor approvals, posts, and metrics in one place.'],
+        ['Report', 'Review final traffic, conversions, and campaign performance.'],
+    ];
+
+    return (
+        <section id="workflow" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <SectionReveal>
+                <motion.div variants={fadeUp} className="mb-8">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Workflow</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-white">A simple, repeatable process</h2>
+                </motion.div>
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                    {steps.map(([title, desc], index) => (
+                        <motion.div key={title} variants={fadeUp} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
+                            <p className="text-5xl font-bold text-white/10">{index + 1}</p>
+                            <h3 className="mt-4 text-xl font-semibold text-white">{title}</h3>
+                            <p className="mt-2 text-sm leading-7 text-gray-400">{desc}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </SectionReveal>
+        </section>
+    );
+}
+
+function FAQ() {
+    const [open, setOpen] = useState<number | null>(0);
+    const items = [
+        ['How does matching work?', 'We use audience fit, engagement quality, niche alignment, and profile completeness to surface the best creators.'],
+        ['Can brands track campaigns?', 'Yes. Campaigns include tracking links, promo codes, traffic metrics, and campaign reporting.'],
+        ['Can influencers manage pricing?', 'Yes. Influencers set their own rates, profile details, and content style tags.'],
+    ];
+
+    return (
+        <section id="faq" className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+            <SectionReveal>
+                <motion.div variants={fadeUp} className="mb-8">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">FAQ</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-white">Common questions</h2>
+                </motion.div>
+                <div className="space-y-3">
+                    {items.map(([q, a], index) => (
+                        <motion.div key={q} variants={fadeUp} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E]">
+                            <button onClick={() => setOpen(open === index ? null : index)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left">
+                                <span className="font-medium text-white">{q}</span>
+                                <Plus size={16} className={`text-gray-400 transition-transform ${open === index ? 'rotate-45' : ''}`} />
+                            </button>
+                            {open === index && <div className="border-t border-[#2A2A30] px-5 py-4 text-sm leading-7 text-gray-400">{a}</div>}
+                        </motion.div>
+                    ))}
+                </div>
+            </SectionReveal>
+        </section>
+    );
+}
+
+function Contact() {
+    return (
+        <section id="contact" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-8 md:flex md:items-center md:justify-between">
+                <div className="max-w-2xl">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Contact</p>
+                    <h2 className="mt-2 text-3xl font-semibold text-white">Need help getting set up?</h2>
+                    <p className="mt-3 text-sm leading-7 text-gray-400">Reach the Porchest team for onboarding, product questions, or help with your creator workflows.</p>
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3 md:mt-0">
+                    <a href="mailto:info@porchest.com" className="rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500">
+                        Send email
+                    </a>
+                    <a href="https://wa.me/923477437615" target="_blank" rel="noreferrer" className="rounded-lg border border-[#2A2A30] bg-[#202025] px-5 py-3 text-sm font-medium text-gray-300 transition hover:bg-[#2A2A30]">
+                        WhatsApp
+                    </a>
+                </div>
+            </div>
+        </section>
+    );
+}
+
 function Footer() {
     return (
-        <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '28px 24px 36px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Image src="/logo.png" alt="Porchest" width={24} height={24} style={{ borderRadius: '6px' }} />
-                    <span style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>© Porchest, {new Date().getFullYear()}</span>
+        <footer className="border-t border-[#2A2A30]">
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+                <div className="flex items-center gap-3">
+                    <Image src="/logo.png" alt="Porchest" width={24} height={24} className="rounded-md" />
+                    <span className="text-sm text-gray-400">© Porchest, {new Date().getFullYear()}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                     {[Mail, Instagram, Linkedin, ExternalLink].map((Icon, i) => (
-                        <a key={i} className="social-icon" href="#" style={{ width: '36px', height: '36px' }}><Icon size={15} /></a>
+                        <a key={i} href="#" className="rounded-lg border border-[#2A2A30] bg-[#1A1A1E] p-2 text-gray-400 transition hover:bg-[#202025] hover:text-white">
+                            <Icon size={15} />
+                        </a>
                     ))}
                 </div>
             </div>
@@ -323,16 +295,13 @@ function Footer() {
     );
 }
 
-/* ───── PAGE ───── */
 export default function LandingPage() {
     return (
-        <main style={{ minHeight: '100vh', background: '#0c0c0c', position: 'relative', overflow: 'hidden' }}>
-            <div className="landing-texture-grid" />
+        <main className="min-h-screen bg-[#0A0A0B]">
             <LandingNav />
             <Hero />
-            <Features />
-            <HowItWorks />
-            <MarqueeTicker />
+            <FeatureGrid />
+            <Workflow />
             <FAQ />
             <Contact />
             <Footer />

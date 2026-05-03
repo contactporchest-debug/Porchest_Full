@@ -22,7 +22,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
             const data = await res.json();
             if (data.authURL) window.location.href = data.authURL;
         } catch {
-            // Leave the CTA available; higher-level pages can surface errors if needed.
+            // Keep the card interactive even if the request fails.
         } finally {
             setConnecting(false);
         }
@@ -32,7 +32,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
         try {
             await triggerSync();
         } catch {
-            // The hook surfaces its own error state; the UI keeps working either way.
+            // Higher-level UI handles any sync errors.
         }
     }
 
@@ -45,7 +45,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
             });
             await refetch();
         } catch {
-            // Keep the UI resilient even if disconnect fails.
+            // Ignore disconnect errors here.
         }
     }
 
@@ -58,32 +58,32 @@ export default function InstagramConnect({ role = 'influencer' }) {
 
     if (loading) {
         return (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <p className="text-sm text-white/50">Checking Instagram connection...</p>
+            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+                <p className="text-sm text-gray-400">Checking Instagram connection...</p>
             </div>
         );
     }
 
     if (connected) {
         return (
-            <div className="rounded-[28px] border border-[#e8e1d4] bg-[#f8f3eb] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.12)]">
-                <div className="mb-4 flex flex-col gap-3 border-b border-[#e8e1d4] pb-4 md:flex-row md:items-start md:justify-between">
+            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+                <div className="mb-4 flex flex-col gap-3 border-b border-[#2A2A30] pb-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex items-start gap-3">
                         {profileImage ? (
-                            <img src={profileImage} alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-white/70 shadow-sm" />
+                            <img src={profileImage} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-[#2A2A30]" />
                         ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#c79b6a] text-sm font-bold text-white shadow-sm">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
                                 IG
                             </div>
                         )}
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-semibold text-[#251d14]">@{metrics?.igUsername || 'instagram'}</p>
-                                <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                                <p className="text-sm font-semibold text-white">@{metrics?.igUsername || 'instagram'}</p>
+                                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
                                     Connected
                                 </span>
                             </div>
-                            <p className="mt-1 text-xs text-[#7c6d58]">
+                            <p className="mt-1 text-xs text-gray-400">
                                 Last synced: {lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : 'Never'}
                             </p>
                         </div>
@@ -92,59 +92,58 @@ export default function InstagramConnect({ role = 'influencer' }) {
                         href={`https://instagram.com/${metrics?.igUsername || ''}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="self-start rounded-full border border-[#e8e1d4] bg-white px-3 py-1.5 text-xs font-semibold text-[#6a553f] transition hover:bg-[#faf7f1]"
+                        className="self-start rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1.5 text-xs font-semibold text-gray-300 transition hover:bg-[#2A2A30]"
                     >
                         View
                     </a>
                 </div>
+
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#93b88d]">Followers</p>
-                        <p className="mt-2 text-2xl font-semibold text-[#2a241c]">{followerCount.toLocaleString()}</p>
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Followers</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">{followerCount.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#93b88d]">Following</p>
-                        <p className="mt-2 text-2xl font-semibold text-[#2a241c]">
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Following</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">
                             {Number(metrics?.igFollowingCount ?? metrics?.followsCount ?? 0).toLocaleString()}
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#93b88d]">Posts</p>
-                        <p className="mt-2 text-2xl font-semibold text-[#2a241c]">
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Posts</p>
+                        <p className="mt-2 text-2xl font-semibold text-white">
                             {Number(metrics?.igMediaCount ?? metrics?.mediaCount ?? 0).toLocaleString()}
                         </p>
                     </div>
                 </div>
+
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-[#e8e1d4] bg-white p-4 shadow-sm">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[#8a7c68]">Engagement</p>
-                        <p className="mt-1 text-lg font-semibold text-[#2a241c]">
-                            {engagementValue != null
-                                ? `${Number(engagementValue).toFixed(1)}%`
-                                : '0.0%'}
-                        </p>
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Engagement</p>
+                        <p className="mt-1 text-lg font-semibold text-white">{engagementValue != null ? `${Number(engagementValue).toFixed(1)}%` : '0.0%'}</p>
                     </div>
-                    <div className="rounded-2xl border border-[#e8e1d4] bg-white p-4 shadow-sm">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[#8a7c68]">Porchest score</p>
-                        <p className="mt-1 text-lg font-semibold text-[#2a241c]">{porchestScore}</p>
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Porchest score</p>
+                        <p className="mt-1 text-lg font-semibold text-white">{porchestScore}</p>
                     </div>
-                    <div className="rounded-2xl border border-[#e8e1d4] bg-white p-4 shadow-sm">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[#8a7c68]">Status</p>
-                        <p className="mt-1 text-lg font-semibold text-[#2a241c]">Ready</p>
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Status</p>
+                        <p className="mt-1 text-lg font-semibold text-white">Ready</p>
                     </div>
                 </div>
+
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="flex-1 rounded-xl bg-[#d8c0a7] px-4 py-2.5 text-sm font-semibold text-[#3c2d20] transition hover:bg-[#cfb28f] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {syncing ? 'Syncing...' : 'Refresh Sync'}
                     </button>
                     <button
                         onClick={handleDisconnect}
                         disabled={connecting}
-                        className="rounded-xl border border-[#e3d4c2] bg-white px-4 py-2.5 text-sm font-semibold text-[#a45f4b] transition hover:bg-[#fff8f3] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-2.5 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {connecting ? 'Disconnecting...' : 'Disconnect'}
                     </button>
@@ -154,9 +153,9 @@ export default function InstagramConnect({ role = 'influencer' }) {
     }
 
     return (
-        <div className="rounded-[28px] border border-[#e8e1d4] bg-[#f8f3eb] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.12)]">
-            <p className="text-sm font-semibold text-[#251d14]">Connect your Instagram</p>
-            <p className="mt-1 mb-4 text-sm text-[#7c6d58]">
+        <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
+            <p className="text-sm font-semibold text-white">Connect your Instagram</p>
+            <p className="mt-1 mb-4 text-sm text-gray-400">
                 {role === 'brand'
                     ? 'Connect to track campaign follower growth and brand account performance.'
                     : 'Required to show your analytics to brands and appear in search results.'}
@@ -164,7 +163,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
             <button
                 onClick={handleConnect}
                 disabled={connecting}
-                className="rounded-xl bg-[#d8c0a7] px-5 py-2.5 text-sm font-semibold text-[#3c2d20] transition hover:bg-[#cfb28f] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
                 {connecting ? 'Connecting...' : 'Connect Instagram'}
             </button>

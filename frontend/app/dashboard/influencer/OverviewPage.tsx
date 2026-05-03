@@ -17,30 +17,22 @@ interface Props {
 
 export default function OverviewPage({ stats }: Props) {
     const { user } = useAuth();
-
-    const collaborationCountCards = [
-        { label: 'Total Requests Received', value: stats?.totalRequests ?? '—', color: '#60d5f8' },
-        { label: 'Total Accepted', value: stats?.totalAccepted ?? '—', color: '#4ade80' },
-        { label: 'Total Rejected', value: stats?.totalRejected ?? '—', color: '#f87171' },
-        { label: 'Total Completed', value: stats?.totalCompleted ?? '—', color: '#a855f7' },
+    const cards = [
+        { label: 'Total Requests Received', value: stats?.totalRequests ?? '—', tone: 'text-blue-300' },
+        { label: 'Total Accepted', value: stats?.totalAccepted ?? '—', tone: 'text-emerald-300' },
+        { label: 'Total Rejected', value: stats?.totalRejected ?? '—', tone: 'text-red-300' },
+        { label: 'Total Completed', value: stats?.totalCompleted ?? '—', tone: 'text-violet-300' },
     ];
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-            {/* ── COLLABORATION REQUEST COUNT CARDS ── */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
             <div>
-                <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' }}>Collaboration Overview</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '14px' }}>
-                    {collaborationCountCards.map((c, i) => (
-                        <motion.div key={c.label}
-                            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.07, duration: 0.35 }}
-                            className="glass-card" style={{ padding: '24px', borderRadius: '22px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${c.color}30` }}>
-                            <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '2rem', color: c.color, letterSpacing: '-0.04em', filter: `drop-shadow(0 0 10px ${c.color}55)` }}>
-                                {c.value}
-                            </p>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' }}>{c.label}</p>
+                <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-400">Collaboration Overview</h3>
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                    {cards.map((card, index) => (
+                        <motion.div key={card.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
+                            <p className={`text-3xl font-bold ${card.tone}`}>{card.value}</p>
+                            <p className="mt-2 text-sm text-gray-400">{card.label}</p>
                         </motion.div>
                     ))}
                 </div>

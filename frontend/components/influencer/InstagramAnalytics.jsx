@@ -49,10 +49,10 @@ export default function InstagramAnalytics() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 className="text-lg font-medium text-white">Instagram analytics</h2>
-                    <p className="mt-0.5 text-xs text-gray-500">
+                    <p className="mt-0.5 text-xs text-gray-400">
                         {data.igLastSyncedAt ? `Last synced ${new Date(data.igLastSyncedAt).toLocaleString()}` : 'Not yet synced'}
                     </p>
                 </div>
@@ -61,14 +61,14 @@ export default function InstagramAnalytics() {
                     <button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="rounded-lg border border-stone-500/10 bg-stone-900/30 px-4 py-2 text-sm text-stone-300 transition-all hover:bg-stone-900/50 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg border border-[#2A2A30] bg-[#202025] px-4 py-2 text-sm text-gray-300 transition-all hover:bg-[#2A2A30] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         {syncing ? 'Syncing...' : 'Sync now'}
                     </button>
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+            <div className="flex items-center gap-4 rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-4">
                 {data.igProfileUrl ? (
                     <img
                         src={data.igProfileUrl}
@@ -81,7 +81,7 @@ export default function InstagramAnalytics() {
                     <p className={`mt-0.5 text-xs font-medium capitalize ${tierColors[tier] || 'text-gray-400'}`}>
                         {tier} influencer
                     </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">{data.igBio || ''}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-gray-400">{data.igBio || ''}</p>
                 </div>
                 <div className="ml-auto text-right">
                     <p className="text-2xl font-semibold text-white">{fmt(data.igFollowersCount)}</p>
@@ -110,7 +110,7 @@ export default function InstagramAnalytics() {
                     transition={{ duration: 0.35 }}
                     className="grid grid-cols-1 gap-4 md:grid-cols-2"
                 >
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-4">
                         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-400">Top countries</p>
                         <div className="space-y-2">
                             {(audience.topCountries || []).slice(0, 5).map((item, index) => (
@@ -130,7 +130,7 @@ export default function InstagramAnalytics() {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-4">
                         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-gray-400">Top cities</p>
                         <div className="space-y-2">
                             {(audience.topCities || []).slice(0, 5).map((item, index) => (

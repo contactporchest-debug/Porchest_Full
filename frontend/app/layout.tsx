@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <link rel="icon" type="image/png" href="/logo.png" />
                 <link rel="apple-touch-icon" href="/apple-icon.png" />
             </head>
-            <body className="antialiased">
+            <body className="bg-[#0A0A0B] text-white antialiased">
                 <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
                 <AuthProvider>
                     <SocketProvider>
@@ -41,15 +41,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                             position="top-right"
                             toastOptions={{
                                 style: {
-                                    background: '#fffaf3',
-                                    color: '#111318',
-                                    border: '1px solid rgba(155,111,80,0.18)',
+                                    background: '#1A1A1E',
+                                    color: '#FFFFFF',
+                                    border: '1px solid #2A2A30',
                                     borderRadius: '12px',
                                     fontSize: '14px',
-                                    boxShadow: '0 18px 42px rgba(17,19,24,0.10)',
+                                    boxShadow: '0 18px 42px rgba(0,0,0,0.30)',
                                 },
                                 success: {
-                                    iconTheme: { primary: '#9b6f50', secondary: '#fff' },
+                                    iconTheme: { primary: '#10B981', secondary: '#fff' },
                                 },
                                 error: {
                                     iconTheme: { primary: '#ff3c3c', secondary: '#fffdf8' },

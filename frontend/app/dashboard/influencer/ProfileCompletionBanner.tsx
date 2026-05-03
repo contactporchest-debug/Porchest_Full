@@ -2,10 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import {
-    AlertTriangle, CheckCircle2, Camera, User, FileText,
-    Tag, Globe, Users, BarChart3, DollarSign, Instagram, ArrowRight,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Camera, User, FileText, Tag, Globe, Users, BarChart3, DollarSign, Instagram, ArrowRight } from 'lucide-react';
 
 interface CheckItem {
     key: string;
@@ -32,164 +29,58 @@ const ICON_MAP: Record<string, React.ReactNode> = {
     instagram: <Instagram size={14} />,
 };
 
-const SURFACE = '#ffffff';
-const SURFACE_ALT = '#f8fafc';
-const BORDER = 'rgba(148, 163, 184, 0.22)';
-const TEXT = '#0f172a';
-const MUTED = '#64748b';
-
 export default function ProfileCompletionBanner({ completion }: { completion: ProfileCompletionData | null }) {
     const router = useRouter();
-
     if (!completion || completion.isComplete) return null;
 
     const { percentage, checklist } = completion;
-    const pending = checklist.filter(c => !c.done);
-    const done = checklist.filter(c => c.done);
-
-    // Progress ring
-    const radius = 38;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDash = (percentage / 100) * circumference;
+    const pending = checklist.filter((c) => !c.done);
+    const done = checklist.filter((c) => c.done);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
-            style={{
-                position: 'relative',
-                marginBottom: '24px',
-                padding: '28px 32px',
-                borderRadius: '28px',
-                background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 42%, #f5f3ff 100%)',
-                border: '1px solid rgba(251,191,36,0.18)',
-                backdropFilter: 'blur(20px)',
-                overflow: 'hidden',
-                boxShadow: '0 20px 40px rgba(15,23,42,0.06)',
-            }}
-        >
-            {/* Subtle glow */}
-            <div style={{
-                position: 'absolute', top: '-30px', right: '10%', width: '300px', height: '160px',
-                borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(251,191,36,0.08) 0%, transparent 70%)',
-                pointerEvents: 'none',
-            }} />
-
-            <div style={{ position: 'relative', display: 'flex', gap: '28px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                {/* Progress Ring */}
-                <div style={{ flexShrink: 0, position: 'relative', width: '96px', height: '96px' }}>
-                    <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="48" cy="48" r={radius} fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="6" />
-                        <motion.circle
-                            cx="48" cy="48" r={radius} fill="none"
-                            stroke={percentage >= 80 ? '#4ade80' : percentage >= 50 ? '#fbbf24' : '#f87171'}
-                            strokeWidth="6" strokeLinecap="round"
-                            strokeDasharray={circumference}
-                            initial={{ strokeDashoffset: circumference }}
-                            animate={{ strokeDashoffset: circumference - strokeDash }}
-                            transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
-                        />
-                    </svg>
-                    <div style={{
-                        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                    }}>
-                        <span style={{
-                            fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '22px',
-                            color: TEXT, lineHeight: '1',
-                        }}>
-                            {percentage}%
-                        </span>
-                        <span style={{ fontSize: '10px', color: MUTED, marginTop: '2px' }}>
-                            complete
-                        </span>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="relative mb-6 overflow-hidden rounded-xl border border-amber-400/20 bg-[#1A1A1E] p-6">
+            <div className="absolute right-10 top-0 h-36 w-64 rounded-full bg-amber-400/5 blur-3xl" />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start">
+                <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-full border border-[#2A2A30] bg-[#202025]">
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-white">{percentage}%</div>
+                        <div className="text-[10px] uppercase tracking-wider text-gray-400">complete</div>
                     </div>
                 </div>
 
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: '240px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <AlertTriangle size={16} style={{ color: '#fbbf24' }} />
-                        <h3 style={{
-                            fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '16px',
-                            color: TEXT, letterSpacing: '-0.02em',
-                        }}>
-                            Complete Your Profile to Get Discovered
-                        </h3>
+                <div className="flex-1">
+                    <div className="mb-2 flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-amber-300" />
+                        <h3 className="text-lg font-semibold text-white">Complete your profile to get discovered</h3>
                     </div>
-                    <p style={{ fontSize: '13px', color: MUTED, lineHeight: '1.6', marginBottom: '18px' }}>
-                        Your profile will only appear in the Brand Portal after all required information is completed.
-                        Add your profile photo, bio, pricing, and connect your Instagram to start receiving brand requests.
+                    <p className="mb-5 max-w-2xl text-sm leading-7 text-gray-400">
+                        Your profile will only appear in the Brand Portal after all required information is completed. Add your profile photo, bio, pricing, and connect your Instagram to start receiving brand requests.
                     </p>
 
-                    {/* Checklist */}
-                    <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-                        gap: '6px', marginBottom: '18px',
-                    }}>
-                        {/* Pending items first */}
-                        {pending.map(item => (
-                            <div key={item.key} style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '8px 12px', borderRadius: '10px',
-                                background: 'rgba(251,191,36,0.06)',
-                                border: '1px solid rgba(251,191,36,0.12)',
-                            }}>
-                                <div style={{
-                                    width: '22px', height: '22px', borderRadius: '6px',
-                                    background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: '#fbbf24', flexShrink: 0,
-                                }}>
+                    <div className="mb-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {pending.map((item) => (
+                            <div key={item.key} className="flex items-center gap-3 rounded-lg border border-amber-400/10 bg-amber-400/10 px-3 py-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-amber-400/20 bg-[#202025] text-amber-300">
                                     {ICON_MAP[item.key] || <AlertTriangle size={12} />}
                                 </div>
-                                <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: '600' }}>
-                                    {item.label}
-                                </span>
+                                <span className="text-sm font-medium text-amber-300">{item.label}</span>
                             </div>
                         ))}
-                        {/* Done items */}
-                        {done.map(item => (
-                            <div key={item.key} style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                padding: '8px 12px', borderRadius: '10px',
-                                background: SURFACE_ALT,
-                                border: `1px solid ${BORDER}`,
-                            }}>
-                                <div style={{
-                                    width: '22px', height: '22px', borderRadius: '6px',
-                                    background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: '#4ade80', flexShrink: 0,
-                                }}>
+                        {done.map((item) => (
+                            <div key={item.key} className="flex items-center gap-3 rounded-lg border border-[#2A2A30] bg-[#202025] px-3 py-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-md border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
                                     <CheckCircle2 size={12} />
                                 </div>
-                                <span style={{
-                                    fontSize: '12px', color: MUTED, fontWeight: '500',
-                                    textDecoration: 'line-through',
-                                }}>
-                                    {item.label}
-                                </span>
+                                <span className="text-sm text-gray-400 line-through">{item.label}</span>
                             </div>
                         ))}
                     </div>
 
-                    {/* CTA */}
                     <button
                         onClick={() => router.push('/dashboard/influencer/profile')}
-                        style={{
-                            padding: '12px 28px', borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #9b6f50, #d7b48f)',
-                            border: 'none', color: '#fff', fontSize: '14px', fontWeight: '700',
-                            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            boxShadow: '0 4px 20px rgba(155,111,80,0.35)',
-                            transition: 'all 200ms ease', fontFamily: 'inherit',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(155,111,80,0.45)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(155,111,80,0.35)'; }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                     >
-                        Complete Profile <ArrowRight size={15} />
+                        Complete profile <ArrowRight size={15} />
                     </button>
                 </div>
             </div>

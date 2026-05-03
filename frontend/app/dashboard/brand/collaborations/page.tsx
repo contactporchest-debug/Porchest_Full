@@ -20,23 +20,23 @@ export default function BrandCollaborationsRoute() {
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
                 {loading ? (
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-sm text-white/50">
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6 text-sm text-gray-400">
                         Loading profile status...
                     </div>
                 ) : !profileComplete ? (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.16)]"
+                        className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-6"
                     >
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Profile incomplete</p>
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-amber-200/70">Profile incomplete</p>
                         <h1 className="mt-2 text-2xl font-semibold text-white">Complete your brand profile first</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">
+                        <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-300">
                             Complete your brand profile first to manage collaborations and campaign workflows.
                         </p>
                         <Link
                             href="/dashboard/brand/profile"
-                            className="mt-6 inline-flex items-center rounded-2xl bg-gradient-to-r from-[#8f6a45] to-[#c79b6a] px-5 py-3 text-sm font-semibold text-white transition-shadow hover:shadow-[0_18px_36px_rgba(199,155,106,0.25)]"
+                            className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
                             Go to profile
                         </Link>

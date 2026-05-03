@@ -7,18 +7,16 @@ import { Building2, Star, ArrowRight, Zap } from 'lucide-react';
 
 const roleCards = [
     {
-        icon: <Building2 size={28} />,
+        icon: Building2,
         role: 'Brand',
-        color: '#a78bfa',
         href: '/signup/brand',
         tagline: 'Scale with clarity',
         desc: 'Create campaigns, match with creators, and manage every collaboration from one place.',
         perks: ['Influencer discovery', 'Campaign coordination', 'Live request tracking'],
     },
     {
-        icon: <Star size={28} />,
+        icon: Star,
         role: 'Influencer',
-        color: '#60a5fa',
         href: '/signup/influencer',
         tagline: 'Monetize with confidence',
         desc: 'Receive brand requests, showcase your profile, and keep your collaborations organized.',
@@ -28,78 +26,57 @@ const roleCards = [
 
 export default function SignupPage() {
     return (
-        <main style={{ minHeight: '100vh', padding: '48px 20px 64px', background: '#0c0c0c', position: 'relative', overflow: 'hidden' }}>
-            <div className="neon-grid" />
-            <div style={{ position: 'absolute', top: '-200px', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(123,63,242,0.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <main className="min-h-screen bg-[#0A0A0B] px-4 py-10 text-white">
+            <div className="mx-auto max-w-6xl">
+                <div className="mx-auto mb-8 flex w-fit items-center gap-3 rounded-full border border-[#2A2A30] bg-[#1A1A1E] px-4 py-2">
+                    <Image src="/logo.png" alt="Porchest" width={26} height={26} className="rounded-md" />
+                    <span className="text-sm font-semibold tracking-wide">PORCHEST</span>
+                </div>
 
-            <div style={{ width: '100%', maxWidth: '900px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '48px' }}>
-                    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '24px' }}>
-                        <Image src="/porchest-logo.png" alt="Porchest" width={168} height={42} priority style={{ width: '168px', height: 'auto', filter: 'brightness(10)' }} />
-                    </Link>
-
-                    <h1 className="display-text" style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', marginBottom: '14px', color: '#fff' }}>
-                        Choose how you want to join
-                    </h1>
-                    <p style={{ maxWidth: '520px', margin: '0 auto', fontSize: '16px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7 }}>
+                <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-4xl text-center">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Create account</p>
+                    <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">Choose how you want to join</h1>
+                    <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-400 sm:text-base">
                         Porchest gives brands and influencers tailored workflows. Pick the role that fits.
                     </p>
                 </motion.div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', alignItems: 'stretch' }}>
+                <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
                     {roleCards.map((card, index) => (
-                        <motion.div key={card.role} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}>
-                            <Link href={card.href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
-                                <div style={{
-                                    height: '100%', padding: '32px', borderRadius: '20px',
-                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-                                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                                    minHeight: '360px', transition: 'all 400ms cubic-bezier(0.23,1,0.32,1)', cursor: 'pointer',
-                                }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
-                                    <div>
-                                        <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: `${card.color}15`, border: `1px solid ${card.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, marginBottom: '24px' }}>
-                                            {card.icon}
+                        <motion.div key={card.role} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.08 }}>
+                            <Link href={card.href} className="block h-full rounded-2xl border border-[#2A2A30] bg-[#1A1A1E] p-6 transition hover:-translate-y-1 hover:bg-[#202025]">
+                                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-[#2A2A30] bg-[#202025] text-blue-300">
+                                    <card.icon size={22} />
+                                </div>
+                                <div className="mb-4 inline-flex rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-300">
+                                    {card.tagline}
+                                </div>
+                                <h2 className="text-2xl font-semibold text-white">I&apos;m a {card.role}</h2>
+                                <p className="mt-3 text-sm leading-7 text-gray-400">{card.desc}</p>
+                                <div className="mt-6 space-y-3">
+                                    {card.perks.map((perk) => (
+                                        <div key={perk} className="flex items-center gap-3 text-sm text-gray-300">
+                                            <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#2A2A30] bg-[#202025] text-blue-300">
+                                                <Zap size={10} />
+                                            </span>
+                                            {perk}
                                         </div>
-
-                                        <div style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: '999px', background: `${card.color}12`, color: card.color, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '16px' }}>
-                                            {card.tagline}
-                                        </div>
-
-                                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '26px', letterSpacing: '-0.03em', color: '#fff', marginBottom: '12px' }}>
-                                            I&apos;m a {card.role}
-                                        </h2>
-                                        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: '24px' }}>
-                                            {card.desc}
-                                        </p>
-
-                                        <div style={{ display: 'grid', gap: '10px' }}>
-                                            {card.perks.map(perk => (
-                                                <div key={perk} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>
-                                                    <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: `${card.color}14`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                        <Zap size={9} style={{ color: card.color }} />
-                                                    </span>
-                                                    {perk}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '28px', paddingTop: '18px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                        <span style={{ fontSize: '14px', fontWeight: 700, color: card.color }}>Get started</span>
-                                        <ArrowRight size={16} style={{ color: card.color }} />
-                                    </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 flex items-center justify-between border-t border-[#2A2A30] pt-5">
+                                    <span className="text-sm font-semibold text-blue-300">Get started</span>
+                                    <ArrowRight size={16} className="text-blue-300" />
                                 </div>
                             </Link>
                         </motion.div>
                     ))}
                 </div>
 
-                <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: 'rgba(255,255,255,0.35)' }}>
+                <p className="mt-8 text-center text-sm text-gray-400">
                     Already have an account?{' '}
-                    <Link href="/login" style={{ color: '#a78bfa', fontWeight: 700, textDecoration: 'none' }}>Sign in</Link>
+                    <Link href="/login" className="font-semibold text-blue-400 transition hover:text-blue-300">
+                        Sign in
+                    </Link>
                 </p>
             </div>
         </main>

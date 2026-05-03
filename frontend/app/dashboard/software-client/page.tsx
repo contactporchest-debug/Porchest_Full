@@ -66,8 +66,8 @@ export default function SoftwareClientDashboardPage() {
         return (
             <ProtectedRoute allowedRoles={['software-client']}>
                 <DashboardLayout>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-                        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: '#2563eb' }} />
+                    <div className="flex min-h-[60vh] items-center justify-center">
+                        <Loader2 size={32} className="animate-spin text-blue-400" />
                     </div>
                 </DashboardLayout>
             </ProtectedRoute>
@@ -77,20 +77,16 @@ export default function SoftwareClientDashboardPage() {
     if (!data) return null;
 
     const StatCard = ({ label, value, sub, color, icon, progress }: any) => (
-        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
-            style={{ background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 22, padding: '22px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
-            <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, borderRadius: '0 22px 0 80px', background: `${color}08` }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', color }}>
-                    {icon}
-                </div>
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2A30] bg-[#202025]" style={{ color }}>
+                {icon}
             </div>
-            <p style={{ fontFamily: 'Space Grotesk', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.04em', filter: `drop-shadow(0 0 8px ${color}50)` }}>{value}</p>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{label}</p>
-            {sub && <p style={{ fontSize: 11, color, opacity: 0.65, marginTop: 3 }}>{sub}</p>}
+            <p className="text-3xl font-bold" style={{ color }}>{value}</p>
+            <p className="mt-2 text-sm text-gray-400">{label}</p>
+            {sub && <p className="mt-1 text-xs" style={{ color }}>{sub}</p>}
             {progress != null && (
-                <div style={{ marginTop: 12, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
-                    <div style={{ height: '100%', borderRadius: 99, width: `${Math.min(100, progress)}%`, background: color, transition: 'width 700ms ease' }} />
+                <div className="mt-4 h-2 rounded-full bg-[#202025]">
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, progress)}%`, background: color }} />
                 </div>
             )}
         </motion.div>
@@ -99,67 +95,58 @@ export default function SoftwareClientDashboardPage() {
     return (
         <ProtectedRoute allowedRoles={['software-client']}>
             <DashboardLayout>
-                <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                    
-                    {/* Header */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div className="mx-auto flex max-w-7xl flex-col gap-8">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <h1 style={{ fontFamily: 'Space Grotesk', fontSize: '28px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em' }}>
-                                Welcome, {data.clientProfile.fullName} 👋
-                            </h1>
-                            <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: '6px', fontSize: '14px' }}>
-                                Here is the latest overview of {data.clientProfile.companyName}'s digital product development.
-                            </p>
+                            <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Software client dashboard</p>
+                            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">Welcome, {data.clientProfile.fullName}</h1>
+                            <p className="mt-2 text-sm text-gray-400">Here is the latest overview of {data.clientProfile.companyName}'s digital product development.</p>
                         </div>
-                        <Link href="mailto:hello@porchest.com?subject=New Project Proposal" style={{ padding: '12px 20px', borderRadius: '12px', background: 'linear-gradient(135deg, #9333ea, #c084fc)', color: '#fff', fontWeight: 700, fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 16px rgba(168,85,247,0.2)' }}>
+                        <Link href="mailto:hello@porchest.com?subject=New Project Proposal" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500">
                             <Briefcase size={16} /> Propose New Project
                         </Link>
                     </motion.div>
 
-                    {/* Stats Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                    <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                         <StatCard label="Overall Completion" value={`${data.overview.completionPercent}%`} color="#60a5fa" icon={<Activity size={18} />} progress={data.overview.completionPercent} sub="For active project phase" />
-                        <StatCard label="Total Projects" value={data.totals.totalProjects} color="#a855f7" icon={<LayoutDashboard size={18} />} />
-                        <StatCard label="Completed Milestones" value={data.totals.completedMilestones} color="#4ade80" icon={<Briefcase size={18} />} sub={`${data.totals.remainingMilestones} remaining`} />
-                        <StatCard label="Current Phase" value={data.overview.currentPhase} color="#f59e0b" icon={<Activity size={18} />} />
+                        <StatCard label="Total Projects" value={data.totals.totalProjects} color="#60a5fa" icon={<LayoutDashboard size={18} />} />
+                        <StatCard label="Completed Milestones" value={data.totals.completedMilestones} color="#34d399" icon={<Briefcase size={18} />} sub={`${data.totals.remainingMilestones} remaining`} />
+                        <StatCard label="Current Phase" value={data.overview.currentPhase} color="#fbbf24" icon={<Activity size={18} />} />
                     </div>
 
-                    {/* Project Snapshot */}
-                    <div style={{ background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24, padding: 32, boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
-                        <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '18px', color: '#ffffff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6">
+                        <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
+                            <Calendar size={18} className="text-blue-300" />
                             Active Project Snapshot
                         </h2>
-                        
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                        <div className="grid gap-6 lg:grid-cols-2">
                             <div>
-                                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff', marginBottom: 10 }}>{data.overview.projectName}</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', lineHeight: 1.6, marginBottom: 20 }}>{data.overview.simpleDescription}</p>
-                                
-                                <div style={{ display: 'flex', gap: 24, marginBottom: 20 }}>
+                                <h3 className="text-2xl font-bold text-white">{data.overview.projectName}</h3>
+                                <p className="mt-3 text-sm leading-7 text-gray-400">{data.overview.simpleDescription}</p>
+                                <div className="mt-6 flex flex-wrap gap-5 text-sm">
                                     <div>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, marginBottom: 4 }}>Status</p>
-                                        <p style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600 }}>{data.overview.currentStatus}</p>
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Status</p>
+                                        <p className="mt-1 font-medium text-white">{data.overview.currentStatus}</p>
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, marginBottom: 4 }}>Deadline</p>
-                                        <p style={{ fontSize: '14px', color: '#ffffff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <Calendar size={14} style={{ color: '#a855f7' }} />
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Deadline</p>
+                                        <p className="mt-1 flex items-center gap-2 font-medium text-white">
+                                            <Calendar size={14} className="text-blue-300" />
                                             {new Date(data.overview.deadline).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 16, padding: 24, border: '1px solid rgba(255,255,255,0.04)' }}>
-                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginBottom: 12 }}>Next Proposed Project</p>
-                                <p style={{ fontSize: '15px', color: '#ffffff', fontWeight: 700, marginBottom: 20 }}>{data.overview.nextProjectProposal}</p>
-                                <Link href="/dashboard/software-client/projects" style={{ fontSize: '13px', color: '#a855f7', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    View full project details &rarr;
+                            <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-5">
+                                <p className="text-xs font-medium uppercase tracking-wider text-gray-400">Next Proposed Project</p>
+                                <p className="mt-3 text-base font-semibold text-white">{data.overview.nextProjectProposal}</p>
+                                <Link href="/dashboard/software-client/projects" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-300 hover:text-blue-200">
+                                    View full project details
                                 </Link>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </DashboardLayout>
         </ProtectedRoute>

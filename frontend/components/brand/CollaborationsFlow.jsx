@@ -12,15 +12,15 @@ const TABS = [
 ];
 
 const STATUS_BADGE = {
-    pending:          { bg: 'bg-blue-500/10 border-blue-500/20',      color: 'text-blue-400',      label: 'Pending' },
-    countered:        { bg: 'bg-amber-500/10 border-amber-500/20',    color: 'text-amber-400',     label: 'Countered' },
-    accepted:         { bg: 'bg-green-500/10 border-green-500/20',    color: 'text-green-400',     label: 'Accepted' },
-    active:           { bg: 'bg-green-500/10 border-green-500/20',    color: 'text-green-400',     label: 'Active' },
-    content_submitted:{ bg: 'bg-purple-500/10 border-purple-500/20',  color: 'text-purple-400',    label: 'Content submitted' },
-    content_approved: { bg: 'bg-purple-500/10 border-purple-500/20',  color: 'text-purple-400',    label: 'Content approved' },
-    posted:           { bg: 'bg-amber-500/10 border-amber-500/20',    color: 'text-amber-400',     label: 'Posted' },
-    completed:        { bg: 'bg-green-500/10 border-green-500/20',    color: 'text-green-400',     label: 'Completed' },
-    declined:         { bg: 'bg-red-500/10 border-red-500/20',        color: 'text-red-400',       label: 'Declined' },
+    pending:          { bg: 'bg-blue-500/10 border-blue-500/20',      color: 'text-blue-300',      label: 'Pending' },
+    countered:        { bg: 'bg-amber-500/10 border-amber-500/20',    color: 'text-amber-300',     label: 'Countered' },
+    accepted:         { bg: 'bg-emerald-500/10 border-emerald-500/20',    color: 'text-emerald-300',     label: 'Accepted' },
+    active:           { bg: 'bg-emerald-500/10 border-emerald-500/20',    color: 'text-emerald-300',     label: 'Active' },
+    content_submitted:{ bg: 'bg-blue-500/10 border-blue-500/20',  color: 'text-blue-300',    label: 'Content submitted' },
+    content_approved: { bg: 'bg-blue-500/10 border-blue-500/20',  color: 'text-blue-300',    label: 'Content approved' },
+    posted:           { bg: 'bg-amber-500/10 border-amber-500/20',    color: 'text-amber-300',     label: 'Posted' },
+    completed:        { bg: 'bg-emerald-500/10 border-emerald-500/20',    color: 'text-emerald-300',     label: 'Completed' },
+    declined:         { bg: 'bg-red-500/10 border-red-500/20',        color: 'text-red-300',       label: 'Declined' },
 };
 
 function StatusBadge({ status }) {
@@ -48,18 +48,18 @@ export default function CollaborationsFlow() {
         }
     }
 
-    const cardClass = 'p-6 rounded-[20px] bg-white/[0.03] border border-white/[0.07] space-y-5 hover:border-white/[0.14] hover:bg-white/[0.05] transition-all';
+    const cardClass = 'p-6 rounded-xl bg-[#1A1A1E] border border-[#2A2A30] space-y-5 hover:border-[#3A3A42] hover:bg-[#202025] transition-all';
 
     return (
         <div className="space-y-6">
             {/* Tab bar */}
-            <div className="flex gap-2 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.07] w-fit">
+            <div className="flex gap-2 p-1.5 rounded-xl bg-[#1A1A1E] border border-[#2A2A30] w-fit">
                 {TABS.map((tab, i) => (
                     <button
                         key={tab.key}
                         onClick={() => setActiveTab(i)}
                         className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                            activeTab === i ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20' : 'text-white/40 hover:text-white hover:bg-white/[0.06]'
+                            activeTab === i ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-gray-400 hover:text-white hover:bg-[#202025]'
                         }`}
                     >
                         {tab.label}
@@ -83,7 +83,7 @@ export default function CollaborationsFlow() {
                             {c.influencerProfile?.profilePictureURL ? (
                                 <img src={c.influencerProfile.profilePictureURL} alt="" className="w-14 h-14 rounded-[14px] object-cover border border-white/[0.08] flex-shrink-0" />
                             ) : (
-                                <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                    <div className="w-14 h-14 rounded-[14px] bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                                     {(c.influencerUsername || c.influencerProfile?.igUsername || 'C')[0].toUpperCase()}
                                 </div>
                             )}
@@ -103,7 +103,7 @@ export default function CollaborationsFlow() {
                             </div>
                         </div>
                         <div className="text-right space-y-2 pt-1">
-                            <p className="text-2xl font-bold text-purple-400 leading-none">
+                            <p className="text-2xl font-bold text-blue-300 leading-none">
                                 ${Number(c.pricing?.agreedFee || c.pricing?.brandOffer || 0).toLocaleString()}
                             </p>
                             <StatusBadge status={c.status} />
@@ -112,7 +112,7 @@ export default function CollaborationsFlow() {
 
                     {/* ── REQUESTS TAB ── Countered by influencer */}
                     {c.status === 'countered' && c.pricing?.influencerCounter && (
-                        <div className="p-5 rounded-2xl bg-amber-500/[0.06] border border-amber-500/[0.12] space-y-4">
+                        <div className="p-5 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] space-y-4">
                             <div className="flex gap-8 items-center">
                                 <div>
                                     <p className="text-[10px] font-bold text-amber-400/70 uppercase tracking-wide mb-1">Your offer</p>
@@ -134,7 +134,7 @@ export default function CollaborationsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'accept-counter')}
                                     disabled={acting}
-                                    className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-md shadow-amber-500/20 disabled:opacity-40 transition-all"
+                                    className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-md shadow-blue-500/20 disabled:opacity-40 transition-all"
                                 >
                                     Accept Counter (${Number(c.pricing.influencerCounter).toLocaleString()})
                                 </button>
@@ -171,7 +171,7 @@ export default function CollaborationsFlow() {
                             <button
                                 onClick={() => action(c._id, 'approve-drive')}
                                 disabled={acting}
-                                className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-bold shadow-md shadow-green-500/20 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold shadow-md shadow-emerald-500/20 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                 Approve Content — Clear for Posting
@@ -182,7 +182,7 @@ export default function CollaborationsFlow() {
                     {/* Content approved — waiting for live post */}
                     {c.status === 'content_approved' && (
                         <div className="p-4 rounded-xl bg-green-500/[0.06] border border-green-500/[0.12] flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-green-500/15 flex items-center justify-center text-green-400 shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-400 shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
@@ -194,7 +194,7 @@ export default function CollaborationsFlow() {
 
                     {/* Post submitted — admin verifying */}
                     {c.status === 'posted' && c.content?.postLink && (
-                        <div className="p-5 rounded-2xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3">
+                        <div className="p-5 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3">
                             <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-400 shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
@@ -215,8 +215,8 @@ export default function CollaborationsFlow() {
 
                     {/* Tracking assets */}
                     {c.brief?.trackingLink && (
-                        <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.07] space-y-3">
-                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide">Campaign tracking assets</p>
+                    <div className="p-4 rounded-xl bg-[#202025] border border-[#2A2A30] space-y-3">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Campaign tracking assets</p>
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs font-bold text-white/40 w-12 flex-shrink-0">Link</span>

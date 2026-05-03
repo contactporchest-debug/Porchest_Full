@@ -8,28 +8,18 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                purple: {
-                    primary: '#7B3FF2',
-                    accent: '#A855F7',
-                    dim: 'rgba(123,63,242,0.12)',
-                    glow: 'rgba(123,63,242,0.35)',
-                },
-                bg: {
-                    base: '#0c0c0c',
-                    elevated: '#111111',
-                    card: 'rgba(255,255,255,0.04)',
-                    'card-hover': 'rgba(255,255,255,0.07)',
-                    surface: 'rgba(255,255,255,0.03)',
-                },
-                border: {
-                    subtle: 'rgba(255,255,255,0.06)',
-                    card: 'rgba(255,255,255,0.08)',
-                    hover: 'rgba(255,255,255,0.14)',
+                porchest: {
+                    bg: '#0A0A0B',
+                    card: '#1A1A1E',
+                    elevated: '#202025',
+                    border: '#2A2A30',
+                    text: '#FFFFFF',
+                    muted: '#9CA3AF',
                 },
             },
             fontFamily: {
-                sans: ['Inter', 'Space Grotesk', '-apple-system', 'sans-serif'],
-                display: ['Space Grotesk', 'Inter', 'sans-serif'],
+                sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
             },
             borderRadius: {
                 'card': '16px',
