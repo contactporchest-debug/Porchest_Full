@@ -42,9 +42,11 @@ export default function InstagramConnect({ role = 'influencer' }) {
     }
 
     const connected = Boolean(metrics?.igUsername || metrics?.isConnected);
-    const followerCount = Number(metrics?.igFollowersCount ?? metrics?.followersCount ?? 0);
+    const followerCount = Number(metrics?.igFollowersCount ?? metrics?.followersCount ?? metrics?.followers ?? 0);
     const lastSyncedAt = metrics?.igLastSyncedAt ?? metrics?.lastSyncedAt;
-    const profileImage = metrics?.igProfileUrl ?? metrics?.profilePictureURL ?? metrics?.profilePictureUrl;
+    const profileImage = metrics?.igProfileUrl ?? metrics?.profilePictureUrl ?? metrics?.profilePictureURL ?? '';
+    const followingCount = Number(metrics?.igFollowingCount ?? metrics?.followingCount ?? metrics?.followsCount ?? 0);
+    const postCount = Number(metrics?.igMediaCount ?? metrics?.mediaCount ?? metrics?.postsCount ?? 0);
 
     if (loading) {
         return (
@@ -96,21 +98,18 @@ export default function InstagramConnect({ role = 'influencer' }) {
                     <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Following</p>
                         <p className="mt-2 text-2xl font-semibold text-white">
-                            {Number(metrics?.igFollowingCount ?? metrics?.followsCount ?? 0).toLocaleString()}
+                            {followingCount.toLocaleString()}
                         </p>
                     </div>
                     <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Posts</p>
                         <p className="mt-2 text-2xl font-semibold text-white">
-                            {Number(metrics?.igMediaCount ?? metrics?.mediaCount ?? 0).toLocaleString()}
+                            {postCount.toLocaleString()}
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-4 rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-gray-400">Sync status</p>
-                    <p className="mt-1 text-sm font-medium text-gray-300">Everything is refreshed in 24hrs.</p>
-                </div>
+                <p className="mt-3 text-xs text-gray-500">Everything refreshes automatically within 24 hours.</p>
 
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <button

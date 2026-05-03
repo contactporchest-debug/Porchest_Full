@@ -66,9 +66,6 @@ function syncAudienceFromLegacy(doc) {
 function syncDerivedInfluencerState(doc) {
     if (!doc) return;
 
-    if (!doc.avatar && doc.profilePictureUrl) doc.avatar = doc.profilePictureUrl;
-    if (!doc.profilePictureUrl && doc.avatar) doc.profilePictureUrl = doc.avatar;
-
     if (!doc.igUserId && doc.instagramAccountId) doc.igUserId = doc.instagramAccountId;
     if (!doc.instagramAccountId && doc.igUserId) doc.instagramAccountId = doc.igUserId;
 
@@ -129,11 +126,9 @@ const influencerProfileSchema = new mongoose.Schema(
         fullName: {
             type: String,
             required: function requiredFullName() {
-                return !this.displayName && !this.username;
+                return !this.fullName && !this.username;
             },
         },
-        displayName: { type: String },
-        avatar: { type: String },
         bio: { type: String },
         country: { type: String },
         city: { type: String },
@@ -207,7 +202,6 @@ const influencerProfileSchema = new mongoose.Schema(
 
         // Legacy compatibility
         username: { type: String },
-        displayNameLegacy: { type: String },
         profilePictureUrl: { type: String },
         profileUrl: { type: String },
         instagramAccountId: { type: String },
@@ -344,7 +338,6 @@ const influencerProfileSchema = new mongoose.Schema(
 );
 
 const MIRROR_PAIRS = [
-    ['avatar', 'profilePictureUrl'],
     ['igUserId', 'instagramAccountId'],
     ['igUsername', 'instagramUsername'],
     ['igProfileUrl', 'instagramDPURL'],
@@ -363,9 +356,6 @@ const MIRROR_PAIRS = [
 
 function syncDerivedInfluencerState(doc) {
     if (!doc) return;
-
-    if (!doc.avatar && doc.profilePictureUrl) doc.avatar = doc.profilePictureUrl;
-    if (!doc.profilePictureUrl && doc.avatar) doc.profilePictureUrl = doc.avatar;
 
     if (!doc.igUserId && doc.instagramAccountId) doc.igUserId = doc.instagramAccountId;
     if (!doc.instagramAccountId && doc.igUserId) doc.instagramAccountId = doc.igUserId;

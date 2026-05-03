@@ -5,6 +5,7 @@ import { useApi } from '../../hooks/useApi';
 
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment'];
 const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional', 'minimalist', 'bold', 'emotional'];
+const LANGUAGES = ['English', 'Urdu', 'Arabic', 'Punjabi', 'Hindi', 'French', 'Spanish', 'German', 'Pashto'];
 const COUNTRIES = ['Pakistan', 'United States', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'India'];
 const CITIES = ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
 
@@ -36,7 +37,6 @@ export default function ProfileForm() {
     const [isEditing, setIsEditing] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const [languageInput, setLanguageInput] = useState('');
     const [form, setForm] = useState({
         fullName: '',
         contactEmail: '',
@@ -82,11 +82,9 @@ export default function ProfileForm() {
         }));
     }
 
-    function addLanguage() {
-        const value = languageInput.trim();
-        if (!value) return;
-        setForm((current) => ({ ...current, languages: unique([...current.languages, value]) }));
-        setLanguageInput('');
+    function handleMultiSelect(field, event) {
+        const values = Array.from(event.target.selectedOptions, (option) => option.value);
+        setForm((current) => ({ ...current, [field]: unique(values) }));
     }
 
     async function handleSave() {
@@ -271,23 +269,19 @@ export default function ProfileForm() {
 
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Languages</label>
-                        <div className="flex gap-2">
-                            <input
-                                className={inputClass}
-                                placeholder="Add language"
-                                value={languageInput}
-                                onChange={(event) => setLanguageInput(event.target.value)}
-                                onKeyDown={(event) => {
-                                    if (event.key === 'Enter') {
-                                        event.preventDefault();
-                                        addLanguage();
-                                    }
-                                }}
-                            />
-                            <button type="button" onClick={addLanguage} className="rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30]">
-                                Add
-                            </button>
-                        </div>
+                        <select
+                            multiple
+                            className={`${inputClass} min-h-[160px] py-3`}
+                            value={form.languages}
+                            onChange={(event) => handleMultiSelect('languages', event)}
+                        >
+                            {LANGUAGES.map((language) => (
+                                <option key={language} value={language}>
+                                    {language}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple languages.</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {form.languages.map((language) => (
                                 <span key={language} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">

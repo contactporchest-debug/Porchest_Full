@@ -14,7 +14,10 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 function normalizeMetricsForResponse(profile) {
     return {
         igUsername: profile.igUsername || profile.instagramUsername || null,
+        igProfileUrl: profile.igProfileUrl || profile.profilePictureUrl || null,
         igFollowersCount: profile.igFollowersCount ?? profile.igFollowers ?? profile.followersCount ?? 0,
+        igFollowingCount: profile.igFollowingCount ?? profile.followingCount ?? profile.followsCount ?? 0,
+        igMediaCount: profile.igMediaCount ?? profile.mediaCount ?? 0,
         followerTier: profile.followerTier || null,
         avgEngagementRate: profile.avgEngagementRate ?? profile.engagementRate ?? 0,
         porchestScore: profile.porchestScore ?? profile.influencerScore ?? null,
@@ -27,6 +30,13 @@ function normalizeMetricsForResponse(profile) {
         audienceDemographics: profile.audience || profile.demographics || profile.targetAudienceDemographics || {},
         igLastSyncedAt: profile.igLastSyncedAt || profile.lastSyncAt || profile.lastSyncedAt || null,
         postingFrequency: profile.postingFrequency ?? 0,
+        profilePictureUrl: profile.profilePictureUrl || null,
+        followersCount: profile.followersCount ?? profile.igFollowersCount ?? 0,
+        followingCount: profile.followingCount ?? profile.igFollowingCount ?? 0,
+        mediaCount: profile.mediaCount ?? profile.igMediaCount ?? 0,
+        followers: profile.followers ?? profile.followersCount ?? profile.igFollowersCount ?? 0,
+        following: profile.following ?? profile.followingCount ?? profile.igFollowingCount ?? 0,
+        postsCount: profile.postsCount ?? profile.igMediaCount ?? profile.mediaCount ?? 0,
     };
 }
 
