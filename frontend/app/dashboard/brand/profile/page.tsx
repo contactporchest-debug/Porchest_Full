@@ -2,7 +2,6 @@
 
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import InstagramConnect from '@/components/shared/InstagramConnect';
 import BrandProfileForm from '@/components/brand/BrandProfileForm';
 
 export default function BrandProfilePage() {
@@ -16,7 +15,7 @@ export default function BrandProfilePage() {
                                 <p className="text-[11px] uppercase tracking-[0.2em] text-white/35">Brand profile</p>
                                 <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">Profile Setup</h1>
                                 <p className="mt-2 max-w-2xl text-sm text-white/45">
-                                    Connect Instagram first, then complete your business, audience, and campaign preferences so Porchest can match you with the right creators.
+                                    Complete your business, audience, and campaign preferences so Porchest can match you with the right creators.
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
@@ -33,7 +32,6 @@ export default function BrandProfilePage() {
                         </div>
                     </div>
 
-                    <InstagramConnect role="brand" />
                     <div id="brand-profile-form">
                         <BrandProfileForm />
                     </div>

@@ -59,24 +59,20 @@ function buildBrandUpdates(body) {
 
     applyIfPresent(updates, body, 'businessName', (value) => value ?? '');
     applyIfPresent(updates, body, 'brandName', (value) => value ?? '');
-    applyIfPresent(updates, body, 'logo', (value) => value ?? '');
-    applyIfPresent(updates, body, 'logoUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'representerName', (value) => value ?? '');
     applyIfPresent(updates, body, 'industry', (value) => value ?? '');
     applyIfPresent(updates, body, 'website', (value) => value ?? '');
+    applyIfPresent(updates, body, 'instagramLink', (value) => value ?? '');
+    applyIfPresent(updates, body, 'linkedinLink', (value) => value ?? '');
+    applyIfPresent(updates, body, 'googleMapLink', (value) => value ?? '');
     applyIfPresent(updates, body, 'description', (value) => value ?? '');
     applyIfPresent(updates, body, 'bio', (value) => value ?? '');
     applyIfPresent(updates, body, 'contactEmail', (value) => value ?? '');
-    applyIfPresent(updates, body, 'pixelId', (value) => value ?? '');
-    applyIfPresent(updates, body, 'usageRightsDefault', toBoolean);
+    applyIfPresent(updates, body, 'marketingGoals', (value) => value ?? '');
 
     if (hasOwn(body, 'preferredNiches')) {
         const list = toStringArray(body.preferredNiches);
         if (list !== undefined) updates.preferredNiches = list;
-    }
-
-    if (hasOwn(body, 'preferredTiers')) {
-        const list = toStringArray(body.preferredTiers);
-        if (list !== undefined) updates.preferredTiers = list;
     }
 
     if (hasOwn(body, 'targetAudience')) {
@@ -88,16 +84,16 @@ function buildBrandUpdates(body) {
             if (ageRange !== undefined) targetAudience.ageRange = ageRange.slice(0, 2);
         }
         if (hasOwn(input, 'genders')) {
-            const genders = toStringArray(input.genders);
+            const genders = toStringArray(input.genders)?.filter((gender) => ['male', 'female', 'both'].includes(gender));
             if (genders !== undefined) targetAudience.genders = genders;
         }
         if (hasOwn(input, 'countries')) {
             const countries = toStringArray(input.countries);
             if (countries !== undefined) targetAudience.countries = countries;
         }
-        if (hasOwn(input, 'interests')) {
-            const interests = toStringArray(input.interests);
-            if (interests !== undefined) targetAudience.interests = interests;
+        if (hasOwn(input, 'cities')) {
+            const cities = toStringArray(input.cities);
+            if (cities !== undefined) targetAudience.cities = cities;
         }
 
         if (Object.keys(targetAudience).length > 0) {
@@ -242,7 +238,23 @@ router.put('/brand', authMiddleware, roleMiddleware('brand'), async (req, res) =
     try {
         const updates = buildBrandUpdates(req.body || {});
         const profile = await upsertProfile(BrandProfile, 'BRD', 'brandProfileId', req.user._id, updates, 'brand');
-        const complete = !!profile.businessName;
+        const targetAudience = profile.targetAudience || {};
+        const hasAgeRange = Array.isArray(targetAudience.ageRange) && targetAudience.ageRange.length === 2 && targetAudience.ageRange.every((value) => typeof value === 'number');
+        const complete = !!(
+            profile.businessName &&
+            profile.representerName &&
+            profile.industry &&
+            profile.contactEmail &&
+            hasAgeRange &&
+            Array.isArray(targetAudience.genders) && targetAudience.genders.length > 0 &&
+            Array.isArray(targetAudience.countries) && targetAudience.countries.length > 0 &&
+            Array.isArray(targetAudience.cities) && targetAudience.cities.length > 0 &&
+            Array.isArray(profile.preferredNiches) && profile.preferredNiches.length > 0 &&
+            profile.budgetRange &&
+            typeof profile.budgetRange.min === 'number' &&
+            typeof profile.budgetRange.max === 'number' &&
+            profile.marketingGoals
+        );
 
         profile.profileComplete = complete;
         profile.profileCompletionStatus = complete;

@@ -3,23 +3,18 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import OverviewPage from './OverviewPage';
-import ConnectInstagramBanner from '@/components/shared/ConnectInstagramBanner';
 import { useApi } from '@/hooks/useApi';
-import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 type BrandProfileResponse = {
     profileComplete?: boolean;
-    igUsername?: string;
 };
 
 export default function BrandPortalOverview() {
-    const { user } = useAuth();
     const { data, loading } = useApi('/profile/brand/me');
     const profile = data as BrandProfileResponse | null;
     const profileComplete = !!profile?.profileComplete;
-    const instagramConnected = !!(profile?.igUsername || user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>
@@ -54,7 +49,6 @@ export default function BrandPortalOverview() {
                             </motion.div>
                         )}
 
-                        {!instagramConnected && <ConnectInstagramBanner role="brand" />}
                         <OverviewPage profileCompleteOverride={profileComplete} />
                     </div>
                 )}

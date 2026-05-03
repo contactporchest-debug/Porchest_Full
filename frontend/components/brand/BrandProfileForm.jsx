@@ -13,9 +13,9 @@ const NICHES = [
     'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment',
 ];
 
-const TIERS = ['nano', 'micro', 'macro', 'mega'];
-const GENDERS = ['female', 'male', 'non-binary', 'all'];
+const GENDERS = ['female', 'male', 'both'];
 const COUNTRIES = ['Pakistan', 'United States', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'India'];
+const CITIES = ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
 
 function unique(values) {
     return [...new Set(values)];
@@ -56,19 +56,20 @@ export default function BrandProfileForm() {
     const [isEditing, setIsEditing] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const [countryInput, setCountryInput] = useState('');
-    const [interestInput, setInterestInput] = useState('');
     const [form, setForm] = useState({
         businessName: '',
+        representerName: '',
         industry: '',
         website: '',
+        instagramLink: '',
+        linkedinLink: '',
+        googleMapLink: '',
         description: '',
         contactEmail: '',
+        marketingGoals: '',
         budgetRange: { min: '', max: '' },
-        targetAudience: { ageRange: [18, 35], genders: [], countries: [], interests: [] },
+        targetAudience: { ageRange: [18, 35], genders: [], countries: [], cities: [] },
         preferredNiches: [],
-        preferredTiers: [],
-        usageRightsDefault: false,
     });
 
     useEffect(() => {
@@ -76,20 +77,23 @@ export default function BrandProfileForm() {
 
         setForm({
             businessName: profile.businessName || profile.brandName || '',
+            representerName: profile.representerName || profile.brandRepresenterName || '',
             industry: profile.industry || profile.category || '',
             website: profile.website || '',
+            instagramLink: profile.instagramLink || '',
+            linkedinLink: profile.linkedinLink || '',
+            googleMapLink: profile.googleMapLink || '',
             description: profile.description || profile.bio || '',
             contactEmail: profile.contactEmail || profile.contactDetails?.officialEmail || '',
+            marketingGoals: profile.marketingGoals || '',
             budgetRange: parseBudgetRange(profile.budgetRange),
             targetAudience: {
                 ageRange: Array.isArray(profile.targetAudience?.ageRange) && profile.targetAudience.ageRange.length === 2 ? profile.targetAudience.ageRange : [18, 35],
                 genders: parseList(profile.targetAudience?.genders),
                 countries: parseList(profile.targetAudience?.countries),
-                interests: parseList(profile.targetAudience?.interests),
+                cities: parseList(profile.targetAudience?.cities),
             },
             preferredNiches: parseList(profile.preferredNiches),
-            preferredTiers: parseList(profile.preferredTiers),
-            usageRightsDefault: Boolean(profile.usageRightsDefault),
         });
 
         setIsEditing(!profile.profileComplete);
@@ -119,15 +123,11 @@ export default function BrandProfileForm() {
         }));
     }
 
-    function addToNested(field, rawValue) {
-        const value = rawValue.trim();
-        if (!value) return;
+    function handleMultiSelect(field, event) {
+        const values = Array.from(event.target.selectedOptions, (option) => option.value);
         setForm((current) => ({
             ...current,
-            targetAudience: {
-                ...current.targetAudience,
-                [field]: unique([...current.targetAudience[field], value]),
-            },
+            targetAudience: { ...current.targetAudience, [field]: unique(values) },
         }));
     }
 
@@ -142,15 +142,18 @@ export default function BrandProfileForm() {
                 },
                 body: JSON.stringify({
                     businessName: form.businessName,
+                    representerName: form.representerName,
                     industry: form.industry,
                     website: form.website,
+                    instagramLink: form.instagramLink,
+                    linkedinLink: form.linkedinLink,
+                    googleMapLink: form.googleMapLink,
                     description: form.description,
                     contactEmail: form.contactEmail,
+                    marketingGoals: form.marketingGoals,
                     budgetRange: form.budgetRange,
                     targetAudience: form.targetAudience,
                     preferredNiches: form.preferredNiches,
-                    preferredTiers: form.preferredTiers,
-                    usageRightsDefault: form.usageRightsDefault,
                 }),
             });
             const data = await res.json().catch(() => null);
@@ -175,6 +178,7 @@ export default function BrandProfileForm() {
 
     const summaryItems = [
         { label: 'Business name', value: form.businessName || '—' },
+        { label: 'Representer', value: form.representerName || '—' },
         { label: 'Website', value: form.website || '—' },
         { label: 'Contact email', value: form.contactEmail || '—' },
         { label: 'Industry', value: form.industry || '—' },
@@ -251,8 +255,24 @@ export default function BrandProfileForm() {
                         <input className={inputClass} placeholder="Business name" value={form.businessName} onChange={(event) => setForm((current) => ({ ...current, businessName: event.target.value }))} />
                     </div>
                     <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Brand representer name</label>
+                        <input className={inputClass} placeholder="Brand representer name" value={form.representerName} onChange={(event) => setForm((current) => ({ ...current, representerName: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Website</label>
                         <input className={inputClass} placeholder="Website" value={form.website} onChange={(event) => setForm((current) => ({ ...current, website: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Instagram link</label>
+                        <input className={inputClass} placeholder="Instagram link" value={form.instagramLink} onChange={(event) => setForm((current) => ({ ...current, instagramLink: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">LinkedIn link</label>
+                        <input className={inputClass} placeholder="LinkedIn link" value={form.linkedinLink} onChange={(event) => setForm((current) => ({ ...current, linkedinLink: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Google map link</label>
+                        <input className={inputClass} placeholder="Google map link" value={form.googleMapLink} onChange={(event) => setForm((current) => ({ ...current, googleMapLink: event.target.value }))} />
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Contact email</label>
@@ -273,6 +293,17 @@ export default function BrandProfileForm() {
                     <div className="space-y-2 md:col-span-2">
                         <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Description</label>
                         <textarea className={`${inputClass} min-h-[132px] resize-y`} placeholder="Tell creators what your brand does" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Marketing goals for Porchest</label>
+                        <textarea
+                            className={`${inputClass} min-h-[132px] resize-y`}
+                            maxLength={900}
+                            placeholder="Describe your marketing goals in your own words"
+                            value={form.marketingGoals}
+                            onChange={(event) => setForm((current) => ({ ...current, marketingGoals: event.target.value }))}
+                        />
+                        <p className="text-xs text-gray-500">Keep this short and focused. Up to 150 words.</p>
                     </div>
                 </div>
             </div>
@@ -310,18 +341,12 @@ export default function BrandProfileForm() {
 
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Countries</label>
-                        <div className="flex gap-2">
-                            <input className={inputClass} placeholder="Add country code or name" value={countryInput} onChange={(event) => setCountryInput(event.target.value)} onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    event.preventDefault();
-                                    addToNested('countries', countryInput);
-                                    setCountryInput('');
-                                }
-                            }} />
-                            <button type="button" onClick={() => { addToNested('countries', countryInput); setCountryInput(''); }} className="rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30]">
-                                Add
-                            </button>
-                        </div>
+                        <select multiple className={`${inputClass} min-h-[144px] py-3`} value={form.targetAudience.countries} onChange={(event) => handleMultiSelect('countries', event)}>
+                            {COUNTRIES.map((country) => (
+                                <option key={country} value={country}>{country}</option>
+                            ))}
+                        </select>
+                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple countries.</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {form.targetAudience.countries.map((country) => (
                                 <span key={country} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
@@ -332,23 +357,17 @@ export default function BrandProfileForm() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Interests</label>
-                        <div className="flex gap-2">
-                            <input className={inputClass} placeholder="Add interest" value={interestInput} onChange={(event) => setInterestInput(event.target.value)} onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    event.preventDefault();
-                                    addToNested('interests', interestInput);
-                                    setInterestInput('');
-                                }
-                            }} />
-                            <button type="button" onClick={() => { addToNested('interests', interestInput); setInterestInput(''); }} className="rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30]">
-                                Add
-                            </button>
-                        </div>
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Cities</label>
+                        <select multiple className={`${inputClass} min-h-[144px] py-3`} value={form.targetAudience.cities} onChange={(event) => handleMultiSelect('cities', event)}>
+                            {CITIES.map((city) => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
+                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple cities.</p>
                         <div className="mt-3 flex flex-wrap gap-2">
-                            {form.targetAudience.interests.map((interest) => (
-                                <span key={interest} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
-                                    {interest}
+                            {form.targetAudience.cities.map((city) => (
+                                <span key={city} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
+                                    {city}
                                 </span>
                             ))}
                         </div>
@@ -365,17 +384,6 @@ export default function BrandProfileForm() {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Preferred tiers</label>
-                        <div className="flex flex-wrap gap-2">
-                            {TIERS.map((tier) => (
-                                <button key={tier} type="button" onClick={() => toggleArray('preferredTiers', tier)} className={chipClass(form.preferredTiers.includes(tier))}>
-                                    {tier}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Budget minimum</label>
@@ -386,11 +394,6 @@ export default function BrandProfileForm() {
                             <input className={inputClass} type="number" min="0" placeholder="Budget maximum" value={form.budgetRange.max} onChange={(event) => setForm((current) => ({ ...current, budgetRange: { ...current.budgetRange, max: event.target.value } }))} />
                         </div>
                     </div>
-
-                    <label className="flex items-center gap-3 rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm text-gray-300">
-                        <input type="checkbox" checked={form.usageRightsDefault} onChange={(event) => setForm((current) => ({ ...current, usageRightsDefault: event.target.checked }))} className="h-4 w-4 rounded border-[#2A2A30] bg-[#1A1A1E] text-blue-500 focus:ring-blue-500" />
-                        Usage rights included by default
-                    </label>
                 </div>
             </div>
 
