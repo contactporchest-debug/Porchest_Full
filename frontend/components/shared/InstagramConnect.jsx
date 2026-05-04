@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInstagramMetrics } from '../../hooks/useInstagramMetrics';
+import toast from 'react-hot-toast';
 
 function token() {
     if (typeof window === 'undefined') return '';
@@ -29,15 +30,24 @@ export default function InstagramConnect({ role = 'influencer' }) {
     }
 
     async function handleDisconnect() {
+        setConnecting(true);
         try {
             const endpoint = role === 'brand' ? '/brand/instagram/disconnect' : '/influencer/instagram/disconnect';
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token()}` },
             });
-            await refetch();
+            if (res.ok) {
+                toast.success('Instagram disconnected successfully');
+                await refetch();
+            } else {
+                const data = await res.json();
+                toast.error(data.message || 'Failed to disconnect Instagram');
+            }
         } catch {
-            // Ignore disconnect errors here.
+            toast.error('An error occurred while disconnecting');
+        } finally {
+            setConnecting(false);
         }
     }
 

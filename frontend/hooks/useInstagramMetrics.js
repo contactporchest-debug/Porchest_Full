@@ -22,6 +22,7 @@ export function useInstagramMetrics() {
             setError(null);
         } catch (err) {
             setError(err);
+            setMetrics(null);
         } finally {
             setLoading(false);
         }
