@@ -75,7 +75,7 @@ export default function CampaignsFlow() {
             collab.brief?.postingDeadline,
             collab.brief?.approvalProcess,
             collab.brief?.deliverables,
-            collab.brief?.usageRights,
+            collab.brief?.usageRightsText || collab.brief?.usageRights,
             collab.brief?.disclosureRequirements,
             collab.brief?.porchestContact,
         ];
@@ -178,7 +178,7 @@ export default function CampaignsFlow() {
                                 ["Do's & don'ts",        c.brief?.dosAndDonts],
                                 ['Caption guidelines',   c.brief?.captionGuidelines],
                                 ['Deliverables',         c.brief?.deliverables?.join(', ')],
-                                ['Usage rights',         c.brief?.usageRights],
+                                ['Usage rights',         c.brief?.usageRightsText || c.brief?.usageRights],
                                 ['Disclosure',           c.brief?.disclosureRequired],
                             ].filter(([, v]) => v).map(([label, value]) => (
                                 <div key={label} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">

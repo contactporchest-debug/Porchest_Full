@@ -77,6 +77,9 @@ function normalizeBriefInput(brief = {}) {
     const mandatoryPoints = brief.mandatoryPoints || (Array.isArray(brief.mandatoryTalkingPoints) ? brief.mandatoryTalkingPoints.join('\n') : brief.mandatoryTalkingPoints || '');
     const dos = Array.isArray(brief.dos) ? brief.dos.join('\n') : brief.dos || '';
     const donts = Array.isArray(brief.donts) ? brief.donts.join('\n') : brief.donts || '';
+    const usageRightsText = typeof brief.usageRightsText === 'string'
+        ? brief.usageRightsText
+        : (typeof brief.usageRights === 'string' ? brief.usageRights : '');
 
     return {
         brandIntro: brief.brandIntro || '',
@@ -104,8 +107,8 @@ function normalizeBriefInput(brief = {}) {
         approvalProcess: brief.approvalProcess || '',
         revisionRoundsAllowed: toNumber(brief.revisionRoundsAllowed, 1),
         deliverables: brief.deliverables || '',
-        usageRights: brief.usageRights || '',
-        usageRightsText: brief.usageRights || '',
+        usageRights: false,
+        usageRightsText,
         disclosureRequirements: brief.disclosureRequirements || brief.disclosureRequired || '',
         disclosureRequired: brief.disclosureRequirements || brief.disclosureRequired || '',
         porchestContact: brief.porchestContact || '',
@@ -227,6 +230,12 @@ async function getBrandAndInfluencerProfiles(collab) {
 
 function buildResponseCollab(doc, brandProfile, influencerProfile) {
     const brief = normalizeBriefInput(doc.brief || {});
+    const usageRightsText =
+        (doc.brief && typeof doc.brief.usageRightsText === 'string' && doc.brief.usageRightsText) ||
+        (doc.brief && typeof doc.brief.usageRights === 'string' && doc.brief.usageRights) ||
+        (doc.brief && doc.brief.usageRights ? 'Usage rights included' : '');
+    brief.usageRightsText = usageRightsText;
+    brief.usageRights = usageRightsText;
     const pricing = normalizePricingInput(doc.pricing || {}, doc);
     const timeline = normalizeTimelineInput(doc.timeline || {}, doc);
     const content = normalizeContentForResponse(doc);
@@ -446,10 +455,21 @@ router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, re
             title: 'New Collaboration Request',
             message: `${brandProfile.businessName || 'A brand'} sent you a collaboration request.`,
             campaignRequestId: created._id,
-        }).catch(() => {});
+        }).catch((notificationError) => {
+            console.error('[collaborationRoutes] Notification create failed:', notificationError);
+        });
 
-        return res.status(201).json(await enrichCollaboration(created.toObject()));
+        try {
+            return res.status(201).json(await enrichCollaboration(created.toObject()));
+        } catch (enrichError) {
+            console.error('[collaborationRoutes] Enrichment failed after create:', enrichError);
+            return res.status(201).json({
+                success: true,
+                request: created.toObject(),
+            });
+        }
     } catch (error) {
+        console.error('[collaborationRoutes] Failed to create collaboration:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
