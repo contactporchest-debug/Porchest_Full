@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApi, apiPatch } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
+import toast from 'react-hot-toast';
 
 const STATUS_TABS = [
     { key: 'pending,countered,negotiation', label: 'Requests' },
@@ -46,10 +47,21 @@ export default function CampaignsFlow() {
         setActing(true);
         try {
             await apiPatch(`/collaborations/${id}/${endpoint}`, body);
-            await refetch();
             if (endpoint === 'accept' || endpoint === 'accept-counter') {
                 setActiveTab(1);
+                toast.success('Request accepted. It moved to Collaborations.');
+            } else if (endpoint === 'counter') {
+                toast.success('Counter offer sent.');
+            } else if (endpoint === 'decline') {
+                toast.success('Request declined.');
+            } else {
+                toast.success('Updated.');
             }
+            await refetch();
+            window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
+        } catch (error) {
+            const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to update collaboration';
+            toast.error(message);
         } finally {
             setActing(false);
         }
