@@ -53,8 +53,8 @@ export default function CollaborationsFlow() {
             void refetch();
         };
 
-        window.addEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
-        return () => window.removeEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
+        window.addEventListener('porchest-collaboration-updated', handleUpdated);
+        return () => window.removeEventListener('porchest-collaboration-updated', handleUpdated);
     }, [refetch]);
 
     async function action(id, endpoint, body = {}) {
