@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { authAPI } from '@/lib/api';
 import { resolveDashboardRole } from '@/lib/accessRoles';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, Building2, Star, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Building2, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const inputStyle: React.CSSProperties = {
@@ -46,10 +46,15 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const result = await login(email, password);
-            if (result.success) { toast.success('Signed in'); goToDashboard(result.role); }
+            if (result.success) { 
+                toast.success('Signed in'); 
+                goToDashboard(result.role); 
+            }
         } catch (err: unknown) {
-            const msg = (err as Error).message || 'Login failed';
-            setLoginError(msg); toast.error(msg);
+            const msg = (err as Error).message || 'Invalid credentials';
+            const displayMsg = msg.toLowerCase().includes('invalid') ? 'Invalid credentials' : msg;
+            setLoginError(displayMsg); 
+            toast.error(displayMsg);
         } finally { setLoading(false); }
     };
 
@@ -151,8 +156,13 @@ export default function LoginPage() {
                             <div style={{ borderRadius: '8px', border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', padding: '10px 14px', fontSize: '13px', color: '#991b1b' }}>{loginError}</div>
                         )}
 
-                        <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: '8px', background: loading ? 'rgba(194,52,10,0.40)' : '#C2340A', color: '#fff', fontSize: '13px', fontWeight: 500, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '0.01em', transition: 'all 0.15s', fontFamily: 'inherit' }}>
-                            {loading ? 'Signing in…' : 'Sign in'}
+                        <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: '8px', background: loading ? 'rgba(194,52,10,0.60)' : '#C2340A', color: '#fff', fontSize: '13px', fontWeight: 600, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '0.01em', transition: 'all 0.15s', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Signing in…
+                                </>
+                            ) : 'Sign in'}
                         </button>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
