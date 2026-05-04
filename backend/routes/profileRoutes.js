@@ -185,7 +185,6 @@ async function upsertProfile(Model, codePrefix, codeField, userId, updates, role
     const existing = await Model.findOne({ userId });
     const profileCode = existing?.[codeField] || await generateUniqueCode(codePrefix, Model, codeField);
     const merged = {
-        userId,
         [codeField]: profileCode,
         ...updates,
     };
