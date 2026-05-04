@@ -465,17 +465,10 @@ async function finalizeAcceptance(collabId, collab) {
         {
             $set: {
                 ...update,
-                'brief.trackingLink': update.brief.trackingLink,
-                'brief.promoCode': update.brief.promoCode,
-                'timeline.campaignStartDate': update.timeline.campaignStartDate,
-                'timeline.campaignEndDate': update.timeline.campaignEndDate,
-                'timeline.gracePeriodDays': update.timeline.gracePeriodDays,
-                'pricing.brandOffer': update.pricing.brandOffer,
-                'pricing.agreedFee': update.pricing.agreedFee,
-                'pricing.currency': update.pricing.currency,
-                'financials.brandOfferedFee': update.financials.brandOfferedFee,
-                'financials.agreedFee': update.financials.agreedFee,
-                'financials.currency': update.financials.currency,
+                brief: update.brief,
+                timeline: update.timeline,
+                pricing: update.pricing,
+                financials: update.financials,
             },
         },
         { new: true, strict: false }
