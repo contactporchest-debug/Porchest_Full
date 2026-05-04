@@ -199,7 +199,6 @@ type AnalyticsMetrics = {
     predictedROI: number | null;
     estimatedCostPerPost: number | null;
     estimatedCostPerReel: number | null;
-    estimatedCostPerStory: number | null;
 };
 
 type AnalyticsDetail = {

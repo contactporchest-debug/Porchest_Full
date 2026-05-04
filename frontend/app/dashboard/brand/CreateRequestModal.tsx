@@ -112,10 +112,10 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         </Field>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <Field label="Deliverables" required>
-                                <textarea required value={form.deliverables} onChange={set('deliverables')}
-                                    placeholder="e.g. 1 × 60s Reel, 3 × Stories" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
-                            </Field>
+                        <Field label="Deliverables" required>
+                            <textarea required value={form.deliverables} onChange={set('deliverables')}
+                                    placeholder="e.g. 1 × 60s Reel, 1 × Carousel Post" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                        </Field>
                             <Field label="Required Elements" required>
                                 <textarea required value={form.requiredElements} onChange={set('requiredElements')}
                                     placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />

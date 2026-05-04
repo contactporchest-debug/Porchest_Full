@@ -138,7 +138,6 @@ function buildInfluencerUpdates(body) {
     if (hasOwn(body, 'rates')) {
         const input = body.rates || {};
         const rates = {
-            storyPrice: hasOwn(input, 'storyPrice') ? toNumber(input.storyPrice) : undefined,
             reelPrice: hasOwn(input, 'reelPrice') ? toNumber(input.reelPrice) : undefined,
             postPrice: hasOwn(input, 'postPrice') ? toNumber(input.postPrice) : undefined,
         };

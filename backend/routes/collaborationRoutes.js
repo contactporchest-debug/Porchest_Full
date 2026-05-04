@@ -43,6 +43,10 @@ function toArray(value) {
     return [];
 }
 
+function normalizeContentTypes(value) {
+    return toArray(value).filter((item) => String(item).toLowerCase() !== 'story');
+}
+
 function toNumber(value, fallback = undefined) {
     const num = Number(value);
     return Number.isFinite(num) ? num : fallback;
@@ -68,7 +72,7 @@ function parseHashtags(value) {
 }
 
 function normalizeBriefInput(brief = {}) {
-    const contentType = toArray(brief.contentType || brief.contentTypes);
+    const contentType = normalizeContentTypes(brief.contentType || brief.contentTypes);
     const hashtags = parseHashtags(brief.hashtags || brief.requiredHashtags);
     const mandatoryPoints = brief.mandatoryPoints || (Array.isArray(brief.mandatoryTalkingPoints) ? brief.mandatoryTalkingPoints.join('\n') : brief.mandatoryTalkingPoints || '');
     const dos = Array.isArray(brief.dos) ? brief.dos.join('\n') : brief.dos || '';

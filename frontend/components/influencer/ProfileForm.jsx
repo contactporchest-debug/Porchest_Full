@@ -45,7 +45,7 @@ export default function ProfileForm() {
         niche: [],
         languages: [],
         contentStyleTags: [],
-        rates: { storyPrice: '', reelPrice: '', postPrice: '' },
+        rates: { reelPrice: '', postPrice: '' },
     });
 
     useEffect(() => {
@@ -60,7 +60,6 @@ export default function ProfileForm() {
             languages: parseList(profile.languages),
             contentStyleTags: parseList(profile.contentStyleTags),
             rates: {
-                storyPrice: profile.rates?.storyPrice ?? profile.avgStoryPrice ?? '',
                 reelPrice: profile.rates?.reelPrice ?? profile.avgReelPrice ?? '',
                 postPrice: profile.rates?.postPrice ?? profile.avgPostPrice ?? '',
             },
@@ -349,11 +348,6 @@ export default function ProfileForm() {
                     <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Collaboration Pricing</h3>
                 </div>
                 <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-3">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Story price</label>
-                        <input style={inputStyle} type="number" min="0" placeholder="Story price" value={form.rates.storyPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, storyPrice: event.target.value } }))}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
-                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Reel price</label>
                         <input style={inputStyle} type="number" min="0" placeholder="Reel price" value={form.rates.reelPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))}

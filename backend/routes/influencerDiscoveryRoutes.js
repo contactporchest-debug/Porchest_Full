@@ -15,7 +15,6 @@ function buildRateFilter(maxRate) {
     if (!Number.isFinite(value)) return null;
     return {
         $or: [
-            { 'rates.storyPrice': { $lte: value } },
             { 'rates.reelPrice': { $lte: value } },
             { 'rates.postPrice': { $lte: value } },
             { avgPostPrice: { $lte: value } },

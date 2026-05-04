@@ -79,7 +79,6 @@ type Metrics = {
     predictedROI: number | null;
     estimatedCostPerPost: number | null;
     estimatedCostPerReel: number | null;
-    estimatedCostPerStory: number | null;
 };
 
 type AnalyticsDetail = {
@@ -595,7 +594,6 @@ export default function AnalyticsPage() {
                                     <MetricCard label="Cost Per Engagement" value={fmtCurrency(metrics.costPerEngagement, 4)} tone={COLORS.amber} formula="postRate / totalEngagements" />
                                     <MetricCard label="Estimated Cost Per Post" value={fmtCurrency(metrics.estimatedCostPerPost)} tone={COLORS.blue} formula="Profile post rate with campaign pricing fallback." />
                                     <MetricCard label="Estimated Cost Per Reel" value={fmtCurrency(metrics.estimatedCostPerReel)} tone={COLORS.teal} formula="Profile reel rate with campaign pricing fallback." />
-                                    <MetricCard label="Estimated Cost Per Story" value={fmtCurrency(metrics.estimatedCostPerStory)} tone={COLORS.green} formula="Story estimate derived from post or reel pricing when not explicitly stored." />
                                 </div>
                             </SectionCard>
                         </>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { apiPost } from '../../hooks/useApi';
 
-const CONTENT_TYPES = ['Reel', 'Story', 'Feed Post', 'Carousel', 'Live', 'Giveaway'];
+const CONTENT_TYPES = ['Reel', 'Feed Post', 'Carousel', 'Live', 'Giveaway'];
 const OBJECTIVES = ['Awareness', 'Sales', 'App installs', 'Lead generation', 'Engagement'];
 
 export default function RequestCollaborationButton({ influencerId, influencerName, rates }) {
@@ -84,7 +84,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {step === 1 && (
                                 <>
-                                    {rates && <p style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Rates: Reel ${rates.reelPrice || '-'} | Story ${rates.storyPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
+                                    {rates && <p style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Rates: Reel ${rates.reelPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
                                     <input type="number" style={IS} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {OBJECTIVES.map((objective) => (

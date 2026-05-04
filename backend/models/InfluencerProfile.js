@@ -181,7 +181,6 @@ const influencerProfileSchema = new mongoose.Schema(
         avgCampaignRating: { type: Number, default: 0 },
         preferredRate: { type: Number, default: 0 },
         rates: {
-            storyPrice: { type: Number },
             reelPrice: { type: Number },
             postPrice: { type: Number },
         },

@@ -108,12 +108,6 @@ function normalizeCountryDistribution(source) {
     return mapDemographicEntries(source);
 }
 
-function estimateStoryRate(postRate, reelRate) {
-    if (Number.isFinite(postRate) && postRate > 0) return Number((postRate * 0.35).toFixed(2));
-    if (Number.isFinite(reelRate) && reelRate > 0) return Number((reelRate * 0.25).toFixed(2));
-    return null;
-}
-
 function calculateEstimatedMediaValue({ averageViews, totalEngagements, followers, finalScore }) {
     const value = (averageViews * 0.01) + (totalEngagements * 0.2) + (followers * 0.0025) + (finalScore * 2);
     return Number(value.toFixed(2));
@@ -262,12 +256,10 @@ async function getCampaignPricingSummary(profile) {
 
     const estimatedPostRate = [profile.avgPostPrice, averageForType('sponsored_post'), averageAgreedPrice].find((value) => Number.isFinite(value) && value > 0) || null;
     const estimatedReelRate = [profile.avgReelPrice, averageForType('reel'), averageForType('ugc'), averageAgreedPrice].find((value) => Number.isFinite(value) && value > 0) || null;
-    const estimatedStoryRate = estimateStoryRate(estimatedPostRate, estimatedReelRate);
 
     return {
         estimatedPostRate,
         estimatedReelRate,
-        estimatedStoryRate,
         averageAgreedPrice,
     };
 }
@@ -442,7 +434,6 @@ async function buildAnalyticsDocument(profile, existingAnalytics = null, { appen
         predictedROI,
         estimatedCostPerPost: pricing.estimatedPostRate == null ? null : Number(pricing.estimatedPostRate.toFixed(2)),
         estimatedCostPerReel: pricing.estimatedReelRate == null ? null : Number(pricing.estimatedReelRate.toFixed(2)),
-        estimatedCostPerStory: pricing.estimatedStoryRate,
     };
 
     return {
