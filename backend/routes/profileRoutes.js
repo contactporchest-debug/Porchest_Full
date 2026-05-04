@@ -228,14 +228,28 @@ router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (r
         const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
         const complete = isInfluencerProfileComplete(profile);
 
-        profile.profileComplete = complete;
-        profile.profileCompletionStatus = complete;
-        await profile.save();
+        const savedProfile = await InfluencerProfile.findByIdAndUpdate(
+            profile._id,
+            {
+                $set: {
+                    profileComplete: complete,
+                    profileCompletionStatus: complete,
+                },
+            },
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
 
         await finalizeUserProfile(req.user._id, 'influencer', profile._id, complete);
 
-        return res.json(stripSecrets(profile));
+        return res.json(stripSecrets(savedProfile || profile));
     } catch (error) {
+        console.error('[profileRoutes] Failed to save influencer profile:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: error.message || 'Failed to save influencer profile' });
+        }
         return res.status(500).json({ message: 'Failed to save influencer profile' });
     }
 });
