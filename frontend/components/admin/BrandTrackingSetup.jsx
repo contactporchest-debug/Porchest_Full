@@ -70,6 +70,24 @@ export default function BrandTrackingSetup() {
                 </p>
             </div>
 
+            <div style={{ borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>Where the brand should add the tracking code</p>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 700, color: '#C2340A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Webhook</p>
+                        <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030', lineHeight: 1.6 }}>
+                            Paste this into the brand's checkout success handler on the server side, right after the order is confirmed. This is the best option for Shopify Plus, WooCommerce, or any custom backend checkout.
+                        </p>
+                    </div>
+                    <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 700, color: '#C2340A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pixel</p>
+                        <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030', lineHeight: 1.6 }}>
+                            Paste the pixel script on the order confirmation or thank-you page, ideally just before the closing <code style={{ padding: '2px 6px', borderRadius: '6px', background: 'rgba(255,255,255,0.9)', border: '1px solid #EDD9BC' }}>&lt;/body&gt;</code> tag. This works when the brand can edit page HTML but cannot touch checkout server code.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div style={blockStyle}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
                     <div>
@@ -104,9 +122,14 @@ export default function BrandTrackingSetup() {
                 <pre style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '16px', fontSize: '12px', lineHeight: 1.6, color: '#1A0A00', fontFamily: 'monospace' }}>
                     {pixelCode}
                 </pre>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#7A5030', fontWeight: 500 }}>
-                    <ExternalLink size={14} />
-                    <span>Pixel script URL: https://www.porchest.com/pixel.js</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#7A5030', fontWeight: 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ExternalLink size={14} />
+                        <span>Pixel script URL: https://www.porchest.com/pixel.js</span>
+                    </div>
+                    <p style={{ lineHeight: 1.6 }}>
+                        Add the script to the thank-you page or order confirmation page. Keep the script tag in the page HTML and place the tracking call immediately after it so the purchase event fires as soon as the order completes.
+                    </p>
                 </div>
             </div>
         </div>

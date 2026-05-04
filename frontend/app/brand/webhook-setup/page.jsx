@@ -51,6 +51,15 @@ await fetch('https://www.porchest.com/api/webhook/purchase', {
                 </p>
             </div>
 
+            <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-medium text-white">Where to add it</p>
+                <ul className="list-inside list-disc space-y-1 text-sm text-gray-400">
+                    <li>Put the webhook call in the brand's checkout success handler on the server.</li>
+                    <li>If the brand uses Shopify Plus, WooCommerce, or a custom backend, add it after payment is confirmed.</li>
+                    <li>Send the order ID, order total, promo code, and currency exactly as shown in the snippet below.</li>
+                </ul>
+            </div>
+
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <p className="text-xs uppercase tracking-[0.18em] text-gray-400">Your integration code</p>
