@@ -29,11 +29,19 @@ const navLinks = [
     { label: 'For Influencers', href: '#influencers' },
 ];
 
+type BrandProfileResponse = {
+    logo?: string;
+    logoUrl?: string;
+    businessName?: string;
+    brandName?: string;
+};
+
 export default function Navbar() {
     const { user, logout } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const { data: brandProfile, refetch: refetchBrandProfile } = useApi('/profile/brand/me', { immediate: Boolean(user?.role === 'brand') });
+    const brandProfileData = brandProfile as BrandProfileResponse | null;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -54,8 +62,8 @@ export default function Navbar() {
 
     const dashboardHref = user ? `/dashboard/${user.role}` : '/login';
     const roleLabel = user ? (user.companyName || user.fullName || user.email.split('@')[0]) : null;
-    const brandLogo = user?.role === 'brand' ? (brandProfile?.logo || brandProfile?.logoUrl || '') : '';
-    const brandName = user?.role === 'brand' ? (brandProfile?.businessName || brandProfile?.brandName || roleLabel || '') : '';
+    const brandLogo = user?.role === 'brand' ? (brandProfileData?.logo || brandProfileData?.logoUrl || '') : '';
+    const brandName = user?.role === 'brand' ? (brandProfileData?.businessName || brandProfileData?.brandName || roleLabel || '') : '';
 
     return (
         <>
