@@ -13,6 +13,8 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
     sent: { label: 'New', color: '#60d5f8', bg: 'rgba(96,213,248,0.08)', icon: <Send size={11} /> },
     viewed: { label: 'Viewed', color: '#a855f7', bg: 'rgba(168,85,247,0.08)', icon: <Eye size={11} /> },
     accepted: { label: 'Accepted', color: '#4ade80', bg: 'rgba(74,222,128,0.08)', icon: <CheckCircle size={11} /> },
+    brand_payment_pending: { label: 'Payment pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', icon: <Clock size={11} /> },
+    brand_paid_work_can_start: { label: 'Payment confirmed', color: '#10b981', bg: 'rgba(16,185,129,0.08)', icon: <CheckCircle size={11} /> },
     rejected: { label: 'Declined', color: '#f87171', bg: 'rgba(248,113,113,0.08)', icon: <XCircle size={11} /> },
     negotiation: { label: 'Negotiation', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', icon: <MessageSquare size={11} /> },
     deal_closed: { label: 'Deal Closed', color: '#4ade80', bg: 'rgba(74,222,128,0.12)', icon: <Handshake size={11} /> },
@@ -168,7 +170,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
 
     const canRespond = ['sent', 'viewed'].includes(request.status);
     const canNegotiate = ['sent', 'viewed', 'negotiation'].includes(request.status);
-    const isAccepted = request.status === 'accepted';
+    const isAccepted = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status);
 
     const handleVerifySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -232,6 +234,20 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                     </div>
                 )}
 
+                {request.status === 'brand_payment_pending' && (
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)' }}>
+                        <p style={{ fontSize: '12px', color: '#d97706', fontWeight: '700', marginBottom: '4px' }}>Accepted, waiting for brand payment</p>
+                        <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>The collaboration will activate once the brand confirms payment.</p>
+                    </div>
+                )}
+
+                {request.status === 'brand_paid_work_can_start' && (
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.18)' }}>
+                        <p style={{ fontSize: '12px', color: '#059669', fontWeight: '700', marginBottom: '4px' }}>Payment confirmed</p>
+                        <p style={{ fontSize: '12px', color: MUTED, lineHeight: '1.6' }}>You can now start work and submit the post link after approval.</p>
+                    </div>
+                )}
+
                 {request.campaignDescription && (
                     <div>
                         <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '8px' }}>Campaign Description</p>
@@ -277,7 +293,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                     </div>
                 )}
 
-                {request.status === 'negotiation' && request.counterOfferPrice && (
+                    {request.status === 'negotiation' && request.counterOfferPrice && (
                     <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
                         <p style={{ fontSize: '11px', color: '#fbbf24', fontWeight: '700', marginBottom: '6px' }}>Current Counter Offer</p>
                         <p style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '20px', color: '#fbbf24' }}>${request.counterOfferPrice.toLocaleString()}</p>

@@ -8,6 +8,9 @@ import toast from 'react-hot-toast';
 const STATUS_CONFIG = {
     pending: { color: '#d97706', label: 'Pending', icon: <Clock size={12} /> },
     accepted: { color: '#059669', label: 'Accepted', icon: <CheckCircle size={12} /> },
+    brand_payment_pending: { color: '#d97706', label: 'Payment pending', icon: <Clock size={12} /> },
+    brand_paid_work_can_start: { color: '#059669', label: 'Payment confirmed', icon: <CheckCircle size={12} /> },
+    campaign_active: { color: '#059669', label: 'Campaign active', icon: <CheckCircle size={12} /> },
     rejected: { color: '#be185d', label: 'Rejected', icon: <XCircle size={12} /> },
 };
 const SURFACE = 'rgba(255,255,255,0.4)';
@@ -48,7 +51,7 @@ export default function CampaignsSection() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
                 <div>
                     <h2 style={{ fontWeight: 800, fontSize: '20px', color: TEXT, marginBottom: '4px' }}>Campaign Requests</h2>
-                    <p style={{ fontSize: '14px', color: MUTED, fontWeight: 500 }}>{requests.length} sent · {requests.filter(r => r.status === 'accepted').length} accepted</p>
+                    <p style={{ fontSize: '14px', color: MUTED, fontWeight: 500 }}>{requests.length} sent · {requests.filter(r => ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(r.status)).length} active</p>
                 </div>
             </div>
 
@@ -61,7 +64,7 @@ export default function CampaignsSection() {
 
                     return (
                         <motion.div key={r._id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, duration: 0.35 }}
-                            style={{ borderRadius: '20px', overflow: 'hidden', background: SURFACE, backdropFilter: 'blur(12px)', border: r.status === 'accepted' ? '1px solid rgba(5,150,105,0.3)' : `1px solid ${BORDER}`, boxShadow: '0 4px 20px rgba(26,10,0,0.02)', transition: 'border-color 0.2s' }}>
+                            style={{ borderRadius: '20px', overflow: 'hidden', background: SURFACE, backdropFilter: 'blur(12px)', border: ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(r.status) ? '1px solid rgba(5,150,105,0.3)' : `1px solid ${BORDER}`, boxShadow: '0 4px 20px rgba(26,10,0,0.02)', transition: 'border-color 0.2s' }}>
 
                             {/* Summary row */}
                             <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', cursor: 'pointer', background: isOpen ? SURFACE_ALT : 'transparent' }}

@@ -17,6 +17,9 @@ type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'verified' | 'paid';
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
     pending: { color: '#fbbf24', label: 'Pending' },
     accepted: { color: '#60d5f8', label: 'Accepted' },
+    brand_payment_pending: { color: '#f59e0b', label: 'Payment pending' },
+    brand_paid_work_can_start: { color: '#10b981', label: 'Payment confirmed' },
+    campaign_active: { color: '#10b981', label: 'Campaign active' },
     rejected: { color: '#f87171', label: 'Declined' },
     verified: { color: '#4ade80', label: 'Verified' },
     paid: { color: '#a855f7', label: 'Paid' },
@@ -71,7 +74,7 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
 
     useEffect(() => {
         const load = () => {
-            influencerAPI.getRequests({ status: 'accepted' })
+            influencerAPI.getRequests({ status: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted' })
                 .then(res => {
                     if (!res.data || typeof res.data !== 'object') {
                         throw new Error('Invalid API response format');

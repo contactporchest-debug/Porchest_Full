@@ -6,8 +6,8 @@ import { useApi, apiPatch } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
 
 const STATUS_TABS = [
-    { key: 'pending,countered', label: 'Requests' },
-    { key: 'accepted,active,content_submitted,content_approved,posted', label: 'Active' },
+    { key: 'pending,countered,brand_payment_pending', label: 'Requests' },
+    { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];
 
@@ -239,6 +239,18 @@ export default function CampaignsFlow() {
                             </div>
                         </div>
                     )}
+
+                    {c.status === 'brand_payment_pending' && (
+                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div className="pt-1.5">
+                                <p className="text-amber-300 font-bold text-sm">Accepted, waiting for brand payment</p>
+                                <p className="text-amber-400/60 text-xs mt-0.5">We’ll unlock content submission once the brand confirms payment.</p>
+                            </div>
+                        </div>
+                    )}
                 </motion.div>
             ))}
 
@@ -333,8 +345,34 @@ export default function CampaignsFlow() {
                         })}
                     </div>
 
+                    {/* Payment pending notice */}
+                    {c.status === 'brand_payment_pending' && (
+                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3 mt-4">
+                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div className="pt-1.5">
+                                <p className="text-amber-300 font-bold text-sm">Accepted, waiting for brand payment</p>
+                                <p className="text-amber-400/60 text-xs mt-0.5">The collaboration will unlock once the brand confirms payment.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Payment confirmed notice */}
+                    {c.status === 'brand_paid_work_can_start' && (
+                        <div className="p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/[0.12] flex items-start gap-3 mt-4">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div className="pt-1.5">
+                                <p className="text-emerald-300 font-bold text-sm">Payment confirmed</p>
+                                <p className="text-emerald-400/60 text-xs mt-0.5">You can now create content and submit the drive link.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Submit Drive link */}
-                    {!c.content?.driveLink && (
+                    {c.status === 'brand_paid_work_can_start' && !c.content?.driveLink && (
                         <div className="space-y-3 pt-4 border-t border-white/[0.06]">
                             <p className="text-sm font-bold text-white">
                                 Submit Content for Review
@@ -372,7 +410,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Submit live post link — shown after brand approves */}
-                    {c.content?.brandApprovedDrive && !c.content?.postLink && (
+                    {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && (
                         <div className="space-y-3 pt-4 border-t border-white/[0.06] mt-4">
                         <div className="p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/[0.12] flex items-start gap-3 mb-4">
                                 <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0">
@@ -415,9 +453,11 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Metrics */}
-                    <div className="pt-2">
-                        <CampaignMetricsCard collaborationId={c._id} />
-                    </div>
+                    {['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'completed'].includes(c.status) && (
+                        <div className="pt-2">
+                            <CampaignMetricsCard collaborationId={c._id} />
+                        </div>
+                    )}
                 </motion.div>
             ))}
 

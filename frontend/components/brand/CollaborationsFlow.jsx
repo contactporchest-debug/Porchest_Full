@@ -6,16 +6,19 @@ import { useApi, apiPatch } from '../../hooks/useApi';
 import CollaborationMetrics from './CollaborationMetrics';
 
 const TABS = [
-    { key: 'pending,countered', label: 'Requests sent' },
-    { key: 'accepted,active,content_submitted,content_approved,posted', label: 'Active' },
+    { key: 'pending,countered,brand_payment_pending', label: 'Requests sent' },
+    { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];
 
 const STATUS_BADGE = {
     pending:          { bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',      color: 'color: #0284c7',      label: 'Pending' },
     countered:        { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)',    color: 'color: #d97706',     label: 'Countered' },
+    brand_payment_pending: { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)', color: 'color: #d97706', label: 'Payment pending' },
+    brand_paid_work_can_start: { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)', color: 'color: #059669', label: 'Paid' },
     accepted:         { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Accepted' },
     active:           { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Active' },
+    campaign_active:  { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Campaign active' },
     content_submitted:{ bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',  color: 'color: #0284c7',    label: 'Content submitted' },
     content_approved: { bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',  color: 'color: #0284c7',    label: 'Content approved' },
     posted:           { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)',    color: 'color: #d97706',     label: 'Posted' },
@@ -177,6 +180,41 @@ export default function CollaborationsFlow() {
                         </div>
                     )}
 
+                    {c.status === 'brand_payment_pending' && (
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <p style={{ color: '#b45309', fontWeight: 700, fontSize: '14px' }}>Influencer accepted the collaboration</p>
+                                    <p style={{ color: 'rgba(180,83,9,0.7)', fontSize: '12px', marginTop: '2px' }}>Complete the brand payment to unlock content creation.</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => action(c._id, 'confirm-brand-payment')}
+                                disabled={acting}
+                                style={{ alignSelf: 'flex-start', padding: '12px 18px', borderRadius: '12px', background: '#059669', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
+                                onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#047857'; }}
+                                onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#059669'; }}
+                            >
+                                Confirm payment received
+                            </button>
+                        </div>
+                    )}
+
+                    {c.status === 'brand_paid_work_can_start' && (
+                        <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', flexShrink: 0 }}>
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div style={{ paddingTop: '6px' }}>
+                                <p style={{ color: '#047857', fontWeight: 700, fontSize: '14px' }}>Payment received</p>
+                                <p style={{ color: 'rgba(4,120,87,0.7)', fontSize: '12px', marginTop: '2px' }}>The influencer can now start work and submit content.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* ── ACTIVE TAB ── Content submitted for review */}
                     {c.status === 'content_submitted' && c.content?.driveLink && (
                         <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(2,132,199,0.06)', border: '1px solid rgba(2,132,199,0.12)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -263,7 +301,7 @@ export default function CollaborationsFlow() {
                     )}
 
                     {/* Metrics — shown for active and beyond */}
-                    {['accepted', 'active', 'content_submitted', 'content_approved', 'posted', 'completed'].includes(c.status) && (
+                    {['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'completed'].includes(c.status) && (
                         <div style={{ paddingTop: '8px' }}>
                             <CollaborationMetrics collaborationId={c._id} />
                         </div>

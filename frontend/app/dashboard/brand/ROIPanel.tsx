@@ -45,7 +45,7 @@ export default function ROIPanel() {
         </div>
     );
 
-    const accepted = requests.filter(r => r.status === 'accepted');
+    const accepted = requests.filter(r => ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(r.status));
     const totalSpend = accepted.reduce((s, r) => s + (r.agreedPrice || 0), 0);
     const verifiedRows = verifications.filter(v => v.status === 'verified');
 

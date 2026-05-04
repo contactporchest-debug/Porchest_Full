@@ -119,16 +119,19 @@ async function takeFollowerBaseline(collaborationId) {
 async function pollFollowerGrowthForActiveCampaigns() {
     try {
         const activeCollabs = await CampaignRequest.find({
-            status: { $in: ['accepted', 'deal_closed'] },
+            status: { $in: ['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'] },
             'followerSnapshot.baseline.count': { $exists: true },
-            campaignEndDate: { $exists: true, $ne: null },
+            $or: [
+                { campaignEndAt: { $exists: true, $ne: null } },
+                { campaignEndDate: { $exists: true, $ne: null } },
+            ],
         }).select('brandId followerSnapshot campaignEndDate gracePeriodDays').lean();
 
         console.log(`[FollowerSnapshot] Polling ${activeCollabs.length} active campaigns`);
 
         for (const collab of activeCollabs) {
             try {
-                const endDate = collab.campaignEndDate ? new Date(collab.campaignEndDate) : null;
+                const endDate = collab.campaignEndAt ? new Date(collab.campaignEndAt) : (collab.campaignEndDate ? new Date(collab.campaignEndDate) : null);
                 if (!endDate) continue;
 
                 const graceDays = Number(collab.gracePeriodDays || 3);
@@ -177,6 +180,44 @@ async function pollFollowerGrowthForActiveCampaigns() {
     } catch (error) {
         console.error('[FollowerSnapshot] Poll error:', error);
         return { success: false, error: error.message || 'Failed to poll follower growth' };
+    }
+}
+
+async function releaseDueSecondPayouts() {
+    try {
+        const now = new Date();
+        const dueCollabs = await CampaignRequest.find({
+            status: 'campaign_active',
+            campaignEndAt: { $exists: true, $ne: null, $lte: now },
+            secondPayoutReleasedAt: { $exists: false },
+        }).select('secondPayoutAmount payment campaignEndAt').lean();
+
+        for (const collab of dueCollabs) {
+            const payout = Number(collab.secondPayoutAmount || collab.payment?.portion2?.amount || collab.payment?.tranche2?.amount || 0);
+            await CampaignRequest.findByIdAndUpdate(
+                collab._id,
+                {
+                    $set: {
+                        status: 'completed',
+                        secondPayoutReleasedAt: now,
+                        campaignCompletedAt: now,
+                        'payment.status': 'released',
+                        'payment.portion2.amount': payout,
+                        'payment.portion2.releasedAt': now,
+                        'payment.portion2.status': 'released',
+                        'payment.tranche2.amount': payout,
+                        'payment.tranche2.releasedAt': now,
+                        'payment.tranche2.status': 'released',
+                    },
+                },
+                { strict: false, new: true }
+            );
+        }
+
+        return { success: true, released: dueCollabs.length };
+    } catch (error) {
+        console.error('[Payouts] Second payout release error:', error);
+        return { success: false, error: error.message || 'Failed to release second payouts' };
     }
 }
 
@@ -243,5 +284,6 @@ module.exports = {
     generatePromoCode,
     takeFollowerBaseline,
     pollFollowerGrowthForActiveCampaigns,
+    releaseDueSecondPayouts,
     ensureTrackingAssets,
 };

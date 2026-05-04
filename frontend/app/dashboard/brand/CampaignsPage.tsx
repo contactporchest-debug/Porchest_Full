@@ -27,6 +27,9 @@ const STATUS_CFG: Record<string, { label: string; bg: string; color: string; bor
     viewed: { label: 'Viewed', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Eye size={11} /> },
     negotiation: { label: 'Negotiation', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <AlertCircle size={11} /> },
     accepted: { label: 'In-Process', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
+    brand_payment_pending: { label: 'Payment pending', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <Clock size={11} /> },
+    brand_paid_work_can_start: { label: 'Payment confirmed', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
+    campaign_active: { label: 'Campaign active', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
     deal_closed: { label: 'Closed ✓', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <CheckCircle size={11} /> },
     rejected: { label: 'Rejected', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)', color: '#dc2626', icon: <XCircle size={11} /> },
 };
@@ -188,7 +191,7 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                 </div>
 
                 {/* Verification block */}
-                {(request.status === 'accepted' || request.status === 'deal_closed') && (
+                {(['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status) || request.status === 'deal_closed') && (
                     <>
                         <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Verification Status</p>
                         {!verification ? (
@@ -301,7 +304,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         if (filter === 'all') matchFilter = true;
         else if (filter === 'pending') matchFilter = ['sent', 'viewed'].includes(r.status);
         else if (filter === 'negotiation') matchFilter = r.status === 'negotiation';
-        else if (filter === 'accepted') matchFilter = ['accepted', 'deal_closed'].includes(r.status);
+        else if (filter === 'accepted') matchFilter = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'deal_closed'].includes(r.status);
         else if (filter === 'rejected') matchFilter = ['rejected', 'cancelled'].includes(r.status);
 
         const q = search.toLowerCase();

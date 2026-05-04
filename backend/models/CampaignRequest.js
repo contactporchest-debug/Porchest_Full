@@ -113,6 +113,8 @@ const campaignRequestSchema = new mongoose.Schema(
                 'pending_brand_review',
                 'pending',
                 'countered',
+                'brand_payment_pending',
+                'brand_paid_work_can_start',
                 'sent',
                 'viewed',
                 'negotiation',
@@ -121,6 +123,7 @@ const campaignRequestSchema = new mongoose.Schema(
                 'content_submitted',
                 'content_approved',
                 'posted',
+                'campaign_active',
                 'rejected',
                 'declined',
                 'brand_approved',
@@ -265,6 +268,25 @@ const campaignRequestSchema = new mongoose.Schema(
                 status: { type: String, enum: ['pending', 'released', 'held'], default: 'pending' },
             },
         },
+
+        // Modern payment flow
+        brandPaymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+        brandPaymentIntentId: { type: String },
+        brandPaymentReceivedAt: { type: Date },
+        platformFeePercent: { type: Number, default: 15 },
+        platformFeeAmount: { type: Number, default: 0 },
+        influencerNetAmount: { type: Number, default: 0 },
+        firstPayoutAmount: { type: Number, default: 0 },
+        secondPayoutAmount: { type: Number, default: 0 },
+        firstTransferId: { type: String },
+        secondTransferId: { type: String },
+        firstPayoutReleasedAt: { type: Date },
+        secondPayoutReleasedAt: { type: Date },
+        verifiedLiveAt: { type: Date },
+        campaignStartAt: { type: Date },
+        campaignEndAt: { type: Date },
+        campaignActiveAt: { type: Date },
+        campaignCompletedAt: { type: Date },
 
         // Live metrics
         metrics: {

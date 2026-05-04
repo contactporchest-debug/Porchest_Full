@@ -40,24 +40,24 @@ export default function OverviewPage({
             .finally(() => setLoading(false));
     }, [authLoading, token, user?.role, profileCompleteOverride]);
 
-    const pending = requests.filter((r) => ['sent', 'viewed', 'negotiation'].includes(r.status));
-    const accepted = requests.filter((r) => r.status === 'accepted');
+    const pending = requests.filter((r) => ['sent', 'viewed', 'negotiation', 'brand_payment_pending'].includes(r.status));
+    const active = requests.filter((r) => ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(r.status));
     const completed = requests.filter((r) => r.status === 'deal_closed');
     const rejected = requests.filter((r) => ['rejected', 'cancelled'].includes(r.status));
-    const totalAllocated = accepted.reduce((sum, r) => sum + (r.agreedPrice || 0), 0);
+    const totalAllocated = active.reduce((sum, r) => sum + (r.agreedPrice || 0), 0);
 
     if (authLoading || loading) {
         return <div style={{ padding: '24px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(12px)', fontSize: '14px', color: '#7A5030' }}>Loading brand dashboard...</div>;
     }
 
     const statCards = [
-        { label: 'Running', value: accepted.length, icon: <Megaphone size={20} /> },
+        { label: 'Running', value: active.length, icon: <Megaphone size={20} /> },
         { label: 'In Process', value: pending.length, icon: <Clock size={20} /> },
         { label: 'Completed', value: completed.length, icon: <CheckCircle2 size={20} /> },
         { label: 'Canceled', value: rejected.length, icon: <XCircle size={20} /> },
     ];
 
-    const runningPreview = [...accepted, ...completed].slice(0, 5);
+    const runningPreview = [...active, ...completed].slice(0, 5);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -138,7 +138,7 @@ export default function OverviewPage({
                     </div>
                     <div style={{ borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)', padding: '20px' }}>
                         <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Active collaborations</p>
-                        <p style={{ marginTop: '10px', fontSize: '24px', fontWeight: 600, color: '#1A0A00' }}>{accepted.length}</p>
+                        <p style={{ marginTop: '10px', fontSize: '24px', fontWeight: 600, color: '#1A0A00' }}>{active.length}</p>
                     </div>
                     <div style={{ borderRadius: '10px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.50)', padding: '20px' }}>
                         <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Pending decisions</p>

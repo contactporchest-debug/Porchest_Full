@@ -129,6 +129,22 @@ function normalizePricingInput(pricing = {}, legacy = {}) {
     };
 }
 
+function calculatePaymentSplit(agreedFee) {
+    const agreed = toNumber(agreedFee, 0);
+    const platformFeePercent = 15;
+    const platformFeeAmount = Number((agreed * 0.15).toFixed(2));
+    const influencerNetAmount = Number((agreed - platformFeeAmount).toFixed(2));
+    const firstPayoutAmount = Number((influencerNetAmount * 0.5).toFixed(2));
+    const secondPayoutAmount = Number((influencerNetAmount - firstPayoutAmount).toFixed(2));
+    return {
+        platformFeePercent,
+        platformFeeAmount,
+        influencerNetAmount,
+        firstPayoutAmount,
+        secondPayoutAmount,
+    };
+}
+
 function normalizeTimelineInput(timeline = {}, legacy = {}) {
     const campaignStartDate = timeline.campaignStartDate || legacy.campaignStartDate || null;
     const campaignEndDate = timeline.campaignEndDate || legacy.campaignEndDate || null;
@@ -174,6 +190,21 @@ function normalizePaymentForResponse(doc) {
             releasedAt: portion2.releasedAt || null,
             status: portion2.status || 'pending',
         },
+        brandPaymentStatus: doc.brandPaymentStatus || 'pending',
+        brandPaymentReceivedAt: doc.brandPaymentReceivedAt || null,
+        brandPaymentIntentId: doc.brandPaymentIntentId || null,
+        platformFeePercent: doc.platformFeePercent ?? 15,
+        platformFeeAmount: doc.platformFeeAmount ?? 0,
+        influencerNetAmount: doc.influencerNetAmount ?? 0,
+        firstPayoutAmount: doc.firstPayoutAmount ?? 0,
+        secondPayoutAmount: doc.secondPayoutAmount ?? 0,
+        firstPayoutReleasedAt: doc.firstPayoutReleasedAt || null,
+        secondPayoutReleasedAt: doc.secondPayoutReleasedAt || null,
+        verifiedLiveAt: doc.verifiedLiveAt || null,
+        campaignStartAt: doc.campaignStartAt || null,
+        campaignEndAt: doc.campaignEndAt || null,
+        campaignActiveAt: doc.campaignActiveAt || null,
+        campaignCompletedAt: doc.campaignCompletedAt || null,
     };
 }
 
@@ -312,17 +343,34 @@ async function verifyAdminFinalization(collabId, collab, reqUser) {
 
 function setExactAcceptanceFields(update, collab, brandWebsite, influencerUsername) {
     const now = new Date();
-    const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const collaborationId = String(collab._id);
     const influencerRef = String(collab.influencerId || collab.influencerProfileId);
+    const split = calculatePaymentSplit(
+        collab.pricing?.brandOffer ?? collab.financials?.brandOfferedFee ?? collab.brandOfferedFee ?? collab.agreedPrice
+    );
 
-    update.status = 'accepted';
+    update.status = 'brand_payment_pending';
     update.acceptedAt = now;
-    update.campaignStartDate = now;
-    update.campaignEndDate = end;
+    update.brandPaymentStatus = 'pending';
+    update.brandPaymentReceivedAt = null;
+    update.brandPaymentIntentId = update.brandPaymentIntentId || null;
+    update.platformFeePercent = split.platformFeePercent;
+    update.platformFeeAmount = split.platformFeeAmount;
+    update.influencerNetAmount = split.influencerNetAmount;
+    update.firstPayoutAmount = split.firstPayoutAmount;
+    update.secondPayoutAmount = split.secondPayoutAmount;
+    update.campaignStartAt = null;
+    update.campaignEndAt = null;
+    update.campaignActiveAt = null;
+    update.campaignCompletedAt = null;
+    update.verifiedLiveAt = null;
+    update.firstPayoutReleasedAt = null;
+    update.secondPayoutReleasedAt = null;
+    update.campaignStartDate = null;
+    update.campaignEndDate = null;
     update.timeline = {
-        campaignStartDate: now,
-        campaignEndDate: end,
+        campaignStartDate: null,
+        campaignEndDate: null,
         gracePeriodDays: collab.gracePeriodDays || 3,
     };
 
@@ -350,6 +398,45 @@ function setExactAcceptanceFields(update, collab, brandWebsite, influencerUserna
     };
 
     return update;
+}
+
+async function scheduleSecondPayoutIfDue(collabId, collab) {
+    const now = new Date();
+    const campaignEnd = collab.campaignEndAt || collab.campaignEndDate || collab.timeline?.campaignEndDate;
+    if (!campaignEnd) return collab;
+    if (new Date(campaignEnd).getTime() > now.getTime()) return collab;
+
+    const secondPayoutAlreadyReleased = Boolean(collab.secondPayoutReleasedAt || collab.payment?.portion2?.releasedAt || collab.payment?.tranche2?.releasedAt);
+    if (secondPayoutAlreadyReleased) return collab;
+
+    const secondAmount = toNumber(
+        collab.secondPayoutAmount ??
+        collab.payment?.portion2?.amount ??
+        collab.payment?.tranche2?.amount ??
+        0,
+        0
+    );
+
+    const updated = await CampaignRequest.findByIdAndUpdate(
+        collabId,
+        {
+            $set: {
+                status: 'completed',
+                secondPayoutReleasedAt: now,
+                campaignCompletedAt: now,
+                'payment.status': 'released',
+                'payment.portion2.amount': secondAmount,
+                'payment.portion2.releasedAt': now,
+                'payment.portion2.status': 'released',
+                'payment.tranche2.amount': secondAmount,
+                'payment.tranche2.releasedAt': now,
+                'payment.tranche2.status': 'released',
+            },
+        },
+        { new: true, strict: false }
+    ).lean();
+
+    return updated;
 }
 
 async function finalizeAcceptance(collabId, collab) {
@@ -383,6 +470,24 @@ async function finalizeAcceptance(collabId, collab) {
     ).lean();
 
     takeFollowerBaseline(collabId).catch(() => {});
+    return updated;
+}
+
+async function markBrandPaymentReceived(collabId, collab, paymentIntentId = null) {
+    const now = new Date();
+    const updated = await CampaignRequest.findByIdAndUpdate(
+        collabId,
+        {
+            $set: {
+                status: 'brand_paid_work_can_start',
+                brandPaymentStatus: 'paid',
+                brandPaymentReceivedAt: now,
+                brandPaymentIntentId: paymentIntentId || collab.brandPaymentIntentId || null,
+                campaignActiveAt: null,
+            },
+        },
+        { new: true, strict: false }
+    ).lean();
     return updated;
 }
 
@@ -543,6 +648,24 @@ router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile
     }
 });
 
+router.patch('/:id/confirm-brand-payment', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        if (String(collab.status) !== 'brand_payment_pending') return throwStatusError(collab.status, res);
+
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const updated = await markBrandPaymentReceived(req.params.id, collab, req.body?.paymentIntentId || null);
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.patch('/:id/counter', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
@@ -622,7 +745,7 @@ router.patch('/:id/submit-drive', roleMiddleware('influencer'), requireCompleteP
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (!inStatusList(collab.status, ['accepted', 'content_submitted'])) return throwStatusError(collab.status, res);
+        if (!inStatusList(collab.status, ['brand_paid_work_can_start', 'content_submitted'])) return throwStatusError(collab.status, res);
 
         const now = new Date();
         const updated = await CampaignRequest.findByIdAndUpdate(
@@ -759,7 +882,45 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
         if (String(collab.status) !== 'posted') return throwStatusError(collab.status, res);
 
-        const updated = await verifyAdminFinalization(req.params.id, collab, req.user);
+        const now = new Date();
+        const split = calculatePaymentSplit(
+            collab.pricing?.agreedFee ?? collab.financials?.agreedFee ?? collab.agreedFee ?? collab.agreedPrice
+        );
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    status: 'campaign_active',
+                    adminVerifiedPost: true,
+                    adminVerifiedAt: now,
+                    adminVerifiedByFK: req.user._id,
+                    verifiedLiveAt: now,
+                    campaignStartAt: now,
+                    campaignEndAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                    campaignActiveAt: now,
+                    'content.adminVerified': true,
+                    'content.adminVerifiedAt': now,
+                    'content.adminVerifiedBy': req.user._id,
+                    'payment.status': 'partial',
+                    'payment.portion1.amount': split.firstPayoutAmount,
+                    'payment.portion1.releasedAt': now,
+                    'payment.portion1.status': 'released',
+                    'payment.portion2.amount': split.secondPayoutAmount,
+                    'payment.portion2.releasedAt': new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                    'payment.portion2.status': 'pending',
+                    'payment.tranche1.amount': split.firstPayoutAmount,
+                    'payment.tranche1.releasedAt': now,
+                    'payment.tranche1.status': 'released',
+                    'payment.tranche2.amount': split.secondPayoutAmount,
+                    'payment.tranche2.releasedAt': new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                    'payment.tranche2.status': 'pending',
+                    firstPayoutAmount: split.firstPayoutAmount,
+                    secondPayoutAmount: split.secondPayoutAmount,
+                    firstPayoutReleasedAt: now,
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
