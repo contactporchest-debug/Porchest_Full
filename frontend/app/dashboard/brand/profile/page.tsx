@@ -6,10 +6,18 @@ import BrandProfileForm from '@/components/brand/BrandProfileForm';
 import { useApi } from '@/hooks/useApi';
 import { Building2 } from 'lucide-react';
 
+type BrandProfileResponse = {
+    logo?: string;
+    logoUrl?: string;
+    businessName?: string;
+    brandName?: string;
+};
+
 export default function BrandProfilePage() {
     const { data: profile } = useApi('/profile/brand/me');
-    const brandLogo = profile?.logo || profile?.logoUrl || '';
-    const brandName = profile?.businessName || profile?.brandName || 'Brand profile';
+    const brandProfile = profile as BrandProfileResponse | null;
+    const brandLogo = brandProfile?.logo || brandProfile?.logoUrl || '';
+    const brandName = brandProfile?.businessName || brandProfile?.brandName || 'Brand profile';
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>
