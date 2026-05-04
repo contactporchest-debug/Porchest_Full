@@ -18,6 +18,9 @@ const mongoose = require('mongoose');
 const InfluencerProfile       = require('../models/InfluencerProfile');
 const BrandProfile            = require('../models/BrandProfile');
 const User                    = require('../models/User');
+const UserRaw                 = require('../models/UserRaw');
+const MediaRaw                = require('../models/MediaRaw');
+const InsightsRaw             = require('../models/InsightsRaw');
 
 const pad = (label) => label.padEnd(40, '.');
 
@@ -71,6 +74,16 @@ async function run() {
         }
     });
     console.log(pad('  InfluencerProfile reset'), `${r1.modifiedCount} profiles wiped securely`);
+
+    console.log('\n── Step 1b: Removing Instagram raw collections ─────────────');
+    const rawDeletes = await Promise.all([
+        UserRaw.deleteMany({ platform: 'Instagram' }),
+        MediaRaw.deleteMany({ platform: 'Instagram' }),
+        InsightsRaw.deleteMany({ platform: 'Instagram' }),
+    ]);
+    console.log(pad('  UserRaw deleted'), `${rawDeletes[0].deletedCount || 0} docs removed`);
+    console.log(pad('  MediaRaw deleted'), `${rawDeletes[1].deletedCount || 0} docs removed`);
+    console.log(pad('  InsightsRaw deleted'), `${rawDeletes[2].deletedCount || 0} docs removed`);
 
     // ── Step 2: Reset analytics fields on BrandProfile ────────────────────
     console.log('\n── Step 2: Resetting BrandProfile analytics + tokens ────────');

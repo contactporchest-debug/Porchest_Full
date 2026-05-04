@@ -7,6 +7,14 @@ function getAuthToken() {
     return localStorage.getItem('token') || localStorage.getItem('porchest_token');
 }
 
+function clearAuthAndRedirect() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('porchest_token');
+    localStorage.removeItem('porchest_user');
+    window.location.href = '/login';
+}
+
 export function useApi(endpoint, { immediate = true } = {}) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(Boolean(immediate));
@@ -27,6 +35,9 @@ export function useApi(endpoint, { immediate = true } = {}) {
             const json = await res.json().catch(() => null);
 
             if (!res.ok) {
+                if (res.status === 401 || res.status === 403) {
+                    clearAuthAndRedirect();
+                }
                 throw new Error(json?.error || json?.message || `HTTP ${res.status}`);
             }
 
@@ -54,6 +65,10 @@ async function apiRequest(endpoint, body, method = 'POST') {
         },
         body: JSON.stringify(body || {}),
     });
+
+    if (res.status === 401 || res.status === 403) {
+        clearAuthAndRedirect();
+    }
 
     return res.json();
 }

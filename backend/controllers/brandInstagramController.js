@@ -10,6 +10,7 @@ const BrandProfile = require('../models/BrandProfile');
 const User = require('../models/User');
 const meta = require('../utils/metaOAuth');
 const syncService = require('../utils/instagramSyncService');
+const { deleteInstagramRawDataForUser } = require('../services/instagramRetentionService');
 const { generateUniqueCode } = require('../utils/generateCode');
 
 const ROLE = 'brand';
@@ -157,6 +158,7 @@ exports.disconnect = async (req, res, next) => {
             }
         );
 
+        await deleteInstagramRawDataForUser(userId);
         await User.findByIdAndUpdate(userId, { instagramConnected: false });
 
         res.json({ success: true, message: 'Instagram disconnected completely. Brand data reset.' });

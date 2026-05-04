@@ -21,6 +21,13 @@ const api = axios.create({
     withCredentials: false, // Using JWT in Authorization header, not cookies
 });
 
+function clearAuthAndRedirect() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('porchest_token');
+    localStorage.removeItem('porchest_user');
+    window.location.href = '/login';
+}
+
 // Attach JWT token to every request
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
@@ -34,10 +41,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401 && typeof window !== 'undefined') {
-            localStorage.removeItem('porchest_token');
-            localStorage.removeItem('porchest_user');
-            window.location.href = '/login';
+        const status = error.response?.status;
+        if ((status === 401 || status === 403) && typeof window !== 'undefined') {
+            clearAuthAndRedirect();
         }
         return Promise.reject(error);
     }

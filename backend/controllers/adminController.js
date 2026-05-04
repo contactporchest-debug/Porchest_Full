@@ -4,6 +4,7 @@ const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const SoftwareClientProfile = require('../models/SoftwareClientProfile');
 const Notification = require('../models/Notification');
+const { deleteInstagramRawDataForUser } = require('../services/instagramRetentionService');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { ADMIN_ROLES, USER_ROLES } = require('../utils/accessRoles');
 
@@ -34,6 +35,8 @@ async function removeRoleSpecificProfiles(user) {
 }
 
 async function hardDeleteUserData(user) {
+    await deleteInstagramRawDataForUser(user._id);
+
     const brandProfiles = await BrandProfile.find({
         $or: [
             { userId: user._id },

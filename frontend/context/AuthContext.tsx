@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { authAPI } from '@/lib/api';
 import { UserRole } from '@/lib/accessRoles';
 
@@ -89,6 +89,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const verifyTimerRef = useRef<number | null>(null);
+
+    const clearSession = useCallback((redirect = false) => {
+        localStorage.removeItem('porchest_token');
+        localStorage.removeItem('porchest_user');
+        setToken(null);
+        setUser(null);
+        if (redirect && typeof window !== 'undefined') {
+            window.location.href = '/login';
+        }
+    }, []);
+
+    const verifySession = useCallback(async () => {
+        const storedToken = localStorage.getItem('porchest_token');
+        const storedUser = localStorage.getItem('porchest_user');
+
+        if (!storedToken || !storedUser) return;
+
+        try {
+            await authAPI.getMe();
+        } catch (error: any) {
+            const status = error?.response?.status;
+            if (status === 401 || status === 403) {
+                clearSession(true);
+            }
+        }
+    }, [clearSession]);
 
     useEffect(() => {
         const storedToken = localStorage.getItem('porchest_token');
@@ -104,6 +131,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         setLoading(false);
     }, []);
+
+    useEffect(() => {
+        if (loading || !token || !user) return;
+
+        void verifySession();
+
+        const onFocus = () => { void verifySession(); };
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                void verifySession();
+            }
+        };
+
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        if (verifyTimerRef.current) {
+            window.clearInterval(verifyTimerRef.current);
+        }
+        verifyTimerRef.current = window.setInterval(() => {
+            void verifySession();
+        }, 30000);
+
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            if (verifyTimerRef.current) {
+                window.clearInterval(verifyTimerRef.current);
+                verifyTimerRef.current = null;
+            }
+        };
+    }, [loading, token, user, verifySession]);
 
     const login = useCallback(async (email: string, password: string) => {
         try {
@@ -123,11 +182,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const logout = useCallback(() => {
-        localStorage.removeItem('porchest_token');
-        localStorage.removeItem('porchest_user');
-        setToken(null);
-        setUser(null);
-    }, []);
+        clearSession(true);
+    }, [clearSession]);
 
     const updateUser = useCallback((userData: Partial<User>) => {
         setUser(prev => {
