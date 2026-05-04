@@ -11,6 +11,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
     const [step, setStep] = useState(1);
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState('');
     const [form, setForm] = useState({
         brandOffer: '',
         campaignObjective: '',
@@ -39,6 +40,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
 
     async function handleSend() {
         setSending(true);
+        setError('');
         await apiPost('/collaborations', {
             influencerId,
             brief: {
@@ -47,14 +49,23 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                 revisionRoundsAllowed: Number(form.revisionRoundsAllowed || 1),
             },
             pricing: { brandOffer: Number(form.brandOffer) },
+        }).then((response) => {
+            if (!response || response.success === false || response.error || !response._id) {
+                throw new Error(response?.error || response?.message || 'Failed to create collaboration request');
+            }
+            setSent(true);
+            window.dispatchEvent(new Event('porchest-collaboration-updated'));
+            window.dispatchEvent(new CustomEvent('porchest-collaboration-created', { detail: response }));
+            setTimeout(() => {
+                setSent(false);
+                setOpen(false);
+                setStep(1);
+            }, 1800);
+        }).catch((err) => {
+            setError(err?.message || 'Failed to create collaboration request');
+        }).finally(() => {
+            setSending(false);
         });
-        setSending(false);
-        setSent(true);
-        setTimeout(() => {
-            setSent(false);
-            setOpen(false);
-            setStep(1);
-        }, 1800);
     }
 
     const IS = {
@@ -69,6 +80,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
             </button>
 
             {sent && <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669', textAlign: 'center', fontSize: '14px', fontWeight: 700 }}>Collaboration request sent.</div>}
+            {error && <div style={{ marginTop: '12px', padding: '14px 16px', borderRadius: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#b91c1c', fontSize: '13px', fontWeight: 600 }}>{error}</div>}
 
             {open && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', background: 'rgba(26,10,0,0.5)', backdropFilter: 'blur(8px)' }}>

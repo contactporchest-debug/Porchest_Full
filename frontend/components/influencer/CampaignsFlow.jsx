@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApi, apiPatch } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
@@ -32,6 +32,15 @@ export default function CampaignsFlow() {
 
     const { data, loading, refetch } = useApi(`/collaborations?status=${STATUS_TABS[activeTab].key}`);
     const collabs = data?.collaborations || [];
+
+    useEffect(() => {
+        const handleUpdated = () => {
+            void refetch();
+        };
+
+        window.addEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
+        return () => window.removeEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
+    }, [refetch]);
 
     async function action(id, endpoint, body = {}) {
         setActing(true);

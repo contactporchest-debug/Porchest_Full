@@ -378,6 +378,21 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
             .finally(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        const handleUpdated = () => {
+            loadRequests().catch(() => {});
+            onChanged?.();
+        };
+
+        window.addEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
+        window.addEventListener('porchest-collaboration-created', handleUpdated as EventListener);
+
+        return () => {
+            window.removeEventListener('porchest-collaboration-updated', handleUpdated as EventListener);
+            window.removeEventListener('porchest-collaboration-created', handleUpdated as EventListener);
+        };
+    }, [onChanged]);
+
     const handleRespond = async (id: string, action: string, data?: any) => {
         if (action === 'refresh') {
             try {
@@ -405,7 +420,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
     const FILTERS = [
         { key: 'all', label: 'All', color: '#a855f7' },
-        { key: 'sent,viewed', label: 'New', color: '#60d5f8' },
+        { key: 'pending,sent,viewed', label: 'New', color: '#60d5f8' },
         { key: 'accepted', label: 'Accepted', color: '#4ade80' },
         { key: 'negotiation', label: 'Negotiation', color: '#fbbf24' },
         { key: 'rejected', label: 'Declined', color: '#f87171' },
