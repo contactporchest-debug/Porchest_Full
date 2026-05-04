@@ -74,6 +74,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<{ success: boolean; role?: string }>;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -83,6 +84,7 @@ const AuthContext = createContext<AuthContextType>({
     login: async () => ({ success: false }),
     logout: () => { },
     updateUser: () => { },
+    refreshUser: async () => { },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -193,9 +195,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return updated;
         });
     }, []);
+    
+    const refreshUser = useCallback(async () => {
+        try {
+            const { data } = await authAPI.getMe();
+            if (data.success && data.user) {
+                setUser(data.user);
+                localStorage.setItem('porchest_user', JSON.stringify(data.user));
+            }
+        } catch (err) {
+            console.error('Failed to refresh user:', err);
+        }
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
+        <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

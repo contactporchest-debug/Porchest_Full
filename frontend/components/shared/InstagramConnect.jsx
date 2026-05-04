@@ -10,6 +10,7 @@ function token() {
 }
 
 export default function InstagramConnect({ role = 'influencer' }) {
+    const { user, updateUser, refreshUser } = useAuth();
     const { metrics, loading, refetch } = useInstagramMetrics();
     const [connecting, setConnecting] = useState(false);
 
@@ -39,6 +40,7 @@ export default function InstagramConnect({ role = 'influencer' }) {
             });
             if (res.ok) {
                 toast.success('Instagram disconnected successfully');
+                if (refreshUser) await refreshUser();
                 await refetch();
             } else {
                 const data = await res.json();
