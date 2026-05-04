@@ -1,11 +1,12 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { Menu, X } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 
 export default function DashboardShell({
     children,
@@ -15,12 +16,26 @@ export default function DashboardShell({
     role: 'influencer' | 'brand' | 'admin' | 'software-client';
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { data: brandProfile, refetch: refetchBrandProfile } = useApi('/profile/brand/me', { immediate: role === 'brand' });
+    const brandLogo = role === 'brand' ? (brandProfile?.logo || brandProfile?.logoUrl || '') : '';
+    const brandName = role === 'brand' ? (brandProfile?.businessName || brandProfile?.brandName || '') : '';
+
+    useEffect(() => {
+        if (role !== 'brand') return;
+
+        const handleBrandProfileUpdated = () => {
+            void refetchBrandProfile();
+        };
+
+        window.addEventListener('porchest-brand-profile-updated', handleBrandProfileUpdated as EventListener);
+        return () => window.removeEventListener('porchest-brand-profile-updated', handleBrandProfileUpdated as EventListener);
+    }, [refetchBrandProfile, role]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: '#FDF6EE' }}>
             {/* Desktop sidebar */}
             <div className="hidden lg:flex" style={{ flexShrink: 0 }}>
-                <Sidebar role={role} />
+                <Sidebar role={role} brandLogo={brandLogo} brandName={brandName} />
             </div>
 
             {/* Mobile sidebar overlay */}
@@ -36,7 +51,7 @@ export default function DashboardShell({
                     onClick={() => setMobileOpen(false)}
                 >
                     <div onClick={e => e.stopPropagation()}>
-                        <Sidebar role={role} mobileOpen onNavigate={() => setMobileOpen(false)} />
+                        <Sidebar role={role} mobileOpen brandLogo={brandLogo} brandName={brandName} onNavigate={() => setMobileOpen(false)} />
                     </div>
                 </div>
             )}
@@ -76,8 +91,12 @@ export default function DashboardShell({
                     </button>
 
                     <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                        <Image src="/porchest-logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '5px', objectFit: 'contain' }} />
-                        <span style={{ fontSize: '16px', fontWeight: 600, color: '#1A0A00' }}>Porchest</span>
+                        {role === 'brand' && brandLogo ? (
+                            <img src={brandLogo} alt={brandName || 'Brand logo'} style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #EDD9BC' }} />
+                        ) : (
+                            <Image src="/porchest-logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '5px', objectFit: 'contain' }} />
+                        )}
+                        <span style={{ fontSize: '16px', fontWeight: 600, color: '#1A0A00' }}>{role === 'brand' && brandName ? brandName : 'Porchest'}</span>
                     </Link>
 
                     <div style={{ width: '38px' }} />
@@ -85,7 +104,7 @@ export default function DashboardShell({
 
                 {/* Desktop topbar */}
                 <div className="hidden lg:block">
-                    <TopBar />
+                    <TopBar role={role} brandLogo={brandLogo} brandName={brandName} />
                 </div>
 
                 {/* Main content */}

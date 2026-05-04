@@ -3,8 +3,14 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import BrandProfileForm from '@/components/brand/BrandProfileForm';
+import { useApi } from '@/hooks/useApi';
+import { Building2 } from 'lucide-react';
 
 export default function BrandProfilePage() {
+    const { data: profile } = useApi('/profile/brand/me');
+    const brandLogo = profile?.logo || profile?.logoUrl || '';
+    const brandName = profile?.businessName || profile?.brandName || 'Brand profile';
+
     return (
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
@@ -18,12 +24,32 @@ export default function BrandProfilePage() {
                         boxShadow: '0 8px 32px rgba(26,10,0,0.04)'
                     }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="lg:flex-row lg:items-end lg:justify-between">
-                            <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                <div style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '18px',
+                                    border: '1px solid #EDD9BC',
+                                    background: 'rgba(255,255,255,0.72)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                    flexShrink: 0,
+                                }}>
+                                    {brandLogo ? (
+                                        <img src={brandLogo} alt={brandName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <Building2 size={26} style={{ color: '#C2340A' }} />
+                                    )}
+                                </div>
+                                <div>
                                 <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#7A5030', fontWeight: 700 }}>Brand profile</p>
                                 <h1 style={{ marginTop: '8px', fontSize: '30px', fontWeight: 800, letterSpacing: '-0.04em', color: '#1A0A00' }}>Profile Setup</h1>
                                 <p style={{ marginTop: '8px', maxWidth: '672px', fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>
                                     Complete your business, audience, and campaign preferences so Porchest can match you with the right creators.
                                 </p>
+                                </div>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
                                 <div style={{

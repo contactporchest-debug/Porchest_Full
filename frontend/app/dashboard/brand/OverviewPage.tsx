@@ -4,13 +4,21 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, AlertTriangle, Megaphone, Clock, CheckCircle2, XCircle, FileText } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Megaphone, Clock, CheckCircle2, XCircle, FileText, Building2 } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { StatCard, GlassCard, BadgeStatus } from '@/components/ui';
 
-export default function OverviewPage({ profileCompleteOverride }: { profileCompleteOverride?: boolean } = {}) {
+export default function OverviewPage({
+    profileCompleteOverride,
+    brandLogo = '',
+    brandName = '',
+}: {
+    profileCompleteOverride?: boolean;
+    brandLogo?: string;
+    brandName?: string;
+} = {}) {
     const router = useRouter();
     const { user, token, loading: authLoading } = useAuth();
     const [requests, setRequests] = useState<any[]>([]);
@@ -53,6 +61,38 @@ export default function OverviewPage({ profileCompleteOverride }: { profileCompl
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <GlassCard padding="24px">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                    <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '16px',
+                        border: '1px solid #EDD9BC',
+                        background: 'rgba(255,255,255,0.72)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                    }}>
+                        {brandLogo ? (
+                            <img src={brandLogo} alt={brandName || 'Brand logo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                            <Building2 size={24} style={{ color: '#C2340A' }} />
+                        )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: '220px' }}>
+                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7A5030' }}>Brand identity</p>
+                        <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 700, color: '#1A0A00' }}>
+                            {brandName || 'Your brand'}
+                        </h3>
+                        <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>
+                            Your logo is used across the Porchest dashboard and brand-facing surfaces.
+                        </p>
+                    </div>
+                </div>
+            </GlassCard>
+
             {showInternalProfilePrompt && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ borderRadius: '14px', border: '1px solid rgba(255,107,26,0.3)', background: 'rgba(255,107,26,0.1)', padding: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="md:flex-row md:items-center md:justify-between">

@@ -50,6 +50,7 @@ export default function BrandProfileForm() {
     const [form, setForm] = useState({
         businessName: '',
         representerName: '',
+        logo: '',
         industry: '',
         website: '',
         instagramLink: '',
@@ -69,6 +70,7 @@ export default function BrandProfileForm() {
         setForm({
             businessName: profile.businessName || profile.brandName || '',
             representerName: profile.representerName || profile.brandRepresenterName || '',
+            logo: profile.logo || profile.logoUrl || '',
             industry: profile.industry || profile.category || '',
             website: profile.website || '',
             instagramLink: profile.instagramLink || '',
@@ -94,6 +96,8 @@ export default function BrandProfileForm() {
         return String(base).slice(0, 2).toUpperCase();
     }, [form.businessName, profile]);
 
+    const logoPreview = form.logo || profile?.logo || profile?.logoUrl || '';
+
     function toggleArray(field, value) {
         setForm((current) => ({
             ...current,
@@ -111,6 +115,18 @@ export default function BrandProfileForm() {
                     : [...current.targetAudience[field], value],
             },
         }));
+    }
+
+    function handleLogoUpload(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : '';
+            setForm((current) => ({ ...current, logo: result }));
+        };
+        reader.readAsDataURL(file);
     }
 
     function toggleCountry(value) {
@@ -152,6 +168,7 @@ export default function BrandProfileForm() {
                 body: JSON.stringify({
                     businessName: form.businessName,
                     representerName: form.representerName,
+                    logo: form.logo,
                     industry: form.industry,
                     website: form.website,
                     instagramLink: form.instagramLink,
@@ -170,6 +187,7 @@ export default function BrandProfileForm() {
             await refetch();
             setIsEditing(false);
             setSaved(true);
+            window.dispatchEvent(new Event('porchest-brand-profile-updated'));
             window.setTimeout(() => setSaved(false), 1800);
         } catch (error) {
             console.error(error);
@@ -247,9 +265,13 @@ export default function BrandProfileForm() {
                     <div style={{ marginTop: '16px', borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '16px' }}>
                         <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Business icon</p>
                         <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ display: 'flex', height: '56px', width: '56px', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#C2340A', fontSize: '16px', fontWeight: 800, color: '#fff' }}>
-                                {profileInitials}
-                            </div>
+                            {logoPreview ? (
+                                <img src={logoPreview} alt="Brand logo preview" style={{ height: '56px', width: '56px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #EDD9BC' }} />
+                            ) : (
+                                <div style={{ display: 'flex', height: '56px', width: '56px', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#C2340A', fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+                                    {profileInitials}
+                                </div>
+                            )}
                             <div>
                                 <p style={{ fontSize: '15px', fontWeight: 700, color: '#1A0A00' }}>{form.businessName || 'Brand profile'}</p>
                                 <p style={{ fontSize: '13px', color: '#7A5030' }}>Used across your Porchest profile.</p>
@@ -288,6 +310,30 @@ export default function BrandProfileForm() {
                 </div>
 
                 <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Brand logo</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderRadius: '16px', border: '1px dashed #EDD9BC', background: 'rgba(255,255,255,0.48)', padding: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                {logoPreview ? (
+                                    <img src={logoPreview} alt="Brand logo preview" style={{ height: '64px', width: '64px', borderRadius: '16px', objectFit: 'cover', border: '1px solid #EDD9BC' }} />
+                                ) : (
+                                    <div style={{ display: 'flex', height: '64px', width: '64px', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', background: 'rgba(194,52,10,0.10)', color: '#C2340A', fontWeight: 800 }}>
+                                        {profileInitials}
+                                    </div>
+                                )}
+                                <div style={{ flex: 1, minWidth: '220px' }}>
+                                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#1A0A00' }}>{logoPreview ? 'Logo uploaded' : 'Upload your brand logo'}</p>
+                                    <p style={{ fontSize: '13px', color: '#7A5030' }}>Used across your Porchest dashboard and brand-facing surfaces.</p>
+                                </div>
+                                <label style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '10px 14px', fontSize: '13px', fontWeight: 700, color: '#1A0A00', cursor: 'pointer' }}>
+                                    Choose file
+                                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                                </label>
+                            </div>
+                            <p style={{ fontSize: '12px', color: '#7A5030' }}>PNG or JPG recommended.</p>
+                        </div>
+                    </div>
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Business name</label>
                         <input style={inputStyle} placeholder="Business name" value={form.businessName} onChange={(event) => setForm((current) => ({ ...current, businessName: event.target.value }))}

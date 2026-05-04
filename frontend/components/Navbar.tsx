@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useApi } from '@/hooks/useApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export default function Navbar() {
     const { user, logout } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { data: brandProfile, refetch: refetchBrandProfile } = useApi('/profile/brand/me', { immediate: Boolean(user?.role === 'brand') });
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -39,8 +41,21 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
+    useEffect(() => {
+        if (user?.role !== 'brand') return;
+
+        const handleBrandProfileUpdated = () => {
+            void refetchBrandProfile();
+        };
+
+        window.addEventListener('porchest-brand-profile-updated', handleBrandProfileUpdated as EventListener);
+        return () => window.removeEventListener('porchest-brand-profile-updated', handleBrandProfileUpdated as EventListener);
+    }, [refetchBrandProfile, user?.role]);
+
     const dashboardHref = user ? `/dashboard/${user.role}` : '/login';
     const roleLabel = user ? (user.companyName || user.fullName || user.email.split('@')[0]) : null;
+    const brandLogo = user?.role === 'brand' ? (brandProfile?.logo || brandProfile?.logoUrl || '') : '';
+    const brandName = user?.role === 'brand' ? (brandProfile?.businessName || brandProfile?.brandName || roleLabel || '') : '';
 
     return (
         <>
@@ -85,8 +100,11 @@ export default function Navbar() {
                     <div className="hidden md:flex items-center gap-3">
                         {user ? (
                             <>
-                                <Link href={dashboardHref} className="outline-btn" style={{ fontSize: '13.5px', padding: '8px 20px' }}>
-                                    {roleLabel}
+                                <Link href={dashboardHref} className="outline-btn" style={{ fontSize: '13.5px', padding: '8px 20px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                    {brandLogo ? (
+                                        <img src={brandLogo} alt={brandName || 'Brand logo'} style={{ width: '18px', height: '18px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(17,19,24,0.12)' }} />
+                                    ) : null}
+                                    {user?.role === 'brand' && brandName ? brandName : roleLabel}
                                 </Link>
                                 <button onClick={logout} className="outline-btn" style={{ fontSize: '13.5px', padding: '8px 20px', cursor: 'pointer' }}>
                                     Sign Out
@@ -124,7 +142,7 @@ export default function Navbar() {
                                     </a>
                                 ))}
                                 <div className="flex gap-2 mt-2">
-                                    <Link href="/login" className="outline-btn" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>Sign In</Link>
+                                <Link href="/login" className="outline-btn" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>Sign In</Link>
                                     <Link href="/signup" className="glow-btn" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>Get Started</Link>
                                 </div>
                             </div>

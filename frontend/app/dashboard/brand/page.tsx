@@ -10,12 +10,18 @@ import { AlertCircle } from 'lucide-react';
 
 type BrandProfileResponse = {
     profileComplete?: boolean;
+    logo?: string;
+    logoUrl?: string;
+    businessName?: string;
+    brandName?: string;
 };
 
 export default function BrandPortalOverview() {
     const { data, loading } = useApi('/profile/brand/me');
     const profile = data as BrandProfileResponse | null;
     const profileComplete = !!profile?.profileComplete;
+    const brandLogo = profile?.logo || profile?.logoUrl || '';
+    const brandName = profile?.businessName || profile?.brandName || '';
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>
@@ -65,7 +71,7 @@ export default function BrandPortalOverview() {
                             </motion.div>
                         )}
 
-                        <OverviewPage profileCompleteOverride={profileComplete} />
+                        <OverviewPage profileCompleteOverride={profileComplete} brandLogo={brandLogo} brandName={brandName} />
                     </div>
                 )}
             </DashboardLayout>

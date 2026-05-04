@@ -59,6 +59,7 @@ function buildBrandUpdates(body) {
     applyIfPresent(updates, body, 'businessName', (value) => value ?? '');
     applyIfPresent(updates, body, 'brandName', (value) => value ?? '');
     applyIfPresent(updates, body, 'representerName', (value) => value ?? '');
+    applyIfPresent(updates, body, 'logo', (value) => value ?? '');
     applyIfPresent(updates, body, 'industry', (value) => value ?? '');
     applyIfPresent(updates, body, 'website', (value) => value ?? '');
     applyIfPresent(updates, body, 'instagramLink', (value) => value ?? '');

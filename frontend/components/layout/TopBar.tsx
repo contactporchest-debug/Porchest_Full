@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Search, Bell } from 'lucide-react';
-import Image from 'next/image';
 
 function titleFromPath(pathname: string) {
     const parts = pathname.split('/').filter(Boolean);
@@ -19,7 +18,7 @@ function titleFromPath(pathname: string) {
     return map[label] || label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export default function TopBar() {
+export default function TopBar({ role, brandLogo = '', brandName = '' }: { role: 'influencer' | 'brand' | 'admin' | 'software-client'; brandLogo?: string; brandName?: string; }) {
     const pathname = usePathname();
     const { user } = useAuth();
     const title = titleFromPath(pathname);
@@ -96,7 +95,8 @@ export default function TopBar() {
                     width: '38px',
                     height: '38px',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #C2340A, #FF6B1A)',
+                    background: role === 'brand' && brandLogo ? 'rgba(255,255,255,0.72)' : 'linear-gradient(135deg, #C2340A, #FF6B1A)',
+                    border: role === 'brand' && brandLogo ? '1px solid #EDD9BC' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -106,7 +106,11 @@ export default function TopBar() {
                     cursor: 'pointer',
                     flexShrink: 0,
                 }}>
-                    {initials}
+                    {role === 'brand' && brandLogo ? (
+                        <img src={brandLogo} alt={brandName || 'Brand logo'} style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                    ) : (
+                        initials
+                    )}
                 </div>
             </div>
         </header>

@@ -44,10 +44,14 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
 export default function Sidebar({
     role,
     mobileOpen = true,
+    brandLogo = '',
+    brandName = '',
     onNavigate,
 }: {
     role: Role;
     mobileOpen?: boolean;
+    brandLogo?: string;
+    brandName?: string;
     onNavigate?: () => void;
 }) {
     const pathname = usePathname();
@@ -88,14 +92,15 @@ export default function Sidebar({
                 flexShrink: 0,
             }}>
                 <Image
-                    src="/porchest-logo.png"
-                    alt="Porchest"
+                    src={role === 'brand' && brandLogo ? brandLogo : '/porchest-logo.png'}
+                    alt={role === 'brand' && brandLogo ? (brandName || 'Brand logo') : 'Porchest'}
                     width={32}
                     height={32}
-                    style={{ borderRadius: '6px', objectFit: 'contain' }}
+                    unoptimized={Boolean(role === 'brand' && brandLogo)}
+                    style={{ borderRadius: role === 'brand' && brandLogo ? '10px' : '6px', objectFit: 'cover' }}
                 />
                 <div>
-                    <p style={{ fontSize: '17px', fontWeight: 600, color: '#1A0A00', lineHeight: 1.2 }}>Porchest</p>
+                    <p style={{ fontSize: '17px', fontWeight: 600, color: '#1A0A00', lineHeight: 1.2 }}>{role === 'brand' && brandName ? brandName : 'Porchest'}</p>
                     <p style={{ fontSize: '10px', fontWeight: 500, color: '#C4A882', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Dashboard</p>
                 </div>
             </div>
