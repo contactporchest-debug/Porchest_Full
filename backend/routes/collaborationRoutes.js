@@ -324,32 +324,47 @@ async function verifyAdminFinalization(collabId, collab, reqUser) {
     const tranche2 = Number((agreedFee * 0.5).toFixed(2));
     const updated = await CampaignRequest.findByIdAndUpdate(
         collabId,
-        {
-            $set: {
-                status: 'completed',
-                adminVerifiedPost: true,
-                adminVerifiedAt: now,
-                adminVerifiedByFK: reqUser._id,
-                'content.adminVerified': true,
-                'content.adminVerifiedAt': now,
-                'content.adminVerifiedBy': reqUser._id,
-                'payment.status': 'partial',
-                'payment.portion1.amount': tranche1,
-                'payment.portion1.releasedAt': now,
-                'payment.portion1.status': 'released',
-                'payment.portion2.amount': tranche2,
-                'payment.portion2.releasedAt': new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-                'payment.portion2.status': 'pending',
-                'payment.tranche1.amount': tranche1,
-                'payment.tranche1.releasedAt': now,
-                'payment.tranche1.status': 'released',
-                'payment.tranche2.amount': tranche2,
-                'payment.tranche2.releasedAt': new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-                'payment.tranche2.status': 'pending',
+            {
+                $set: {
+                    status: 'completed',
+                    adminVerifiedPost: true,
+                    adminVerifiedAt: now,
+                    adminVerifiedByFK: reqUser._id,
+                    'content.adminVerified': true,
+                    'content.adminVerifiedAt': now,
+                    'content.adminVerifiedBy': reqUser._id,
+                    payment: {
+                        ...(collab.payment || {}),
+                        status: 'partial',
+                        portion1: {
+                            ...(collab.payment?.portion1 || {}),
+                            amount: tranche1,
+                            releasedAt: now,
+                            status: 'released',
+                        },
+                        portion2: {
+                            ...(collab.payment?.portion2 || {}),
+                            amount: tranche2,
+                            releasedAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+                            status: 'pending',
+                        },
+                        tranche1: {
+                            ...(collab.payment?.tranche1 || collab.payment?.portion1 || {}),
+                            amount: tranche1,
+                            releasedAt: now,
+                            status: 'released',
+                        },
+                        tranche2: {
+                            ...(collab.payment?.tranche2 || collab.payment?.portion2 || {}),
+                            amount: tranche2,
+                            releasedAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+                            status: 'pending',
+                        },
+                    },
+                },
             },
-        },
-        { new: true, strict: false }
-    ).lean();
+            { new: true, strict: false }
+        ).lean();
     return updated;
 }
 
@@ -436,13 +451,28 @@ async function scheduleSecondPayoutIfDue(collabId, collab) {
                 status: 'completed',
                 secondPayoutReleasedAt: now,
                 campaignCompletedAt: now,
-                'payment.status': 'released',
-                'payment.portion2.amount': secondAmount,
-                'payment.portion2.releasedAt': now,
-                'payment.portion2.status': 'released',
-                'payment.tranche2.amount': secondAmount,
-                'payment.tranche2.releasedAt': now,
-                'payment.tranche2.status': 'released',
+                payment: {
+                    ...(collab.payment || {}),
+                    status: 'released',
+                    portion1: {
+                        ...(collab.payment?.portion1 || {}),
+                    },
+                    portion2: {
+                        ...(collab.payment?.portion2 || {}),
+                        amount: secondAmount,
+                        releasedAt: now,
+                        status: 'released',
+                    },
+                    tranche1: {
+                        ...(collab.payment?.tranche1 || collab.payment?.portion1 || {}),
+                    },
+                    tranche2: {
+                        ...(collab.payment?.tranche2 || collab.payment?.portion2 || {}),
+                        amount: secondAmount,
+                        releasedAt: now,
+                        status: 'released',
+                    },
+                },
             },
         },
         { new: true, strict: false }
@@ -926,37 +956,52 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
         );
         const updated = await CampaignRequest.findByIdAndUpdate(
             req.params.id,
-            {
-                $set: {
-                    status: 'campaign_active',
-                    adminVerifiedPost: true,
-                    adminVerifiedAt: now,
+        {
+            $set: {
+                status: 'campaign_active',
+                adminVerifiedPost: true,
+                adminVerifiedAt: now,
                     adminVerifiedByFK: req.user._id,
                     verifiedLiveAt: now,
                     campaignStartAt: now,
-                    campaignEndAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-                    campaignActiveAt: now,
-                    'content.adminVerified': true,
-                    'content.adminVerifiedAt': now,
-                    'content.adminVerifiedBy': req.user._id,
-                    'payment.status': 'partial',
-                    'payment.portion1.amount': split.firstPayoutAmount,
-                    'payment.portion1.releasedAt': now,
-                    'payment.portion1.status': 'released',
-                    'payment.portion2.amount': split.secondPayoutAmount,
-                    'payment.portion2.releasedAt': new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-                    'payment.portion2.status': 'pending',
-                    'payment.tranche1.amount': split.firstPayoutAmount,
-                    'payment.tranche1.releasedAt': now,
-                    'payment.tranche1.status': 'released',
-                    'payment.tranche2.amount': split.secondPayoutAmount,
-                    'payment.tranche2.releasedAt': new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-                    'payment.tranche2.status': 'pending',
-                    firstPayoutAmount: split.firstPayoutAmount,
-                    secondPayoutAmount: split.secondPayoutAmount,
-                    firstPayoutReleasedAt: now,
+                campaignEndAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                campaignActiveAt: now,
+                'content.adminVerified': true,
+                'content.adminVerifiedAt': now,
+                'content.adminVerifiedBy': req.user._id,
+                payment: {
+                    ...(collab.payment || {}),
+                    status: 'partial',
+                    portion1: {
+                        ...(collab.payment?.portion1 || {}),
+                        amount: split.firstPayoutAmount,
+                        releasedAt: now,
+                        status: 'released',
+                    },
+                    portion2: {
+                        ...(collab.payment?.portion2 || {}),
+                        amount: split.secondPayoutAmount,
+                        releasedAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                        status: 'pending',
+                    },
+                    tranche1: {
+                        ...(collab.payment?.tranche1 || collab.payment?.portion1 || {}),
+                        amount: split.firstPayoutAmount,
+                        releasedAt: now,
+                        status: 'released',
+                    },
+                    tranche2: {
+                        ...(collab.payment?.tranche2 || collab.payment?.portion2 || {}),
+                        amount: split.secondPayoutAmount,
+                        releasedAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+                        status: 'pending',
+                    },
                 },
+                firstPayoutAmount: split.firstPayoutAmount,
+                secondPayoutAmount: split.secondPayoutAmount,
+                firstPayoutReleasedAt: now,
             },
+        },
             { new: true, strict: false }
         ).lean();
 
@@ -1011,8 +1056,23 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
                     campaignCompletedAt: now,
                     adminStoppedAt: now,
                     adminStopReason: reason,
-                    'payment.portion2.status': 'held',
-                    'payment.tranche2.status': 'held',
+                    payment: {
+                        ...(collab.payment || {}),
+                        portion1: {
+                            ...(collab.payment?.portion1 || {}),
+                        },
+                        portion2: {
+                            ...(collab.payment?.portion2 || {}),
+                            status: 'held',
+                        },
+                        tranche1: {
+                            ...(collab.payment?.tranche1 || collab.payment?.portion1 || {}),
+                        },
+                        tranche2: {
+                            ...(collab.payment?.tranche2 || collab.payment?.portion2 || {}),
+                            status: 'held',
+                        },
+                    },
                 },
             },
             { new: true, strict: false }
