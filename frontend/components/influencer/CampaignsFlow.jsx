@@ -46,7 +46,16 @@ export default function CampaignsFlow() {
     async function action(id, endpoint, body = {}) {
         setActing(true);
         try {
-            await apiPatch(`/collaborations/${id}/${endpoint}`, body);
+            const result = await apiPatch(`/collaborations/${id}/${endpoint}`, body);
+            if (result?.success === false || result?.error || result?.message === 'Invalid status') {
+                throw new Error(result?.error || result?.message || 'Unable to update collaboration');
+            }
+            const nextStatus = result?.status || result?.request?.status || result?.data?.status;
+            if (endpoint === 'accept' || endpoint === 'accept-counter') {
+                if (!['brand_payment_pending', 'brand_paid_work_can_start', 'campaign_active'].includes(String(nextStatus || ''))) {
+                    throw new Error('The collaboration did not move to the next stage.');
+                }
+            }
             if (endpoint === 'accept' || endpoint === 'accept-counter') {
                 setActiveTab(1);
                 toast.success('Request accepted. It moved to Collaborations.');

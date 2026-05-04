@@ -426,7 +426,10 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
         setResponding(true);
         try {
             const payload = { status: action, ...data };
-            await influencerAPI.respondToRequest(id, payload);
+            const result = await influencerAPI.respondToRequest(id, payload);
+            if (result?.data?.success === false || result?.data?.error || result?.data?.message) {
+                throw new Error(result?.data?.error || result?.data?.message || 'Unable to update request');
+            }
             toast.success(
                 action === 'accepted'
                     ? 'Request accepted. It moved to Collaborations.'
@@ -436,8 +439,8 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
             );
             await loadRequests();
             onChanged?.();
-        } catch {
-            toast.error('Failed to respond to request');
+        } catch (error: any) {
+            toast.error(error?.message || 'Failed to respond to request');
         } finally {
             setResponding(false);
         }
