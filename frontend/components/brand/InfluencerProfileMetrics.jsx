@@ -7,8 +7,8 @@ import MetricCard from '../metrics/MetricCard';
 export default function InfluencerProfileMetrics({ influencerId }) {
     const { data, loading, error } = useApi(`/instagram/influencer/${influencerId}/metrics`);
 
-    if (loading) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#C4A882', background: 'rgba(255,255,255,0.4)', borderRadius: '16px', textAlign: 'center', border: '1px solid #EDD9BC' }}>Loading influencer metrics...</div>;
-    if (error) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#E8400A', background: 'rgba(232,64,10,0.06)', borderRadius: '16px', textAlign: 'center', border: '1px solid rgba(232,64,10,0.15)' }}>Could not load metrics: {error}</div>;
+    if (loading) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#7A5030', background: 'rgba(255,255,255,0.45)', borderRadius: '16px', textAlign: 'center', border: '1px solid #EDD9BC', backdropFilter: 'blur(12px)' }}>Loading influencer metrics...</div>;
+    if (error) return <div style={{ padding: '24px', fontSize: '14px', fontWeight: 600, color: '#C2340A', background: 'rgba(255,255,255,0.45)', borderRadius: '16px', textAlign: 'center', border: '1px solid #EDD9BC', backdropFilter: 'blur(12px)' }}>Could not load metrics: {error}</div>;
     if (!data) return null;
 
     const fmt = (n) => (n == null ? '—' : Number(n).toLocaleString());
@@ -40,7 +40,7 @@ export default function InfluencerProfileMetrics({ influencerId }) {
                     {data.country ? <p style={{ fontSize: '12px', fontWeight: 500, color: '#C4A882', marginTop: '4px' }}>{data.country}</p> : null}
                 </div>
                 {fitScore != null ? (
-                    <div style={{ marginLeft: 'auto', textAlign: 'right', background: 'rgba(255,255,255,0.6)', padding: '12px 20px', borderRadius: '16px', border: '1px solid #EDD9BC' }}>
+                    <div style={{ marginLeft: 'auto', textAlign: 'right', background: 'rgba(255,255,255,0.6)', padding: '12px 20px', borderRadius: '16px', border: '1px solid #EDD9BC', backdropFilter: 'blur(12px)' }}>
                         <p style={{ fontSize: '30px', fontWeight: 900, letterSpacing: '-0.02em', color: fitColor }}>{Math.round(fitScore)}</p>
                         <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Audience fit</p>
                         <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px', color: fitColor }}>{fitLabel}</p>
@@ -71,7 +71,7 @@ export default function InfluencerProfileMetrics({ influencerId }) {
                     className="md:grid-cols-2"
                 >
                     {audience.topCountries?.length > 0 && (
-                        <div style={{ borderRadius: '24px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px' }}>
+                        <div style={{ borderRadius: '24px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.45)', padding: '24px', backdropFilter: 'blur(12px)' }}>
                             <p style={{ marginBottom: '16px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7A5030' }}>Top countries</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {(audience.topCountries || []).slice(0, 5).map((item, index) => (
@@ -87,7 +87,7 @@ export default function InfluencerProfileMetrics({ influencerId }) {
                         </div>
                     )}
                     {audience.ageGender && Object.keys(audience.ageGender).length > 0 && (
-                        <div style={{ borderRadius: '24px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px' }}>
+                        <div style={{ borderRadius: '24px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.45)', padding: '24px', backdropFilter: 'blur(12px)' }}>
                             <p style={{ marginBottom: '16px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7A5030' }}>Age & gender</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {Object.entries(audience.ageGender || {})

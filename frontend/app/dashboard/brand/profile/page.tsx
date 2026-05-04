@@ -61,14 +61,15 @@ export default function BrandProfilePage() {
                             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
                                 <div style={{
                                     borderRadius: '99px',
-                                    border: '1px solid rgba(16,185,129,0.2)',
-                                    background: 'rgba(16,185,129,0.1)',
+                                    border: '1px solid #EDD9BC',
+                                    background: 'rgba(255,255,255,0.6)',
                                     padding: '8px 16px',
                                     fontSize: '12px',
                                     fontWeight: 700,
-                                    color: '#059669',
+                                    color: '#C2340A',
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.05em'
+                                    letterSpacing: '0.05em',
+                                    backdropFilter: 'blur(12px)'
                                 }}>
                                     Profile ready
                                 </div>

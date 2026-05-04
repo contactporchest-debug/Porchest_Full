@@ -77,14 +77,14 @@ interface Stats {
 
 /* ─── Status / Role color maps ─────────────────────────── */
 const statusColors: Record<string, { bg: string; color: string; border: string }> = {
-    active:      { bg: 'rgba(16,185,129,0.1)',  color: '#059669', border: 'rgba(16,185,129,0.2)' },
+    active:      { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     pending:     { bg: 'rgba(245,158,11,0.1)',  color: '#d97706', border: 'rgba(245,158,11,0.2)' },
     suspended:   { bg: 'rgba(239,68,68,0.1)', color: '#dc2626', border: 'rgba(239,68,68,0.2)' },
-    sent:        { bg: 'rgba(56,189,248,0.1)',  color: '#0284c7', border: 'rgba(56,189,248,0.2)' },
-    accepted:    { bg: 'rgba(16,185,129,0.1)',  color: '#059669', border: 'rgba(16,185,129,0.2)' },
+    sent:        { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
+    accepted:    { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     rejected:    { bg: 'rgba(239,68,68,0.1)', color: '#dc2626', border: 'rgba(239,68,68,0.2)' },
     negotiation: { bg: 'rgba(245,158,11,0.1)',  color: '#d97706', border: 'rgba(245,158,11,0.2)' },
-    deal_closed: { bg: 'rgba(168,85,247,0.1)', color: '#9333ea', border: 'rgba(168,85,247,0.2)' },
+    deal_closed: { bg: 'rgba(194,52,10,0.1)', color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     cancelled:   { bg: 'rgba(255,255,255,0.6)', color: '#7A5030', border: '#EDD9BC' },
     expired:     { bg: 'rgba(255,255,255,0.6)', color: '#7A5030', border: '#EDD9BC' },
 };
@@ -95,9 +95,9 @@ const roleColors: Record<string, { bg: string; color: string; border: string }> 
     'employee-marketing': { bg: 'rgba(194,52,10,0.1)', color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     'employee-software': { bg: 'rgba(194,52,10,0.1)', color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     owner:      { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
-    brand:      { bg: 'rgba(168,85,247,0.1)',  color: '#9333ea', border: 'rgba(168,85,247,0.2)' },
-    influencer: { bg: 'rgba(56,189,248,0.1)',  color: '#0284c7', border: 'rgba(56,189,248,0.2)' },
-    'software-client': { bg: 'rgba(37,99,235,0.1)', color: '#2563eb', border: 'rgba(37,99,235,0.2)' },
+    brand:      { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
+    influencer: { bg: 'rgba(194,52,10,0.08)',  color: '#7A5030', border: 'rgba(194,52,10,0.16)' },
+    'software-client': { bg: 'rgba(194,52,10,0.08)', color: '#7A5030', border: 'rgba(194,52,10,0.16)' },
 };
 
 /* ─── Shared tiny components ───────────────────────────── */
@@ -413,7 +413,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                                 {isAdminRole(u.role) ? (
                                                                     <span style={{ fontSize: 12, color: '#C4A882', fontWeight: 600 }}>—</span>
                                                                 ) : (
-                                                                    <span style={{ fontSize: 12, fontWeight: 700, color: u.profileCompletionStatus ? '#059669' : '#d97706', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontSize: 12, fontWeight: 700, color: u.profileCompletionStatus ? '#C2340A' : '#d97706', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                                                                         {u.profileCompletionStatus ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
                                                                         {u.profileCompletionStatus ? 'Complete' : 'Incomplete'}
                                                                     </span>
@@ -431,8 +431,8 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                                     <div style={{ display: 'flex', gap: 8 }}>
                                                                         <button onClick={(e) => { e.stopPropagation(); handleStatus(u._id, 'active'); }} title="Approve / Activate"
                                                                             disabled={actioningUser === u._id}
-                                                                            style={{ padding: '8px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669', cursor: 'pointer', transition: 'all 0.15s' }}
-                                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}>
+                                                                            style={{ padding: '8px', borderRadius: 8, background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.18)', color: '#C2340A', cursor: 'pointer', transition: 'all 0.15s' }}
+                                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,52,10,0.16)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(194,52,10,0.1)'}>
                                                                             <UserCheck size={16} />
                                                                         </button>
                                                                         <button onClick={(e) => { e.stopPropagation(); handleStatus(u._id, 'suspended'); }} title="Suspend"
@@ -572,7 +572,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
 
                                                             {/* Brand */}
                                                             <td style={{ padding: '16px 24px' }}>
-                                                                <p style={{ fontSize: 13, fontWeight: 600, color: '#9333ea' }}>{c.brandName || '—'}</p>
+                                                                <p style={{ fontSize: 13, fontWeight: 600, color: '#C2340A' }}>{c.brandName || '—'}</p>
                                                             </td>
 
                                                             {/* Influencer */}
@@ -594,15 +594,15 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                             </td>
 
                                                             {/* Budget */}
-                                                            <td style={{ padding: '16px 24px', color: (c.counterOfferPrice || c.agreedPrice) ? '#059669' : '#C4A882', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                                            <td style={{ padding: '16px 24px', color: (c.counterOfferPrice || c.agreedPrice) ? '#C2340A' : '#C4A882', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
                                                                 {(c.counterOfferPrice || c.agreedPrice) ? `$${(c.counterOfferPrice || c.agreedPrice || 0).toLocaleString()}` : '—'}
                                                             </td>
 
                                                             {/* Actions */}
                                                             <td style={{ padding: '16px 24px' }}>
                                                                 <div style={{ display: 'flex', gap: 8 }}>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'accepted'); }} title="Mark Accepted" style={{ padding: '8px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}><UserCheck size={16} /></button>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'deal_closed'); }} title="Close Deal" style={{ padding: '8px', borderRadius: 8, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', color: '#9333ea', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(168,85,247,0.2)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(168,85,247,0.1)'}><CheckCircle size={16} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'accepted'); }} title="Mark Accepted" style={{ padding: '8px', borderRadius: 8, background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.18)', color: '#C2340A', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,52,10,0.16)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(194,52,10,0.1)'}><UserCheck size={16} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'deal_closed'); }} title="Close Deal" style={{ padding: '8px', borderRadius: 8, background: 'rgba(194,52,10,0.1)', border: '1px solid rgba(194,52,10,0.18)', color: '#7A5030', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(194,52,10,0.16)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(194,52,10,0.1)'}><CheckCircle size={16} /></button>
                                                                     <button onClick={(e) => { e.stopPropagation(); handleCampaignStatus(c._id, 'cancelled'); }} title="Cancel" style={{ padding: '8px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#dc2626', cursor: 'pointer', transition: 'all 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.2)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}><Trash2 size={16} /></button>
                                                                 </div>
                                                             </td>
@@ -636,7 +636,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #EDD9BC' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Brand</span>
-                                                    <span style={{ fontSize: 15, fontWeight: 600, color: '#9333ea' }}>{selectedCampaign.brandName || '—'}</span>
+                                                    <span style={{ fontSize: 15, fontWeight: 600, color: '#C2340A' }}>{selectedCampaign.brandName || '—'}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #EDD9BC' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Influencer</span>
@@ -648,7 +648,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #EDD9BC' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Budget</span>
-                                                    <span style={{ fontSize: 15, fontWeight: 700, color: '#059669' }}>{(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice) ? `$${(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice || 0).toLocaleString()}` : '—'}</span>
+                                                    <span style={{ fontSize: 15, fontWeight: 700, color: '#C2340A' }}>{(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice) ? `$${(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice || 0).toLocaleString()}` : '—'}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12 }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dates</span>

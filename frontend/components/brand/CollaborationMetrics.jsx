@@ -30,9 +30,20 @@ export default function CollaborationMetrics({ collaborationId }) {
     };
 
     const st = statusColors[windowStatus] || statusColors.active;
+    const metricsReady = Boolean(m?.metricsReady);
+    const readyMessage = m?.dataLabel || 'Final post link has not been submitted yet. Metrics will appear after submission.';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingTop: '16px', borderTop: '1px solid #EDD9BC' }}>
+            {!metricsReady ? (
+                <div style={{ borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>Metrics unlock after the final post is submitted</p>
+                    <p style={{ marginTop: '4px', fontSize: '12px', fontWeight: 500, color: '#7A5030' }}>
+                        {readyMessage}
+                    </p>
+                </div>
+            ) : null}
+
             {m ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '20px' }} className="md:flex-row md:items-center md:justify-between">
                     <div>
@@ -52,6 +63,7 @@ export default function CollaborationMetrics({ collaborationId }) {
 
             {m ? <p style={{ fontSize: '12px', fontStyle: 'italic', color: '#C4A882', fontWeight: 500 }}>{m.dataLabel}</p> : null}
 
+            {metricsReady ? (
             <div>
                 <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Traffic</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -60,26 +72,29 @@ export default function CollaborationMetrics({ collaborationId }) {
                     <MetricCard index={2} label="Click-through rate" value={c?.ctr != null ? `${Number(c.ctr).toFixed(1)}%` : '—'} />
                 </div>
             </div>
+            ) : null}
 
-            {m?.metrics?.conversions > 0 ? (
-                <div>
-                    <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Revenue & ROI</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                        <MetricCard index={3} label="Orders" value={fmt(m.metrics.conversions)} accent />
-                        <MetricCard index={4} label="Total revenue" value={fmtMoney(m.metrics.revenue)} accent />
-                        <MetricCard index={5} label="ROAS" value={fmtX(m.metrics.roas)} sub="revenue / influencer cost" />
-                        <MetricCard index={6} label="Cost per order" value={fmtMoney(m.metrics.cpa)} />
+            {metricsReady ? (
+                m?.metrics?.conversions > 0 ? (
+                    <div>
+                        <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Revenue & ROI</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                            <MetricCard index={3} label="Orders" value={fmt(m.metrics.conversions)} accent />
+                            <MetricCard index={4} label="Total revenue" value={fmtMoney(m.metrics.revenue)} accent />
+                            <MetricCard index={5} label="ROAS" value={fmtX(m.metrics.roas)} sub="revenue / influencer cost" />
+                            <MetricCard index={6} label="Cost per order" value={fmtMoney(m.metrics.cpa)} />
+                        </div>
                     </div>
-                </div>
-            ) : (
-                <div style={{ borderRadius: '16px', border: '1px dashed #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>
-                    <svg width="32" height="32" style={{ color: '#C4A882', margin: '0 auto 8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>No promo code purchases recorded yet</p>
-                    <p style={{ marginTop: '4px', fontSize: '12px', fontWeight: 500, color: '#7A5030' }}>Make sure your checkout is calling the Porchest purchase webhook</p>
-                </div>
-            )}
+                ) : (
+                    <div style={{ borderRadius: '16px', border: '1px dashed #EDD9BC', background: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>
+                        <svg width="32" height="32" style={{ color: '#C4A882', margin: '0 auto 8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>No promo code purchases recorded yet</p>
+                        <p style={{ marginTop: '4px', fontSize: '12px', fontWeight: 500, color: '#7A5030' }}>Make sure your checkout is calling the Porchest purchase webhook</p>
+                    </div>
+                )
+            ) : null}
 
-            {m?.metrics?.reach > 0 ? (
+            {metricsReady && m?.metrics?.reach > 0 ? (
                 <div>
                     <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Post performance</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -90,7 +105,7 @@ export default function CollaborationMetrics({ collaborationId }) {
                 </div>
             ) : null}
 
-            {f ? (
+            {metricsReady && f ? (
                 <div>
                     <p style={{ marginBottom: '12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#7A5030' }}>Follower growth</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>

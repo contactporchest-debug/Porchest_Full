@@ -62,7 +62,7 @@ export default function BrandTrackingSetup() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ borderRadius: '16px', border: '1px solid rgba(194,52,10,0.2)', background: 'rgba(194,52,10,0.06)', padding: '20px' }}>
+            <div style={{ borderRadius: '18px', border: '1px solid rgba(194,52,10,0.18)', background: 'rgba(194,52,10,0.06)', padding: '20px', backdropFilter: 'blur(12px)' }}>
                 <p style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#C2340A' }}>Brand tracking setup</p>
                 <h3 style={{ marginTop: '8px', fontSize: '18px', fontWeight: 700, color: '#1A0A00' }}>Share these integration options with brands</h3>
                 <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>
@@ -70,16 +70,16 @@ export default function BrandTrackingSetup() {
                 </p>
             </div>
 
-            <div style={{ borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ borderRadius: '18px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', backdropFilter: 'blur(12px)' }}>
                 <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>Where the brand should add the tracking code</p>
                 <div style={{ display: 'grid', gap: '12px' }}>
-                    <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
+                    <div style={{ borderRadius: '14px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
                         <p style={{ fontSize: '12px', fontWeight: 700, color: '#C2340A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Webhook</p>
                         <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030', lineHeight: 1.6 }}>
                             Paste this into the brand's checkout success handler on the server side, right after the order is confirmed. This is the best option for Shopify Plus, WooCommerce, or any custom backend checkout.
                         </p>
                     </div>
-                    <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
+                    <div style={{ borderRadius: '14px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '14px' }}>
                         <p style={{ fontSize: '12px', fontWeight: 700, color: '#C2340A', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pixel</p>
                         <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030', lineHeight: 1.6 }}>
                             Paste the pixel script on the order confirmation or thank-you page, ideally just before the closing <code style={{ padding: '2px 6px', borderRadius: '6px', background: 'rgba(255,255,255,0.9)', border: '1px solid #EDD9BC' }}>&lt;/body&gt;</code> tag. This works when the brand can edit page HTML but cannot touch checkout server code.

@@ -163,9 +163,9 @@ function fmtMoney(value?: number) {
 
 function StatPill({ label, value }: { label: string; value: string | number }) {
     return (
-        <div className="bg-[#1A1A1E] border border-[#2A2A30] rounded-xl p-4">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400 font-medium">{label}</p>
-            <p className="text-2xl font-bold text-white mt-1">{value}</p>
+        <div className="bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] p-4 backdrop-blur-[12px]">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030] font-medium">{label}</p>
+            <p className="text-2xl font-bold text-[#1A0A00] mt-1">{value}</p>
         </div>
     );
 }
@@ -296,18 +296,18 @@ export default function AdminCollaborationsPage() {
         <ProtectedRoute allowedRoles={['admin']}>
             <DashboardLayout>
                 <div className="max-w-7xl mx-auto space-y-6">
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-[#1A1A1E] border border-[#2A2A30] rounded-xl p-6">
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] p-6 backdrop-blur-[12px]">
                         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.25em] text-gray-400 font-medium">Admin portal</p>
-                                <h1 className="text-3xl font-bold text-white mt-2">Collaborations</h1>
-                                <p className="text-sm text-gray-400 mt-2 max-w-3xl">
+                                <p className="text-xs uppercase tracking-[0.25em] text-[#7A5030] font-medium">Admin portal</p>
+                                <h1 className="text-3xl font-bold text-[#1A0A00] mt-2">Collaborations</h1>
+                                <p className="text-sm text-[#7A5030] mt-2 max-w-3xl">
                                     Review every collaboration in one place, monitor live analytics, verify posts, release the first payout, and stop anything that needs intervention.
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                                <span className="px-3 py-1.5 rounded-full bg-[#202025] border border-[#2A2A30]">{counts.total} total</span>
-                                <span className="px-3 py-1.5 rounded-full bg-[#202025] border border-[#2A2A30]">{counts.awaiting} awaiting review</span>
+                            <div className="flex items-center gap-2 text-xs text-[#7A5030]">
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC]">{counts.total} total</span>
+                                <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC]">{counts.awaiting} awaiting review</span>
                             </div>
                         </div>
                     </motion.div>
@@ -320,13 +320,13 @@ export default function AdminCollaborationsPage() {
                     </div>
 
                     <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
-                        <div className="flex flex-wrap gap-2 p-1 bg-[#1A1A1E] border border-[#2A2A30] rounded-xl w-fit">
+                        <div className="flex flex-wrap gap-2 p-1 bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] w-fit backdrop-blur-[12px]">
                             {FILTERS.map((item) => (
                                 <button
                                     key={item.key}
                                     onClick={() => setFilter(item.key)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        filter === item.key ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-[#202025]'
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                        filter === item.key ? 'bg-[#C2340A] text-white' : 'text-[#7A5030] hover:text-[#1A0A00] hover:bg-[rgba(255,255,255,0.55)]'
                                     }`}
                                 >
                                     {item.label}
@@ -334,18 +334,18 @@ export default function AdminCollaborationsPage() {
                             ))}
                         </div>
                         <div className="relative flex-1 max-w-2xl">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A5030]" />
                             <input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search collaborations, brands, influencers..."
-                                className="w-full bg-[#1A1A1E] border border-[#2A2A30] rounded-xl pl-11 pr-4 py-3 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-blue-500"
+                                className="w-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] pl-11 pr-4 py-3 text-[#1A0A00] text-sm placeholder:text-[#A88C6D] focus:outline-none focus:border-[#C2340A] backdrop-blur-[12px]"
                             />
                         </div>
                     </div>
 
                     {loading ? (
-                        <div className="flex items-center justify-center py-20 text-gray-400">
+                        <div className="flex items-center justify-center py-20 text-[#7A5030]">
                             <Loader2 className="w-5 h-5 animate-spin mr-2" />
                             Loading collaborations...
                         </div>
@@ -353,10 +353,10 @@ export default function AdminCollaborationsPage() {
                         <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
                             <div className="space-y-4">
                                 {filtered.length === 0 ? (
-                                    <div className="bg-[#1A1A1E] border border-dashed border-[#2A2A30] rounded-xl p-10 text-center">
-                                        <Users className="w-10 h-10 text-gray-500 mx-auto mb-4" />
-                                        <p className="text-white font-medium">No collaborations found</p>
-                                        <p className="text-gray-400 text-sm mt-2">Try adjusting the search or filter chips.</p>
+                                    <div className="bg-[rgba(255,255,255,0.38)] border border-dashed border-[#EDD9BC] rounded-[14px] p-10 text-center backdrop-blur-[12px]">
+                                        <Users className="w-10 h-10 text-[#C4A882] mx-auto mb-4" />
+                                        <p className="text-[#1A0A00] font-medium">No collaborations found</p>
+                                        <p className="text-[#7A5030] text-sm mt-2">Try adjusting the search or filter chips.</p>
                                     </div>
                                 ) : filtered.map((item) => {
                                     const badge = STATUS_META[item.status] || STATUS_META.pending;
@@ -371,33 +371,33 @@ export default function AdminCollaborationsPage() {
                                                 setSelectedId(item._id);
                                                 setSelected(item);
                                             }}
-                                            className={`w-full text-left bg-[#1A1A1E] border rounded-xl p-5 transition-all ${
-                                                active ? 'border-blue-500 shadow-lg shadow-blue-500/10' : 'border-[#2A2A30] hover:border-[#3A3A42]'
+                                            className={`w-full text-left bg-[rgba(255,255,255,0.38)] border rounded-[14px] p-5 transition-all backdrop-blur-[12px] ${
+                                                active ? 'border-[#C2340A] shadow-lg shadow-[#C2340A]/10' : 'border-[rgba(255,255,255,0.65)] hover:border-[#EDD9BC]'
                                             }`}
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 <div className="flex items-start gap-4 min-w-0">
-                                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#202025] border border-[#2A2A30] flex items-center justify-center shrink-0">
+                                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] flex items-center justify-center shrink-0">
                                                         {item.brandLogoUrl ? (
                                                             <img src={item.brandLogoUrl} alt="" className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <span className="text-sm font-bold text-orange-500">{(item.brandName || 'B').slice(0, 1).toUpperCase()}</span>
+                                                            <span className="text-sm font-bold text-[#C2340A]">{(item.brandName || 'B').slice(0, 1).toUpperCase()}</span>
                                                         )}
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-white font-semibold truncate">{item.campaignTitle || item.brief?.campaignObjective || 'Collaboration'}</p>
-                                                        <p className="text-sm text-gray-400 mt-1 truncate">
+                                                        <p className="text-[#1A0A00] font-semibold truncate">{item.campaignTitle || item.brief?.campaignObjective || 'Collaboration'}</p>
+                                                        <p className="text-sm text-[#7A5030] mt-1 truncate">
                                                             {item.brandName || 'Brand'} · {item.influencerName || 'Influencer'}
                                                         </p>
                                                         <div className="flex flex-wrap gap-2 mt-3">
-                                                            <span className="px-2.5 py-1 rounded-full bg-[#202025] border border-[#2A2A30] text-xs text-gray-300">
+                                                            <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs text-[#7A5030]">
                                                                 Start: {fmtDate(item.campaignStartAt || item.verifiedLiveAt || item.acceptedAt)}
                                                             </span>
-                                                            <span className="px-2.5 py-1 rounded-full bg-[#202025] border border-[#2A2A30] text-xs text-gray-300">
+                                                            <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs text-[#7A5030]">
                                                                 End: {fmtDate(item.campaignEndAt || item.brief?.postingDeadline)}
                                                             </span>
                                                             {needsReview && (
-                                                                <span className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                                                                <span className="px-2.5 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-xs text-[#C2340A]">
                                                                     Awaiting admin verification
                                                                 </span>
                                                             )}
@@ -405,7 +405,7 @@ export default function AdminCollaborationsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <p className="text-lg font-bold text-white">{fmtMoney(item.pricing?.agreedFee ?? item.agreedPrice)}</p>
+                                                    <p className="text-lg font-bold text-[#1A0A00]">{fmtMoney(item.pricing?.agreedFee ?? item.agreedPrice)}</p>
                                                     <span className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-full border text-[11px] font-semibold uppercase tracking-wide" style={{ background: badge.bg, color: badge.color, borderColor: badge.border }}>
                                                         {badge.icon} {badge.label}
                                                     </span>
@@ -419,12 +419,12 @@ export default function AdminCollaborationsPage() {
                             <div className="sticky top-4 space-y-4">
                                 {selected ? (
                                     <>
-                                        <div className="bg-[#1A1A1E] border border-[#2A2A30] rounded-xl p-6">
+                                        <div className="bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] p-6 backdrop-blur-[12px]">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <p className="text-xs uppercase tracking-[0.2em] text-gray-400 font-medium">Selected collaboration</p>
-                                                    <h2 className="text-2xl font-bold text-white mt-2">{selected.campaignTitle || selected.brief?.campaignObjective || 'Collaboration'}</h2>
-                                                    <p className="text-sm text-gray-400 mt-2">{selected.brandName || 'Brand'} with {selected.influencerName || 'Influencer'}</p>
+                                                    <p className="text-xs uppercase tracking-[0.2em] text-[#7A5030] font-medium">Selected collaboration</p>
+                                                    <h2 className="text-2xl font-bold text-[#1A0A00] mt-2">{selected.campaignTitle || selected.brief?.campaignObjective || 'Collaboration'}</h2>
+                                                    <p className="text-sm text-[#7A5030] mt-2">{selected.brandName || 'Brand'} with {selected.influencerName || 'Influencer'}</p>
                                                 </div>
                                                 <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-[11px] font-semibold uppercase tracking-wide" style={{ background: selectedStatus?.bg, color: selectedStatus?.color, borderColor: selectedStatus?.border }}>
                                                     {selectedStatus?.icon} {selectedStatus?.label}
@@ -439,35 +439,35 @@ export default function AdminCollaborationsPage() {
                                             </div>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 text-sm">
-                                                <div className="bg-[#202025] border border-[#2A2A30] rounded-xl p-4">
-                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Accepted</p>
-                                                    <p className="text-white font-medium mt-1">{fmtDate(selected.acceptedAt)}</p>
+                                                <div className="bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] p-4">
+                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030]">Accepted</p>
+                                                    <p className="text-[#1A0A00] font-medium mt-1">{fmtDate(selected.acceptedAt)}</p>
                                                 </div>
-                                                <div className="bg-[#202025] border border-[#2A2A30] rounded-xl p-4">
-                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Start time</p>
-                                                    <p className="text-white font-medium mt-1">{fmtDate(selected.campaignStartAt || selected.verifiedLiveAt || selected.acceptedAt)}</p>
+                                                <div className="bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] p-4">
+                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030]">Start time</p>
+                                                    <p className="text-[#1A0A00] font-medium mt-1">{fmtDate(selected.campaignStartAt || selected.verifiedLiveAt || selected.acceptedAt)}</p>
                                                 </div>
-                                                <div className="bg-[#202025] border border-[#2A2A30] rounded-xl p-4">
-                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Campaign end</p>
-                                                    <p className="text-white font-medium mt-1">{fmtDate(selected.campaignEndAt || selected.brief?.postingDeadline)}</p>
+                                                <div className="bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] p-4">
+                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030]">Campaign end</p>
+                                                    <p className="text-[#1A0A00] font-medium mt-1">{fmtDate(selected.campaignEndAt || selected.brief?.postingDeadline)}</p>
                                                 </div>
-                                                <div className="bg-[#202025] border border-[#2A2A30] rounded-xl p-4">
-                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">Payment status</p>
-                                                    <p className="text-white font-medium mt-1">{selected.brandPaymentStatus || 'pending'}</p>
+                                                <div className="bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] p-4">
+                                                    <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030]">Payment status</p>
+                                                    <p className="text-[#1A0A00] font-medium mt-1">{selected.brandPaymentStatus || 'pending'}</p>
                                                 </div>
                                             </div>
 
                                             {(selected.status === 'posted' || (selected.content?.postLink && !selected.content?.adminVerified)) && (
-                                                <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-                                                    <p className="text-amber-300 font-semibold text-sm">Post submitted and awaiting verification</p>
-                                                    <p className="text-amber-200/70 text-xs mt-2">
+                                                <div className="mt-6 rounded-[14px] border border-[#EDD9BC] bg-[rgba(255,255,255,0.45)] p-4 backdrop-blur-[12px]">
+                                                    <p className="text-[#C2340A] font-semibold text-sm">Post submitted and awaiting verification</p>
+                                                    <p className="text-[#7A5030] text-xs mt-2">
                                                         The influencer has submitted the live post link. Verify the post to release the first payout.
                                                     </p>
                                                     <div className="mt-3 flex gap-2 flex-wrap">
                                                         <button
                                                             onClick={handleVerify}
                                                             disabled={actioning}
-                                                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium disabled:opacity-50"
+                                                            className="px-4 py-2 rounded-full bg-[#C2340A] hover:bg-[#E8400A] text-white text-sm font-medium disabled:opacity-50"
                                                         >
                                                             Verify & release first payout
                                                         </button>
@@ -475,7 +475,7 @@ export default function AdminCollaborationsPage() {
                                                             href={selected.content?.postLink || '#'}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="px-4 py-2 rounded-lg bg-[#202025] border border-[#2A2A30] text-gray-300 text-sm font-medium inline-flex items-center gap-2"
+                                                            className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-medium inline-flex items-center gap-2"
                                                         >
                                                             Open post <SquareArrowOutUpRight className="w-4 h-4" />
                                                         </a>
@@ -487,7 +487,7 @@ export default function AdminCollaborationsPage() {
                                                 <button
                                                     onClick={handleStop}
                                                     disabled={actioning}
-                                                    className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/15 disabled:opacity-50"
+                                                    className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-sm font-medium hover:bg-[#C2340A]/15 disabled:opacity-50"
                                                 >
                                                     <StopCircle className="w-4 h-4" />
                                                     Stop collaboration
@@ -495,8 +495,8 @@ export default function AdminCollaborationsPage() {
                                             )}
                                         </div>
 
-                                        <div className="bg-[#1A1A1E] border border-[#2A2A30] rounded-xl p-6">
-                                            <p className="text-xs uppercase tracking-[0.2em] text-gray-400 font-medium mb-4">Brief summary</p>
+                                        <div className="bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] p-6 backdrop-blur-[12px]">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-[#7A5030] font-medium mb-4">Brief summary</p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                                 {[
                                                     ['Objective', selected.brief?.campaignObjective],
@@ -510,24 +510,24 @@ export default function AdminCollaborationsPage() {
                                                     ['Usage rights', selected.brief?.usageRightsText],
                                                     ['Disclosure', selected.brief?.disclosureRequirements],
                                                 ].filter(([, value]) => value).map(([label, value]) => (
-                                                    <div key={label} className="bg-[#202025] border border-[#2A2A30] rounded-xl p-4">
-                                                        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-400">{label}</p>
-                                                        <p className="text-white mt-1 leading-6">{value as string}</p>
+                                                    <div key={label} className="bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] rounded-[14px] p-4">
+                                                        <p className="text-[10px] uppercase tracking-[0.18em] text-[#7A5030]">{label}</p>
+                                                        <p className="text-[#1A0A00] mt-1 leading-6">{value as string}</p>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        <div className="bg-[#1A1A1E] border border-[#2A2A30] rounded-xl p-6">
-                                            <p className="text-xs uppercase tracking-[0.2em] text-gray-400 font-medium mb-4">Ongoing analytics</p>
+                                        <div className="bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] rounded-[14px] p-6 backdrop-blur-[12px]">
+                                            <p className="text-xs uppercase tracking-[0.2em] text-[#7A5030] font-medium mb-4">Ongoing analytics</p>
                                             <CollaborationMetrics collaborationId={selected._id} />
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="bg-[#1A1A1E] border border-dashed border-[#2A2A30] rounded-xl p-8 text-center">
-                                        <Users className="w-10 h-10 text-gray-500 mx-auto mb-4" />
-                                        <p className="text-white font-medium">Select a collaboration</p>
-                                        <p className="text-gray-400 text-sm mt-2">Open any collaboration from the list to review its details and analytics.</p>
+                                    <div className="bg-[rgba(255,255,255,0.38)] border border-dashed border-[#EDD9BC] rounded-[14px] p-8 text-center backdrop-blur-[12px]">
+                                        <Users className="w-10 h-10 text-[#C4A882] mx-auto mb-4" />
+                                        <p className="text-[#1A0A00] font-medium">Select a collaboration</p>
+                                        <p className="text-[#7A5030] text-sm mt-2">Open any collaboration from the list to review its details and analytics.</p>
                                     </div>
                                 )}
                             </div>

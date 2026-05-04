@@ -12,11 +12,11 @@ const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gamin
 
 const getPillColor = (niche) => {
     const colors = {
-        fashion: { bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', text: '#0284c7' },
-        fitness: { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', text: '#059669' },
-        food: { bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', text: '#d97706' },
-        beauty: { bg: 'rgba(236, 72, 153, 0.1)', border: 'rgba(236, 72, 153, 0.2)', text: '#db2777' },
-        tech: { bg: 'rgba(6, 182, 212, 0.1)', border: 'rgba(6, 182, 212, 0.2)', text: '#0891b2' },
+        fashion: { bg: 'rgba(194,52,10,0.08)', border: 'rgba(194,52,10,0.18)', text: '#C2340A' },
+        fitness: { bg: 'rgba(5,150,105,0.08)', border: 'rgba(5,150,105,0.18)', text: '#059669' },
+        food: { bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.18)', text: '#d97706' },
+        beauty: { bg: 'rgba(232,64,10,0.08)', border: 'rgba(232,64,10,0.18)', text: '#E8400A' },
+        tech: { bg: 'rgba(122,80,48,0.08)', border: 'rgba(122,80,48,0.18)', text: '#7A5030' },
     };
     return colors[niche?.toLowerCase()] || { bg: 'rgba(255,255,255,0.6)', border: '#EDD9BC', text: '#7A5030' };
 };
@@ -41,7 +41,7 @@ export default function InfluencerDiscovery() {
                         <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
                         <input style={{ ...IS, paddingLeft: '44px' }} placeholder="Search by username or name..." value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
-                    <div style={{ borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', padding: '6px 12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '6px 12px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#7A5030', display: 'flex', alignItems: 'center', gap: '4px', backdropFilter: 'blur(12px)' }}>
                         <ShieldCheck size={14} /> Verified profiles
                     </div>
                 </div>

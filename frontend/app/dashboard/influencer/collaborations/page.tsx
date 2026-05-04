@@ -19,23 +19,23 @@ export default function InfluencerCollaborationsRoute() {
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
                 {loading ? (
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-6 text-sm text-gray-400">
+                    <div className="rounded-[14px] border border-[rgba(255,255,255,0.65)] bg-[rgba(255,255,255,0.38)] p-6 text-sm text-[#7A5030] backdrop-blur-[12px]">
                         Loading profile status...
                     </div>
                 ) : !profileComplete ? (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-6"
+                        className="rounded-[14px] border border-[#EDD9BC] bg-[rgba(255,255,255,0.45)] p-6 backdrop-blur-[12px]"
                     >
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-amber-200/70">Profile incomplete</p>
-                        <h1 className="mt-2 text-2xl font-semibold text-white">Complete your profile first</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-7 text-gray-300">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-[#C2340A]">Profile incomplete</p>
+                        <h1 className="mt-2 text-2xl font-semibold text-[#1A0A00]">Complete your profile first</h1>
+                        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#7A5030]">
                             Complete your profile first to see campaign opportunities and collaboration workflows.
                         </p>
                         <Link
                             href="/dashboard/influencer/profile"
-                            className="mt-6 inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                            className="mt-6 inline-flex items-center rounded-full bg-[#C2340A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E8400A]"
                         >
                             Go to profile
                         </Link>

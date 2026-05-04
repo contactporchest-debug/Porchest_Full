@@ -341,12 +341,13 @@ async function syncCollaborationMetrics(collaborationId) {
             return { success: false, error: 'Influencer Instagram account not connected' };
         }
 
-        if (!collaboration.postLink) {
+        const finalPostLink = collaboration.content?.postLink || collaboration.postLink || null;
+        if (!finalPostLink) {
             return { success: false, error: 'Post link not submitted' };
         }
 
         const recentMedia = await fetchRecentMedia(accessToken, influencerProfile.igUserId);
-        const normalizedLink = String(collaboration.postLink || '').replace(/\/?$/, '/');
+        const normalizedLink = String(finalPostLink || '').replace(/\/?$/, '/');
         const matchedPost = recentMedia.find((item) => String(item.permalink || '').replace(/\/?$/, '/') === normalizedLink);
 
         if (!matchedPost) {

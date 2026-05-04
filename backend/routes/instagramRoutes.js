@@ -168,6 +168,8 @@ router.get('/collaboration/:collaborationId/metrics', authMiddleware, async (req
         const startTime = campaignStartDate ? new Date(campaignStartDate).getTime() : now;
         const gracePeriodDays = collaboration.gracePeriodDays || 3;
         const graceEndTime = endTime + (gracePeriodDays * 24 * 60 * 60 * 1000);
+        const finalPostLink = collaboration.content?.postLink || collaboration.postLink || null;
+        const finalPostSubmittedAt = collaboration.content?.postSubmittedAt || collaboration.postSubmittedAt || null;
 
         let windowStatus = 'completed';
         if (now < startTime) windowStatus = 'pending';
@@ -182,13 +184,18 @@ router.get('/collaboration/:collaborationId/metrics', authMiddleware, async (req
                 roas: metrics.roas ?? (collaboration.agreedFee ? Number(((metrics.revenue || 0) / collaboration.agreedFee).toFixed(2)) : 0),
                 cpa: metrics.cpa ?? ((metrics.conversions || 0) > 0 ? Number((collaboration.agreedFee / metrics.conversions).toFixed(2)) : 0),
             },
+            finalPostLink,
+            finalPostSubmittedAt,
+            metricsReady: Boolean(finalPostLink),
             campaignStartDate,
             campaignEndDate,
             daysRemaining: Math.max(0, Math.ceil((endTime - now) / 86400000)),
             windowStatus,
-            dataLabel: windowStatus === 'completed'
-                ? 'Final campaign report'
-                : 'Campaign in progress — data still being collected',
+            dataLabel: finalPostLink
+                ? (windowStatus === 'completed'
+                    ? 'Final campaign report'
+                    : 'Campaign in progress — data still being collected')
+                : 'Final post link has not been submitted yet. Metrics will appear after submission.',
         });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message || 'Failed to fetch collaboration metrics' });

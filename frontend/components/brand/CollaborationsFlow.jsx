@@ -50,6 +50,7 @@ export default function CollaborationsFlow() {
     const [acting, setActing] = useState(false);
     const { data, loading, refetch } = useApi(`/collaborations?status=${TABS[activeTab].key}`);
     const collabs = data?.collaborations || [];
+    const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
 
     useEffect(() => {
         const handleUpdated = () => {
@@ -134,25 +135,30 @@ export default function CollaborationsFlow() {
                                 ${Number(c.pricing?.agreedFee || c.pricing?.brandOffer || 0).toLocaleString()}
                             </p>
                             <StatusBadge status={c.status} />
+                            {isMetricsLocked(c) && ['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'completed'].includes(c.status) && (
+                                <span style={{ alignSelf: 'flex-end', padding: '4px 10px', borderRadius: '999px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', color: '#C2340A', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', backdropFilter: 'blur(12px)' }}>
+                                    Metrics locked until final post
+                                </span>
+                            )}
                         </div>
                     </div>
 
                     {/* ── REQUESTS TAB ── Countered by influencer */}
                     {c.status === 'countered' && c.pricing?.influencerCounter && (
-                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '16px', backdropFilter: 'blur(12px)' }}>
                             <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                 <div>
-                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Your offer</p>
-                                    <p style={{ color: '#d97706', fontWeight: 700, fontSize: '20px', textDecoration: 'line-through' }}>
+                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Your offer</p>
+                                    <p style={{ color: '#C2340A', fontWeight: 700, fontSize: '20px', textDecoration: 'line-through' }}>
                                         ${Number(c.pricing.brandOffer || 0).toLocaleString()}
                                     </p>
                                 </div>
-                                <div style={{ color: '#d97706' }}>
+                                <div style={{ color: '#C2340A' }}>
                                     <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Influencer counter</p>
-                                    <p style={{ color: '#b45309', fontWeight: 700, fontSize: '24px' }}>
+                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Influencer counter</p>
+                                    <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '24px' }}>
                                         ${Number(c.pricing.influencerCounter).toLocaleString()}
                                     </p>
                                 </div>
@@ -161,18 +167,18 @@ export default function CollaborationsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'accept-counter')}
                                     disabled={acting}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#0284c7', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
-                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#0369a1'; }}
-                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#0284c7'; }}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
+                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#E8400A'; }}
+                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#C2340A'; }}
                                 >
                                     Accept Counter (${Number(c.pricing.influencerCounter).toLocaleString()})
                                 </button>
                                 <button
                                     onClick={() => action(c._id, 'decline')}
                                     disabled={acting}
-                                    style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(220,38,38,0.06)', color: '#dc2626', fontSize: '14px', fontWeight: 700, cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
-                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = 'rgba(220,38,38,0.12)'; }}
-                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = 'rgba(220,38,38,0.06)'; }}
+                                    style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(255,255,255,0.45)', color: '#dc2626', fontSize: '14px', fontWeight: 700, cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit', backdropFilter: 'blur(12px)' }}
+                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; }}
+                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = 'rgba(255,255,255,0.45)'; }}
                                 >
                                     Decline
                                 </button>
@@ -181,22 +187,22 @@ export default function CollaborationsFlow() {
                     )}
 
                     {c.status === 'brand_payment_pending' && (
-                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px', backdropFilter: 'blur(12px)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2340A', flexShrink: 0 }}>
                                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
                                 <div>
-                                    <p style={{ color: '#b45309', fontWeight: 700, fontSize: '14px' }}>Influencer accepted the collaboration</p>
-                                    <p style={{ color: 'rgba(180,83,9,0.7)', fontSize: '12px', marginTop: '2px' }}>Complete the brand payment to unlock content creation.</p>
+                                    <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '14px' }}>Influencer accepted the collaboration</p>
+                                    <p style={{ color: '#7A5030', fontSize: '12px', marginTop: '2px' }}>Complete the brand payment to unlock content creation.</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => action(c._id, 'confirm-brand-payment')}
                                 disabled={acting}
-                                style={{ alignSelf: 'flex-start', padding: '12px 18px', borderRadius: '12px', background: '#059669', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
-                                onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#047857'; }}
-                                onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#059669'; }}
+                                style={{ alignSelf: 'flex-start', padding: '12px 18px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
+                                onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#E8400A'; }}
+                                onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#C2340A'; }}
                             >
                                 Confirm payment received
                             </button>
@@ -204,31 +210,31 @@ export default function CollaborationsFlow() {
                     )}
 
                     {c.status === 'brand_paid_work_can_start' && (
-                        <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.12)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', flexShrink: 0 }}>
+                        <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', alignItems: 'flex-start', gap: '12px', backdropFilter: 'blur(12px)' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2340A', flexShrink: 0 }}>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                             <div style={{ paddingTop: '6px' }}>
-                                <p style={{ color: '#047857', fontWeight: 700, fontSize: '14px' }}>Payment received</p>
-                                <p style={{ color: 'rgba(4,120,87,0.7)', fontSize: '12px', marginTop: '2px' }}>The influencer can now start work and submit content.</p>
+                                <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '14px' }}>Payment received</p>
+                                <p style={{ color: '#7A5030', fontSize: '12px', marginTop: '2px' }}>The influencer can now start work and submit content.</p>
                             </div>
                         </div>
                     )}
 
                     {/* ── ACTIVE TAB ── Content submitted for review */}
                     {c.status === 'content_submitted' && c.content?.driveLink && (
-                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(2,132,199,0.06)', border: '1px solid rgba(2,132,199,0.12)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '16px', backdropFilter: 'blur(12px)' }}>
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(2,132,199,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', flexShrink: 0 }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2340A', flexShrink: 0 }}>
                                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 </div>
                                 <div style={{ paddingTop: '6px', flex: 1, minWidth: 0 }}>
-                                    <p style={{ color: '#0369a1', fontWeight: 700, fontSize: '14px' }}>Review Submitted Content</p>
+                                    <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '14px' }}>Review Submitted Content</p>
                                     <a
                                         href={c.content.driveLink}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{ color: '#0284c7', fontSize: '14px', textDecoration: 'underline', wordBreak: 'break-all', display: 'block', marginTop: '4px' }}
+                                        style={{ color: '#C2340A', fontSize: '14px', textDecoration: 'underline', wordBreak: 'break-all', display: 'block', marginTop: '4px' }}
                                     >
                                         {c.content.driveLink}
                                     </a>
@@ -237,9 +243,9 @@ export default function CollaborationsFlow() {
                             <button
                                 onClick={() => action(c._id, 'approve-drive')}
                                 disabled={acting}
-                                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: '#059669', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
-                                onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#047857'; }}
-                                onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#059669'; }}
+                                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
+                                onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#E8400A'; }}
+                                onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#C2340A'; }}
                             >
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                 Approve Content — Clear for Posting
@@ -249,31 +255,31 @@ export default function CollaborationsFlow() {
 
                     {/* Content approved — waiting for live post */}
                     {c.status === 'content_approved' && (
-                        <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.12)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(5,150,105,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', flexShrink: 0 }}>
+                        <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', alignItems: 'flex-start', gap: '12px', backdropFilter: 'blur(12px)' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2340A', flexShrink: 0 }}>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div style={{ paddingTop: '6px' }}>
-                                <p style={{ color: '#047857', fontWeight: 700, fontSize: '14px' }}>Content Approved</p>
-                                <p style={{ color: 'rgba(4,120,87,0.7)', fontSize: '12px', marginTop: '2px' }}>Waiting for the influencer to post the content live.</p>
+                                <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '14px' }}>Content Approved</p>
+                                <p style={{ color: '#7A5030', fontSize: '12px', marginTop: '2px' }}>Waiting for the influencer to post the content live.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Post submitted — admin verifying */}
                     {c.status === 'posted' && c.content?.postLink && (
-                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
+                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', alignItems: 'flex-start', gap: '12px', backdropFilter: 'blur(12px)' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(194,52,10,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2340A', flexShrink: 0 }}>
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div style={{ paddingTop: '4px', flex: 1, minWidth: 0 }}>
-                                <p style={{ color: '#b45309', fontWeight: 700, fontSize: '14px' }}>Live Post Submitted</p>
-                                <p style={{ color: 'rgba(180,83,9,0.7)', fontSize: '12px', marginTop: '2px', marginBottom: '8px' }}>Our admins are currently reviewing the live post for compliance.</p>
+                                <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '14px' }}>Live Post Submitted</p>
+                                <p style={{ color: '#7A5030', fontSize: '12px', marginTop: '2px', marginBottom: '8px' }}>Our admins are currently reviewing the live post for compliance.</p>
                                 <a
                                     href={c.content.postLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: '#d97706', fontSize: '14px', textDecoration: 'underline', wordBreak: 'break-all', fontWeight: 500 }}
+                                    style={{ color: '#C2340A', fontSize: '14px', textDecoration: 'underline', wordBreak: 'break-all', fontWeight: 500 }}
                                 >
                                     {c.content.postLink}
                                 </a>
@@ -283,7 +289,7 @@ export default function CollaborationsFlow() {
 
                     {/* Tracking assets */}
                     {c.brief?.trackingLink && (
-                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px', backdropFilter: 'blur(12px)' }}>
                             <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Campaign tracking assets</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -310,7 +316,7 @@ export default function CollaborationsFlow() {
             ))}
 
             {!loading && collabs.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '64px 20px', background: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.65)', borderRadius: '24px' }}>
+                <div style={{ textAlign: 'center', padding: '64px 20px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', borderRadius: '24px', backdropFilter: 'blur(12px)', boxShadow: '0 8px 30px rgba(155,111,80,0.05)' }}>
                     <svg width="48" height="48" style={{ color: '#C4A882', margin: '0 auto 16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '18px', marginBottom: '4px' }}>
                         {activeTab === 0

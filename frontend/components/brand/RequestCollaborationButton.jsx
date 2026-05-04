@@ -79,7 +79,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                 Request collaboration with @{influencerName || 'creator'}
             </button>
 
-            {sent && <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669', textAlign: 'center', fontSize: '14px', fontWeight: 700 }}>Collaboration request sent.</div>}
+            {sent && <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', color: '#1A0A00', textAlign: 'center', fontSize: '14px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>Collaboration request sent.</div>}
             {error && <div style={{ marginTop: '12px', padding: '14px 16px', borderRadius: '12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#b91c1c', fontSize: '13px', fontWeight: 600 }}>{error}</div>}
 
             {open && (

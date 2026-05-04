@@ -12,6 +12,12 @@ const STATUS_TABS = [
     { key: 'completed', label: 'Completed' },
 ];
 
+const SURFACE = 'rgba(255,255,255,0.38)';
+const SURFACE_ALT = 'rgba(255,255,255,0.48)';
+const BORDER = '#EDD9BC';
+const TEXT = '#1A0A00';
+const MUTED = '#7A5030';
+
 const PROGRESS_STEPS = [
     { label: 'Campaign accepted',               done: (c) => true },
     { label: 'Drive content submitted',         done: (c) => !!c.content?.driveLink },
@@ -30,6 +36,7 @@ export default function CampaignsFlow() {
     const [driveLinkMap, setDriveLinkMap] = useState({});
     const [postLinkMap, setPostLinkMap]   = useState({});
     const [counterMap, setCounterMap]     = useState({});
+    const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
 
     const { data, loading, refetch } = useApi(`/collaborations?status=${STATUS_TABS[activeTab].key}`);
     const collabs = data?.collaborations || [];
@@ -76,8 +83,8 @@ export default function CampaignsFlow() {
         }
     }
 
-    const inputClass = 'flex-1 px-4 py-2.5 rounded-xl bg-[#202025] border border-[#2A2A30] text-white text-sm focus:outline-none focus:border-blue-500 placeholder:text-gray-500 transition-all';
-    const cardClass = 'p-6 rounded-xl bg-[#1A1A1E] border border-[#2A2A30] space-y-5 hover:border-[#3A3A42] hover:bg-[#202025] transition-all';
+    const inputClass = 'flex-1 px-4 py-2.5 rounded-[12px] bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] text-sm focus:outline-none focus:border-[#C2340A] placeholder:text-[#A88C6D] transition-all backdrop-blur-[12px]';
+    const cardClass = 'p-6 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] space-y-5 hover:bg-[rgba(255,255,255,0.48)] transition-all backdrop-blur-[12px]';
 
     function getBriefProgress(collab) {
         const fields = [
@@ -110,13 +117,13 @@ export default function CampaignsFlow() {
     return (
         <div className="space-y-6">
             {/* Tab switcher */}
-            <div className="flex gap-2 p-1.5 rounded-xl bg-[#1A1A1E] border border-[#2A2A30] w-fit">
+            <div className="flex gap-2 p-1.5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[rgba(255,255,255,0.65)] backdrop-blur-[12px] w-fit">
                 {STATUS_TABS.map((tab, i) => (
                     <button
                         key={tab.key}
                         onClick={() => setActiveTab(i)}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                            activeTab === i ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-gray-400 hover:text-white hover:bg-[#202025]'
+                        className={`px-5 py-2.5 rounded-[12px] text-sm font-bold transition-all ${
+                            activeTab === i ? 'bg-[#C2340A] text-white shadow-md shadow-[#C2340A]/20' : 'text-[#7A5030] hover:text-[#1A0A00] hover:bg-[rgba(255,255,255,0.5)]'
                         }`}
                     >
                         {tab.label}
@@ -124,7 +131,7 @@ export default function CampaignsFlow() {
                 ))}
             </div>
 
-            {loading && <p className="text-white/40 text-sm font-medium">Loading...</p>}
+            {loading && <p className="text-[#7A5030] text-sm font-medium">Loading...</p>}
 
             {/* ── REQUESTS TAB ── */}
             {activeTab === 0 && collabs.map((c, i) => (
@@ -138,46 +145,46 @@ export default function CampaignsFlow() {
                     {/* Header */}
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-[#1A0A00] font-bold text-lg">
                                 {c.brief?.campaignObjective || c.campaignTitle || 'Collaboration request'}
                             </p>
                             <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-xs font-bold text-white/40 uppercase tracking-wide">From</span>
-                                <span className="px-2.5 py-1 rounded-md bg-white/[0.04] text-white/70 text-xs font-bold border border-white/[0.08]">
+                                <span className="text-xs font-bold text-[#7A5030] uppercase tracking-wide">From</span>
+                                <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] text-xs font-bold border border-[#EDD9BC]">
                                     {c.brandProfile?.businessName || c.brandName || 'Brand'}
                                 </span>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-blue-300">
+                            <p className="text-2xl font-bold text-[#C2340A]">
                                 ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
                             </p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide">Brand offer</p>
+                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">Brand offer</p>
                         </div>
                     </div>
 
                     {/* Brief preview chips */}
                     <div className="flex flex-wrap gap-2">
                         {c.brief?.contentTypes?.length > 0 && (
-                            <span className="px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold text-white/50">
+                            <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs font-bold text-[#7A5030]">
                                 {c.brief.contentTypes.join(', ')}
                             </span>
                         )}
                         {c.brief?.postingSchedule && (
-                            <span className="px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-bold text-white/50">
+                            <span className="px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs font-bold text-[#7A5030]">
                                 Deadline: {new Date(c.brief.postingSchedule).toLocaleDateString()}
                             </span>
                         )}
                     </div>
 
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-white/30">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-[#7A5030]">
                             <span>Brief completeness</span>
                             <span>{getBriefProgress(c).filled}/{getBriefProgress(c).total} fields</span>
                         </div>
-                        <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                        <div className="h-2 rounded-full bg-[#EDD9BC]/45 overflow-hidden">
                             <div
-                                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400"
+                                className="h-full rounded-full bg-gradient-to-r from-[#C2340A] to-[#E8400A]"
                                 style={{ width: `${getBriefProgress(c).pct}%` }}
                             />
                         </div>
@@ -186,13 +193,13 @@ export default function CampaignsFlow() {
                     {/* Toggle full brief */}
                     <button
                         onClick={() => setExpanded(expanded === c._id ? null : c._id)}
-                        className="text-xs font-bold text-white/50 hover:text-white flex items-center gap-1 bg-white/[0.04] px-3 py-1.5 rounded-lg border border-white/[0.08] transition-colors"
+                        className="text-xs font-bold text-[#7A5030] hover:text-[#1A0A00] flex items-center gap-1 bg-[rgba(255,255,255,0.48)] px-3 py-1.5 rounded-full border border-[#EDD9BC] transition-colors"
                     >
                         {expanded === c._id ? 'Hide brief ▲' : 'View full brief ▼'}
                     </button>
 
                     {expanded === c._id && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-t border-white/[0.06] pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-t border-[#EDD9BC] pt-4">
                             {[
                                 ['Brand intro',          c.brief?.brandIntro],
                                 ['Product details',      c.brief?.productDetails],
@@ -205,9 +212,9 @@ export default function CampaignsFlow() {
                                 ['Usage rights',         c.brief?.usageRightsText || c.brief?.usageRights],
                                 ['Disclosure',           c.brief?.disclosureRequired],
                             ].filter(([, v]) => v).map(([label, value]) => (
-                                <div key={label} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-1">{label}</p>
-                                    <p className="text-white/70 text-sm">{value}</p>
+                                <div key={label} className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] backdrop-blur-[12px]">
+                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1">{label}</p>
+                                    <p className="text-[#1A0A00] text-sm">{value}</p>
                                 </div>
                             ))}
                         </div>
@@ -215,11 +222,11 @@ export default function CampaignsFlow() {
 
                     {/* Actions — pending */}
                     {c.status === 'pending' && (
-                        <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-white/[0.06]">
+                        <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-[#EDD9BC]">
                             <button
                                 onClick={() => action(c._id, 'accept')}
                                 disabled={acting}
-                                className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40"
+                                className="flex-1 py-3 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                             >
                                 Accept ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
                             </button>
@@ -235,7 +242,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'counter', { counterAmount: Number(counterMap[c._id]) })}
                                     disabled={acting || !counterMap[c._id]}
-                                    className="px-6 py-3 rounded-xl bg-white/[0.04] text-white/60 font-bold text-sm hover:bg-white/[0.08] transition-colors border border-white/[0.08] disabled:opacity-40"
+                                    className="px-6 py-3 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-sm hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40"
                                 >
                                     Counter
                                 </button>
@@ -244,7 +251,7 @@ export default function CampaignsFlow() {
                             <button
                                 onClick={() => action(c._id, 'decline')}
                                 disabled={acting}
-                                className="px-6 py-3 rounded-xl bg-red-500/[0.06] text-red-300 font-bold text-sm hover:bg-red-500/[0.12] transition-colors border border-red-500/20 disabled:opacity-40"
+                                className="px-6 py-3 rounded-full bg-[#C2340A]/10 text-[#C2340A] font-bold text-sm hover:bg-[#C2340A]/15 transition-colors border border-[#EDD9BC] disabled:opacity-40"
                             >
                                 Decline
                             </button>
@@ -253,25 +260,25 @@ export default function CampaignsFlow() {
 
                     {/* Countered — waiting for brand */}
                     {c.status === 'countered' && (
-                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-amber-300 font-bold text-sm">Waiting for brand response</p>
-                                <p className="text-amber-400/60 text-xs mt-0.5">You countered at ${Number(c.pricing?.influencerCounter || 0).toLocaleString()}</p>
+                                <p className="text-[#d97706] font-bold text-sm">Waiting for brand response</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">You countered at ${Number(c.pricing?.influencerCounter || 0).toLocaleString()}</p>
                             </div>
                         </div>
                     )}
 
                     {c.status === 'brand_payment_pending' && (
-                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-amber-300 font-bold text-sm">Accepted, waiting for brand payment</p>
-                                <p className="text-amber-400/60 text-xs mt-0.5">We’ll unlock content submission once the brand confirms payment.</p>
+                                <p className="text-[#d97706] font-bold text-sm">Accepted, waiting for brand payment</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">We’ll unlock content submission once the brand confirms payment.</p>
                             </div>
                         </div>
                     )}
@@ -288,37 +295,42 @@ export default function CampaignsFlow() {
                     className={cardClass}
                 >
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] pb-4">
+                    <div className="flex items-start justify-between gap-4 border-b border-[#EDD9BC] pb-4">
                         <div>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-[#1A0A00] font-bold text-lg">
                                 {c.brief?.campaignObjective || c.campaignTitle || 'Active campaign'}
                             </p>
-                            <p className="text-sm font-medium text-white/40 mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            <p className="text-sm font-medium text-[#7A5030] mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            {isMetricsLocked(c) && (
+                                    <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-[10px] font-bold uppercase tracking-wide">
+                                        Metrics locked until final post
+                                    </span>
+                                )}
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-blue-300">
+                            <p className="text-2xl font-bold text-[#C2340A]">
                                 ${Number(c.pricing?.agreedFee || 0).toLocaleString()}
                             </p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide">Agreed fee</p>
+                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">Agreed fee</p>
                         </div>
                     </div>
 
                     {/* Campaign tools — tracking link + promo code */}
                     {(c.brief?.trackingLink || c.brief?.promoCode) && (
-                        <div className="p-5 rounded-xl bg-blue-500/[0.06] border border-blue-500/[0.12] space-y-4">
-                            <p className="text-sm font-bold text-white">Your Campaign Tools</p>
+                        <div className="p-5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] space-y-4 backdrop-blur-[12px]">
+                            <p className="text-sm font-bold text-[#1A0A00]">Your Campaign Tools</p>
                             {c.brief?.trackingLink && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
+                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
                                     <div className="flex gap-2">
                                         <input
                                             readOnly
                                             value={c.brief.trackingLink}
-                                            className="flex-1 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/70 text-sm font-mono"
+                                            className="flex-1 px-4 py-2.5 rounded-[12px] bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] text-sm font-mono backdrop-blur-[12px]"
                                         />
                                         <button
                                             onClick={() => navigator.clipboard.writeText(c.brief.trackingLink)}
-                                            className="px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/60 text-sm font-bold hover:bg-white/[0.08]"
+                                            className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
                                         >
                                             Copy
                                         </button>
@@ -327,14 +339,14 @@ export default function CampaignsFlow() {
                             )}
                             {c.brief?.promoCode && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-1.5">Promo code</p>
+                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Promo code</p>
                                     <div className="flex gap-3 items-center">
-                                        <span className="px-5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/80 font-mono font-bold tracking-wider text-base">
+                                        <span className="px-5 py-2.5 rounded-full bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] font-mono font-bold tracking-wider text-base backdrop-blur-[12px]">
                                             {c.brief.promoCode}
                                         </span>
                                         <button
                                             onClick={() => navigator.clipboard.writeText(c.brief.promoCode)}
-                                            className="px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/60 text-sm font-bold hover:bg-white/[0.08]"
+                                            className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
                                         >
                                             Copy
                                         </button>
@@ -343,8 +355,8 @@ export default function CampaignsFlow() {
                             )}
                             {c.brief?.requiredHashtags?.length > 0 && (
                                 <div>
-                                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide mb-1">Required hashtags</p>
-                                    <p className="text-white/70 font-medium text-sm">{c.brief.requiredHashtags.join(' ')}</p>
+                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1">Required hashtags</p>
+                                    <p className="text-[#1A0A00] font-medium text-sm">{c.brief.requiredHashtags.join(' ')}</p>
                                 </div>
                             )}
                         </div>
@@ -357,11 +369,11 @@ export default function CampaignsFlow() {
                             return (
                                 <div key={idx} className="flex items-center gap-3">
                                     <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${
-                                        done ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20' : 'bg-[#202025] border border-[#2A2A30] text-gray-500'
+                                        done ? 'bg-[#059669] text-white shadow-sm shadow-[#059669]/20' : 'bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030]'
                                     }`}>
                                         {done ? '✓' : ''}
                                     </div>
-                                    <p className={`text-sm font-medium ${done ? 'text-white/30 line-through' : 'text-white/70'}`}>
+                                    <p className={`text-sm font-medium ${done ? 'text-[#B48C73] line-through' : 'text-[#1A0A00]'}`}>
                                         {step.label}
                                     </p>
                                 </div>
@@ -371,37 +383,37 @@ export default function CampaignsFlow() {
 
                     {/* Payment pending notice */}
                     {c.status === 'brand_payment_pending' && (
-                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3 mt-4">
-                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-amber-300 font-bold text-sm">Accepted, waiting for brand payment</p>
-                                <p className="text-amber-400/60 text-xs mt-0.5">The collaboration will unlock once the brand confirms payment.</p>
+                                <p className="text-[#d97706] font-bold text-sm">Accepted, waiting for brand payment</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">The collaboration will unlock once the brand confirms payment.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Payment confirmed notice */}
                     {c.status === 'brand_paid_work_can_start' && (
-                        <div className="p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/[0.12] flex items-start gap-3 mt-4">
-                            <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-emerald-300 font-bold text-sm">Payment confirmed</p>
-                                <p className="text-emerald-400/60 text-xs mt-0.5">You can now create content and submit the drive link.</p>
+                                <p className="text-[#059669] font-bold text-sm">Payment confirmed</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">You can now create content and submit the drive link.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Submit Drive link */}
                     {c.status === 'brand_paid_work_can_start' && !c.content?.driveLink && (
-                        <div className="space-y-3 pt-4 border-t border-white/[0.06]">
-                            <p className="text-sm font-bold text-white">
+                        <div className="space-y-3 pt-4 border-t border-[#EDD9BC]">
+                            <p className="text-sm font-bold text-[#1A0A00]">
                                 Submit Content for Review
                             </p>
-                            <p className="text-xs text-white/40">Provide a Google Drive folder link containing your raw/edited content.</p>
+                            <p className="text-xs text-[#7A5030]">Provide a Google Drive folder link containing your raw/edited content.</p>
                             <div className="flex gap-2">
                                 <input
                                     placeholder="https://drive.google.com/..."
@@ -412,7 +424,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'submit-drive', { driveLink: driveLinkMap[c._id] })}
                                     disabled={acting || !driveLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40"
+                                    className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                                 >
                                     Submit
                                 </button>
@@ -422,27 +434,27 @@ export default function CampaignsFlow() {
 
                     {/* Drive submitted — awaiting brand approval */}
                     {c.content?.driveLink && !c.content?.brandApprovedDrive && (
-                        <div className="p-4 rounded-xl bg-blue-500/[0.06] border border-blue-500/[0.12] flex items-start gap-3 mt-4">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#0284c7]/10 flex items-center justify-center text-[#0284c7] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-blue-300 font-bold text-sm">Under Brand Review</p>
-                                <p className="text-blue-400/60 text-xs mt-0.5">Your content has been submitted. Waiting for the brand to approve.</p>
+                                <p className="text-[#0284c7] font-bold text-sm">Under Brand Review</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">Your content has been submitted. Waiting for the brand to approve.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Submit live post link — shown after brand approves */}
                     {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && (
-                        <div className="space-y-3 pt-4 border-t border-white/[0.06] mt-4">
-                        <div className="p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/[0.12] flex items-start gap-3 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-300 shrink-0">
+                        <div className="space-y-3 pt-4 border-t border-[#EDD9BC] mt-4">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mb-4 backdrop-blur-[12px]">
+                                <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                 </div>
                                 <div className="pt-1.5">
-                                    <p className="text-green-300 font-bold text-sm">Content Approved!</p>
-                                    <p className="text-green-400/60 text-xs mt-0.5">You are cleared to post. Submit the live Instagram link below.</p>
+                                    <p className="text-[#059669] font-bold text-sm">Content Approved!</p>
+                                    <p className="text-[#7A5030] text-xs mt-0.5">You are cleared to post. Submit the live Instagram link below.</p>
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -455,7 +467,7 @@ export default function CampaignsFlow() {
                                 <button
                                     onClick={() => action(c._id, 'submit-post', { postLink: postLinkMap[c._id] })}
                                     disabled={acting || !postLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40"
+                                    className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                                 >
                                     Submit Post
                                 </button>
@@ -465,13 +477,13 @@ export default function CampaignsFlow() {
 
                     {/* Post submitted — waiting admin */}
                     {c.content?.postLink && !c.content?.adminVerified && (
-                        <div className="p-4 rounded-xl bg-amber-500/[0.06] border border-amber-500/[0.12] flex items-start gap-3 mt-4">
-                            <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-300 shrink-0">
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-amber-300 font-bold text-sm">Verifying Post</p>
-                                <p className="text-amber-400/60 text-xs mt-0.5">Our admins are verifying the live post. Your payment will be released shortly after.</p>
+                                <p className="text-[#d97706] font-bold text-sm">Verifying Post</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">Our admins are verifying the live post. Your payment will be released shortly after.</p>
                             </div>
                         </div>
                     )}
@@ -500,6 +512,11 @@ export default function CampaignsFlow() {
                                 {c.brief?.campaignObjective || c.campaignTitle || 'Completed campaign'}
                             </p>
                             <p className="text-sm font-medium text-white/40 mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            {isMetricsLocked(c) && (
+                                <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+                                    Metrics locked until final post
+                                </span>
+                            )}
                         </div>
                         <div className="text-right">
                             <p className="text-2xl font-bold text-green-400">
@@ -515,16 +532,16 @@ export default function CampaignsFlow() {
             ))}
 
             {!loading && collabs.length === 0 && (
-                <div className="text-center py-16 bg-white/[0.03] border border-white/[0.07] rounded-[20px]">
-                    <svg className="w-12 h-12 text-white/15 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <p className="text-white font-bold text-lg mb-1">
+                <div className="text-center py-16 bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] rounded-[14px] backdrop-blur-[12px]">
+                    <svg className="w-12 h-12 text-[#C4A882] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <p className="text-[#1A0A00] font-bold text-lg mb-1">
                         {activeTab === 0
                             ? 'No Pending Requests'
                             : activeTab === 1
                             ? 'No Active Campaigns'
                             : 'No Completed Campaigns'}
                     </p>
-                    <p className="text-white/40 text-sm">
+                    <p className="text-[#7A5030] text-sm">
                         {activeTab === 0
                             ? "You're all caught up on your collaboration requests."
                             : activeTab === 1

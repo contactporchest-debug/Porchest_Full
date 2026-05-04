@@ -248,7 +248,7 @@ export default function BrandProfileForm() {
                             <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
                             <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>View your brand details and click edit if you need to make changes.</p>
                         </div>
-                        <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', color: '#059669', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                        <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', color: '#C2340A', padding: '4px 12px', fontSize: '12px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>
                             Profile complete
                         </div>
                     </div>
@@ -304,7 +304,7 @@ export default function BrandProfileForm() {
                         <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
                         <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Keep your brand details, audience, and campaign preferences up to date.</p>
                     </div>
-                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profile?.profileComplete ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(245,158,11,0.2)', background: profile?.profileComplete ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: profile?.profileComplete ? '#059669' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profile?.profileComplete ? '1px solid #EDD9BC' : '1px solid rgba(245,158,11,0.2)', background: profile?.profileComplete ? 'rgba(255,255,255,0.6)' : 'rgba(245,158,11,0.1)', color: profile?.profileComplete ? '#C2340A' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>
                         {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
                     </div>
                 </div>
@@ -502,7 +502,7 @@ export default function BrandProfileForm() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
-                {saved && <p style={{ fontSize: '14px', fontWeight: 600, color: '#059669' }}>Profile saved successfully.</p>}
+                {saved && <p style={{ fontSize: '14px', fontWeight: 600, color: '#C2340A' }}>Profile saved successfully.</p>}
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {profile?.profileComplete ? (
                         <button
