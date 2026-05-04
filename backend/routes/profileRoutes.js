@@ -202,7 +202,6 @@ async function upsertProfile(Model, codePrefix, codeField, userId, updates, role
         {
             new: true,
             upsert: true,
-            runValidators: true,
             setDefaultsOnInsert: true,
         }
     );
@@ -228,25 +227,23 @@ router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (r
         const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
         const complete = isInfluencerProfileComplete(profile);
 
-        const savedProfile = await InfluencerProfile.findByIdAndUpdate(
-            profile._id,
+        await InfluencerProfile.updateOne(
+            { _id: profile._id },
             {
                 $set: {
                     profileComplete: complete,
                     profileCompletionStatus: complete,
                 },
-            },
-            {
-                new: true,
-                runValidators: true,
             }
         );
 
         await finalizeUserProfile(req.user._id, 'influencer', profile._id, complete);
 
-        return res.json(stripSecrets(savedProfile || profile));
+        const freshProfile = await InfluencerProfile.findById(profile._id).select('-sync.accessToken -sync.longLivedToken');
+
+        return res.json(stripSecrets(freshProfile || profile));
     } catch (error) {
-        console.error('[profileRoutes] Failed to save influencer profile:', error);
+        console.error('[profileRoutes] Failed to save influencer profile:', error?.stack || error);
         if (error.name === 'ValidationError') {
             return res.status(400).json({ message: error.message || 'Failed to save influencer profile' });
         }
