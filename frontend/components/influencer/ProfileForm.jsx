@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
 
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment'];
@@ -8,10 +9,6 @@ const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional'
 const LANGUAGES = ['English', 'Urdu', 'Arabic', 'Punjabi', 'Hindi', 'French', 'Spanish', 'German', 'Pashto'];
 const COUNTRIES = ['Pakistan', 'United States', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'India'];
 const CITIES = ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
-
-function unique(values) {
-    return [...new Set(values)];
-}
 
 function parseList(value) {
     if (Array.isArray(value)) return value.filter(Boolean).map(String);
@@ -24,12 +21,40 @@ function token() {
     return localStorage.getItem('porchest_token') || localStorage.getItem('token') || '';
 }
 
-function chipClass(selected) {
-    return `rounded-full border px-4 py-2 text-xs font-semibold transition-colors ${
+function chipClass(selected, disabled = false) {
+    return [
+        'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
         selected
-            ? 'border-blue-500/40 bg-blue-500/15 text-blue-200'
-            : 'border-[#2A2A30] bg-[#202025] text-gray-300 hover:bg-[#2A2A30]'
-    }`;
+            ? 'border-[#C2340A]/30 bg-[#C2340A]/8 text-[#C2340A]'
+            : 'border-[#EDD9BC] bg-[rgba(255,255,255,0.72)] text-[#7A5030] hover:bg-white',
+        disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
+    ].join(' ');
+}
+
+function inputStyle() {
+    return {
+        width: '100%',
+        borderRadius: '12px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.72)',
+        padding: '12px 16px',
+        fontSize: '14px',
+        color: '#1A0A00',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        fontFamily: 'inherit',
+    };
+}
+
+function sectionStyle() {
+    return {
+        borderRadius: '24px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.42)',
+        padding: '24px',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 20px rgba(26,10,0,0.02)',
+    };
 }
 
 export default function ProfileForm() {
@@ -68,30 +93,43 @@ export default function ProfileForm() {
         setIsEditing(!profile.profileComplete);
     }, [profile]);
 
-    const profileImage = useMemo(() => {
-        return profile?.igProfileUrl || profile?.profilePictureUrl || '';
-    }, [profile]);
-
-    const profileInitials = useMemo(() => {
-        const base = form.fullName || profile?.fullName || 'I';
-        return String(base).slice(0, 2).toUpperCase();
-    }, [form.fullName, profile]);
+    const isComplete = useMemo(() => {
+        const hasRates = Number(form.rates.reelPrice) > 0 && Number(form.rates.postPrice) > 0;
+        return !!(
+            form.fullName.trim() &&
+            form.contactEmail.trim() &&
+            form.country &&
+            form.city &&
+            form.niche.length > 0 &&
+            form.contentStyleTags.length > 0 &&
+            form.languages.length > 0 &&
+            form.languages.length <= 2 &&
+            hasRates
+        );
+    }, [form]);
 
     function toggleArray(field, value) {
-        setForm((current) => ({
-            ...current,
-            [field]: current[field].includes(value)
-                ? current[field].filter((item) => item !== value)
-                : [...current[field], value],
-        }));
-    }
+        setSaved(false);
+        setForm((current) => {
+            const selected = current[field].includes(value);
+            if (selected) {
+                return { ...current, [field]: current[field].filter((item) => item !== value) };
+            }
 
-    function handleMultiSelect(field, event) {
-        const values = Array.from(event.target.selectedOptions, (option) => option.value);
-        setForm((current) => ({ ...current, [field]: unique(values) }));
+            if (field === 'languages' && current[field].length >= 2) {
+                return current;
+            }
+
+            return { ...current, [field]: [...current[field], value] };
+        });
     }
 
     async function handleSave() {
+        if (!isComplete) {
+            toast.error('Please fill every required field to complete your profile.');
+            return;
+        }
+
         setSaving(true);
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/influencer`, {
@@ -116,109 +154,92 @@ export default function ProfileForm() {
             if (!res.ok) throw new Error(data?.message || 'Failed to save influencer profile');
 
             await refetch();
-            setIsEditing(false);
             setSaved(true);
+            setIsEditing(false);
             window.setTimeout(() => setSaved(false), 1800);
         } catch (error) {
             console.error(error);
+            toast.error(error?.message || 'Failed to save influencer profile');
         } finally {
             setSaving(false);
         }
     }
 
-    const inputStyle = {
-        width: '100%',
-        borderRadius: '12px',
-        border: '1px solid #EDD9BC',
-        background: 'rgba(255,255,255,0.6)',
-        padding: '12px 16px',
-        fontSize: '14px',
-        color: '#1A0A00',
-        outline: 'none',
-        transition: 'border-color 0.2s',
-        fontFamily: 'inherit'
-    };
+    const profileComplete = Boolean(profile?.profileComplete);
 
-    const sectionStyle = {
-        borderRadius: '24px',
-        border: '1px solid #EDD9BC',
-        background: 'rgba(255,255,255,0.4)',
-        padding: '24px',
-        backdropFilter: 'blur(12px)',
-        boxShadow: '0 4px 20px rgba(26,10,0,0.02)'
-    };
-
-    const getChipStyle = (selected) => ({
-        borderRadius: '99px',
-        border: selected ? '1px solid rgba(194,52,10,0.3)' : '1px solid #EDD9BC',
-        background: selected ? 'rgba(194,52,10,0.08)' : 'rgba(255,255,255,0.6)',
-        color: selected ? '#C2340A' : '#7A5030',
-        padding: '8px 16px',
-        fontSize: '13px',
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.15s'
-    });
-
-    const handle = profile?.igUsername ? `@${profile.igUsername}` : '@instagram';
-    const profileSummary = [
-        { label: 'Full name', value: form.fullName || '—' },
-        { label: 'Contact email', value: form.contactEmail || '—' },
-        { label: 'Country', value: form.country || '—' },
-        { label: 'City', value: form.city || '—' },
-    ];
-
-    if (!isEditing && profile?.profileComplete) {
+    if (!isEditing && profileComplete) {
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} id="profile-form">
-                <div style={sectionStyle}>
-                    <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px' }} className="md:flex-row md:items-start md:justify-between">
+            <div id="profile-form" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={sectionStyle()}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC' }} className="md:flex-row md:items-start md:justify-between">
                         <div>
-                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Influencer profile</p>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Basic profile</p>
                             <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
-                            <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>View your profile details and click edit if you need to make changes.</p>
+                            <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Your profile is ready. Click edit if you want to make changes.</p>
                         </div>
-                        <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', color: '#059669', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
-                            Profile complete
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-                        {profileSummary.map((item) => (
-                            <div key={item.label} style={{ borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '16px' }}>
-                                <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>{item.label}</p>
-                                <p style={{ marginTop: '8px', fontSize: '14px', fontWeight: 600, color: '#1A0A00' }}>{item.value}</p>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', color: '#059669', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                                Profile complete
                             </div>
-                        ))}
-                    </div>
-
-                    <div style={{ marginTop: '16px', borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '16px' }}>
-                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Profile image</p>
-                        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            {profileImage ? (
-                                <img src={profileImage} alt="Instagram profile" style={{ height: '56px', width: '56px', borderRadius: '50%', objectCover: 'cover', border: '1px solid #EDD9BC' }} />
-                            ) : (
-                                <div style={{ display: 'flex', height: '56px', width: '56px', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#C2340A', fontSize: '16px', fontWeight: 800, color: '#fff' }}>
-                                    {profileInitials}
-                                </div>
-                            )}
-                            <div>
-                                <p style={{ fontSize: '15px', fontWeight: 700, color: '#1A0A00' }}>{handle}</p>
-                                <p style={{ fontSize: '13px', color: '#7A5030' }}>Used across your Porchest profile.</p>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(true)}
+                                style={{ borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '8px 14px', fontSize: '12px', fontWeight: 700, color: '#1A0A00', cursor: 'pointer' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.72)'; }}
+                            >
+                                Edit profile
+                            </button>
                         </div>
                     </div>
 
-                    <div style={{ marginTop: '24px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                        <button
-                            type="button"
-                            onClick={() => setIsEditing(true)}
-                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#E8400A'}
-                            onMouseLeave={e => e.currentTarget.style.background = '#C2340A'}
-                        >
-                            Edit profile
-                        </button>
+                    <div style={{ display: 'grid', gap: '16px', marginTop: '20px' }} className="md:grid-cols-2">
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Full name</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>{profile.fullName || '—'}</p>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Contact email</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>{profile.contactEmail || '—'}</p>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Country</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>{profile.country || '—'}</p>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>City</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>{profile.city || '—'}</p>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Niche</p>
+                            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {(profile.niche || []).length ? parseList(profile.niche).map((item) => (
+                                    <span key={item} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '999px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>{item}</span>
+                                )) : <span style={{ fontSize: '14px', color: '#7A5030' }}>—</span>}
+                            </div>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Languages</p>
+                            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {parseList(profile.languages).length ? parseList(profile.languages).map((item) => (
+                                    <span key={item} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '999px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>{item}</span>
+                                )) : <span style={{ fontSize: '14px', color: '#7A5030' }}>—</span>}
+                            </div>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Content style</p>
+                            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {parseList(profile.contentStyleTags).length ? parseList(profile.contentStyleTags).map((item) => (
+                                    <span key={item} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '999px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '6px 12px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>{item}</span>
+                                )) : <span style={{ fontSize: '14px', color: '#7A5030' }}>—</span>}
+                            </div>
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Rates</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>
+                                Reel {profile.rates?.reelPrice ? `Rs ${profile.rates.reelPrice}` : '—'} · Post {profile.rates?.postPrice ? `Rs ${profile.rates.postPrice}` : '—'}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -226,41 +247,38 @@ export default function ProfileForm() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} id="profile-form">
-            <div style={sectionStyle}>
+        <div id="profile-form" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={sectionStyle()}>
                 <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px' }} className="md:flex-row md:items-start md:justify-between">
                     <div>
-                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Influencer profile</p>
-                        <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Basic Identity</h3>
-                        <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Keep your contact details and location up to date.</p>
+                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Basic profile</p>
+                        <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
+                        <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Fill every field to complete your profile. Brands use this information to find and match you.</p>
                     </div>
-                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profile?.profileComplete ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(245,158,11,0.2)', background: profile?.profileComplete ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: profile?.profileComplete ? '#059669' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
-                        {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'inline-flex', borderRadius: '99px', border: profileComplete ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(245,158,11,0.2)', background: profileComplete ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: profileComplete ? '#059669' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                            {profileComplete ? 'Profile complete' : 'Incomplete'}
+                        </div>
                     </div>
                 </div>
 
                 <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-2">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Full name</label>
-                        <input style={inputStyle} placeholder="Full name" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                        <input required style={inputStyle()} placeholder="Full name" value={form.fullName} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, fullName: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Contact email</label>
-                        <input style={inputStyle} placeholder="Contact email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                        <input required style={inputStyle()} placeholder="Contact email" value={form.contactEmail} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, contactEmail: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Country</label>
                         <div style={{ position: 'relative' }}>
-                            <select style={{ ...inputStyle, appearance: 'none' }} value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))}
-                                onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}>
+                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.country} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, country: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
                                 <option value="">Select country</option>
-                                {COUNTRIES.map((country) => (
-                                    <option key={country} value={country}>{country}</option>
-                                ))}
+                                {COUNTRIES.map((country) => <option key={country} value={country}>{country}</option>)}
                             </select>
                             <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
                         </div>
@@ -269,12 +287,9 @@ export default function ProfileForm() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>City</label>
                         <div style={{ position: 'relative' }}>
-                            <select style={{ ...inputStyle, appearance: 'none' }} value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
-                                onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}>
+                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.city} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, city: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
                                 <option value="">Select city</option>
-                                {CITIES.map((city) => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
+                                {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
                             </select>
                             <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
                         </div>
@@ -282,9 +297,9 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div style={sectionStyle}>
+            <div style={sectionStyle()}>
                 <div style={{ marginBottom: '24px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Profile setup</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Basic profile</p>
                     <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Niche & Content Style</h3>
                 </div>
 
@@ -293,9 +308,7 @@ export default function ProfileForm() {
                         <label style={{ marginBottom: '12px', display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Niche</label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {NICHES.map((niche) => (
-                                <button key={niche} type="button" onClick={() => toggleArray('niche', niche)} style={getChipStyle(form.niche.includes(niche))}
-                                    onMouseEnter={e => { if (!form.niche.includes(niche)) e.currentTarget.style.background = '#fff' }}
-                                    onMouseLeave={e => { if (!form.niche.includes(niche)) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}>
+                                <button key={niche} type="button" onClick={() => toggleArray('niche', niche)} className={chipClass(form.niche.includes(niche))}>
                                     {niche}
                                 </button>
                             ))}
@@ -306,9 +319,7 @@ export default function ProfileForm() {
                         <label style={{ marginBottom: '12px', display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Content style</label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {CONTENT_STYLES.map((style) => (
-                                <button key={style} type="button" onClick={() => toggleArray('contentStyleTags', style)} style={getChipStyle(form.contentStyleTags.includes(style))}
-                                    onMouseEnter={e => { if (!form.contentStyleTags.includes(style)) e.currentTarget.style.background = '#fff' }}
-                                    onMouseLeave={e => { if (!form.contentStyleTags.includes(style)) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}>
+                                <button key={style} type="button" onClick={() => toggleArray('contentStyleTags', style)} className={chipClass(form.contentStyleTags.includes(style))}>
                                     {style}
                                 </button>
                             ))}
@@ -317,23 +328,27 @@ export default function ProfileForm() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Languages</label>
-                        <select
-                            multiple
-                            style={{ ...inputStyle, minHeight: '160px', padding: '12px' }}
-                            value={form.languages}
-                            onChange={(event) => handleMultiSelect('languages', event)}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
-                        >
-                            {LANGUAGES.map((language) => (
-                                <option key={language} value={language}>
-                                    {language}
-                                </option>
-                            ))}
-                        </select>
-                        <p style={{ fontSize: '12px', color: '#7A5030' }}>Hold Ctrl or Command to select multiple languages.</p>
+                        <p style={{ fontSize: '12px', color: '#7A5030' }}>Select up to 2 languages.</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {LANGUAGES.map((language) => {
+                                const selected = form.languages.includes(language);
+                                const locked = !selected && form.languages.length >= 2;
+                                return (
+                                    <button
+                                        key={language}
+                                        type="button"
+                                        disabled={locked}
+                                        onClick={() => toggleArray('languages', language)}
+                                        className={chipClass(selected, locked)}
+                                    >
+                                        {language}
+                                    </button>
+                                );
+                            })}
+                        </div>
                         <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {form.languages.map((language) => (
-                                <span key={language} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '6px 14px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>
+                                <span key={language} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '999px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '6px 14px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>
                                     {language}
                                 </span>
                             ))}
@@ -342,42 +357,48 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div style={sectionStyle}>
+            <div style={sectionStyle()}>
                 <div style={{ marginBottom: '24px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Profile setup</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Basic profile</p>
                     <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Collaboration Pricing</h3>
                 </div>
-                <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-3">
+                <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-2">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Reel price</label>
-                        <input style={inputStyle} type="number" min="0" placeholder="Reel price" value={form.rates.reelPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                        <input required style={inputStyle()} type="number" min="0" placeholder="Reel price" value={form.rates.reelPrice} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Post price</label>
-                        <input style={inputStyle} type="number" min="0" placeholder="Post price" value={form.rates.postPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } }))}
-                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                        <input required style={inputStyle()} type="number" min="0" placeholder="Post price" value={form.rates.postPrice} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
                     </div>
                 </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
                 {saved && <p style={{ fontSize: '14px', fontWeight: 600, color: '#059669' }}>Profile saved successfully.</p>}
+                {!isComplete && (
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: '#d97706' }}>Fill every required field to complete your profile.</p>
+                )}
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    {profile?.profileComplete ? (
+                    {profileComplete ? (
                         <button
                             type="button"
                             onClick={() => setIsEditing(false)}
-                            style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#1A0A00', cursor: 'pointer', transition: 'background-color 0.15s' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#fff'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.6)'}
+                            style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#1A0A00', cursor: 'pointer', transition: 'background-color 0.15s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#fff'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.72)'; }}
                         >
                             Cancel
                         </button>
                     ) : null}
-                    <button onClick={handleSave} disabled={saving} style={{ display: 'inline-flex', minWidth: '170px', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'background-color 0.15s' }}
-                        onMouseEnter={e => { if (!saving) e.currentTarget.style.background = '#E8400A' }}
-                        onMouseLeave={e => { if (!saving) e.currentTarget.style.background = '#C2340A' }}>
+                    <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saving || !isComplete}
+                        style={{ display: 'inline-flex', minWidth: '170px', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: saving || !isComplete ? 'not-allowed' : 'pointer', opacity: saving || !isComplete ? 0.6 : 1, transition: 'background-color 0.15s' }}
+                        onMouseEnter={(e) => { if (!saving) e.currentTarget.style.background = '#E8400A'; }}
+                        onMouseLeave={(e) => { if (!saving) e.currentTarget.style.background = '#C2340A'; }}
+                    >
                         {saving ? 'Saving...' : 'Save profile'}
                     </button>
                 </div>

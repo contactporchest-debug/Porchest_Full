@@ -127,7 +127,7 @@ function buildInfluencerUpdates(body) {
 
     if (hasOwn(body, 'languages')) {
         const languages = toStringArray(body.languages);
-        if (languages !== undefined) updates.languages = languages;
+        if (languages !== undefined) updates.languages = languages.slice(0, 2);
     }
 
     if (hasOwn(body, 'contentStyleTags')) {
@@ -147,6 +147,29 @@ function buildInfluencerUpdates(body) {
     }
 
     return updates;
+}
+
+function isInfluencerProfileComplete(profile) {
+    const languages = Array.isArray(profile.languages) ? profile.languages : [];
+    const niches = Array.isArray(profile.niche) ? profile.niche : [];
+    const contentStyles = Array.isArray(profile.contentStyleTags) ? profile.contentStyleTags : [];
+    const hasRates = !!(
+        profile.rates &&
+        typeof profile.rates.reelPrice === 'number' &&
+        typeof profile.rates.postPrice === 'number'
+    );
+
+    return !!(
+        profile.fullName &&
+        profile.contactEmail &&
+        profile.country &&
+        profile.city &&
+        niches.length > 0 &&
+        contentStyles.length > 0 &&
+        languages.length > 0 &&
+        languages.length <= 2 &&
+        hasRates
+    );
 }
 
 async function finalizeUserProfile(userId, role, profileId, profileComplete) {
@@ -203,7 +226,7 @@ router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (r
     try {
         const updates = buildInfluencerUpdates(req.body || {});
         const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
-        const complete = !!(profile.fullName && Array.isArray(profile.niche) && profile.niche.length > 0);
+        const complete = isInfluencerProfileComplete(profile);
 
         profile.profileComplete = complete;
         profile.profileCompletionStatus = complete;
