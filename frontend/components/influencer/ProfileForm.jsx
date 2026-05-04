@@ -8,7 +8,16 @@ const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gamin
 const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional', 'minimalist', 'bold', 'emotional'];
 const LANGUAGES = ['English', 'Urdu', 'Arabic', 'Punjabi', 'Hindi', 'French', 'Spanish', 'German', 'Pashto'];
 const COUNTRIES = ['Pakistan', 'United States', 'United Kingdom', 'Canada', 'United Arab Emirates', 'Saudi Arabia', 'Australia', 'India'];
-const CITIES = ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'];
+const COUNTRY_CITIES = {
+    Pakistan: ['Rawalpindi', 'Islamabad', 'Lahore', 'Karachi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta'],
+    Canada: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', 'Quebec City'],
+    'United States': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Miami', 'Dallas', 'San Francisco', 'Seattle'],
+    'United Kingdom': ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Leeds', 'Glasgow', 'Edinburgh', 'Bristol'],
+    'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Al Ain'],
+    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Khobar'],
+    Australia: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Canberra'],
+    India: ['Mumbai', 'Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune'],
+};
 
 function parseList(value) {
     if (Array.isArray(value)) return value.filter(Boolean).map(String);
@@ -122,6 +131,21 @@ export default function ProfileForm() {
 
             return { ...current, [field]: [...current[field], value] };
         });
+    }
+
+    const cityOptions = useMemo(() => {
+        const countryCities = COUNTRY_CITIES[form.country] || [];
+        if (!form.city) return countryCities;
+        return countryCities.includes(form.city) ? countryCities : [form.city, ...countryCities];
+    }, [form.country, form.city]);
+
+    function handleCountryChange(value) {
+        setSaved(false);
+        setForm((current) => ({
+            ...current,
+            country: value,
+            city: current.country === value ? current.city : '',
+        }));
     }
 
     async function handleSave() {
@@ -276,7 +300,7 @@ export default function ProfileForm() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Country</label>
                         <div style={{ position: 'relative' }}>
-                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.country} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, country: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
+                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.country} onChange={(event) => handleCountryChange(event.target.value)} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
                                 <option value="">Select country</option>
                                 {COUNTRIES.map((country) => <option key={country} value={country}>{country}</option>)}
                             </select>
@@ -287,9 +311,9 @@ export default function ProfileForm() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>City</label>
                         <div style={{ position: 'relative' }}>
-                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.city} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, city: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
-                                <option value="">Select city</option>
-                                {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
+                            <select required disabled={!form.country} style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px', opacity: form.country ? 1 : 0.7 }} value={form.city} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, city: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
+                                <option value="">{form.country ? 'Select city' : 'Select country first'}</option>
+                                {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
                             </select>
                             <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
                         </div>
