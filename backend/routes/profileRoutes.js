@@ -6,7 +6,6 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
-const { generateUniqueCode } = require('../utils/generateCode');
 
 function hasOwn(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj || {}, key);
@@ -181,21 +180,15 @@ async function finalizeUserProfile(userId, role, profileId, profileComplete) {
     await User.findByIdAndUpdate(userId, update, { new: true });
 }
 
-async function upsertProfile(Model, codePrefix, codeField, userId, updates, role) {
-    const existing = await Model.findOne({ userId });
-    const profileCode = existing?.[codeField] || await generateUniqueCode(codePrefix, Model, codeField);
-    const merged = {
-        [codeField]: profileCode,
-        ...updates,
-    };
-
-    const profile = await Model.findOneAndUpdate(
+async function upsertProfile(Model, userId, updates) {
+    return Model.findOneAndUpdate(
         { userId },
         {
-            $set: merged,
+            $set: {
+                ...updates,
+            },
             $setOnInsert: {
                 userId,
-                [codeField]: profileCode,
             },
         },
         {
@@ -204,8 +197,6 @@ async function upsertProfile(Model, codePrefix, codeField, userId, updates, role
             setDefaultsOnInsert: true,
         }
     );
-
-    return profile;
 }
 
 router.get('/influencer/me', authMiddleware, roleMiddleware('influencer'), async (req, res) => {
@@ -223,7 +214,7 @@ router.get('/influencer/me', authMiddleware, roleMiddleware('influencer'), async
 router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (req, res) => {
     try {
         const updates = buildInfluencerUpdates(req.body || {});
-        const profile = await upsertProfile(InfluencerProfile, 'INF', 'influencerProfileId', req.user._id, updates, 'influencer');
+        const profile = await upsertProfile(InfluencerProfile, req.user._id, updates);
         const complete = isInfluencerProfileComplete(profile);
 
         await InfluencerProfile.updateOne(
@@ -265,7 +256,7 @@ router.get('/brand/me', authMiddleware, roleMiddleware('brand'), async (req, res
 router.put('/brand', authMiddleware, roleMiddleware('brand'), async (req, res) => {
     try {
         const updates = buildBrandUpdates(req.body || {});
-        const profile = await upsertProfile(BrandProfile, 'BRD', 'brandProfileId', req.user._id, updates, 'brand');
+        const profile = await upsertProfile(BrandProfile, req.user._id, updates);
         const targetAudience = profile.targetAudience || {};
         const hasAgeRange = Array.isArray(targetAudience.ageRange) && targetAudience.ageRange.length === 2 && targetAudience.ageRange.every((value) => typeof value === 'number');
         const complete = !!(
