@@ -7,7 +7,7 @@ import CampaignMetricsCard from './CampaignMetricsCard';
 
 const STATUS_TABS = [
     { key: 'pending,countered,negotiation', label: 'Requests' },
-    { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
+    { key: 'brand_payment_pending,brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];
 
@@ -47,6 +47,9 @@ export default function CampaignsFlow() {
         try {
             await apiPatch(`/collaborations/${id}/${endpoint}`, body);
             await refetch();
+            if (endpoint === 'accept' || endpoint === 'accept-counter') {
+                setActiveTab(1);
+            }
         } finally {
             setActing(false);
         }
