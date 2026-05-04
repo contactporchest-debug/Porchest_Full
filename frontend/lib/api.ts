@@ -42,7 +42,7 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error.response?.status;
-        if ((status === 401 || status === 403) && typeof window !== 'undefined') {
+        if (status === 401 && typeof window !== 'undefined') {
             clearAuthAndRedirect();
         }
         return Promise.reject(error);

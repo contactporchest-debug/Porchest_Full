@@ -35,7 +35,7 @@ export function useApi(endpoint, { immediate = true } = {}) {
             const json = await res.json().catch(() => null);
 
             if (!res.ok) {
-                if (res.status === 401 || res.status === 403) {
+                if (res.status === 401) {
                     clearAuthAndRedirect();
                 }
                 throw new Error(json?.error || json?.message || `HTTP ${res.status}`);
@@ -66,7 +66,7 @@ async function apiRequest(endpoint, body, method = 'POST') {
         body: JSON.stringify(body || {}),
     });
 
-    if (res.status === 401 || res.status === 403) {
+    if (res.status === 401) {
         clearAuthAndRedirect();
     }
 
