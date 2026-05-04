@@ -73,6 +73,11 @@ export default function ProfileForm() {
         return profile?.igProfileUrl || profile?.profilePictureUrl || '';
     }, [profile]);
 
+    const profileInitials = useMemo(() => {
+        const base = form.fullName || profile?.fullName || 'I';
+        return String(base).slice(0, 2).toUpperCase();
+    }, [form.fullName, profile]);
+
     function toggleArray(field, value) {
         setForm((current) => ({
             ...current,
@@ -122,14 +127,40 @@ export default function ProfileForm() {
         }
     }
 
-    const inputClass = 'w-full rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-blue-500';
-    const sectionCard = 'rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5 md:p-6';
+    const inputStyle = {
+        width: '100%',
+        borderRadius: '12px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.6)',
+        padding: '12px 16px',
+        fontSize: '14px',
+        color: '#1A0A00',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        fontFamily: 'inherit'
+    };
 
-    const summaryBadge = profile?.profileComplete
-        ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-        : 'border-amber-400/20 bg-amber-400/10 text-amber-300';
+    const sectionStyle = {
+        borderRadius: '24px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.4)',
+        padding: '24px',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 20px rgba(26,10,0,0.02)'
+    };
 
-    const name = form.fullName || profile?.fullName || 'Your name';
+    const getChipStyle = (selected) => ({
+        borderRadius: '99px',
+        border: selected ? '1px solid rgba(194,52,10,0.3)' : '1px solid #EDD9BC',
+        background: selected ? 'rgba(194,52,10,0.08)' : 'rgba(255,255,255,0.6)',
+        color: selected ? '#C2340A' : '#7A5030',
+        padding: '8px 16px',
+        fontSize: '13px',
+        fontWeight: 600,
+        cursor: 'pointer',
+        transition: 'all 0.15s'
+    });
+
     const handle = profile?.igUsername ? `@${profile.igUsername}` : '@instagram';
     const profileSummary = [
         { label: 'Full name', value: form.fullName || '—' },
@@ -140,48 +171,52 @@ export default function ProfileForm() {
 
     if (!isEditing && profile?.profileComplete) {
         return (
-            <div className="space-y-6" id="profile-form">
-                <div className={sectionCard}>
-                    <div className="mb-5 flex flex-col gap-3 border-b border-[#2A2A30] pb-4 md:flex-row md:items-start md:justify-between">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} id="profile-form">
+                <div style={sectionStyle}>
+                    <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px' }} className="md:flex-row md:items-start md:justify-between">
                         <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Profile setup</p>
-                            <h3 className="mt-1 text-xl font-semibold text-white">Profile Setup</h3>
-                            <p className="mt-1 text-sm text-gray-400">View your profile details and click edit if you need to make changes.</p>
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Influencer profile</p>
+                            <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
+                            <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>View your profile details and click edit if you need to make changes.</p>
                         </div>
-                        <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${summaryBadge}`}>
-                            {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
+                        <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', color: '#059669', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                            Profile complete
                         </div>
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
                         {profileSummary.map((item) => (
-                            <div key={item.label} className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">{item.label}</p>
-                                <p className="mt-2 text-sm font-semibold text-white">{item.value}</p>
+                            <div key={item.label} style={{ borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '16px' }}>
+                                <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>{item.label}</p>
+                                <p style={{ marginTop: '8px', fontSize: '14px', fontWeight: 600, color: '#1A0A00' }}>{item.value}</p>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-4 rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Instagram DP</p>
-                        <div className="mt-3 flex items-center gap-3">
+                    <div style={{ marginTop: '16px', borderRadius: '16px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '16px' }}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Profile image</p>
+                        <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             {profileImage ? (
-                                <img src={profileImage} alt="Instagram profile" className="h-14 w-14 rounded-full object-cover ring-1 ring-[#2A2A30]" />
+                                <img src={profileImage} alt="Instagram profile" style={{ height: '56px', width: '56px', borderRadius: '50%', objectCover: 'cover', border: '1px solid #EDD9BC' }} />
                             ) : (
-                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">IG</div>
+                                <div style={{ display: 'flex', height: '56px', width: '56px', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#C2340A', fontSize: '16px', fontWeight: 800, color: '#fff' }}>
+                                    {profileInitials}
+                                </div>
                             )}
                             <div>
-                                <p className="text-sm font-semibold text-white">{handle}</p>
-                                <p className="text-xs text-gray-400">Used across your Porchest profile.</p>
+                                <p style={{ fontSize: '15px', fontWeight: 700, color: '#1A0A00' }}>{handle}</p>
+                                <p style={{ fontSize: '13px', color: '#7A5030' }}>Used across your Porchest profile.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-3">
+                    <div style={{ marginTop: '24px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                         <button
                             type="button"
                             onClick={() => setIsEditing(true)}
-                            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: 'pointer' }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#E8400A'}
+                            onMouseLeave={e => e.currentTarget.style.background = '#C2340A'}
                         >
                             Edit profile
                         </button>
@@ -192,64 +227,76 @@ export default function ProfileForm() {
     }
 
     return (
-        <div className="space-y-6" id="profile-form">
-            <div className={sectionCard}>
-                <div className="mb-5 flex flex-col gap-3 border-b border-[#2A2A30] pb-4 md:flex-row md:items-start md:justify-between">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} id="profile-form">
+            <div style={sectionStyle}>
+                <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px' }} className="md:flex-row md:items-start md:justify-between">
                     <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Profile setup</p>
-                        <h3 className="mt-1 text-xl font-semibold text-white">Profile Setup</h3>
-                        <p className="mt-1 text-sm text-gray-400">Keep your Instagram details, identity, and collaboration preferences up to date.</p>
+                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Influencer profile</p>
+                        <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Basic Identity</h3>
+                        <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Keep your contact details and location up to date.</p>
                     </div>
-                    <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${summaryBadge}`}>
+                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profile?.profileComplete ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(245,158,11,0.2)', background: profile?.profileComplete ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: profile?.profileComplete ? '#059669' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
                         {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
                     </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Full name</label>
-                        <input className={inputClass} placeholder="Full name" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))} />
+                <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Full name</label>
+                        <input style={inputStyle} placeholder="Full name" value={form.fullName} onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Contact email</label>
-                        <input className={inputClass} placeholder="Contact email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Contact email</label>
+                        <input style={inputStyle} placeholder="Contact email" value={form.contactEmail} onChange={(event) => setForm((current) => ({ ...current, contactEmail: event.target.value }))}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Country</label>
-                        <select className={inputClass} value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))}>
-                            <option value="">Select country</option>
-                            {COUNTRIES.map((country) => (
-                                <option key={country} value={country}>{country}</option>
-                            ))}
-                        </select>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Country</label>
+                        <div style={{ position: 'relative' }}>
+                            <select style={{ ...inputStyle, appearance: 'none' }} value={form.country} onChange={(event) => setForm((current) => ({ ...current, country: event.target.value }))}
+                                onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}>
+                                <option value="">Select country</option>
+                                {COUNTRIES.map((country) => (
+                                    <option key={country} value={country}>{country}</option>
+                                ))}
+                            </select>
+                            <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
+                        </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">City</label>
-                        <select className={inputClass} value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}>
-                            <option value="">Select city</option>
-                            {CITIES.map((city) => (
-                                <option key={city} value={city}>{city}</option>
-                            ))}
-                        </select>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>City</label>
+                        <div style={{ position: 'relative' }}>
+                            <select style={{ ...inputStyle, appearance: 'none' }} value={form.city} onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
+                                onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}>
+                                <option value="">Select city</option>
+                                {CITIES.map((city) => (
+                                    <option key={city} value={city}>{city}</option>
+                                ))}
+                            </select>
+                            <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className={sectionCard}>
-                <div className="mb-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Profile setup</p>
-                    <h3 className="mt-1 text-xl font-semibold text-white">Niche, languages, and content style</h3>
+            <div style={sectionStyle}>
+                <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Profile setup</p>
+                    <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Niche & Content Style</h3>
                 </div>
 
-                <div className="space-y-6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Niche</label>
-                        <div className="flex flex-wrap gap-2">
+                        <label style={{ marginBottom: '12px', display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Niche</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {NICHES.map((niche) => (
-                                <button key={niche} type="button" onClick={() => toggleArray('niche', niche)} className={chipClass(form.niche.includes(niche))}>
+                                <button key={niche} type="button" onClick={() => toggleArray('niche', niche)} style={getChipStyle(form.niche.includes(niche))}
+                                    onMouseEnter={e => { if (!form.niche.includes(niche)) e.currentTarget.style.background = '#fff' }}
+                                    onMouseLeave={e => { if (!form.niche.includes(niche)) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}>
                                     {niche}
                                 </button>
                             ))}
@@ -257,23 +304,26 @@ export default function ProfileForm() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Content style</label>
-                        <div className="flex flex-wrap gap-2">
+                        <label style={{ marginBottom: '12px', display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Content style</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {CONTENT_STYLES.map((style) => (
-                                <button key={style} type="button" onClick={() => toggleArray('contentStyleTags', style)} className={chipClass(form.contentStyleTags.includes(style))}>
+                                <button key={style} type="button" onClick={() => toggleArray('contentStyleTags', style)} style={getChipStyle(form.contentStyleTags.includes(style))}
+                                    onMouseEnter={e => { if (!form.contentStyleTags.includes(style)) e.currentTarget.style.background = '#fff' }}
+                                    onMouseLeave={e => { if (!form.contentStyleTags.includes(style)) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}>
                                     {style}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Languages</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Languages</label>
                         <select
                             multiple
-                            className={`${inputClass} min-h-[160px] py-3`}
+                            style={{ ...inputStyle, minHeight: '160px', padding: '12px' }}
                             value={form.languages}
                             onChange={(event) => handleMultiSelect('languages', event)}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
                         >
                             {LANGUAGES.map((language) => (
                                 <option key={language} value={language}>
@@ -281,10 +331,10 @@ export default function ProfileForm() {
                                 </option>
                             ))}
                         </select>
-                        <p className="mt-2 text-xs text-gray-500">Hold Ctrl or Command to select multiple languages.</p>
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <p style={{ fontSize: '12px', color: '#7A5030' }}>Hold Ctrl or Command to select multiple languages.</p>
+                        <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {form.languages.map((language) => (
-                                <span key={language} className="inline-flex items-center rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1 text-xs font-semibold text-gray-300">
+                                <span key={language} style={{ display: 'inline-flex', alignItems: 'center', borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.8)', padding: '6px 14px', fontSize: '12px', fontWeight: 600, color: '#1A0A00' }}>
                                     {language}
                                 </span>
                             ))}
@@ -293,40 +343,47 @@ export default function ProfileForm() {
                 </div>
             </div>
 
-            <div className={sectionCard}>
-                <div className="mb-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Profile setup</p>
-                    <h3 className="mt-1 text-xl font-semibold text-white">Collaboration pricing</h3>
+            <div style={sectionStyle}>
+                <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Profile setup</p>
+                    <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Collaboration Pricing</h3>
                 </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Story price</label>
-                        <input className={inputClass} type="number" min="0" placeholder="Story price" value={form.rates.storyPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, storyPrice: event.target.value } }))} />
+                <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-3">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Story price</label>
+                        <input style={inputStyle} type="number" min="0" placeholder="Story price" value={form.rates.storyPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, storyPrice: event.target.value } }))}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Reel price</label>
-                        <input className={inputClass} type="number" min="0" placeholder="Reel price" value={form.rates.reelPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Reel price</label>
+                        <input style={inputStyle} type="number" min="0" placeholder="Reel price" value={form.rates.reelPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, reelPrice: event.target.value } }))}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Post price</label>
-                        <input className={inputClass} type="number" min="0" placeholder="Post price" value={form.rates.postPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } }))} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Post price</label>
+                        <input style={inputStyle} type="number" min="0" placeholder="Post price" value={form.rates.postPrice} onChange={(event) => setForm((current) => ({ ...current, rates: { ...current.rates, postPrice: event.target.value } }))}
+                            onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
                     </div>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-3">
-                {saved && <p className="text-sm font-medium text-emerald-400">Profile saved successfully.</p>}
-                <div className="flex gap-3">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                {saved && <p style={{ fontSize: '14px', fontWeight: 600, color: '#059669' }}>Profile saved successfully.</p>}
+                <div style={{ display: 'flex', gap: '12px' }}>
                     {profile?.profileComplete ? (
                         <button
                             type="button"
                             onClick={() => setIsEditing(false)}
-                            className="rounded-xl border border-[#2A2A30] bg-[#202025] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30]"
+                            style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#1A0A00', cursor: 'pointer', transition: 'background-color 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = '#fff'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.6)'}
                         >
                             Cancel
                         </button>
                     ) : null}
-                    <button onClick={handleSave} disabled={saving} className="inline-flex min-w-[170px] items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60">
+                    <button onClick={handleSave} disabled={saving} style={{ display: 'inline-flex', minWidth: '170px', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, transition: 'background-color 0.15s' }}
+                        onMouseEnter={e => { if (!saving) e.currentTarget.style.background = '#E8400A' }}
+                        onMouseLeave={e => { if (!saving) e.currentTarget.style.background = '#C2340A' }}>
                         {saving ? 'Saving...' : 'Save profile'}
                     </button>
                 </div>

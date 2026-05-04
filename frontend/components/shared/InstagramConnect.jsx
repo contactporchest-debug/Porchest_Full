@@ -61,34 +61,50 @@ export default function InstagramConnect({ role = 'influencer' }) {
     const followingCount = Number(metrics?.igFollowingCount ?? metrics?.followingCount ?? metrics?.followsCount ?? 0);
     const postCount = Number(metrics?.igMediaCount ?? metrics?.mediaCount ?? metrics?.postsCount ?? 0);
 
+    const sectionStyle = {
+        borderRadius: '24px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.4)',
+        padding: '24px',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '0 4px 20px rgba(26,10,0,0.02)'
+    };
+
+    const cardStyle = {
+        borderRadius: '16px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.6)',
+        padding: '16px'
+    };
+
     if (loading) {
         return (
-            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
-                <p className="text-sm text-gray-400">Checking Instagram connection...</p>
+            <div style={sectionStyle}>
+                <p style={{ fontSize: '14px', color: '#7A5030' }}>Checking Instagram connection...</p>
             </div>
         );
     }
 
     if (connected) {
         return (
-            <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
-                <div className="mb-4 flex flex-col gap-3 border-b border-[#2A2A30] pb-4 md:flex-row md:items-start md:justify-between">
-                    <div className="flex items-start gap-3">
+            <div style={sectionStyle}>
+                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '16px', borderBottom: '1px solid #EDD9BC' }} className="md:flex-row md:items-start md:justify-between">
+                    <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
                         {profileImage ? (
-                            <img src={profileImage} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-[#2A2A30]" />
+                            <img src={profileImage} alt="" style={{ height: '48px', width: '48px', borderRadius: '50%', objectCover: 'cover', border: '1px solid #EDD9BC' }} />
                         ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                            <div style={{ display: 'flex', height: '48px', width: '48px', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: '#C2340A', fontSize: '14px', fontWeight: 800, color: '#fff' }}>
                                 IG
                             </div>
                         )}
-                        <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-semibold text-white">@{metrics?.igUsername || 'instagram'}</p>
-                                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
+                        <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                                <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00' }}>@{metrics?.igUsername || 'instagram'}</p>
+                                <span style={{ borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', padding: '4px 10px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#059669' }}>
                                     Connected
                                 </span>
                             </div>
-                            <p className="mt-1 text-xs text-gray-400">
+                            <p style={{ marginTop: '4px', fontSize: '12px', color: '#7A5030' }}>
                                 Last synced: {lastSyncedAt ? new Date(lastSyncedAt).toLocaleString() : 'Never'}
                             </p>
                         </div>
@@ -97,40 +113,40 @@ export default function InstagramConnect({ role = 'influencer' }) {
                         href={`https://instagram.com/${metrics?.igUsername || ''}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="self-start rounded-full border border-[#2A2A30] bg-[#202025] px-3 py-1.5 text-xs font-semibold text-gray-300 transition hover:bg-[#2A2A30]"
+                        style={{ borderRadius: '99px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '6px 14px', fontSize: '12px', fontWeight: 700, color: '#1A0A00', textDecoration: 'none', transition: 'background-color 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.6)'}
                     >
-                        View
+                        View Profile
                     </a>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Followers</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{followerCount.toLocaleString()}</p>
+                <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+                    <div style={cardStyle}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Followers</p>
+                        <p style={{ marginTop: '8px', fontSize: '24px', fontWeight: 800, color: '#1A0A00' }}>{followerCount.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Following</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">
-                            {followingCount.toLocaleString()}
-                        </p>
+                    <div style={cardStyle}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Following</p>
+                        <p style={{ marginTop: '8px', fontSize: '24px', fontWeight: 800, color: '#1A0A00' }}>{followingCount.toLocaleString()}</p>
                     </div>
-                    <div className="rounded-xl border border-[#2A2A30] bg-[#202025] p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Posts</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">
-                            {postCount.toLocaleString()}
-                        </p>
+                    <div style={cardStyle}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Posts</p>
+                        <p style={{ marginTop: '8px', fontSize: '24px', fontWeight: 800, color: '#1A0A00' }}>{postCount.toLocaleString()}</p>
                     </div>
                 </div>
 
-                <p className="mt-3 text-xs text-gray-500">Everything refreshes automatically within 24 hours.</p>
+                <p style={{ marginTop: '12px', fontSize: '12px', color: '#7A5030' }}>Data refreshes automatically within 24 hours.</p>
 
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <div style={{ marginTop: '16px' }}>
                     <button
                         onClick={handleDisconnect}
                         disabled={connecting}
-                        className="rounded-xl border border-[#2A2A30] bg-[#202025] px-4 py-2.5 text-sm font-semibold text-gray-300 transition hover:bg-[#2A2A30] disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: '10px 20px', fontSize: '13px', fontWeight: 700, color: '#1A0A00', cursor: connecting ? 'not-allowed' : 'pointer', opacity: connecting ? 0.6 : 1, transition: 'background-color 0.15s' }}
+                        onMouseEnter={e => { if (!connecting) e.currentTarget.style.background = '#fff' }}
+                        onMouseLeave={e => { if (!connecting) e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }}
                     >
-                        {connecting ? 'Disconnecting...' : 'Disconnect'}
+                        {connecting ? 'Disconnecting...' : 'Disconnect Instagram'}
                     </button>
                 </div>
             </div>
@@ -138,17 +154,19 @@ export default function InstagramConnect({ role = 'influencer' }) {
     }
 
     return (
-        <div className="rounded-xl border border-[#2A2A30] bg-[#1A1A1E] p-5">
-            <p className="text-sm font-semibold text-white">Connect your Instagram</p>
-            <p className="mt-1 mb-4 text-sm text-gray-400">
+        <div style={sectionStyle}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#1A0A00' }}>Connect your Instagram</h3>
+            <p style={{ marginTop: '4px', marginBottom: '16px', fontSize: '14px', color: '#7A5030', lineHeight: 1.5 }}>
                 {role === 'brand'
                     ? 'Connect to track campaign follower growth and brand account performance.'
-                    : 'Required to show your analytics to brands and appear in search results.'}
+                    : 'Required to show your analytics to brands, engagement data, and appear in search results.'}
             </p>
             <button
                 onClick={handleConnect}
                 disabled={connecting}
-                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ borderRadius: '12px', background: '#C2340A', padding: '12px 24px', fontSize: '14px', fontWeight: 700, color: '#fff', border: 'none', cursor: connecting ? 'not-allowed' : 'pointer', opacity: connecting ? 0.6 : 1, transition: 'background-color 0.15s' }}
+                onMouseEnter={e => { if (!connecting) e.currentTarget.style.background = '#E8400A' }}
+                onMouseLeave={e => { if (!connecting) e.currentTarget.style.background = '#C2340A' }}
             >
                 {connecting ? 'Connecting...' : 'Connect Instagram'}
             </button>

@@ -9,23 +9,54 @@ export default function InfluencerProfilePage() {
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
             <DashboardLayout>
-                <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-                    <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div style={{ margin: '0 auto', display: 'flex', width: '100%', maxWidth: '1152px', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{
+                        borderRadius: '28px',
+                        border: '1px solid #EDD9BC',
+                        background: 'rgba(255,255,255,0.4)',
+                        backdropFilter: 'blur(12px)',
+                        padding: '24px',
+                        boxShadow: '0 8px 32px rgba(26,10,0,0.04)'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} className="lg:flex-row lg:items-end lg:justify-between">
                             <div>
-                                <p className="text-[11px] uppercase tracking-[0.2em] text-white/35">Influencer profile</p>
-                                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">Profile Setup</h1>
-                                <p className="mt-2 max-w-2xl text-sm text-white/45">
+                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#7A5030', fontWeight: 700 }}>Influencer profile</p>
+                                <h1 style={{ marginTop: '8px', fontSize: '30px', fontWeight: 800, letterSpacing: '-0.04em', color: '#1A0A00' }}>Profile Setup</h1>
+                                <p style={{ marginTop: '8px', maxWidth: '672px', fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>
                                     Your profile is shown to brands searching for influencers. Keep your Instagram, identity, niche, languages, and rates up to date.
                                 </p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold text-emerald-300">
-                                    100% complete
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    borderRadius: '99px',
+                                    border: '1px solid rgba(16,185,129,0.2)',
+                                    background: 'rgba(16,185,129,0.1)',
+                                    padding: '8px 16px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    color: '#059669',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    Profile ready
                                 </div>
                                 <a
                                     href="#profile-form"
-                                    className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08]"
+                                    style={{
+                                        borderRadius: '99px',
+                                        border: '1px solid #EDD9BC',
+                                        background: 'rgba(255,255,255,0.6)',
+                                        padding: '8px 16px',
+                                        fontSize: '12px',
+                                        fontWeight: 700,
+                                        color: '#1A0A00',
+                                        textDecoration: 'none',
+                                        transition: 'background-color 0.2s',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#fff'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.6)'}
                                 >
                                     Edit profile
                                 </a>
