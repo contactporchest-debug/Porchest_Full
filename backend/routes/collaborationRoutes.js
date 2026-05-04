@@ -13,7 +13,7 @@ const {
     takeFollowerBaseline,
 } = require('../services/trackingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
-const { isAdminRole } = require('../utils/accessRoles');
+const { isAdminRole, ADMIN_ROLES } = require('../utils/accessRoles');
 const { requireCompleteProfile } = require('../middleware/profileCompleteCheck');
 
 const router = express.Router();
@@ -61,6 +61,18 @@ function throwStatusError(currentStatus, res) {
         success: false,
         error: `Action not allowed in current status: ${currentStatus}`,
     });
+}
+
+function emitCollaborationEvent(req, userIds, event, payload) {
+    const io = req.app?.locals?.io;
+    if (!io) return;
+    userIds.filter(Boolean).forEach((userId) => {
+        io.to(`user-${userId}`).emit(event, payload);
+    });
+}
+
+async function getAdminRecipients() {
+    return User.find({ role: { $in: ADMIN_ROLES } }).select('_id fullName email').lean();
 }
 
 function parseHashtags(value) {
@@ -843,6 +855,39 @@ router.patch('/:id/submit-post', roleMiddleware('influencer'), requireCompletePr
             { new: true, strict: false }
         );
 
+        const [admins] = await Promise.all([
+            getAdminRecipients(),
+            Notification.create({
+                recipientUserId: collab.brandUserId,
+                type: 'system',
+                title: 'Post submitted for verification',
+                message: `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}".`,
+                campaignRequestId: collab._id,
+                metadata: { action: 'submit-post', postLink },
+            }).catch((notificationError) => {
+                console.error('[collaborationRoutes] Brand notification create failed:', notificationError);
+            }),
+        ]);
+
+        if (admins.length > 0) {
+            await Notification.insertMany(admins.map((admin) => ({
+                recipientUserId: admin._id,
+                type: 'system',
+                title: 'Collaboration ready for admin review',
+                message: `${collab.influencerName || 'An influencer'} submitted "${collab.campaignTitle}" for verification.`,
+                campaignRequestId: collab._id,
+                metadata: { action: 'submit-post', postLink, collabStatus: 'posted' },
+            }))).catch((notificationError) => {
+                console.error('[collaborationRoutes] Admin notification create failed:', notificationError);
+            });
+        }
+
+        emitCollaborationEvent(req, [collab.brandUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
+            collaborationId: collab._id,
+            status: 'posted',
+            action: 'submit-post',
+        });
+
         syncCollaborationMetrics(req.params.id).catch(() => {});
         const updated = await CampaignRequest.findById(req.params.id).lean();
         return res.json(await enrichCollaboration(updated));
@@ -921,6 +966,103 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
             },
             { new: true, strict: false }
         ).lean();
+
+        await Notification.create([
+            {
+                recipientUserId: collab.brandUserId,
+                type: 'system',
+                title: 'Post verified',
+                message: `The post for "${collab.campaignTitle}" has been verified and the first payout was released.`,
+                campaignRequestId: collab._id,
+                metadata: { action: 'verify-admin', status: 'campaign_active' },
+            },
+            {
+                recipientUserId: collab.influencerUserId,
+                type: 'system',
+                title: 'First payout released',
+                message: `Your post for "${collab.campaignTitle}" has been verified by admin. The first payout was released.`,
+                campaignRequestId: collab._id,
+                metadata: { action: 'verify-admin', status: 'campaign_active' },
+            },
+        ]).catch((notificationError) => {
+            console.error('[collaborationRoutes] Verify notification create failed:', notificationError);
+        });
+
+        emitCollaborationEvent(req, [collab.brandUserId, collab.influencerUserId], 'collaboration:updated', {
+            collaborationId: collab._id,
+            status: 'campaign_active',
+            action: 'verify-admin',
+        });
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        if (String(collab.status) === 'completed' || String(collab.status) === 'cancelled') {
+            return throwStatusError(collab.status, res);
+        }
+
+        const now = new Date();
+        const reason = String(req.body?.reason || 'Stopped by admin').trim();
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    status: 'cancelled',
+                    cancelledAt: now,
+                    campaignCompletedAt: now,
+                    adminStoppedAt: now,
+                    adminStopReason: reason,
+                    'payment.portion2.status': 'held',
+                    'payment.tranche2.status': 'held',
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
+
+        const [admins] = await Promise.all([
+            getAdminRecipients(),
+            Notification.create([
+                {
+                    recipientUserId: collab.brandUserId,
+                    type: 'system',
+                    title: 'Collaboration stopped by admin',
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    campaignRequestId: collab._id,
+                    metadata: { action: 'stop', reason },
+                },
+                {
+                    recipientUserId: collab.influencerUserId,
+                    type: 'system',
+                    title: 'Collaboration stopped by admin',
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    campaignRequestId: collab._id,
+                    metadata: { action: 'stop', reason },
+                },
+                ...admins.map((admin) => ({
+                    recipientUserId: admin._id,
+                    type: 'system',
+                    title: 'Collaboration stopped',
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    campaignRequestId: collab._id,
+                    metadata: { action: 'stop', reason },
+                })),
+            ]).catch((notificationError) => {
+                console.error('[collaborationRoutes] Stop notification create failed:', notificationError);
+            }),
+        ]);
+
+        emitCollaborationEvent(req, [collab.brandUserId, collab.influencerUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
+            collaborationId: collab._id,
+            status: 'cancelled',
+            action: 'stop',
+        });
+
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });

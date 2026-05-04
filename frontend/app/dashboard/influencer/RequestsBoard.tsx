@@ -46,6 +46,9 @@ function downloadRequestPdf(request: any) {
     }
 
     const logoUrl = `${window.location.origin}/logo.png`;
+    const brandDisplayName = request.brandName || request.brand?.companyName || request.brand?.businessName || 'Brand';
+    const influencerDisplayName = request.influencerName || request.influencer?.fullName || 'Influencer';
+    const title = `${brandDisplayName} campaign request to ${influencerDisplayName}`;
     const priceText = request.agreedPrice
         ? `$${request.agreedPrice.toLocaleString()}`
         : `$${request.budgetRangeMin?.toLocaleString() || '—'} – $${request.budgetRangeMax?.toLocaleString() || '—'}`;
@@ -100,7 +103,7 @@ function downloadRequestPdf(request: any) {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Porchest Collaboration Request - ${escapeHtml(request.campaignTitle || 'Request')}</title>
+            <title>${escapeHtml(title)}</title>
             <meta charset="utf-8" />
             <style>
                 body { font-family: Arial, sans-serif; margin: 0; color: #111827; background: #ffffff; }
@@ -133,8 +136,8 @@ function downloadRequestPdf(request: any) {
                     </div>
                 </div>
                 <div class="title">
-                    <h2>${escapeHtml(request.campaignTitle || 'Collaboration Request')}</h2>
-                    <p>Prepared for the influencer from the details provided by ${escapeHtml(request.brandName || 'the brand')}.</p>
+                    <h2>${escapeHtml(title)}</h2>
+                    <p>Prepared for ${escapeHtml(influencerDisplayName)} from the details provided by ${escapeHtml(brandDisplayName)}.</p>
                 </div>
                 <div class="grid">
                     ${detailRows.map(([label, value]) => `
@@ -146,7 +149,7 @@ function downloadRequestPdf(request: any) {
                 </div>
                 ${optionalSections}
                 <div class="footer">
-                    Generated from Porchest on ${escapeHtml(new Date().toLocaleString())}.
+                    Powered by Porchest · Generated on ${escapeHtml(new Date().toLocaleString())}.
                 </div>
             </div>
         </body>
@@ -168,8 +171,8 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
     const [postUrl, setPostUrl] = useState('');
     const [submittingVer, setSubmittingVer] = useState(false);
 
-    const canRespond = ['sent', 'viewed'].includes(request.status);
-    const canNegotiate = ['sent', 'viewed', 'negotiation'].includes(request.status);
+    const canRespond = ['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
+    const canNegotiate = ['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
     const isAccepted = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status);
 
     const handleVerifySubmit = async (e: React.FormEvent) => {
@@ -426,7 +429,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
             await influencerAPI.respondToRequest(id, payload);
             toast.success(
                 action === 'accepted'
-                    ? 'Request accepted. Waiting for brand payment.'
+                    ? 'Request accepted. It moved to Collaborations.'
                     : action === 'rejected'
                         ? 'Request declined.'
                         : 'Counter offer sent! 💬'
@@ -442,10 +445,9 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
     const FILTERS = [
         { key: 'all', label: 'All', color: '#a855f7' },
-        { key: 'pending,sent,viewed,brand_payment_pending', label: 'New', color: '#60d5f8' },
-        { key: 'accepted,brand_payment_pending,brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Accepted', color: '#4ade80' },
-        { key: 'negotiation', label: 'Negotiation', color: '#fbbf24' },
-        { key: 'rejected', label: 'Declined', color: '#f87171' },
+        { key: 'sent,viewed,pending', label: 'New', color: '#60d5f8' },
+        { key: 'countered,negotiation', label: 'Countered', color: '#fbbf24' },
+        { key: 'rejected,declined,cancelled', label: 'Declined', color: '#f87171' },
         { key: 'deal_closed', label: 'Deals', color: '#4ade80' },
     ];
 
@@ -467,10 +469,10 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
         <div style={{ marginBottom: '40px' }}>
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontFamily: 'Space Grotesk', fontWeight: '800', fontSize: '24px', color: TEXT, letterSpacing: '-0.03em', marginBottom: '4px' }}>
-                    Collaborations
+                    Collaboration Requests
                 </h1>
                 <p style={{ fontSize: '13px', color: MUTED }}>
-                    {requests.length} collaboration request{requests.length !== 1 ? 's' : ''} and deal update{requests.length !== 1 ? 's' : ''}
+                    {requests.length} incoming collaboration request{requests.length !== 1 ? 's' : ''}
                 </p>
             </motion.div>
 

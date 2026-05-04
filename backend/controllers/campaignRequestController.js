@@ -220,7 +220,12 @@ exports.getInfluencerRequests = async (req, res, next) => {
     try {
         const { status, page = 1, limit = 50 } = req.query;
         const filter = { influencerUserId: req.user._id };
-        if (status && status !== 'all') filter.status = status;
+        const incomingStatuses = ['sent', 'viewed', 'pending', 'countered', 'negotiation', 'rejected', 'declined', 'deal_closed', 'expired', 'cancelled'];
+        if (status && status !== 'all') {
+            filter.status = status;
+        } else {
+            filter.status = { $in: incomingStatuses };
+        }
 
         const requests = await CampaignRequest.find(filter)
             .sort({ createdAt: -1 })

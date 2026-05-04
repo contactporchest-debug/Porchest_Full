@@ -6,7 +6,7 @@ import { useApi, apiPatch } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
 
 const STATUS_TABS = [
-    { key: 'pending,countered,brand_payment_pending', label: 'Requests' },
+    { key: 'pending,countered,negotiation', label: 'Requests' },
     { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];

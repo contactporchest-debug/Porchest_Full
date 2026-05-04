@@ -33,6 +33,7 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Dashboard',      href: '/dashboard/admin',                     icon: <LayoutDashboard size={18} /> },
         { label: 'Users',          href: '/dashboard/admin/users',               icon: <Users size={18} /> },
         { label: 'Campaigns',      href: '/dashboard/admin/campaigns',           icon: <Briefcase size={18} /> },
+        { label: 'Collaborations', href: '/dashboard/admin/collaborations',      icon: <Handshake size={18} /> },
     ],
     'software-client': [
         { label: 'Dashboard',      href: '/dashboard/software-client',           icon: <LayoutDashboard size={18} /> },

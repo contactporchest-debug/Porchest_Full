@@ -71,6 +71,10 @@ export const adminAPI = {
     getCampaigns: (params?: Record<string, unknown>) => api.get('/admin/campaigns', { params }),
     getCampaignById: (id: string) => api.get(`/admin/campaigns/${id}`),
     updateCampaignStatus: (id: string, status: string) => api.patch(`/admin/campaigns/${id}/status`, { status }),
+    getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
+    getCollaboration: (id: string) => api.get(`/collaborations/${id}`),
+    stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
+    verifyCollaboration: (id: string) => api.patch(`/collaborations/${id}/verify-admin`),
     // Campaign requests overview
     getRequests: (params?: Record<string, unknown>) => api.get('/admin/requests', { params }),
     // Verification queue
