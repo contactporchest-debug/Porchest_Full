@@ -20,8 +20,7 @@ type InfluencerProfileResponse = {
 
 export default function InfluencerPortal() {
     const { user } = useAuth();
-    const { data } = useApi('/profile/influencer/me');
-    const profile = data as InfluencerProfileResponse | null;
+    const { data: profile } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
     const [igConnected, setIgConnected] = useState(false);
     const [dashStats, setDashStats] = useState<any>(null);
     const [profileCompletion, setProfileCompletion] = useState<any>(null);

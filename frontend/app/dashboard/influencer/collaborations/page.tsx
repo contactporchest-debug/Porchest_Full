@@ -12,8 +12,7 @@ type InfluencerProfileResponse = {
 };
 
 export default function InfluencerCollaborationsRoute() {
-    const { data, loading } = useApi('/profile/influencer/me');
-    const profile = data as InfluencerProfileResponse | null;
+    const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
     const profileComplete = !!profile?.profileComplete;
 
     return (

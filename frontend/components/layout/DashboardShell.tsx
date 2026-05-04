@@ -8,6 +8,13 @@ import TopBar from './TopBar';
 import { Menu, X } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 
+type BrandProfileResponse = {
+    logo?: string;
+    logoUrl?: string;
+    businessName?: string;
+    brandName?: string;
+};
+
 export default function DashboardShell({
     children,
     role,
@@ -16,9 +23,10 @@ export default function DashboardShell({
     role: 'influencer' | 'brand' | 'admin' | 'software-client';
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { data: brandProfile, refetch: refetchBrandProfile } = useApi('/profile/brand/me', { immediate: role === 'brand' });
-    const brandLogo = role === 'brand' ? (brandProfile?.logo || brandProfile?.logoUrl || '') : '';
-    const brandName = role === 'brand' ? (brandProfile?.businessName || brandProfile?.brandName || '') : '';
+    const { data: brandProfile, refetch: refetchBrandProfile } = useApi<BrandProfileResponse>('/profile/brand/me', { immediate: role === 'brand' });
+    const brandProfileData = brandProfile;
+    const brandLogo = role === 'brand' ? (brandProfileData?.logo || brandProfileData?.logoUrl || '') : '';
+    const brandName = role === 'brand' ? (brandProfileData?.businessName || brandProfileData?.brandName || '') : '';
 
     useEffect(() => {
         if (role !== 'brand') return;

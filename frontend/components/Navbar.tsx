@@ -40,8 +40,8 @@ export default function Navbar() {
     const { user, logout } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { data: brandProfile, refetch: refetchBrandProfile } = useApi('/profile/brand/me', { immediate: Boolean(user?.role === 'brand') });
-    const brandProfileData = brandProfile as BrandProfileResponse | null;
+    const { data: brandProfile, refetch: refetchBrandProfile } = useApi<BrandProfileResponse>('/profile/brand/me', { immediate: Boolean(user?.role === 'brand') });
+    const brandProfileData = brandProfile;
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);

@@ -14,8 +14,7 @@ type BrandProfileResponse = {
 };
 
 export default function BrandProfilePage() {
-    const { data: profile } = useApi('/profile/brand/me');
-    const brandProfile = profile as BrandProfileResponse | null;
+    const { data: brandProfile } = useApi<BrandProfileResponse>('/profile/brand/me');
     const brandLogo = brandProfile?.logo || brandProfile?.logoUrl || '';
     const brandName = brandProfile?.businessName || brandProfile?.brandName || 'Brand profile';
 

@@ -13,8 +13,7 @@ type BrandProfileResponse = {
 };
 
 export default function BrandCollaborationsRoute() {
-    const { data, loading } = useApi('/profile/brand/me');
-    const profile = data as BrandProfileResponse | null;
+    const { data: profile, loading } = useApi<BrandProfileResponse>('/profile/brand/me');
     const profileComplete = !!profile?.profileComplete;
 
     return (

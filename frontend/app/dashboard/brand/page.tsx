@@ -17,8 +17,7 @@ type BrandProfileResponse = {
 };
 
 export default function BrandPortalOverview() {
-    const { data, loading } = useApi('/profile/brand/me');
-    const profile = data as BrandProfileResponse | null;
+    const { data: profile, loading } = useApi<BrandProfileResponse>('/profile/brand/me');
     const profileComplete = !!profile?.profileComplete;
     const brandLogo = profile?.logo || profile?.logoUrl || '';
     const brandName = profile?.businessName || profile?.brandName || '';
