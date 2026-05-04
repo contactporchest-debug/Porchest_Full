@@ -290,7 +290,12 @@ exports.respondToRequest = async (req, res, next) => {
 
         // Update status
         request.status = status;
-        if (status === 'accepted') request.acceptedAt = new Date();
+        if (status === 'accepted') {
+            request.acceptedAt = new Date();
+            request.status = 'brand_payment_pending';
+            request.brandPaymentStatus = 'pending';
+            request.brandPaymentReceivedAt = null;
+        }
         if (status === 'rejected') {
             request.rejectedAt = new Date();
             request.rejectionReason = rejectionReason || '';
@@ -322,7 +327,7 @@ exports.respondToRequest = async (req, res, next) => {
             deal_closed: 'Deal Confirmed! ✅',
         };
         const notifMessageMap = {
-            accepted: `${request.influencerName || 'Influencer'} accepted your request "${request.campaignTitle}"`,
+            accepted: `${request.influencerName || 'Influencer'} accepted your request "${request.campaignTitle}". Brand payment is now required to start the collaboration.`,
             rejected: `${request.influencerName || 'Influencer'} declined your request "${request.campaignTitle}"`,
             negotiation: `${request.influencerName || 'Influencer'} sent a counter offer for "${request.campaignTitle}"`,
             deal_closed: `Deal confirmed for "${request.campaignTitle}" with ${request.influencerName || 'Influencer'}`,

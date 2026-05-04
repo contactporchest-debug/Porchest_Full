@@ -74,7 +74,7 @@ function ActiveCollaborations({ refresh }: { refresh: number }) {
 
     useEffect(() => {
         const load = () => {
-            influencerAPI.getRequests({ status: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted' })
+            influencerAPI.getRequests({ status: 'brand_payment_pending,brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted' })
                 .then(res => {
                     if (!res.data || typeof res.data !== 'object') {
                         throw new Error('Invalid API response format');

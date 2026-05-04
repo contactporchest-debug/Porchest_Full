@@ -424,7 +424,13 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
         try {
             const payload = { status: action, ...data };
             await influencerAPI.respondToRequest(id, payload);
-            toast.success(action === 'accepted' ? 'Request accepted! 🎉' : action === 'rejected' ? 'Request declined.' : 'Counter offer sent! 💬');
+            toast.success(
+                action === 'accepted'
+                    ? 'Request accepted. Waiting for brand payment.'
+                    : action === 'rejected'
+                        ? 'Request declined.'
+                        : 'Counter offer sent! 💬'
+            );
             await loadRequests();
             onChanged?.();
         } catch {
@@ -436,8 +442,8 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
     const FILTERS = [
         { key: 'all', label: 'All', color: '#a855f7' },
-        { key: 'pending,sent,viewed', label: 'New', color: '#60d5f8' },
-        { key: 'accepted', label: 'Accepted', color: '#4ade80' },
+        { key: 'pending,sent,viewed,brand_payment_pending', label: 'New', color: '#60d5f8' },
+        { key: 'accepted,brand_payment_pending,brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Accepted', color: '#4ade80' },
         { key: 'negotiation', label: 'Negotiation', color: '#fbbf24' },
         { key: 'rejected', label: 'Declined', color: '#f87171' },
         { key: 'deal_closed', label: 'Deals', color: '#4ade80' },
