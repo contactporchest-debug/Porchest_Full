@@ -662,8 +662,9 @@ exports.profileBasedMatching = async (req, res, next) => {
 
         const f = aiData.filters || {};
 
-        // ── 3. Build Database Query ──────────────────────────────────
-        const filter = {
+        // ── 3. Multi-Stage Database Query Cascade ────────────────────
+        // Stage 1: Strict Match (Niche AND Country AND Budget AND Engagement)
+        const buildBaseFilter = () => ({
             profileCompletionStatus: true,
             $or: [
                 { instagramConnectionStatus: 'connected' },
@@ -671,43 +672,57 @@ exports.profileBasedMatching = async (req, res, next) => {
             ],
             followersCount: { $gt: 0 },
             engagementRate: { $gt: 0 }
+        });
+
+        const applyFilters = (base, filters, mode = 'strict') => {
+            const query = { ...base };
+            
+            // Niche/Industry
+            if (filters.niches && filters.niches.length > 0) {
+                query.niche = { $in: filters.niches.map(n => new RegExp(n, 'i')) };
+            } else if (filters.niche) {
+                query.niche = { $regex: new RegExp(filters.niche, 'i') };
+            }
+
+            // Country
+            if (mode === 'strict' && filters.countries && filters.countries.length > 0) {
+                query.country = { $in: filters.countries.map(c => new RegExp(c, 'i')) };
+            } else if (mode === 'strict' && filters.country) {
+                query.country = { $regex: new RegExp(filters.country, 'i') };
+            }
+
+            // Constraints (only in strict mode)
+            if (mode === 'strict') {
+                if (filters.minFollowers) query.followersCount = { ...query.followersCount, $gte: filters.minFollowers };
+                if (filters.maxFollowers) query.followersCount = { ...query.followersCount, $lte: filters.maxFollowers };
+                if (filters.minEngagement) query.engagementRate = { ...query.engagementRate, $gte: filters.minEngagement };
+                if (filters.maxPostCost) query.avgPostPrice = { $lte: filters.maxPostCost, $gt: 0 };
+            }
+
+            return query;
         };
 
-        // Support both single niche string (from AI) and niches array (from fallback)
-        if (f.niches && Array.isArray(f.niches) && f.niches.length > 0) {
-            filter.niche = { $in: f.niches.map(n => new RegExp(n, 'i')) };
-        } else if (f.niche) {
-            filter.niche = { $regex: new RegExp(f.niche, 'i') };
+        // Execution Cascade
+        let influencerProfiles = await InfluencerProfile.find(applyFilters(buildBaseFilter(), f, 'strict'))
+            .select(INFLUENCER_CARD_FIELDS).sort({ fitScore: -1, followersCount: -1 }).limit(20).lean();
+
+        if (influencerProfiles.length === 0) {
+            console.log('[Smart Matching] No strict matches, trying broad niche match...');
+            influencerProfiles = await InfluencerProfile.find(applyFilters(buildBaseFilter(), f, 'broad'))
+                .select(INFLUENCER_CARD_FIELDS).sort({ fitScore: -1, followersCount: -1 }).limit(20).lean();
         }
 
-        // Support both single country string (from AI) and countries array (from fallback)
-        if (f.countries && Array.isArray(f.countries) && f.countries.length > 0) {
-            filter.country = { $in: f.countries.map(c => new RegExp(c, 'i')) };
-        } else if (f.country) {
-            filter.country = { $regex: new RegExp(f.country, 'i') };
+        if (influencerProfiles.length === 0) {
+            console.log('[Smart Matching] Still no matches, trying any relevant niche/industry...');
+            // Last resort: Just match any of the niches or industry without any other filters
+            const lastResortFilter = buildBaseFilter();
+            const allPossibleNiches = [...(f.niches || []), f.niche, brandProfile.industry].filter(Boolean);
+            if (allPossibleNiches.length > 0) {
+                lastResortFilter.niche = { $in: allPossibleNiches.map(n => new RegExp(n, 'i')) };
+                influencerProfiles = await InfluencerProfile.find(lastResortFilter)
+                    .select(INFLUENCER_CARD_FIELDS).sort({ followersCount: -1 }).limit(20).lean();
+            }
         }
-
-        if (f.minFollowers) filter.followersCount.$gte = f.minFollowers;
-        if (f.maxFollowers) filter.followersCount.$lte = f.maxFollowers;
-        if (f.minEngagement) filter.engagementRate.$gte = f.minEngagement;
-        if (f.maxPostCost) filter.avgPostPrice = { $lte: f.maxPostCost, $gt: 0 };
-
-        if (f.keywords && f.keywords.length > 0) {
-            const keywordRegex = f.keywords.join('|');
-            filter.$and = [{
-                $or: [
-                    { bio: { $regex: new RegExp(keywordRegex, 'i') } },
-                    { fullName: { $regex: new RegExp(keywordRegex, 'i') } },
-                    { niche: { $regex: new RegExp(keywordRegex, 'i') } }
-                ]
-            }];
-        }
-
-        const influencerProfiles = await InfluencerProfile.find(filter)
-            .select(INFLUENCER_CARD_FIELDS)
-            .sort({ fitScore: -1, followersCount: -1 })
-            .limit(20)
-            .lean();
 
         const result = influencerProfiles.filter(p => !!(p.fullName || p.displayName)).map(buildInfluencerCard);
 
@@ -716,7 +731,8 @@ exports.profileBasedMatching = async (req, res, next) => {
             aiReply: aiData.reply,
             filters: aiData.filters,
             influencers: result,
-            isHeuristicFallback: extractionError
+            isHeuristicFallback: extractionError,
+            matchCount: result.length
         });
 
     } catch (error) {
