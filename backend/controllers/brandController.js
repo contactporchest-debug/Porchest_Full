@@ -159,16 +159,42 @@ function buildInfluencerCard(profile) {
     };
 }
 
+function isBrandProfileComplete(profile) {
+    if (!profile) return false;
+
+    const targetAudience = profile.targetAudience || {};
+    const ageRange = Array.isArray(targetAudience.ageRange)
+        ? targetAudience.ageRange.map((value) => Number(value)).filter((value) => Number.isFinite(value))
+        : [];
+    const genders = Array.isArray(targetAudience.genders) ? targetAudience.genders.filter(Boolean) : [];
+    const countries = Array.isArray(targetAudience.countries) ? targetAudience.countries.filter(Boolean) : [];
+    const niches = Array.isArray(profile.preferredNiches) ? profile.preferredNiches.filter(Boolean) : [];
+    const budgetMin = Number(profile.budgetRange?.min);
+    const budgetMax = Number(profile.budgetRange?.max);
+
+    return !!(
+        (profile.businessName || profile.brandName || profile.companyName) &&
+        profile.representerName &&
+        profile.industry &&
+        profile.contactEmail &&
+        ageRange.length === 2 &&
+        genders.length > 0 &&
+        countries.length > 0 &&
+        countries.length <= 3 &&
+        niches.length > 0 &&
+        Number.isFinite(budgetMin) &&
+        Number.isFinite(budgetMax) &&
+        String(profile.marketingGoals || '').trim()
+    );
+}
+
 // @desc    Brand dashboard overview
 exports.getDashboard = async (req, res, next) => {
     try {
         const brandId = req.user._id;
         const brandProfile = await BrandProfile.findOne({ userId: brandId }).lean();
 
-        const profileComplete = !!(
-            brandProfile?.brandName && brandProfile?.contactDetails?.officialEmail &&
-            brandProfile?.contactDetails?.contactPersonName && brandProfile?.country
-        );
+        const profileComplete = isBrandProfileComplete(brandProfile);
 
         let formattedBrandProfile = brandProfile;
         if (formattedBrandProfile) {
@@ -180,6 +206,7 @@ exports.getDashboard = async (req, res, next) => {
                 brandGoal: formattedBrandProfile.description,
                 contactPersonName: formattedBrandProfile.contactDetails?.contactPersonName,
                 officialEmail: formattedBrandProfile.contactDetails?.officialEmail,
+                profileComplete,
             };
         }
 
@@ -231,6 +258,7 @@ exports.getBrandProfile = async (req, res, next) => {
             success: true, 
             user, 
             brandProfile: formattedBrandProfile,
+            profileComplete: isBrandProfileComplete(brandProfile),
             instagramConnection: brandProfile ? {
                 isConnected: brandProfile.instagramConnected || brandProfile.instagramConnectionStatus === 'connected',
                 lastSyncedAt: brandProfile.lastSyncedAt || null,
@@ -283,7 +311,8 @@ exports.updateProfile = async (req, res, next) => {
             await brandProfile.save();
         }
 
-        const profileCompletionStatus = !!(brandProfile.brandName && brandProfile.contactDetails?.officialEmail && brandProfile.contactDetails?.contactPersonName && brandProfile.country && brandProfile.description && brandProfile.category);
+        const profileCompletionStatus = isBrandProfileComplete(brandProfile);
+        brandProfile.profileComplete = profileCompletionStatus;
         brandProfile.profileCompletionStatus = profileCompletionStatus;
         
         if (profileCompletionStatus && brandProfile.verificationStatus !== 'verified') {
