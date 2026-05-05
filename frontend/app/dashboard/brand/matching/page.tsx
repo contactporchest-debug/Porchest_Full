@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { motion } from 'framer-motion';
 import { UserX, ArrowRight, Loader2 } from 'lucide-react';
-import { brandAPI } from '@/lib/api';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
 import { GlassCard } from '@/components/ui';
+import { useApi } from '@/hooks/useApi';
 
 const AIMatchingComponent = dynamic(() => import('./AIMatchingComponent'), {
     loading: () => (
@@ -20,30 +18,8 @@ const AIMatchingComponent = dynamic(() => import('./AIMatchingComponent'), {
 });
 
 export default function AiMatchingPage() {
-    const { user } = useAuth();
-    const [profileComplete, setProfileComplete] = useState<boolean | null>(user?.profileCompletionStatus ?? null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const cached = sessionStorage.getItem('brand_profile_complete');
-            if (cached === 'true' || cached === 'false') {
-                setProfileComplete(cached === 'true');
-                setLoading(false);
-            }
-        }
-
-        brandAPI.getDashboard().then(res => {
-            const nextProfileComplete = !!res.data.dashboard.profileComplete;
-            setProfileComplete(nextProfileComplete);
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('brand_profile_complete', String(nextProfileComplete));
-            }
-            setLoading(false);
-        }).catch(() => {
-            setLoading(false);
-        });
-    }, []);
+    const { data: profile, loading } = useApi<{ profileComplete?: boolean; profileCompletionStatus?: boolean }>('/profile/brand/me');
+    const profileComplete = Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus);
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>
