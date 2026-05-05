@@ -77,7 +77,7 @@ function computeDynamicFitScore(profile) {
     let dataPts = 0;
     if (profile.fullName && profile.fullName.trim())                  dataPts += 5;
     if (profile.bio || profile.instagramBiography)                    dataPts += 5;
-    if (profile.niche && profile.niche.trim())                        dataPts += 5;
+    if (profile.niche && (Array.isArray(profile.niche) ? profile.niche.length > 0 : profile.niche.trim())) dataPts += 5;
     if (profile.country && profile.country.trim())                    dataPts += 5;
     if ((profile.avgPostPrice || 0) > 0 || (profile.avgReelPrice || 0) > 0) {
         dataPts += 5; reasons.push('Pricing published');
