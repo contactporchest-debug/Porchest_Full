@@ -641,17 +641,22 @@ exports.profileBasedMatching = async (req, res, next) => {
 
         // ── 2. Heuristic Fallback if AI Fails ────────────────────────
         if (extractionError || !aiData) {
+            const niches = [...(brandProfile.preferredNiches || [])];
+            if (brandProfile.industry && !niches.includes(brandProfile.industry)) {
+                niches.push(brandProfile.industry);
+            }
+
             aiData = {
                 filters: {
-                    niche: (brandProfile.preferredNiches && brandProfile.preferredNiches[0]) || brandProfile.industry,
-                    country: (brandProfile.targetAudience?.countries && brandProfile.targetAudience.countries[0]) || null,
+                    niches: niches, // Support multiple niches
+                    countries: brandProfile.targetAudience?.countries || [], // Support multiple countries
                     minFollowers: null,
                     maxFollowers: null,
-                    minEngagement: 2,
+                    minEngagement: 1.0, // Relaxed from 2.0
                     maxPostCost: brandProfile.budgetRange?.max || null,
                     keywords: []
                 },
-                reply: "Based on your brand profile's industry and preferred niches, we've identified these high-fit creators for your campaign."
+                reply: "Our automated system analyzed your brand's industry, niches, and target countries to find the best influencer matches for your campaign."
             };
         }
 
@@ -668,8 +673,20 @@ exports.profileBasedMatching = async (req, res, next) => {
             engagementRate: { $gt: 0 }
         };
 
-        if (f.niche) filter.niche = { $regex: new RegExp(f.niche, 'i') };
-        if (f.country) filter.country = { $regex: new RegExp(f.country, 'i') };
+        // Support both single niche string (from AI) and niches array (from fallback)
+        if (f.niches && Array.isArray(f.niches) && f.niches.length > 0) {
+            filter.niche = { $in: f.niches.map(n => new RegExp(n, 'i')) };
+        } else if (f.niche) {
+            filter.niche = { $regex: new RegExp(f.niche, 'i') };
+        }
+
+        // Support both single country string (from AI) and countries array (from fallback)
+        if (f.countries && Array.isArray(f.countries) && f.countries.length > 0) {
+            filter.country = { $in: f.countries.map(c => new RegExp(c, 'i')) };
+        } else if (f.country) {
+            filter.country = { $regex: new RegExp(f.country, 'i') };
+        }
+
         if (f.minFollowers) filter.followersCount.$gte = f.minFollowers;
         if (f.maxFollowers) filter.followersCount.$lte = f.maxFollowers;
         if (f.minEngagement) filter.engagementRate.$gte = f.minEngagement;
