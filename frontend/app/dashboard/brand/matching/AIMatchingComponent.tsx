@@ -18,6 +18,8 @@ const CreateRequestModal = dynamic(() => import('../CreateRequestModal'));
 
 export default function AIMatchingComponent() {
     const [aiReply, setAiReply] = useState<string>('');
+    const [loading, setLoading] = useState(false);
+    const [influencers, setInfluencers] = useState<any[]>([]);
     
     // Modal states
     const [selectedInfluencerProfile, setSelectedInfluencerProfile] = useState<any>(null);
