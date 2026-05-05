@@ -10,6 +10,7 @@ import { AlertCircle } from 'lucide-react';
 
 type BrandProfileResponse = {
     profileComplete?: boolean;
+    profileCompletionStatus?: boolean;
     logo?: string;
     logoUrl?: string;
     businessName?: string;
@@ -18,7 +19,7 @@ type BrandProfileResponse = {
 
 export default function BrandPortalOverview() {
     const { data: profile, loading } = useApi<BrandProfileResponse>('/profile/brand/me');
-    const profileComplete = !!profile?.profileComplete;
+    const profileComplete = Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus);
     const brandLogo = profile?.logo || profile?.logoUrl || '';
     const brandName = profile?.businessName || profile?.brandName || '';
 

@@ -9,11 +9,12 @@ import { motion } from 'framer-motion';
 
 type BrandProfileResponse = {
     profileComplete?: boolean;
+    profileCompletionStatus?: boolean;
 };
 
 export default function BrandInfluencersRoute() {
     const { data: profile, loading } = useApi<BrandProfileResponse>('/profile/brand/me');
-    const profileComplete = !!profile?.profileComplete;
+    const profileComplete = Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus);
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>

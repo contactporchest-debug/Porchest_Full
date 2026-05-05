@@ -172,6 +172,33 @@ function isInfluencerProfileComplete(profile) {
     );
 }
 
+function isBrandProfileComplete(profile) {
+    const targetAudience = profile.targetAudience || {};
+    const ageRange = Array.isArray(targetAudience.ageRange)
+        ? targetAudience.ageRange.map((value) => Number(value)).filter((value) => Number.isFinite(value))
+        : [];
+    const genders = Array.isArray(targetAudience.genders) ? targetAudience.genders.filter(Boolean) : [];
+    const countries = Array.isArray(targetAudience.countries) ? targetAudience.countries.filter(Boolean) : [];
+    const niches = Array.isArray(profile.preferredNiches) ? profile.preferredNiches.filter(Boolean) : [];
+    const budgetMin = Number(profile.budgetRange?.min);
+    const budgetMax = Number(profile.budgetRange?.max);
+
+    return !!(
+        (profile.businessName || profile.brandName || profile.companyName) &&
+        profile.representerName &&
+        profile.industry &&
+        profile.contactEmail &&
+        ageRange.length === 2 &&
+        genders.length > 0 &&
+        countries.length > 0 &&
+        countries.length <= 3 &&
+        niches.length > 0 &&
+        Number.isFinite(budgetMin) &&
+        Number.isFinite(budgetMax) &&
+        String(profile.marketingGoals || '').trim()
+    );
+}
+
 async function finalizeUserProfile(userId, role, profileId, profileComplete) {
     const update = { profileCompletionStatus: profileComplete };
 
@@ -248,7 +275,26 @@ router.get('/brand/me', authMiddleware, roleMiddleware('brand'), async (req, res
         if (!profile) {
             return res.json({ userId: String(req.user._id), profileComplete: false });
         }
-        return res.json(stripSecrets(profile));
+
+        const complete = isBrandProfileComplete(profile);
+        if (profile.profileComplete !== complete || profile.profileCompletionStatus !== complete) {
+            await BrandProfile.updateOne(
+                { _id: profile._id },
+                {
+                    $set: {
+                        profileComplete: complete,
+                        profileCompletionStatus: complete,
+                    },
+                }
+            );
+            profile.profileComplete = complete;
+            profile.profileCompletionStatus = complete;
+        }
+
+        const response = stripSecrets(profile);
+        response.profileComplete = complete;
+        response.profileCompletionStatus = complete;
+        return res.json(response);
     } catch (error) {
         return res.status(500).json({ message: 'Failed to load brand profile' });
     }
@@ -258,26 +304,19 @@ router.put('/brand', authMiddleware, roleMiddleware('brand'), async (req, res) =
     try {
         const updates = buildBrandUpdates(req.body || {});
         const profile = await upsertProfile(BrandProfile, req.user._id, updates);
-        const targetAudience = profile.targetAudience || {};
-        const hasAgeRange = Array.isArray(targetAudience.ageRange) && targetAudience.ageRange.length === 2 && targetAudience.ageRange.every((value) => typeof value === 'number');
-        const complete = !!(
-            profile.businessName &&
-            profile.representerName &&
-            profile.industry &&
-            profile.contactEmail &&
-            hasAgeRange &&
-            Array.isArray(targetAudience.genders) && targetAudience.genders.length > 0 &&
-            Array.isArray(targetAudience.countries) && targetAudience.countries.length > 0 && targetAudience.countries.length <= 3 &&
-            Array.isArray(profile.preferredNiches) && profile.preferredNiches.length > 0 &&
-            profile.budgetRange &&
-            typeof profile.budgetRange.min === 'number' &&
-            typeof profile.budgetRange.max === 'number' &&
-            profile.marketingGoals
-        );
+        const complete = isBrandProfileComplete(profile);
 
         profile.profileComplete = complete;
         profile.profileCompletionStatus = complete;
-        await profile.save();
+        await BrandProfile.updateOne(
+            { _id: profile._id },
+            {
+                $set: {
+                    profileComplete: complete,
+                    profileCompletionStatus: complete,
+                },
+            }
+        );
 
         await finalizeUserProfile(req.user._id, 'brand', profile._id, complete);
 

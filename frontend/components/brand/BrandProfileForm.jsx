@@ -44,6 +44,7 @@ function token() {
 
 export default function BrandProfileForm() {
     const { data: profile, refetch } = useApi('/profile/brand/me');
+    const profileComplete = Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus);
     const [isEditing, setIsEditing] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -88,7 +89,7 @@ export default function BrandProfileForm() {
             preferredNiches: parseList(profile.preferredNiches),
         });
 
-        setIsEditing(!profile.profileComplete);
+        setIsEditing(!profileComplete);
     }, [profile]);
 
     const profileInitials = useMemo(() => {
@@ -238,7 +239,7 @@ export default function BrandProfileForm() {
         transition: 'all 0.15s'
     });
 
-    if (!isEditing && profile?.profileComplete) {
+    if (!isEditing && profileComplete) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={sectionStyle}>
@@ -304,8 +305,8 @@ export default function BrandProfileForm() {
                         <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
                         <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Keep your brand details, audience, and campaign preferences up to date.</p>
                     </div>
-                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profile?.profileComplete ? '1px solid #EDD9BC' : '1px solid rgba(245,158,11,0.2)', background: profile?.profileComplete ? 'rgba(255,255,255,0.6)' : 'rgba(245,158,11,0.1)', color: profile?.profileComplete ? '#C2340A' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>
-                        {profile?.profileComplete ? 'Profile complete' : 'Incomplete'}
+                    <div style={{ display: 'inline-flex', borderRadius: '99px', border: profileComplete ? '1px solid #EDD9BC' : '1px solid rgba(245,158,11,0.2)', background: profileComplete ? 'rgba(255,255,255,0.6)' : 'rgba(245,158,11,0.1)', color: profileComplete ? '#C2340A' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>
+                        {profileComplete ? 'Profile complete' : 'Incomplete'}
                     </div>
                 </div>
 
@@ -504,7 +505,7 @@ export default function BrandProfileForm() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
                 {saved && <p style={{ fontSize: '14px', fontWeight: 600, color: '#C2340A' }}>Profile saved successfully.</p>}
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    {profile?.profileComplete ? (
+                    {profileComplete ? (
                         <button
                             type="button"
                             onClick={() => setIsEditing(false)}
