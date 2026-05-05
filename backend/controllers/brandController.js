@@ -597,58 +597,67 @@ exports.profileBasedMatching = async (req, res, next) => {
             return res.status(500).json({ success: false, message: 'GEMINI_API_KEY is not configured in the backend.' });
         }
 
-        const profileContext = `
-            Brand Name: ${brandProfile.businessName || brandProfile.brandName}
-            Industry: ${brandProfile.industry}
-            Description: ${brandProfile.description}
-            Target Audience: 
-                Age Range: ${brandProfile.targetAudience?.ageRange?.join('-')}
-                Genders: ${brandProfile.targetAudience?.genders?.join(', ')}
-                Countries: ${brandProfile.targetAudience?.countries?.join(', ')}
-            Preferred Niches: ${brandProfile.preferredNiches?.join(', ')}
-            Marketing Goals: ${brandProfile.marketingGoals}
-            Budget Range: $${brandProfile.budgetRange?.min} - $${brandProfile.budgetRange?.max}
-        `;
+        let aiData = null;
+        let extractionError = false;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        // ── 1. AI Extraction (with Fallback) ─────────────────────────
+        if (process.env.GEMINI_API_KEY) {
+            try {
+                const profileContext = `
+                    Brand Name: ${brandProfile.businessName || brandProfile.brandName}
+                    Industry: ${brandProfile.industry}
+                    Description: ${brandProfile.description}
+                    Target Audience: 
+                        Age Range: ${brandProfile.targetAudience?.ageRange?.join('-')}
+                        Genders: ${brandProfile.targetAudience?.genders?.join(', ')}
+                        Countries: ${brandProfile.targetAudience?.countries?.join(', ')}
+                    Preferred Niches: ${brandProfile.preferredNiches?.join(', ')}
+                    Marketing Goals: ${brandProfile.marketingGoals}
+                    Budget Range: $${brandProfile.budgetRange?.min} - $${brandProfile.budgetRange?.max}
+                `;
 
-        const prompt = `You are an AI assistant for an influencer discovery platform. 
-        Analyze the following brand profile and extract search filters to find the best matching influencers.
-        
-        Brand Profile:
-        ${profileContext}
-        
-        Your task is to:
-        1. Extract the appropriate search filters (niche, country, followers, etc.) based on the brand's data.
-        2. Output a JSON object and NOTHING else.
-        
-        Output JSON MUST match this structure:
-        {
-            "filters": {
-                "niche": "string or null",
-                "country": "string or null",
-                "minFollowers": "number or null",
-                "maxFollowers": "number or null",
-                "minEngagement": "number or null",
-                "maxPostCost": "number or null",
-                "keywords": ["array of at most 3 context keywords"]
-            },
-            "reply": "A professional summary explaining why these creators were selected based on the brand profile."
-        }
-        Only output raw JSON. No markdown blocks.`;
+                const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+                const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-        const response = await model.generateContent(prompt);
-        let textResult = response.response.text().trim();
-        if (textResult.startsWith('\`\`\`json')) {
-            textResult = textResult.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
-        } else if (textResult.startsWith('\`\`\`')) {
-            textResult = textResult.replace(/\`\`\`/g, '').trim();
+                const prompt = `Analyze this brand profile and extract search filters for influencers.
+                ${profileContext}
+                Output JSON: { "filters": { "niche", "country", "minFollowers", "maxFollowers", "minEngagement", "maxPostCost", "keywords": [] }, "reply": "string" }`;
+
+                const response = await model.generateContent(prompt);
+                let textResult = response.response.text().trim();
+                if (textResult.startsWith('\`\`\`json')) {
+                    textResult = textResult.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+                } else if (textResult.startsWith('\`\`\`')) {
+                    textResult = textResult.replace(/\`\`\`/g, '').trim();
+                }
+                aiData = JSON.parse(textResult);
+            } catch (err) {
+                console.warn('[Smart Matching] AI failed, falling back to heuristic matching:', err.message);
+                extractionError = true;
+            }
+        } else {
+            extractionError = true;
         }
 
-        const aiData = JSON.parse(textResult);
+        // ── 2. Heuristic Fallback if AI Fails ────────────────────────
+        if (extractionError || !aiData) {
+            aiData = {
+                filters: {
+                    niche: (brandProfile.preferredNiches && brandProfile.preferredNiches[0]) || brandProfile.industry,
+                    country: (brandProfile.targetAudience?.countries && brandProfile.targetAudience.countries[0]) || null,
+                    minFollowers: null,
+                    maxFollowers: null,
+                    minEngagement: 2,
+                    maxPostCost: brandProfile.budgetRange?.max || null,
+                    keywords: []
+                },
+                reply: "Based on your brand profile's industry and preferred niches, we've identified these high-fit creators for your campaign."
+            };
+        }
+
         const f = aiData.filters || {};
 
+        // ── 3. Build Database Query ──────────────────────────────────
         const filter = {
             profileCompletionStatus: true,
             $or: [
@@ -689,11 +698,12 @@ exports.profileBasedMatching = async (req, res, next) => {
             success: true,
             aiReply: aiData.reply,
             filters: aiData.filters,
-            influencers: result
+            influencers: result,
+            isHeuristicFallback: extractionError
         });
 
     } catch (error) {
         console.error('[Profile Matching Error]', error);
-        res.status(500).json({ success: false, message: 'AI Matching failed.' });
+        res.status(500).json({ success: false, message: 'Matching failed.' });
     }
 };
