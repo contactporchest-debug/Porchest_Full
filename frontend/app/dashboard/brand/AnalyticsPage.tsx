@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
     Activity,
@@ -203,6 +204,8 @@ const EmptyState = ({ title, copy }: { title: string; copy: string }) => (
 );
 
 export default function AnalyticsPage() {
+    const searchParams = useSearchParams();
+    const targetInfluencerId = searchParams.get('influencerId') || '';
     const [influencers, setInfluencers] = useState<AnalyticsSummary[]>([]);
     const [selectedId, setSelectedId] = useState<string>('');
     const [search, setSearch] = useState('');
@@ -228,6 +231,9 @@ export default function AnalyticsPage() {
             }
 
             setSelectedId((current) => {
+                if (targetInfluencerId && nextInfluencers.some((item: AnalyticsSummary) => item.influencerId === targetInfluencerId)) {
+                    return targetInfluencerId;
+                }
                 if (current && nextInfluencers.some((item: AnalyticsSummary) => item.influencerId === current)) return current;
                 return nextInfluencers[0].influencerId;
             });
@@ -236,7 +242,7 @@ export default function AnalyticsPage() {
         } finally {
             setLoadingList(false);
         }
-    }, []);
+    }, [targetInfluencerId]);
 
     const loadDetail = useCallback(async (id: string) => {
         if (!id) return;

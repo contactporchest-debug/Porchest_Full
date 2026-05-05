@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiPost } from '../../hooks/useApi';
 
 const CONTENT_TYPES = ['Reel', 'Feed Post', 'Carousel', 'Live', 'Giveaway'];
 const OBJECTIVES = ['Awareness', 'Sales', 'App installs', 'Lead generation', 'Engagement'];
 
-export default function RequestCollaborationButton({ influencerId, influencerName, rates }) {
+export default function RequestCollaborationButton({ influencerId, influencerName, rates, autoOpen = false }) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState(1);
     const [sending, setSending] = useState(false);
@@ -37,6 +37,10 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
     function toggle(field, value) {
         setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((x) => x !== value) : [...f[field], value] }));
     }
+
+    useEffect(() => {
+        if (autoOpen) setOpen(true);
+    }, [autoOpen]);
 
     async function handleSend() {
         setSending(true);
@@ -76,7 +80,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
     return (
         <>
             <button onClick={() => setOpen(true)} style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => e.currentTarget.style.background = '#E8400A'} onMouseLeave={e => e.currentTarget.style.background = '#C2340A'}>
-                Request collaboration with @{influencerName || 'creator'}
+                Request collaboration with {influencerName || 'creator'}
             </button>
 
             {sent && <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', color: '#1A0A00', textAlign: 'center', fontSize: '14px', fontWeight: 700, backdropFilter: 'blur(12px)' }}>Collaboration request sent.</div>}
@@ -88,7 +92,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                         <div style={{ position: 'sticky', top: 0, background: 'rgba(253,246,238,0.95)', borderBottom: '1px solid #EDD9BC', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, backdropFilter: 'blur(8px)' }}>
                             <div>
                                 <p style={{ fontWeight: 700, fontSize: '18px', color: '#1A0A00' }}>Request collaboration</p>
-                                <p style={{ fontSize: '12px', color: '#7A5030', fontWeight: 500, marginTop: '2px' }}>@{influencerName} - Step {step} of 3</p>
+                                <p style={{ fontSize: '12px', color: '#7A5030', fontWeight: 500, marginTop: '2px' }}>{influencerName || 'Creator'} - Step {step} of 3</p>
                             </div>
                             <button onClick={() => setOpen(false)} style={{ color: '#C4A882', background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }} onMouseEnter={e => { e.currentTarget.style.color = '#1A0A00'; e.currentTarget.style.background = 'rgba(255,255,255,0.6)' }} onMouseLeave={e => { e.currentTarget.style.color = '#C4A882'; e.currentTarget.style.background = 'transparent' }}>x</button>
                         </div>
