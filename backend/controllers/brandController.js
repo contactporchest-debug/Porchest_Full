@@ -451,7 +451,7 @@ exports.aiMatching = async (req, res, next) => {
         }
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
         const prompt = `You are an AI assistant for an influencer discovery platform. A brand user is chatting with you to find influencers.
 The user message is: "${message}"
@@ -611,7 +611,7 @@ exports.profileBasedMatching = async (req, res, next) => {
         `;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
         const prompt = `You are an AI assistant for an influencer discovery platform. 
         Analyze the following brand profile and extract search filters to find the best matching influencers.
