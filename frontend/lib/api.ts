@@ -100,6 +100,7 @@ export const brandAPI = {
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),
     getInfluencerDetail: (id: string) => api.get(`/brand/influencers/${id}/details`),
     aiMatching: (message: string) => api.post('/brand/influencers/matching', { message }),
+    profileMatching: () => api.post('/brand/influencers/profile-matching'),
     // Campaign Requests
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),

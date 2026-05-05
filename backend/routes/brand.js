@@ -50,6 +50,7 @@ router.patch('/notifications/read-all', notificationController.markAllAsRead);
 // ── Influencer Discovery ───────────────────────────────────────────
 router.get('/influencers', brandController.getMatchedInfluencers);
 router.post('/influencers/matching', brandController.aiMatching);
+router.post('/influencers/profile-matching', brandController.profileBasedMatching);
 router.get('/influencers/:id/details', brandController.getInfluencerDetail);
 
 module.exports = router;

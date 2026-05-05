@@ -17,57 +17,33 @@ const InfluencerProfileModal = dynamic(() => import('../InfluencerProfileModal')
 const CreateRequestModal = dynamic(() => import('../CreateRequestModal'));
 
 export default function AIMatchingComponent() {
-    const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([
-        { role: 'ai', text: "Hi! Tell me what kind of creators you're looking for. For example: 'tech creators with engagement above 5% and reel rates under $500'." }
-    ]);
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [influencers, setInfluencers] = useState<any[]>([]);
+    const [aiReply, setAiReply] = useState<string>('');
     
     // Modal states
     const [selectedInfluencerProfile, setSelectedInfluencerProfile] = useState<any>(null);
     const [selectedForCollaboration, setSelectedForCollaboration] = useState<any>(null);
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
-    
-    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        
-        const userQuery = input.trim();
-        setMessages(prev => [...prev, { role: 'user', text: userQuery }]);
-        setInput('');
+    const handleAnalyze = async () => {
         setLoading(true);
+        setInfluencers([]);
+        setAiReply('');
         
         try {
-            const res = await brandAPI.aiMatching(userQuery);
+            const res = await brandAPI.profileMatching();
             if (res.data.success) {
-                setMessages(prev => [...prev, { role: 'ai', text: res.data.aiReply }]);
+                setAiReply(res.data.aiReply);
                 setInfluencers(res.data.influencers || []);
+                if (res.data.influencers?.length === 0) {
+                    toast.error('No direct matches found. Try broadening your brand profile preferences.');
+                }
             } else {
                 toast.error(res.data.message || 'Failed to match influencers');
             }
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Could not load recommendations right now');
-            setMessages(prev => [...prev, { role: 'ai', text: "I couldn’t complete that search just now. Please try again or simplify the request." }]);
         } finally {
             setLoading(false);
-            scrollToBottom();
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
         }
     };
 
@@ -106,74 +82,76 @@ export default function AIMatchingComponent() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Header */}
-            <div>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1A0A00', letterSpacing: '-0.02em', marginBottom: '4px' }}>
-                    Smart Matching
-                </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p style={{ fontSize: '14px', color: '#7A5030' }}>
-                        Describe your ideal creator in plain language to get tailored recommendations.
+            <div style={{
+                borderRadius: '28px',
+                border: '1px solid #EDD9BC',
+                background: 'rgba(255,255,255,0.4)',
+                backdropFilter: 'blur(12px)',
+                padding: '32px',
+                boxShadow: '0 8px 32px rgba(26,10,0,0.04)',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '16px'
+            }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
+                    <Bot size={32} color="#fff" />
+                </div>
+                <div>
+                    <h2 style={{ fontSize: '30px', fontWeight: 800, color: '#1A0A00', letterSpacing: '-0.04em', marginBottom: '8px' }}>
+                        Smart AI Matching
+                    </h2>
+                    <p style={{ fontSize: '15px', color: '#7A5030', maxWidth: '500px', lineHeight: 1.6 }}>
+                        Let our AI analyze your brand profile, target audience, and marketing goals to discover perfectly matched creators for your next campaign.
                     </p>
                 </div>
+                
+                <button
+                    onClick={handleAnalyze}
+                    disabled={loading}
+                    style={{
+                        marginTop: '12px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        background: '#C2340A',
+                        color: '#fff',
+                        padding: '16px 32px',
+                        borderRadius: '99px',
+                        fontSize: '15px',
+                        fontWeight: 700,
+                        border: 'none',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 4px 15px rgba(194,52,10,0.2)'
+                    }}
+                    onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#E8400A'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { if (!loading) e.currentTarget.style.background = '#C2340A'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                    {loading ? <Loader2 size={20} className="animate-spin" /> : <BarChart3 size={20} />}
+                    {loading ? 'Analyzing Profile...' : 'Analyze Brand Profile'}
+                </button>
             </div>
 
-            {/* Chat Interface */}
-            <GlassCard padding="0" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: '24px', flex: 1, maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <AnimatePresence initial={false}>
-                        {messages.map((msg, i) => (
-                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                style={{ display: 'flex', gap: '12px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
-                                {msg.role === 'ai' && (
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Bot size={16} color="#fff" />
-                                    </div>
-                                )}
-                                <div style={{ padding: '14px 18px', borderRadius: '16px', background: msg.role === 'user' ? '#C2340A' : 'rgba(255,255,255,0.60)', border: msg.role === 'user' ? 'none' : '1px solid #EDD9BC', color: msg.role === 'user' ? '#fff' : '#1A0A00', fontSize: '14px', lineHeight: 1.6, borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px', borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '16px' }}>
-                                    {msg.text}
-                                </div>
-                                {msg.role === 'user' && (
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.60)', border: '1px solid #EDD9BC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <User size={16} color="#C2340A" />
-                                    </div>
-                                )}
-                            </motion.div>
-                        ))}
-                        {loading && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {/* AI Reasoning Summary */}
+            <AnimatePresence>
+                {aiReply && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                        <GlassCard padding="24px" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'start' }}>
                                 <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <Bot size={16} color="#fff" />
+                                    <Bot size={18} color="#fff" />
                                 </div>
-                                <div style={{ padding: '12px 18px', borderRadius: '16px', background: 'rgba(255,255,255,0.60)', border: '1px solid #EDD9BC' }}>
-                                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', color: '#C2340A' }} />
+                                <div style={{ flex: 1 }}>
+                                    <h4 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#C2340A', marginBottom: '8px' }}>AI Match Analysis</h4>
+                                    <p style={{ fontSize: '15px', color: '#1A0A00', lineHeight: 1.6 }}>{aiReply}</p>
                                 </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                    <div ref={messagesEndRef} />
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.40)', borderTop: '1px solid #EDD9BC', padding: '16px 24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Type your requirements..."
-                            style={{ width: '100%', padding: '12px 20px', paddingRight: '50px', background: 'rgba(255,255,255,0.80)', border: '1px solid #EDD9BC', borderRadius: '12px', color: '#1A0A00', fontSize: '14px', outline: 'none', transition: 'border 0.15s', fontFamily: 'inherit' }}
-                            onFocus={(e) => e.target.style.borderColor = '#C2340A'}
-                            onBlur={(e) => e.target.style.borderColor = '#EDD9BC'}
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={loading || !input.trim()}
-                            style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', padding: '8px', borderRadius: '8px', background: loading || !input.trim() ? 'transparent' : '#C2340A', border: 'none', color: loading || !input.trim() ? '#C4A882' : '#fff', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', transition: 'all 0.15s' }}
-                        >
-                            <Send size={16} />
-                        </button>
-                    </div>
-                </div>
-            </GlassCard>
+                            </div>
+                        </GlassCard>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Results Grid */}
              {influencers.length > 0 && (
