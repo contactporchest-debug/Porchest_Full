@@ -8,7 +8,6 @@ import {
     Activity,
     BarChart3,
     Info,
-    LineChart as LineChartIcon,
     Loader2,
     PieChart as PieChartIcon,
     RefreshCw,
@@ -275,12 +274,13 @@ export default function AnalyticsPage() {
 
     const metrics = detail?.metrics || selectedInfluencer?.metrics || null;
     const radarData = detail?.charts?.radar || [];
-    const followerGrowth = detail?.charts?.followerGrowth || [];
     const engagementTrend = detail?.charts?.engagementTrend || [];
     const engagementBreakdown = detail?.charts?.engagementBreakdown || [];
     const demographics = detail?.charts?.demographics || { gender: [], age: [], country: [] };
     const roi = detail?.charts?.roi || null;
 
+    const genderData = demographics.gender || [];
+    const ageData = demographics.age || [];
     const demographicsData = demographics.country.length ? demographics.country : demographics.gender.length ? demographics.gender : demographics.age;
     const demographicsLabel = demographics.country.length ? 'Top Countries' : demographics.gender.length ? 'Gender Split' : demographics.age.length ? 'Age Range' : '';
 
@@ -521,20 +521,43 @@ export default function AnalyticsPage() {
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 24 }}>
-                                <SectionCard title="Follower Growth" subtitle="Historical snapshot trend from stored analytics recalculations." icon={<LineChartIcon size={16} />}>
-                                    {hasChartData(followerGrowth) ? (
-                                        <ResponsiveContainer width="100%" height={260}>
-                                            <LineChart data={followerGrowth}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
-                                                <XAxis dataKey="label" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                                                <YAxis tick={{ fill: COLORS.slate, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
-                                                <Tooltip contentStyle={tooltipStyle} />
-                                                <Line type="monotone" dataKey="followers" stroke="#C2340A" strokeWidth={3} dot={{ r: 4, fill: '#C2340A', strokeWidth: 0 }} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <EmptyState title="No follower trend yet" copy="This chart will fill in as more historical performance data becomes available." />
-                                    )}
+                                <SectionCard title="Age & Gender Demographics" subtitle="Audience age and gender split from stored demographic analytics." icon={<Users size={16} />}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 }}>
+                                        <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC' }}>
+                                            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: COLORS.muted, marginBottom: 12 }}>Age range</p>
+                                            {ageData.length ? (
+                                                <ResponsiveContainer width="100%" height={220}>
+                                                    <BarChart data={ageData}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#EDD9BC" vertical={false} />
+                                                        <XAxis dataKey="name" tick={{ fill: COLORS.muted, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                                        <YAxis tick={{ fill: COLORS.slate, fontSize: 11, fontWeight: 500 }} axisLine={false} tickLine={false} />
+                                                        <Tooltip contentStyle={tooltipStyle} />
+                                                        <Bar dataKey="value" fill="#C2340A" radius={[8, 8, 0, 0]} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            ) : (
+                                                <EmptyState title="No age data yet" copy="Age distribution will appear here when demographic analytics are available." />
+                                            )}
+                                        </div>
+                                        <div style={{ padding: 16, borderRadius: 18, background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC' }}>
+                                            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: COLORS.muted, marginBottom: 12 }}>Gender split</p>
+                                            {genderData.length ? (
+                                                <ResponsiveContainer width="100%" height={220}>
+                                                    <PieChart>
+                                                        <Pie data={genderData} dataKey="value" nameKey="name" innerRadius={44} outerRadius={78} paddingAngle={3}>
+                                                            {genderData.map((entry, index) => (
+                                                                <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                            ))}
+                                                        </Pie>
+                                                        <Tooltip contentStyle={tooltipStyle} />
+                                                        <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: COLORS.ink }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            ) : (
+                                                <EmptyState title="No gender data yet" copy="Gender distribution will appear here when demographic analytics are available." />
+                                            )}
+                                        </div>
+                                    </div>
                                 </SectionCard>
 
                                 <SectionCard title="Engagement Trend" subtitle="Stored engagement-rate history over time." icon={<Activity size={16} />}>
