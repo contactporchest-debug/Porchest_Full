@@ -14,9 +14,12 @@ const daysFromNow = (days) => new Date(now.getTime() + days * 24 * 60 * 60 * 100
 const REALISTIC_BRAND_PROFILE = {
     brandName: 'Northstar Collective',
     companyName: 'Northstar Collective',
+    businessName: 'Northstar Collective',
+    industry: 'Beauty',
     category: 'Beauty',
     country: 'United Arab Emirates',
     city: 'Dubai',
+    bio: 'Northstar Collective is a premium beauty and personal care brand focused on modern skincare essentials, elevated daily rituals, and creator-led storytelling across GCC and South Asian markets.',
     description: 'Northstar Collective is a premium beauty and personal care brand focused on modern skincare essentials, elevated daily rituals, and creator-led storytelling across GCC and South Asian markets.',
     logoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
     website: 'https://northstarcollective.co',
@@ -25,40 +28,22 @@ const REALISTIC_BRAND_PROFILE = {
         contactPersonName: 'Maya Rahman',
     },
     profileCompletionStatus: true,
+    profileComplete: true,
     verificationStatus: 'verified',
+    verified: true,
     isActive: true,
-    budgetRange: '5000-15000',
-    approxBudgetUSD: 12000,
-    instagramConnected: true,
-    instagramConnectionStatus: 'connected',
-    instagramUserId: '17841400099124500',
-    instagramUsername: 'northstarcollective',
-    instagramProfileURL: 'https://instagram.com/northstarcollective',
-    instagramDPURL: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
-    instagramBiography: 'Skincare and self-care essentials designed for refined everyday routines.',
-    instagramAccountType: 'BUSINESS',
-    followersCount: 28640,
-    followsCount: 842,
-    mediaCount: 214,
-    linkedPageId: '104889225001289',
-    linkedPageName: 'Northstar Collective',
-    engagementRate: 3.84,
-    avgLikesPerPost: 982,
-    avgCommentsPerPost: 56,
-    avgEngagementPerPost: 1098,
-    likeToCommentRatio: 17.54,
-    postsAnalyzed: 24,
-    influencerEfficiencyRate: 44.3,
-    postingFrequency7d: 3,
-    postingFrequency30d: 13,
-    qualityScore: 88,
-    topPostScore: 84,
-    topReelScore: 90,
-    lastSyncedAt: new Date(),
-    sync: {
-        refreshStatus: 'success',
-        refreshError: null,
+    budgetRange: {
+        min: 5000,
+        max: 25000
     },
+    marketingGoals: 'Increase brand awareness in the GCC region, drive traffic to our Ramadan sales landing page, and partner with authentic skincare creators to showcase product efficacy through high-quality Reels.',
+    targetAudience: {
+        ageRange: [18, 45],
+        genders: ['Female', 'Non-Binary'],
+        countries: ['Pakistan', 'United Arab Emirates', 'Saudi Arabia']
+    },
+    preferredNiches: ['Beauty', 'Fashion', 'Lifestyle', 'Health'],
+    approxBudgetUSD: 15000,
 };
 
 const DEMO_CAMPAIGNS = [
@@ -109,6 +94,28 @@ const DEMO_CAMPAIGNS = [
         sentAt: daysAgo(4),
         viewedAt: daysAgo(4),
         negotiationStartedAt: daysAgo(2),
+    },
+    {
+        influencerEmail: 'inf6@porchest.com',
+        campaignTitle: 'Luxe Skin Launch - Elite Tier',
+        campaignDescription: 'High-production value campaign targeting premium skincare buyers.',
+        campaignType: 'reel',
+        deliverables: '1 Reel + High Res Photography Bundle',
+        requiredElements: 'Macro texture shots, 4K resolution, minimalist editing',
+        videoLength: '45 seconds',
+        contentGuidelines: 'Clean aesthetic, high-key lighting, focused on luxury skin feel.',
+        hashtags: '#NorthstarLuxe #EliteSkincare',
+        paymentTerms: 'Milestone-based payments',
+        agreedPrice: 1200,
+        budgetRangeMin: 1000,
+        budgetRangeMax: 1500,
+        postingDeadline: daysFromNow(20),
+        campaignStartDate: daysFromNow(5),
+        campaignEndDate: daysFromNow(30),
+        brandMessage: 'Your skin studio content is the benchmark for what we want for this luxury line.',
+        status: 'accepted',
+        sentAt: daysAgo(2),
+        acceptedAt: daysAgo(1),
     },
     {
         influencerEmail: 'inf3@porchest.com',
@@ -180,27 +187,6 @@ const DEMO_CAMPAIGNS = [
         viewedAt: daysAgo(11),
         rejectedAt: daysAgo(9),
     },
-    {
-        influencerEmail: 'inf1@porchest.com',
-        campaignTitle: 'Weekend Self-Care Reel Sequence',
-        campaignDescription: 'Light awareness burst using quick skincare ritual clips during a relaxed weekend routine.',
-        campaignType: 'reel',
-        deliverables: '4 Feed Posts',
-        requiredElements: 'Morning light, application shot, swipe-up CTA',
-        videoLength: '15 seconds each',
-        contentGuidelines: 'Bright, clean visuals and clear CTA.',
-        hashtags: '#NorthstarCollective #WeekendGlow',
-        paymentTerms: 'Paid after posting',
-        agreedPrice: 180,
-        budgetRangeMin: 150,
-        budgetRangeMax: 200,
-        postingDeadline: daysFromNow(6),
-        campaignStartDate: daysAgo(1),
-        campaignEndDate: daysFromNow(7),
-        brandMessage: 'Quick short-form burst to support the broader glow campaign.',
-        status: 'sent',
-        sentAt: daysAgo(1),
-    },
 ];
 
 async function seedDemoBrandRequests({ brandUser, brandProfile }) {
@@ -211,6 +197,7 @@ async function seedDemoBrandRequests({ brandUser, brandProfile }) {
     const influencerByEmail = new Map(influencerProfiles.map((profile) => [profile.contactEmail, profile]));
 
     await CampaignRequest.deleteMany({ brandUserId: brandUser._id });
+    // Keep some notifications if needed, or clear for fresh demo
     await Notification.deleteMany({ $or: [{ recipientUserId: brandUser._id }, { senderName: brandProfile.brandName }] });
 
     for (const item of DEMO_CAMPAIGNS) {
@@ -254,7 +241,7 @@ async function seedDemoBrandRequests({ brandUser, brandProfile }) {
             dealClosedAt: item.dealClosedAt,
             brandName: brandProfile.brandName,
             brandLogoUrl: brandProfile.logoUrl || brandProfile.instagramDPURL,
-            brandCategory: brandProfile.category,
+            brandCategory: brandProfile.category || brandProfile.industry,
             influencerName: influencerProfile.displayName || influencerProfile.fullName,
             influencerUsername: influencerProfile.instagramUsername,
             influencerProfilePic: influencerProfile.profilePictureUrl,
@@ -289,24 +276,18 @@ async function ensureDemoBrand() {
         await user.save();
     }
 
-    let brandProfile = null;
-    if (user.brandProfileId) {
-        brandProfile = await BrandProfile.findById(user.brandProfileId);
-    }
-    if (!brandProfile) {
-        brandProfile = await BrandProfile.findOne({ userId: user._id });
-    }
-
+    let brandProfile = await BrandProfile.findOne({ userId: user._id });
     if (!brandProfile) {
         const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
         brandProfile = await BrandProfile.create({
             userId: user._id,
             brandProfileId,
-            businessName: REALISTIC_BRAND_PROFILE.businessName || REALISTIC_BRAND_PROFILE.brandName,
             ...REALISTIC_BRAND_PROFILE,
         });
     } else {
         Object.assign(brandProfile, REALISTIC_BRAND_PROFILE);
+        brandProfile.profileComplete = true;
+        brandProfile.profileCompletionStatus = true;
         await brandProfile.save();
     }
 
@@ -329,3 +310,4 @@ module.exports = {
     DEMO_BRAND_EMAIL,
     DEMO_BRAND_PASSWORD,
 };
+

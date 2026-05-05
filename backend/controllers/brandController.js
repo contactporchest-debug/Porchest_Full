@@ -620,8 +620,27 @@ exports.profileBasedMatching = async (req, res, next) => {
                 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
                 const prompt = `Analyze this brand profile and extract search filters for influencers.
+                Focus your analysis specifically on three pillars:
+                1. Niche relevance (matching brand industry/niche to creator content).
+                2. Geographic alignment (matching target countries to creator location).
+                3. Budget compatibility (matching brand budget to creator post prices).
+
+                Brand Profile:
                 ${profileContext}
-                Output JSON: { "filters": { "niche", "country", "minFollowers", "maxFollowers", "minEngagement", "maxPostCost", "keywords": [] }, "reply": "string" }`;
+
+                Output JSON MUST match this structure:
+                {
+                    "filters": {
+                        "niche": "string",
+                        "country": "string",
+                        "minFollowers": number or null,
+                        "maxFollowers": number or null,
+                        "minEngagement": number or null,
+                        "maxPostCost": number,
+                        "keywords": ["array of 3 keywords"]
+                    },
+                    "reply": "A detailed 2-3 sentence analysis explaining how the selected creators align with the brand's Niche, Location, and Price requirements."
+                }`;
 
                 const response = await model.generateContent(prompt);
                 let textResult = response.response.text().trim();
