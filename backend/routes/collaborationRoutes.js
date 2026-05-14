@@ -2,6 +2,8 @@ const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const CampaignRequest = require('../models/CampaignRequest');
+const ClickEvent = require('../models/ClickEvent');
+const PurchaseEvent = require('../models/PurchaseEvent');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
@@ -17,6 +19,11 @@ const {
     buildEmailHtml,
     sendOptionalEmail,
 } = require('../services/notificationDeliveryService');
+const {
+    buildCollaborationAnalytics,
+    buildCollaborationPdfBuffer,
+    formatDate,
+} = require('../services/collaborationReportService');
 const { isAdminRole, ADMIN_ROLES } = require('../utils/accessRoles');
 const { requireCompleteProfile } = require('../middleware/profileCompleteCheck');
 
@@ -370,6 +377,27 @@ async function verifyAdminFinalization(collabId, collab, reqUser) {
             { new: true, strict: false }
         ).lean();
     return updated;
+}
+
+async function canManageBrandCollaboration(collab, reqUser) {
+    if (isAdmin(reqUser)) return true;
+    if (reqUser?.role !== 'brand') return false;
+    const { brandProfile } = await getUserProfiles(reqUser._id);
+    return canAccessCollaboration(collab, reqUser, brandProfile, null);
+}
+
+async function getBrandCollaborationOrThrow(id, req, res) {
+    const collab = await CampaignRequest.findById(id).lean();
+    if (!collab) {
+        res.status(404).json({ success: false, error: 'Collaboration not found' });
+        return null;
+    }
+    const allowed = await canManageBrandCollaboration(collab, req.user);
+    if (!allowed) {
+        res.status(403).json({ success: false, error: 'Access denied' });
+        return null;
+    }
+    return collab;
 }
 
 function setExactAcceptanceFields(update, collab, brandWebsite, influencerUsername) {
@@ -754,6 +782,115 @@ router.patch('/:id/accept-counter', roleMiddleware('brand'), requireCompleteProf
     }
 });
 
+router.patch('/:id/requirements', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        if (!inStatusList(collab.status, ['pending', 'countered', 'accepted', 'brand_payment_pending', 'brand_paid_work_can_start'])) {
+            return throwStatusError(collab.status, res);
+        }
+
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const updates = {};
+        const updateIfPresent = (key, targetKey = key, transform = (value) => value) => {
+            if (req.body[key] !== undefined) {
+                updates[targetKey] = transform(req.body[key]);
+            }
+        };
+
+        updateIfPresent('campaignTitle', 'campaignTitle', (value) => String(value).trim());
+        updateIfPresent('campaignDescription', 'campaignDescription', (value) => String(value).trim());
+        updateIfPresent('campaignType', 'campaignType', (value) => String(value).trim());
+        updateIfPresent('contentGuidelines', 'contentGuidelines', (value) => String(value).trim());
+        updateIfPresent('postingDeadline', 'postingDeadline', (value) => (value ? new Date(value) : null));
+        updateIfPresent('agreedPrice', 'agreedPrice', (value) => toNumber(value, null));
+
+        if (req.body.deliverables !== undefined) {
+            updates.deliverables = toArray(req.body.deliverables);
+            updates['brief.deliverables'] = updates.deliverables;
+        }
+        if (req.body.hashtags !== undefined) {
+            updates.hashtags = toArray(req.body.hashtags);
+            updates['brief.hashtags'] = updates.hashtags;
+            updates['brief.requiredHashtags'] = updates.hashtags;
+        }
+        if (req.body.disclosureRequirements !== undefined) {
+            updates.disclosureRequirements = String(req.body.disclosureRequirements).trim();
+            updates['brief.disclosureRequirements'] = updates.disclosureRequirements;
+            updates['brief.disclosureRequired'] = updates.disclosureRequirements;
+        }
+        if (req.body.requiredElements !== undefined) {
+            updates.requiredElements = String(req.body.requiredElements).trim();
+        }
+        if (req.body.videoLength !== undefined) {
+            updates.videoLength = String(req.body.videoLength).trim();
+        }
+        if (req.body.paymentTerms !== undefined) {
+            updates.paymentTerms = String(req.body.paymentTerms).trim();
+            updates['brief.callToAction'] = updates.paymentTerms;
+        }
+        if (req.body.brandMessage !== undefined) {
+            updates.brandMessage = String(req.body.brandMessage).trim();
+            updates['brief.brandIntro'] = updates.brandMessage;
+        }
+
+        if (req.body.agreedPrice !== undefined) {
+            const agreedPrice = toNumber(req.body.agreedPrice, null);
+            if (agreedPrice != null) {
+                updates.agreedPrice = agreedPrice;
+                updates.agreedFee = agreedPrice;
+                updates.brandOfferedFee = agreedPrice;
+                updates.influencerPayable = agreedPrice;
+                updates['pricing.brandOffer'] = agreedPrice;
+                updates['pricing.agreedFee'] = agreedPrice;
+                updates['financials.brandOfferedFee'] = agreedPrice;
+                updates['financials.agreedFee'] = agreedPrice;
+                updates['financials.influencerPayable'] = agreedPrice;
+            }
+        }
+
+        const updatePayload = { $set: updates };
+        const updated = await CampaignRequest.findByIdAndUpdate(req.params.id, updatePayload, { new: true, strict: false }).lean();
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.patch('/:id/verify-content', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        if (String(collab.status) !== 'content_submitted') return throwStatusError(collab.status, res);
+
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const now = new Date();
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    status: 'content_approved',
+                    draftApprovedAt: now,
+                    'content.brandApprovedDrive': true,
+                    'content.brandApprovedAt': now,
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.patch('/:id/decline', async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
@@ -811,6 +948,11 @@ router.patch('/:id/approve-drive', roleMiddleware('brand'), requireCompleteProfi
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
         if (String(collab.status) !== 'content_submitted') return throwStatusError(collab.status, res);
+
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
 
         const now = new Date();
         const updated = await CampaignRequest.findByIdAndUpdate(
@@ -1067,7 +1209,7 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
     }
 });
 
-router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
+router.patch('/:id/stop', async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -1075,8 +1217,14 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
             return throwStatusError(collab.status, res);
         }
 
+        const canStop = isAdmin(req.user) || (req.user?.role === 'brand' && await canManageBrandCollaboration(collab, req.user));
+        if (!canStop) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
         const now = new Date();
-        const reason = String(req.body?.reason || 'Stopped by admin').trim();
+        const stoppedBy = isAdmin(req.user) ? 'admin' : 'brand';
+        const reason = String(req.body?.reason || `Stopped by ${stoppedBy}`).trim();
         const updated = await CampaignRequest.findByIdAndUpdate(
             req.params.id,
             {
@@ -1084,8 +1232,7 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
                     status: 'cancelled',
                     cancelledAt: now,
                     campaignCompletedAt: now,
-                    adminStoppedAt: now,
-                    adminStopReason: reason,
+                    ...(stoppedBy === 'admin' ? { adminStoppedAt: now, adminStopReason: reason } : { brandStoppedAt: now, brandStopReason: reason }),
                     payment: {
                         ...(collab.payment || {}),
                         portion1: {
@@ -1114,26 +1261,26 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
                 {
                     recipientUserId: collab.brandUserId,
                     type: 'system',
-                    title: 'Collaboration stopped by admin',
-                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    title: `Collaboration stopped by ${stoppedBy}`,
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by ${stoppedBy}.`,
                     campaignRequestId: collab._id,
-                    metadata: { action: 'stop', reason },
+                    metadata: { action: 'stop', reason, stoppedBy },
                 },
                 {
                     recipientUserId: collab.influencerUserId,
                     type: 'system',
-                    title: 'Collaboration stopped by admin',
-                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    title: `Collaboration stopped by ${stoppedBy}`,
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by ${stoppedBy}.`,
                     campaignRequestId: collab._id,
-                    metadata: { action: 'stop', reason },
+                    metadata: { action: 'stop', reason, stoppedBy },
                 },
                 ...admins.map((admin) => ({
                     recipientUserId: admin._id,
                     type: 'system',
                     title: 'Collaboration stopped',
-                    message: `The collaboration "${collab.campaignTitle}" was stopped by an admin.`,
+                    message: `The collaboration "${collab.campaignTitle}" was stopped by ${stoppedBy}.`,
                     campaignRequestId: collab._id,
-                    metadata: { action: 'stop', reason },
+                    metadata: { action: 'stop', reason, stoppedBy },
                 })),
             ]).catch((notificationError) => {
                 console.error('[collaborationRoutes] Stop notification create failed:', notificationError);
@@ -1144,11 +1291,11 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
             User.findById(collab.brandUserId).select('email').lean(),
             User.findById(collab.influencerUserId).select('email').lean(),
         ]);
-        const stopMessage = `The collaboration "${collab.campaignTitle}" was stopped by an admin.`;
+        const stopMessage = `The collaboration "${collab.campaignTitle}" was stopped by ${stoppedBy}.`;
         await Promise.all([
             sendOptionalEmail({
                 email: brandUser?.email,
-                subject: 'Collaboration stopped by admin',
+                subject: `Collaboration stopped by ${stoppedBy}`,
                 message: stopMessage,
                 html: buildEmailHtml({
                     title: 'Collaboration stopped',
@@ -1157,7 +1304,7 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
             }),
             sendOptionalEmail({
                 email: influencerUser?.email,
-                subject: 'Collaboration stopped by admin',
+                subject: `Collaboration stopped by ${stoppedBy}`,
                 message: stopMessage,
                 html: buildEmailHtml({
                     title: 'Collaboration stopped',
@@ -1173,6 +1320,48 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
         });
 
         return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/:id/analytics', async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { brandProfile, influencerProfile } = await getBrandAndInfluencerProfiles(collab);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, influencerProfile)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const enriched = buildResponseCollab(collab, brandProfile, influencerProfile);
+        const analytics = await buildCollaborationAnalytics(enriched);
+        return res.json({
+            success: true,
+            collaboration: enriched,
+            ...analytics,
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/:id/pdf', async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { brandProfile, influencerProfile } = await getBrandAndInfluencerProfiles(collab);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, influencerProfile)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const enriched = buildResponseCollab(collab, brandProfile, influencerProfile);
+        const analytics = await buildCollaborationAnalytics(enriched);
+        const pdfBuffer = await buildCollaborationPdfBuffer({ collaboration: enriched, analytics });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${String(enriched.campaignTitle || 'collaboration').replace(/[^a-z0-9-_]+/gi, '_').replace(/_+/g, '_').toLowerCase()}.pdf"`);
+        return res.send(pdfBuffer);
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
     }

@@ -100,6 +100,12 @@ export const brandAPI = {
     getProfile: () => api.get('/brand/profile'),
     updateProfile: (data: Record<string, unknown>) => api.put('/brand/profile', data),
     getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
+    getCollaboration: (id: string) => api.get(`/collaborations/${id}`),
+    getCollaborationAnalytics: (id: string) => api.get(`/collaborations/${id}/analytics`),
+    downloadCollaborationPdf: (id: string) => api.get(`/collaborations/${id}/pdf`, { responseType: 'blob' }),
+    updateCollaborationRequirements: (id: string, data: Record<string, unknown>) => api.patch(`/collaborations/${id}/requirements`, data),
+    verifyCollaborationContent: (id: string) => api.patch(`/collaborations/${id}/verify-content`),
+    stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
     // Influencer discovery
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),
     getInfluencerDetail: (id: string) => api.get(`/brand/influencers/${id}/details`),
