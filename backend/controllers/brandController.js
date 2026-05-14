@@ -188,6 +188,18 @@ function isBrandProfileComplete(profile) {
     );
 }
 
+function toStringArray(value) {
+    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+    if (typeof value === 'string') return value.split(',').map((item) => item.trim()).filter(Boolean);
+    return undefined;
+}
+
+function toNumber(value) {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+}
+
 // @desc    Brand dashboard overview
 exports.getDashboard = async (req, res, next) => {
     try {
@@ -278,26 +290,54 @@ exports.getBrandProfile = async (req, res, next) => {
 // @desc    Update brand profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        // Just extract basic fields since validator isn't perfectly mapped in reality
-        const updates = req.body;
+        const updates = req.body || {};
+        const existing = await BrandProfile.findOne({ userId: req.user._id });
+        let brandProfile = existing;
+        const targetAudience = updates.targetAudience || {};
+        const budgetRange = updates.budgetRange || {};
         const mappedUpdates = {
             businessName: updates.businessName || updates.brandName || updates.companyName || req.user?.name || req.user?.email?.split('@')[0] || 'Brand',
             brandName: updates.brandName || updates.businessName || updates.companyName,
-            category: updates.brandNiche || updates.category,
+            companyName: updates.companyName || updates.businessName || updates.brandName,
+            representerName: updates.representerName || updates.contactPersonName || updates.brandRepresenterName,
+            category: updates.brandNiche || updates.category || updates.industry,
+            industry: updates.industry || updates.category || updates.brandNiche,
             country: updates.companyCountry || updates.country,
             website: updates.companyWebsite || updates.website,
             description: updates.brandGoal || updates.description,
-            approxBudgetUSD: updates.approxBudgetUSD,
+            bio: updates.brandGoal || updates.description,
+            approxBudgetUSD: updates.approxBudgetUSD != null ? toNumber(updates.approxBudgetUSD) : undefined,
+            marketingGoals: updates.marketingGoals,
             logo: updates.logo || updates.logoUrl,
             logoUrl: updates.logoUrl || updates.logo,
+            contactEmail: updates.contactEmail || updates.officialEmail || updates.contactDetails?.officialEmail,
             contactDetails: {
-                officialEmail: updates.officialEmail,
-                contactPersonName: updates.contactPersonName
-            }
+                officialEmail: updates.contactEmail || updates.officialEmail || updates.contactDetails?.officialEmail,
+                contactPersonName: updates.representerName || updates.contactPersonName || updates.contactDetails?.contactPersonName,
+            },
+            targetAudience: {
+                ageRange: Array.isArray(targetAudience.ageRange) ? targetAudience.ageRange.map((value) => Number(value)).filter((value) => Number.isFinite(value)).slice(0, 2) : undefined,
+                genders: toStringArray(targetAudience.genders),
+                countries: toStringArray(targetAudience.countries)?.slice(0, 3),
+            },
+            preferredNiches: toStringArray(updates.preferredNiches),
+            budgetRange: {
+                min: budgetRange.min !== undefined ? toNumber(budgetRange.min) : undefined,
+                max: budgetRange.max !== undefined ? toNumber(budgetRange.max) : undefined,
+            },
         };
 
-        const existing = await BrandProfile.findOne({ userId: req.user._id });
-        let brandProfile = existing;
+        Object.keys(mappedUpdates).forEach((key) => {
+            if (mappedUpdates[key] === undefined) {
+                delete mappedUpdates[key];
+            }
+        });
+        if (mappedUpdates.targetAudience && Object.values(mappedUpdates.targetAudience).every((value) => value === undefined)) {
+            delete mappedUpdates.targetAudience;
+        }
+        if (mappedUpdates.budgetRange && Object.values(mappedUpdates.budgetRange).every((value) => value === undefined)) {
+            delete mappedUpdates.budgetRange;
+        }
 
         if (!brandProfile) {
             const brandProfileId = await generateUniqueCode('BRD', BrandProfile, 'brandProfileId');
