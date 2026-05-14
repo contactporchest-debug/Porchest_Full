@@ -1,10 +1,15 @@
 const CampaignRequest = require('../models/CampaignRequest');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
 const { ensureTrackingAssets } = require('../services/trackingService');
+const {
+    buildEmailHtml,
+    sendOptionalEmail,
+} = require('../services/notificationDeliveryService');
 
 // @desc    Brand creates a campaign request to an influencer
 // @route   POST /api/brand/requests
@@ -152,6 +157,17 @@ exports.createRequest = async (req, res, next) => {
                 deliverables,
                 requestCode,
             },
+        });
+
+        const influencerUser = await User.findById(influencerId).select('email fullName').lean();
+        await sendOptionalEmail({
+            email: influencerUser?.email,
+            subject: `New collaboration request from ${brandName}`,
+            message: `${brandName} wants to collaborate on "${campaignTitle}". Open Porchest to review the invitation.`,
+            html: buildEmailHtml({
+                title: 'New collaboration request',
+                message: `${brandName} wants to collaborate on <strong>${campaignTitle}</strong>. Open Porchest to review the invitation.`,
+            }),
         });
 
         res.status(201).json({ success: true, request });
@@ -353,6 +369,17 @@ exports.respondToRequest = async (req, res, next) => {
             },
         });
 
+        const brandUser = await User.findById(request.brandUserId).select('email fullName').lean();
+        await sendOptionalEmail({
+            email: brandUser?.email,
+            subject: notifTitleMap[status],
+            message: notifMessageMap[status],
+            html: buildEmailHtml({
+                title: notifTitleMap[status],
+                message: notifMessageMap[status],
+            }),
+        });
+
         // ✅ EMIT REAL-TIME SOCKET.IO EVENTS
         const io = req.app.locals.io;
         if (io) {
@@ -465,6 +492,17 @@ exports.brandRespondToRequest = async (req, res, next) => {
                 brandMessage,
                 rejectionReason,
             },
+        });
+
+        const influencerUser = await User.findById(request.influencerUserId).select('email fullName').lean();
+        await sendOptionalEmail({
+            email: influencerUser?.email,
+            subject: notifTitleMap[targetStatus],
+            message: notifMessageMap[targetStatus],
+            html: buildEmailHtml({
+                title: notifTitleMap[targetStatus],
+                message: notifMessageMap[targetStatus],
+            }),
         });
 
         // ✅ EMIT REAL-TIME SOCKET.IO EVENTS

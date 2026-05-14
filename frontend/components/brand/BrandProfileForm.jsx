@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useApi } from '../../hooks/useApi';
+import { brandAPI } from '@/lib/api';
 
 const INDUSTRIES = [
     'Fashion', 'Beauty', 'Tech', 'Food & Beverage', 'Travel', 'Health & Fitness',
@@ -35,11 +36,6 @@ function parseBudgetRange(value) {
         return { min: min || '', max: max || '' };
     }
     return { min: '', max: '' };
-}
-
-function token() {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem('porchest_token') || localStorage.getItem('token') || '';
 }
 
 export default function BrandProfileForm() {
@@ -160,31 +156,22 @@ export default function BrandProfileForm() {
     async function handleSave() {
         setSaving(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/brand`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token()}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    businessName: form.businessName,
-                    representerName: form.representerName,
-                    logo: form.logo,
-                    industry: form.industry,
-                    website: form.website,
-                    instagramLink: form.instagramLink,
-                    linkedinLink: form.linkedinLink,
-                    googleMapLink: form.googleMapLink,
-                    description: form.description,
-                    contactEmail: form.contactEmail,
-                    marketingGoals: form.marketingGoals,
-                    budgetRange: form.budgetRange,
-                    targetAudience: form.targetAudience,
-                    preferredNiches: form.preferredNiches,
-                }),
+            await brandAPI.updateProfile({
+                businessName: form.businessName,
+                representerName: form.representerName,
+                logo: form.logo,
+                industry: form.industry,
+                website: form.website,
+                instagramLink: form.instagramLink,
+                linkedinLink: form.linkedinLink,
+                googleMapLink: form.googleMapLink,
+                description: form.description,
+                contactEmail: form.contactEmail,
+                marketingGoals: form.marketingGoals,
+                budgetRange: form.budgetRange,
+                targetAudience: form.targetAudience,
+                preferredNiches: form.preferredNiches,
             });
-            const data = await res.json().catch(() => null);
-            if (!res.ok) throw new Error(data?.message || 'Failed to save brand profile');
             await refetch();
             setIsEditing(false);
             setSaved(true);

@@ -5,10 +5,12 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
     LayoutDashboard, User, Users, BarChart3, Briefcase, DollarSign, Inbox,
-    Building2, Handshake, Sparkles, FolderKanban, LogOut, ChevronRight,
+    Building2, Handshake, Sparkles, FolderKanban, LogOut, ChevronRight, Bell, TrendingUp,
 } from 'lucide-react';
+import { brandAPI, influencerAPI } from '@/lib/api';
 
 type Role = 'influencer' | 'brand' | 'admin' | 'software-client';
 
@@ -18,8 +20,10 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Profile',        href: '/dashboard/influencer/profile',        icon: <User size={18} /> },
         { label: 'Analytics',      href: '/dashboard/influencer/analytics',      icon: <BarChart3 size={18} /> },
         { label: 'Campaigns',      href: '/dashboard/influencer/collaborations', icon: <Briefcase size={18} /> },
+        { label: 'Outcomes',       href: '/dashboard/influencer/outcomes',       icon: <TrendingUp size={18} /> },
         { label: 'Earnings',       href: '/dashboard/influencer/earnings',       icon: <DollarSign size={18} /> },
         { label: 'Requests',       href: '/dashboard/influencer/requests',       icon: <Inbox size={18} /> },
+        { label: 'Notifications',  href: '/dashboard/influencer/notifications',  icon: <Bell size={18} /> },
     ],
     brand: [
         { label: 'Dashboard',      href: '/dashboard/brand',                     icon: <LayoutDashboard size={18} /> },
@@ -27,13 +31,16 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Influencers',    href: '/dashboard/brand/influencers',         icon: <Users size={18} /> },
         { label: 'Collaborations', href: '/dashboard/brand/collaborations',      icon: <Handshake size={18} /> },
         { label: 'Analytics',      href: '/dashboard/brand/analytics',           icon: <BarChart3 size={18} /> },
+        { label: 'Performance',    href: '/dashboard/brand/performance',         icon: <TrendingUp size={18} /> },
         { label: 'Smart Matching', href: '/dashboard/brand/matching',            icon: <Sparkles size={18} /> },
+        { label: 'Notifications',  href: '/dashboard/brand/notifications',       icon: <Bell size={18} /> },
     ],
     admin: [
         { label: 'Dashboard',      href: '/dashboard/admin',                     icon: <LayoutDashboard size={18} /> },
         { label: 'Users',          href: '/dashboard/admin/users',               icon: <Users size={18} /> },
         { label: 'Campaigns',      href: '/dashboard/admin/campaigns',           icon: <Briefcase size={18} /> },
         { label: 'Collaborations', href: '/dashboard/admin/collaborations',      icon: <Handshake size={18} /> },
+        { label: 'Cashouts',       href: '/dashboard/admin/cashouts',            icon: <DollarSign size={18} /> },
     ],
     'software-client': [
         { label: 'Dashboard',      href: '/dashboard/software-client',           icon: <LayoutDashboard size={18} /> },
@@ -59,6 +66,33 @@ export default function Sidebar({
     const { logout } = useAuth();
     const router = useRouter();
     const nav = NAVS[role] || NAVS.brand;
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const loadUnread = async () => {
+            if (role !== 'brand' && role !== 'influencer') {
+                if (mounted) setUnreadCount(0);
+                return;
+            }
+
+            try {
+                const res = role === 'brand'
+                    ? await brandAPI.getUnreadCount()
+                    : await influencerAPI.getUnreadCount();
+                if (mounted) setUnreadCount(Number(res.data?.count || 0));
+            } catch {
+                if (mounted) setUnreadCount(0);
+            }
+        };
+
+        void loadUnread();
+
+        return () => {
+            mounted = false;
+        };
+    }, [role]);
 
     const handleLogout = () => {
         logout();
@@ -145,6 +179,23 @@ export default function Sidebar({
                                 <span style={{ color: active ? '#C2340A' : '#C4A882' }}>{item.icon}</span>
                                 {item.label}
                             </span>
+                            {item.label === 'Notifications' && unreadCount > 0 && (
+                                <span style={{
+                                    minWidth: '22px',
+                                    height: '22px',
+                                    borderRadius: '999px',
+                                    padding: '0 7px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: '#C2340A',
+                                    color: '#fff',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                }}>
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
                             {active && <ChevronRight size={14} style={{ color: '#C2340A' }} />}
                         </Link>
                     );

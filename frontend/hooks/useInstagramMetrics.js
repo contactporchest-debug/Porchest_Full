@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 
 export function useInstagramMetrics() {
     const [metrics, setMetrics] = useState(null);
@@ -10,18 +11,11 @@ export function useInstagramMetrics() {
 
     const fetchMetrics = async () => {
         try {
-            const token = localStorage.getItem('porchest_token') || localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram/metrics`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || data.message || 'Failed to fetch Instagram metrics');
-            }
-            setMetrics(data.metrics || data);
+            const res = await api.get('/instagram/metrics');
+            setMetrics(res.data.metrics || res.data);
             setError(null);
         } catch (err) {
-            setError(err);
+            setError(err?.response?.data?.error || err?.response?.data?.message || err?.message || 'Failed to fetch Instagram metrics');
             setMetrics(null);
         } finally {
             setLoading(false);
@@ -31,17 +25,9 @@ export function useInstagramMetrics() {
     const triggerSync = async () => {
         setSyncing(true);
         try {
-            const token = localStorage.getItem('porchest_token') || localStorage.getItem('token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/instagram/sync`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || data.message || 'Sync failed');
-            }
+            const res = await api.post('/instagram/sync', {});
             await fetchMetrics();
-            return data;
+            return res.data;
         } finally {
             setSyncing(false);
         }

@@ -3,27 +3,21 @@
 import { useState } from 'react';
 import { useInstagramMetrics } from '../../hooks/useInstagramMetrics';
 import { useAuth } from '../../context/AuthContext';
+import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-function token() {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem('token') || localStorage.getItem('porchest_token') || '';
-}
-
 export default function InstagramConnect({ role = 'influencer' }) {
-    const { user, updateUser, refreshUser } = useAuth();
+    const { refreshUser } = useAuth();
     const { metrics, loading, refetch } = useInstagramMetrics();
     const [connecting, setConnecting] = useState(false);
 
     async function handleConnect() {
         setConnecting(true);
         try {
-            const endpoint = role === 'brand' ? '/brand/instagram/connect' : '/influencer/instagram/connect';
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-                headers: { Authorization: `Bearer ${token()}` },
-            });
-            const data = await res.json();
-            if (data.authURL) window.location.href = data.authURL;
+            const res = role === 'brand'
+                ? await brandAPI.getInstagramConnectURL()
+                : await influencerAPI.getInstagramConnectURL();
+            if (res.data.authURL) window.location.href = res.data.authURL;
         } catch {
             // Keep the card interactive even if the request fails.
         } finally {
@@ -34,18 +28,15 @@ export default function InstagramConnect({ role = 'influencer' }) {
     async function handleDisconnect() {
         setConnecting(true);
         try {
-            const endpoint = role === 'brand' ? '/brand/instagram/disconnect' : '/influencer/instagram/disconnect';
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token()}` },
-            });
-            if (res.ok) {
+            const res = role === 'brand'
+                ? await brandAPI.disconnectInstagram()
+                : await influencerAPI.disconnectInstagram();
+            if (res?.data?.success !== false) {
                 toast.success('Instagram disconnected successfully');
                 if (refreshUser) await refreshUser();
                 await refetch();
             } else {
-                const data = await res.json();
-                toast.error(data.message || 'Failed to disconnect Instagram');
+                toast.error(res?.data?.message || 'Failed to disconnect Instagram');
             }
         } catch {
             toast.error('An error occurred while disconnecting');

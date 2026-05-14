@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
 export default function WebhookSetupPage() {
     const [secret, setSecret] = useState('YOUR_PORCHEST_WEBHOOK_SECRET');
@@ -8,11 +9,8 @@ export default function WebhookSetupPage() {
 
     async function fetchSecret() {
         try {
-            const token = localStorage.getItem('token') || localStorage.getItem('porchest_token');
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/webhook/docs`, {
-                headers: { Authorization: `Bearer ${token || ''}` },
-            });
-            const data = await res.json();
+            const res = await api.get('/webhook/docs');
+            const data = res.data;
             if (data?.webhookSecret) setSecret(data.webhookSecret);
         } catch {
             setSecret('YOUR_PORCHEST_WEBHOOK_SECRET');

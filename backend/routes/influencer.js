@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const influencerController = require('../controllers/influencerController');
+const financeController = require('../controllers/influencerFinanceController');
 const instagramController = require('../controllers/instagramController');
 const campaignRequestController = require('../controllers/campaignRequestController');
 const notificationController = require('../controllers/notificationController');
@@ -34,6 +35,11 @@ router.patch('/requests/:id', campaignRequestController.respondToRequest);
 
 // ── Verifications (Completed Collaborations) ───────────────────────
 router.get('/verifications', campaignRequestController.getInfluencerVerifications);
+
+// ── Earnings & Cashouts ───────────────────────────────────────────
+router.get('/earnings', financeController.getEarnings);
+router.get('/cashouts', financeController.getCashouts);
+router.post('/cashout', financeController.requestCashout);
 
 // ── Notifications ──
 router.get('/notifications', notificationController.getNotifications);

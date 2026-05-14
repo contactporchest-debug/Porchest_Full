@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
+import { influencerAPI } from '@/lib/api';
 
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment'];
 const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional', 'minimalist', 'bold', 'emotional'];
@@ -23,11 +24,6 @@ function parseList(value) {
     if (Array.isArray(value)) return value.filter(Boolean).map(String);
     if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
     return [];
-}
-
-function token() {
-    if (typeof window === 'undefined') return '';
-    return localStorage.getItem('porchest_token') || localStorage.getItem('token') || '';
 }
 
 function chipClass(selected, disabled = false) {
@@ -156,26 +152,16 @@ export default function ProfileForm() {
 
         setSaving(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/influencer`, {
-                method: 'PUT',
-                headers: {
-                    Authorization: `Bearer ${token()}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    fullName: form.fullName,
-                    contactEmail: form.contactEmail,
-                    country: form.country,
-                    city: form.city,
-                    niche: form.niche,
-                    languages: form.languages,
-                    contentStyleTags: form.contentStyleTags,
-                    rates: form.rates,
-                }),
+            await influencerAPI.updateProfile({
+                fullName: form.fullName,
+                contactEmail: form.contactEmail,
+                country: form.country,
+                city: form.city,
+                niche: form.niche,
+                languages: form.languages,
+                contentStyleTags: form.contentStyleTags,
+                rates: form.rates,
             });
-
-            const data = await res.json().catch(() => null);
-            if (!res.ok) throw new Error(data?.message || 'Failed to save influencer profile');
 
             await refetch();
             setSaved(true);

@@ -25,6 +25,12 @@ const authMiddleware = async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Account suspended' });
         }
 
+        const tokenVersion = Number.isFinite(Number(decoded.tokenVersion)) ? Number(decoded.tokenVersion) : 0;
+        const currentTokenVersion = Number.isFinite(Number(hydrated.tokenVersion)) ? Number(hydrated.tokenVersion) : 0;
+        if (tokenVersion !== currentTokenVersion) {
+            return res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
+        }
+
         req.user = hydrated;
         next();
     } catch (error) {

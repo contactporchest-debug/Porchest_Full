@@ -13,6 +13,7 @@ const {
     reviewVerification,
 } = require('../controllers/adminController');
 const adminCampaignController = require('../controllers/adminCampaignController');
+const cashoutController = require('../controllers/cashoutController');
 
 // All admin routes require authentication + admin role
 router.use(authMiddleware, roleMiddleware('admin'));
@@ -37,5 +38,9 @@ router.patch('/campaigns/:id/status',  adminCampaignController.updateCampaignSta
 // ── Verification Queue ─────────────────────────────────
 router.get('/verifications',           getVerificationQueue);
 router.patch('/verifications/:id',     reviewVerification);
+
+// ── Cashouts ───────────────────────────────────────────
+router.get('/cashouts',                cashoutController.listCashouts);
+router.patch('/cashouts/:id',           cashoutController.reviewCashout);
 
 module.exports = router;

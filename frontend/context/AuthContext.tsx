@@ -184,7 +184,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const logout = useCallback(() => {
-        clearSession(true);
+        void authAPI.logout().catch(() => undefined).finally(() => {
+            clearSession(true);
+        });
     }, [clearSession]);
 
     const updateUser = useCallback((userData: Partial<User>) => {

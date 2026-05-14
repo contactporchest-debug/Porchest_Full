@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
         profileCompletionStatus: { type: Boolean, default: false },
         instagramConnected: { type: Boolean, default: false },
         lastLoginAt: { type: Date },
+        tokenVersion: { type: Number, default: 0 },
         
         // Linkage fields for the profile-centric architecture
         influencerProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'InfluencerProfile' },

@@ -15,6 +15,9 @@ const notificationSchema = new mongoose.Schema(
                 'deal_closed',
                 'request_expired',
                 'request_cancelled',
+                'cashout_requested',
+                'cashout_approved',
+                'cashout_rejected',
                 'system'
             ],
             required: true

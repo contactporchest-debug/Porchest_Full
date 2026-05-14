@@ -13,6 +13,7 @@ const softwareClientRoutes = require('./routes/softwareClient');
 const profileRoutes = require('./routes/profileRoutes');
 const influencerDiscoveryRoutes = require('./routes/influencerDiscoveryRoutes');
 const collaborationRoutes = require('./routes/collaborationRoutes');
+const clientRoutes = require('./routes/client');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -89,6 +90,7 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/pixel', pixelRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/software-client', softwareClientRoutes);
+app.use('/api/client', clientRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/discover', influencerDiscoveryRoutes);
 app.use('/api/collaborations', collaborationRoutes);

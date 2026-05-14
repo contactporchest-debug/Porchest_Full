@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import api from '../lib/api';
 
 function getAuthToken() {
     if (typeof window === 'undefined') return null;
@@ -25,25 +26,19 @@ export function useApi(endpoint, { immediate = true } = {}) {
         setError(null);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+            const res = await api.get(endpoint, {
                 headers: {
                     Authorization: `Bearer ${getAuthToken() || ''}`,
-                    'Content-Type': 'application/json',
                 },
             });
 
-            const json = await res.json().catch(() => null);
-
-            if (!res.ok) {
-                if (res.status === 401) {
-                    clearAuthAndRedirect();
-                }
-                throw new Error(json?.error || json?.message || `HTTP ${res.status}`);
-            }
-
-            setData(json);
+            setData(res.data);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Request failed');
+            const status = e?.response?.status;
+            if (status === 401) {
+                clearAuthAndRedirect();
+            }
+            setError(e?.response?.data?.error || e?.response?.data?.message || e.message || 'Request failed');
         } finally {
             setLoading(false);
         }
@@ -57,20 +52,21 @@ export function useApi(endpoint, { immediate = true } = {}) {
 }
 
 async function apiRequest(endpoint, body, method = 'POST') {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+    const token = getAuthToken() || '';
+    const res = await api.request({
+        url: endpoint,
         method,
+        data: body || {},
         headers: {
-            Authorization: `Bearer ${getAuthToken() || ''}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(body || {}),
     });
 
-    if (res.status === 401) {
+    if (res?.status === 401) {
         clearAuthAndRedirect();
     }
 
-    return res.json();
+    return res.data;
 }
 
 export async function apiPost(endpoint, body) {

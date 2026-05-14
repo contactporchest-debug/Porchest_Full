@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const SoftwareClientProfile = require('../models/SoftwareClientProfile');
-const { protect } = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // @route   GET /api/client/profile
 // @desc    Get current software client profile
 // @access  Private (software-client only)
-router.get('/profile', protect, async (req, res) => {
+router.get('/profile', authMiddleware, async (req, res) => {
     try {
         if (req.user.role !== 'software-client') {
             return res.status(403).json({ message: 'Access denied. Software clients only.' });

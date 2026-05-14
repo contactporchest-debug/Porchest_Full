@@ -78,6 +78,7 @@ const generateToken = (user) => {
             role: user.role,
             accountType: isAdminRole(user.role) ? 'admin' : 'user',
             email: user.email,
+            tokenVersion: Number.isFinite(Number(user.tokenVersion)) ? Number(user.tokenVersion) : 0,
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
@@ -393,4 +394,20 @@ exports.login = async (req, res, next) => {
 // @route   GET /api/auth/me
 exports.getMe = async (req, res) => {
     res.json({ success: true, user: req.user });
+};
+
+// @desc    Logout current session
+// @route   POST /api/auth/logout
+exports.logout = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            user.tokenVersion = (Number(user.tokenVersion) || 0) + 1;
+            await user.save();
+        }
+
+        res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+        next(error);
+    }
 };

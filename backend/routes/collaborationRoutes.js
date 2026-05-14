@@ -13,6 +13,10 @@ const {
     takeFollowerBaseline,
 } = require('../services/trackingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
+const {
+    buildEmailHtml,
+    sendOptionalEmail,
+} = require('../services/notificationDeliveryService');
 const { isAdminRole, ADMIN_ROLES } = require('../utils/accessRoles');
 const { requireCompleteProfile } = require('../middleware/profileCompleteCheck');
 
@@ -1026,6 +1030,32 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
             console.error('[collaborationRoutes] Verify notification create failed:', notificationError);
         });
 
+        const [brandUser, influencerUser] = await Promise.all([
+            User.findById(collab.brandUserId).select('email').lean(),
+            User.findById(collab.influencerUserId).select('email').lean(),
+        ]);
+        const verifyBrandMessage = `The post for "${collab.campaignTitle}" has been verified and the first payout was released.`;
+        await Promise.all([
+            sendOptionalEmail({
+                email: brandUser?.email,
+                subject: 'Post verified',
+                message: verifyBrandMessage,
+                html: buildEmailHtml({
+                    title: 'Post verified',
+                    message: verifyBrandMessage,
+                }),
+            }),
+            sendOptionalEmail({
+                email: influencerUser?.email,
+                subject: 'First payout released',
+                message: `Your post for "${collab.campaignTitle}" has been verified by admin. The first payout was released.`,
+                html: buildEmailHtml({
+                    title: 'First payout released',
+                    message: `Your post for "${collab.campaignTitle}" has been verified by admin. The first payout was released.`,
+                }),
+            }),
+        ]);
+
         emitCollaborationEvent(req, [collab.brandUserId, collab.influencerUserId], 'collaboration:updated', {
             collaborationId: collab._id,
             status: 'campaign_active',
@@ -1107,6 +1137,32 @@ router.patch('/:id/stop', roleMiddleware('admin'), async (req, res) => {
                 })),
             ]).catch((notificationError) => {
                 console.error('[collaborationRoutes] Stop notification create failed:', notificationError);
+            }),
+        ]);
+
+        const [brandUser, influencerUser] = await Promise.all([
+            User.findById(collab.brandUserId).select('email').lean(),
+            User.findById(collab.influencerUserId).select('email').lean(),
+        ]);
+        const stopMessage = `The collaboration "${collab.campaignTitle}" was stopped by an admin.`;
+        await Promise.all([
+            sendOptionalEmail({
+                email: brandUser?.email,
+                subject: 'Collaboration stopped by admin',
+                message: stopMessage,
+                html: buildEmailHtml({
+                    title: 'Collaboration stopped',
+                    message: stopMessage,
+                }),
+            }),
+            sendOptionalEmail({
+                email: influencerUser?.email,
+                subject: 'Collaboration stopped by admin',
+                message: stopMessage,
+                html: buildEmailHtml({
+                    title: 'Collaboration stopped',
+                    message: stopMessage,
+                }),
             }),
         ]);
 

@@ -57,6 +57,7 @@ export const authAPI = {
     register: (data: Record<string, unknown>) => api.post('/auth/register', data),
     googleAuth: (data: { idToken: string; role: 'brand' | 'influencer' | null }) => api.post('/auth/google', data),
     getMe: () => api.get('/auth/me'),
+    logout: () => api.post('/auth/logout'),
     verifyOTP: (data: { email: string; otp: string }) => api.post('/auth/verify-otp', data),
     resendOTP: (data: { email: string }) => api.post('/auth/resend-otp', data),
 };
@@ -81,6 +82,9 @@ export const adminAPI = {
     getVerificationQueue: (status = 'pending') => api.get('/admin/verifications', { params: { status } }),
     reviewVerification: (id: string, status: string, adminNote?: string) =>
         api.patch(`/admin/verifications/${id}`, { status, adminNote }),
+    getCashouts: (params?: Record<string, unknown>) => api.get('/admin/cashouts', { params }),
+    reviewCashout: (id: string, status: 'approved' | 'rejected', data?: { transactionId?: string; rejectionReason?: string }) =>
+        api.patch(`/admin/cashouts/${id}`, { status, ...data }),
 };
 
 export const analyticsAPI = {
@@ -96,6 +100,7 @@ export const brandAPI = {
     // Profile
     getProfile: () => api.get('/brand/profile'),
     updateProfile: (data: Record<string, unknown>) => api.put('/brand/profile', data),
+    getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
     // Influencer discovery
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),
     getInfluencerDetail: (id: string) => api.get(`/brand/influencers/${id}/details`),
@@ -130,6 +135,7 @@ export const influencerAPI = {
     // Profile
     getProfile: () => api.get('/influencer/profile'),
     updateProfile: (data: Record<string, unknown>) => api.put('/influencer/profile', data),
+    getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
     // Instagram OAuth
     getInstagramConnectURL: () => api.get('/influencer/instagram/connect'),
     disconnectInstagram: () => api.post('/influencer/instagram/disconnect'),

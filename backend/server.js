@@ -6,6 +6,7 @@ const app = require('./app');
 const connectDB = require('./config/db');
 const { startSyncScheduler } = require('./services/schedulerService');
 const { startTrackingScheduler } = require('./services/trackingScheduler');
+const { startCampaignLifecycleScheduler } = require('./services/campaignLifecycleScheduler');
 const ensureAdminUser = require('./utils/ensureAdminUser');
 const { ensureDemoInfluencers } = require('./utils/ensureDemoInfluencers');
 const { ensureDemoSoftwareClient } = require('./utils/ensureDemoSoftwareClient');
@@ -59,6 +60,7 @@ connectDB().then(() => {
     // Initialize the Instagram sync scheduler
     startSyncScheduler();
     startTrackingScheduler();
+    startCampaignLifecycleScheduler(io);
 
     server.listen(PORT, () => {
         console.log(`\n🚀 Porchest API running on http://localhost:${PORT}`);
