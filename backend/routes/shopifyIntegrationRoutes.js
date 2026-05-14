@@ -64,6 +64,19 @@ router.get('/install', authMiddleware, roleMiddleware('brand'), async (req, res)
             brandId: String(brandProfile._id),
         });
         const installUrl = buildShopifyInstallUrl({ shop, state });
+
+        const wantsJson =
+            String(req.headers.accept || '').includes('application/json') ||
+            String(req.headers['x-requested-with'] || '').toLowerCase() === 'xmlhttprequest';
+
+        if (wantsJson) {
+            return res.json({
+                success: true,
+                installUrl,
+                shop,
+            });
+        }
+
         return res.redirect(302, installUrl);
     } catch (error) {
         return res.status(400).json({ success: false, error: error.message || 'Unable to start Shopify install' });

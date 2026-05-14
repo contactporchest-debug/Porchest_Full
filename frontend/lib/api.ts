@@ -180,7 +180,7 @@ export const shopifyAPI = {
     getStatus: () => api.get('/integrations/shopify/status'),
     disconnect: () => api.post('/integrations/shopify/disconnect'),
     getInstallUrl: (shopDomain: string) => `${API_URL}/integrations/shopify/install?shop=${encodeURIComponent(shopDomain)}`,
-    startShopifyInstall: (shopDomain: string) => `${API_URL}/integrations/shopify/install?shop=${encodeURIComponent(shopDomain)}`,
+    startShopifyInstall: (shopDomain: string) => api.get('/integrations/shopify/install', { params: { shop: shopDomain } }),
 };
 
 export const woocommerceAPI = {

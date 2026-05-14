@@ -106,7 +106,16 @@ await fetch('${webhookEndpoint}', {
             toast.error('Enter a valid Shopify store domain like your-store.myshopify.com');
             return;
         }
-        window.location.href = shopifyAPI.getInstallUrl(domain);
+        try {
+            const res = await shopifyAPI.startShopifyInstall(domain);
+            const installUrl = res.data?.installUrl || res.data?.url;
+            if (!installUrl) {
+                throw new Error('Unable to generate Shopify install URL');
+            }
+            window.location.href = installUrl;
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error?.message || 'Unable to start Shopify install');
+        }
     }
 
     async function disconnectShopify() {
