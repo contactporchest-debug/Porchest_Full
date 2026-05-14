@@ -111,7 +111,7 @@ export default function OverviewPage({
     const refreshTracking = async () => {
         try {
             const res = await trackingAPI.testStatus();
-            setTrackingStatus((prev) => ({
+            setTrackingStatus((prev: any) => ({
                 ...(prev || {}),
                 ...res.data,
             }));
