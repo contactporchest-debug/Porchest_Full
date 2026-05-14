@@ -106,8 +106,6 @@ export default function BrandTrackingPage() {
     ];
 
     const shopifyConnected = Boolean(status?.availableIntegrations?.shopify?.connected);
-    const wooCommerceConnected = Boolean(status?.availableIntegrations?.woocommerce?.connected);
-
     return (
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
@@ -288,38 +286,13 @@ export default function BrandTrackingPage() {
                                         <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                                             <div>
                                                 <p style={{ fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>{shopifyConnected ? 'Shopify Connected' : 'Connect Shopify'}</p>
-                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 2 }}>Phase 1 matches orders using promo codes and Shopify order webhooks.</p>
+                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 2 }}>Track Shopify purchases and campaign links from the setup page.</p>
                                                 <p style={{ fontSize: 12, color: '#7A5030', marginTop: 6 }}>Store: {status?.shopDomain || status?.storeUrl || '—'}</p>
-                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 2 }}>Webhook: {status?.webhookStatus ? String(status.webhookStatus).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()) : 'Not Configured'}</p>
                                             </div>
                                             <Link href="/brand/webhook-setup" style={{ border: 'none', background: '#C2340A', color: '#fff', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
                                                 Open Setup
                                             </Link>
                                         </div>
-                                    </div>
-                                </div>
-                                <div style={{ borderRadius: 18, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.86)', padding: 20 }}>
-                                    <p style={{ fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>WooCommerce Integration</p>
-                                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.6)', padding: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                                            <div>
-                                                <p style={{ fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>{wooCommerceConnected ? 'WooCommerce Connected' : 'Connect WooCommerce'}</p>
-                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 2 }}>Phase 1 matches orders using promo and coupon codes.</p>
-                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 6 }}>Store: {status?.availableIntegrations?.woocommerce?.storeUrl || status?.storeUrl || '—'}</p>
-                                                <p style={{ fontSize: 12, color: '#7A5030', marginTop: 2 }}>Webhook: {status?.webhookStatus ? String(status.webhookStatus).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()) : 'Not Configured'}</p>
-                                            </div>
-                                            <Link href="/brand/webhook-setup" style={{ border: 'none', background: '#C2340A', color: '#fff', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
-                                                Open Setup
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{ borderRadius: 18, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.86)', padding: 20 }}>
-                                    <p style={{ fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Google Tag Manager</p>
-                                    <p style={{ marginTop: 12, fontSize: 12, color: '#7A5030', lineHeight: 1.6 }}>Tag-based install option for advanced custom websites.</p>
-                                    <div style={{ marginTop: 12, display: 'inline-flex', borderRadius: 999, background: 'rgba(180,83,9,0.12)', color: '#b45309', padding: '6px 10px', fontSize: 11, fontWeight: 800 }}>
-                                        Coming Soon
                                     </div>
                                 </div>
 

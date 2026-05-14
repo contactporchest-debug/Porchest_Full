@@ -38,7 +38,7 @@ async function resolveTrackingConnection(brandId) {
 
     if (!connections.length) return null;
 
-    const preferredOrder = ['woocommerce', 'shopify', 'gtm', 'custom', 'manual'];
+    const preferredOrder = ['shopify', 'custom', 'manual', 'woocommerce', 'gtm'];
     for (const platform of preferredOrder) {
         const match = connections.find((item) => item.platform === platform);
         if (match) return match;
@@ -55,6 +55,89 @@ async function resolveShopifyConnection(brandId) {
 async function resolveWooCommerceConnection(brandId) {
     if (!brandId) return null;
     return BrandTrackingConnection.findOne({ brandId, platform: 'woocommerce' }).lean();
+}
+
+function normalizeCampaignStatus(status) {
+    const value = String(status || '').toLowerCase();
+    if (['completed', 'deal_closed'].includes(value)) return 'completed';
+    if (['accepted', 'brand_approved'].includes(value)) return 'accepted';
+    if (['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'active', 'live_post_submitted'].includes(value)) return 'active';
+    return 'requested';
+}
+
+function resolveCampaignDeadline(campaign) {
+    return campaign?.campaignEndAt
+        || campaign?.campaignEndDate
+        || campaign?.timeline?.campaignEndDate
+        || campaign?.postingDeadline
+        || campaign?.brief?.postingSchedule
+        || null;
+}
+
+function resolveCampaignPrice(campaign) {
+    return Number(
+        campaign?.agreedPrice
+        ?? campaign?.agreedFee
+        ?? campaign?.pricing?.agreedFee
+        ?? campaign?.financials?.agreedFee
+        ?? campaign?.brandOfferedFee
+        ?? 0
+    ) || 0;
+}
+
+function resolveCampaignInfluencer(campaign) {
+    return campaign?.influencerName
+        || campaign?.influencerUsername
+        || campaign?.brief?.influencerName
+        || 'Influencer';
+}
+
+async function loadBrandCampaigns(brandId) {
+    const campaigns = await CampaignRequest.find({
+        brandId,
+        status: { $nin: ['rejected', 'declined', 'cancelled', 'expired'] },
+    })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .select('_id campaignTitle influencerId influencerName influencerUsername agreedPrice agreedFee pricing financials campaignEndAt campaignEndDate timeline postingDeadline brief status')
+        .lean();
+
+    return campaigns.map((campaign) => ({
+        id: String(campaign._id),
+        name: campaign.campaignTitle || campaign.brief?.campaignObjective || 'Campaign',
+        influencer: resolveCampaignInfluencer(campaign),
+        price: resolveCampaignPrice(campaign),
+        deadline: resolveCampaignDeadline(campaign),
+        status: normalizeCampaignStatus(campaign.status),
+        trackingLink: campaign.brief?.trackingLink || null,
+    }));
+}
+
+async function getLatestShopifyPurchase(brandId) {
+    return PurchaseEvent.findOne({
+        brandId,
+        source: 'shopify',
+        timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    }).sort({ timestamp: -1 }).lean();
+}
+
+async function buildTrackingVerificationState(brandProfile) {
+    const shopifyConnection = await resolveShopifyConnection(brandProfile._id);
+    const campaigns = await loadBrandCampaigns(brandProfile._id);
+    const campaignLinksReady = campaigns.some((campaign) => Boolean(campaign.trackingLink));
+    const recentShopifyPurchase = await getLatestShopifyPurchase(brandProfile._id);
+    const webhookInstalled = Boolean(shopifyConnection && shopifyConnection.status !== 'disconnected' && ['configured', 'active', 'connected'].includes(shopifyConnection.webhookStatus));
+    const testPurchaseReceived = Boolean(recentShopifyPurchase && recentShopifyPurchase.withinWindow !== false && recentShopifyPurchase.collaborationId);
+    const trackingActive = Boolean(campaignLinksReady && webhookInstalled && testPurchaseReceived && !shopifyConnection?.lastError);
+
+    return {
+        shopifyConnection,
+        campaigns,
+        campaignLinksReady,
+        recentShopifyPurchase,
+        webhookInstalled,
+        testPurchaseReceived,
+        trackingActive,
+    };
 }
 
 function setupInstructions() {
@@ -75,48 +158,43 @@ router.get('/api/tracking/status', async (req, res, next) => {
         }
 
         const connection = await resolveTrackingConnection(brandProfile._id);
-        const shopifyConnection = await resolveShopifyConnection(brandProfile._id);
-        const wooCommerceConnection = await resolveWooCommerceConnection(brandProfile._id);
-        const hasTrackingLinks = await CampaignRequest.exists({
-            brandId: brandProfile._id,
-            'brief.trackingLink': { $exists: true, $ne: '' },
-        });
         const health = await getBrandTrackingHealth(brandProfile._id);
+        const {
+            shopifyConnection,
+            campaigns,
+            campaignLinksReady,
+            recentShopifyPurchase,
+            webhookInstalled,
+            testPurchaseReceived,
+            trackingActive,
+        } = await buildTrackingVerificationState(brandProfile);
         const shopDomain = shopifyConnection?.metadata?.shopify?.shopDomain || shopifyConnection?.storeUrl || null;
-        const connectedShopify = Boolean(shopifyConnection && shopifyConnection.status !== 'disconnected');
-        const connectedWooCommerce = Boolean(wooCommerceConnection && wooCommerceConnection.status !== 'disconnected');
+        const platform = shopifyConnection ? 'shopify' : (connection?.platform || 'custom');
 
         const payload = {
-            linksStatus: connection?.linksStatus || (hasTrackingLinks ? 'active' : 'not_ready'),
-            salesStatus: connection?.salesStatus || (health.overallStatus === 'healthy' ? 'active' : health.overallStatus === 'issue_detected' ? 'issue_detected' : 'waiting_for_test'),
-            platform: connection?.platform || 'custom',
-            storeUrl: connection?.storeUrl || (connection?.platform === 'shopify' ? shopDomain : null) || (connection?.platform === 'woocommerce' ? wooCommerceConnection?.storeUrl || wooCommerceConnection?.metadata?.woocommerce?.storeUrl || null : null),
-            shopDomain: connection?.platform === 'shopify' ? shopDomain : null,
-            pixelStatus: connection?.pixelStatus || 'not_installed',
-            webhookStatus: connection?.webhookStatus || 'not_configured',
-            lastEventReceivedAt: connection?.lastEventReceivedAt || null,
-            lastVerifiedAt: connection?.lastVerifiedAt || null,
-            lastError: connection?.lastError || null,
-            trackingKey: connection?.trackingKey || null,
-            webhookSecret: connection?.webhookSecret || null,
+            campaignLinksReady,
+            webhookInstalled,
+            testPurchaseReceived,
+            trackingActive,
+            platform,
+            lastEventReceivedAt: shopifyConnection?.lastEventReceivedAt || recentShopifyPurchase?.timestamp || null,
+            lastVerifiedAt: shopifyConnection?.lastVerifiedAt || (testPurchaseReceived ? recentShopifyPurchase?.timestamp || null : null),
+            lastError: shopifyConnection?.lastError || null,
+            campaigns,
             health,
             availableIntegrations: {
                 shopify: {
                     enabled: true,
-                    connected: connectedShopify,
+                    connected: Boolean(shopifyConnection && shopifyConnection.status !== 'disconnected'),
                     shopDomain,
                 },
-                woocommerce: {
-                    enabled: true,
-                    connected: connectedWooCommerce,
-                    storeUrl: wooCommerceConnection?.storeUrl || wooCommerceConnection?.metadata?.woocommerce?.storeUrl || null,
-                },
-                gtm: {
-                    enabled: false,
-                    comingSoon: true,
-                },
+                custom: { enabled: true, connected: true },
             },
             setupInstructions: setupInstructions(),
+            linksStatus: campaignLinksReady ? 'active' : 'not_ready',
+            salesStatus: trackingActive ? 'active' : (shopifyConnection?.lastError ? 'issue_detected' : 'waiting_for_test'),
+            webhookStatus: webhookInstalled ? 'active' : 'not_configured',
+            status: trackingActive ? 'active' : (shopifyConnection?.lastError ? 'issue_detected' : 'waiting_for_test'),
         };
 
         return res.json({ success: true, ...payload });
@@ -224,7 +302,7 @@ router.get('/api/tracking/test-campaign', async (req, res, next) => {
     }
 });
 
-router.post('/api/tracking/test-status', async (req, res, next) => {
+async function handleTrackingCheck(req, res, next) {
     try {
         const brandProfile = await resolveBrandProfile(req);
         if (!brandProfile) {
@@ -232,10 +310,7 @@ router.post('/api/tracking/test-status', async (req, res, next) => {
         }
 
         const existingConnection = await resolveTrackingConnection(brandProfile._id);
-        const recentEvent = await PurchaseEvent.findOne({
-            brandId: brandProfile._id,
-            timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        }).sort({ timestamp: -1 }).lean();
+        const recentEvent = await getLatestShopifyPurchase(brandProfile._id);
         const recentCampaign = recentEvent?.collaborationId
             ? await CampaignRequest.findById(recentEvent.collaborationId).select('_id brief campaignTitle influencerId influencerName influencerUsername').lean()
             : null;
@@ -298,7 +373,10 @@ router.post('/api/tracking/test-status', async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-});
+}
+
+router.post('/api/tracking/test-status', handleTrackingCheck);
+router.post('/api/tracking/check-test-status', handleTrackingCheck);
 
 router.get('/api/tracking/activity', async (req, res, next) => {
     try {

@@ -103,6 +103,7 @@ export const brandAPI = {
     getCollaboration: (id: string) => api.get(`/collaborations/${id}`),
     getCollaborationAnalytics: (id: string) => api.get(`/collaborations/${id}/analytics`),
     downloadCollaborationPdf: (id: string) => api.get(`/collaborations/${id}/pdf`, { responseType: 'blob' }),
+    getCampaignTrackingLink: (id: string) => api.get(`/campaigns/${id}/tracking-link`),
     updateCollaborationRequirements: (id: string, data: Record<string, unknown>) => api.patch(`/collaborations/${id}/requirements`, data),
     verifyCollaborationContent: (id: string) => api.patch(`/collaborations/${id}/verify-content`),
     stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
@@ -168,6 +169,7 @@ export const trackingAPI = {
     getStatus: () => api.get('/tracking/status'),
     startSetup: (data: { platform?: string; method?: string }) => api.post('/tracking/setup/start', data),
     testStatus: () => api.post('/tracking/test-status'),
+    checkTestStatus: () => api.post('/tracking/check-test-status'),
     getTestCampaign: () => api.get('/tracking/test-campaign'),
     getActivity: () => api.get('/tracking/activity'),
 };
@@ -177,6 +179,7 @@ export const shopifyAPI = {
     disconnect: () => api.post('/integrations/shopify/disconnect'),
     getInstallUrl: (shopDomain: string) => `${API_URL}/integrations/shopify/install?shop=${encodeURIComponent(shopDomain)}`,
     startShopifyInstall: (shopDomain: string) => api.get('/integrations/shopify/install', { params: { shop: shopDomain } }),
+    connect: (data: { shopDomain: string }) => api.post('/integrations/shopify/connect', data),
 };
 
 export const woocommerceAPI = {

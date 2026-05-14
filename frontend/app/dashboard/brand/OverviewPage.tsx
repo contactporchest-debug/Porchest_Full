@@ -83,13 +83,12 @@ export default function OverviewPage({
 
     const trackingProgress = [
         { label: 'Campaign Links Ready', done: trackingStatus?.linksStatus === 'active' },
-        { label: 'Webhook Tracking Installed', done: ['configured', 'active'].includes(trackingStatus?.webhookStatus) },
+        { label: 'Webhook Connected', done: ['configured', 'active'].includes(trackingStatus?.webhookStatus) },
         { label: 'Test Purchase Received', done: trackingStatus?.salesStatus === 'active' },
         { label: 'Tracking Active', done: trackingStatus?.salesStatus === 'active' && !trackingStatus?.lastError },
     ];
 
     const shopifyConnected = Boolean(trackingStatus?.availableIntegrations?.shopify?.connected);
-    const wooCommerceConnected = Boolean(trackingStatus?.availableIntegrations?.woocommerce?.connected);
 
     const formatTime = (value?: string | Date | null) => {
         if (!value) return '—';
@@ -275,13 +274,11 @@ export default function OverviewPage({
                             <p style={{ marginTop: '8px', fontSize: '18px', fontWeight: 700, color: '#1A0A00' }}>
                                 {formatPlatform(trackingStatus?.platform)}
                             </p>
-                            {shopifyConnected || wooCommerceConnected ? (
+                            {shopifyConnected ? (
                                 <div style={{ marginTop: '8px', display: 'grid', gap: '4px', fontSize: '12px', color: '#7A5030' }}>
-                                    <div>Store: {trackingStatus?.shopDomain || trackingStatus?.storeUrl || trackingStatus?.availableIntegrations?.woocommerce?.storeUrl || '—'}</div>
+                                    <div>Store: {trackingStatus?.shopDomain || trackingStatus?.storeUrl || '—'}</div>
                                     <div>Order Webhook: {trackingStatus?.webhookStatus ? String(trackingStatus.webhookStatus).replace(/_/g, ' ').replace(/\b\w/g, (m: string) => m.toUpperCase()) : '—'}</div>
                                 </div>
-                            ) : trackingStatus?.platform === 'woocommerce' ? (
-                                <p style={{ marginTop: '8px', fontSize: '12px', color: '#7A5030' }}>WooCommerce is disconnected. Reconnect it from the tracking setup page to resume order tracking.</p>
                             ) : trackingStatus?.platform === 'shopify' ? (
                                 <p style={{ marginTop: '8px', fontSize: '12px', color: '#7A5030' }}>Shopify is disconnected. Reconnect it from the tracking setup page to resume order tracking.</p>
                             ) : (

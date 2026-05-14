@@ -52,14 +52,14 @@ function trackingRedirectPath() {
     return process.env.SHOPIFY_SUCCESS_REDIRECT || `${base}/dashboard/brand/tracking?shopify=connected`;
 }
 
-router.get('/install', authMiddleware, roleMiddleware('brand'), async (req, res) => {
+async function startShopifyInstall(req, res) {
     try {
         const brandProfile = await resolveBrandProfile(req);
         if (!brandProfile) {
             return res.status(404).json({ success: false, error: 'Brand profile not found' });
         }
 
-        const shop = normalizeString(req.query?.shop);
+        const shop = normalizeString(req.body?.shopDomain || req.body?.shop || req.query?.shop);
         const state = signShopifyStateToken({
             brandId: String(brandProfile._id),
         });
@@ -81,7 +81,11 @@ router.get('/install', authMiddleware, roleMiddleware('brand'), async (req, res)
     } catch (error) {
         return res.status(400).json({ success: false, error: error.message || 'Unable to start Shopify install' });
     }
-});
+}
+
+router.get('/install', authMiddleware, roleMiddleware('brand'), startShopifyInstall);
+
+router.post('/connect', authMiddleware, roleMiddleware('brand'), startShopifyInstall);
 
 router.get('/callback', async (req, res) => {
     try {
