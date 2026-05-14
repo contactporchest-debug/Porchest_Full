@@ -16,8 +16,7 @@ const {
 } = require('../services/trackingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
 const {
-    buildEmailHtml,
-    sendOptionalEmail,
+    sendCampaignEmailNotification,
 } = require('../services/notificationDeliveryService');
 const {
     buildCollaborationAnalytics,
@@ -758,6 +757,16 @@ router.patch('/:id/counter', roleMiddleware('influencer'), requireCompleteProfil
             },
             { new: true, strict: false }
         ).lean();
+
+        const influencerUser = await User.findById(collab.influencerUserId).select('email fullName').lean();
+        await sendCampaignEmailNotification({
+            email: influencerUser?.email,
+            subject: 'Content approved',
+            title: 'Content approved',
+            message: `Your draft for "${collab.campaignTitle}" was approved. Please verify the final content before posting.`,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+        });
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
@@ -885,6 +894,16 @@ router.patch('/:id/verify-content', roleMiddleware('brand'), requireCompleteProf
             },
             { new: true, strict: false }
         ).lean();
+
+        const influencerUser = await User.findById(collab.influencerUserId).select('email fullName').lean();
+        await sendCampaignEmailNotification({
+            email: influencerUser?.email,
+            subject: 'Content approved',
+            title: 'Content approved',
+            message: `Your draft for "${collab.campaignTitle}" was approved. Please verify the final content before posting.`,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+        });
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
@@ -1051,6 +1070,30 @@ router.patch('/:id/submit-post', roleMiddleware('influencer'), requireCompletePr
             });
         }
 
+        const [brandUser] = await Promise.all([
+            User.findById(collab.brandUserId).select('email fullName').lean(),
+        ]);
+        const approvalMessage = `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}" and it is ready for review.`;
+        await Promise.all([
+            sendCampaignEmailNotification({
+                email: brandUser?.email,
+                subject: 'Content submitted for approval',
+                title: 'Content submitted for approval',
+                message: approvalMessage,
+                actionText: 'Review collaboration',
+                actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+            }),
+            ...admins.map((admin) => sendCampaignEmailNotification({
+                email: admin.email,
+                subject: 'Campaign ready for admin review',
+                title: 'Campaign ready for admin review',
+                message: `${collab.influencerName || 'The influencer'} submitted "${collab.campaignTitle}" for verification.`,
+                actionText: 'Open admin collaboration queue',
+                actionHref: `/dashboard/admin/collaborations?request=${collab._id}`,
+                accent: '#7A5030',
+            })),
+        ]);
+
         emitCollaborationEvent(req, [collab.brandUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
             collaborationId: collab._id,
             status: 'posted',
@@ -1178,23 +1221,21 @@ router.patch('/:id/verify-admin', roleMiddleware('admin'), async (req, res) => {
         ]);
         const verifyBrandMessage = `The post for "${collab.campaignTitle}" has been verified and the first payout was released.`;
         await Promise.all([
-            sendOptionalEmail({
+            sendCampaignEmailNotification({
                 email: brandUser?.email,
                 subject: 'Post verified',
+                title: 'Post verified',
                 message: verifyBrandMessage,
-                html: buildEmailHtml({
-                    title: 'Post verified',
-                    message: verifyBrandMessage,
-                }),
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
             }),
-            sendOptionalEmail({
+            sendCampaignEmailNotification({
                 email: influencerUser?.email,
                 subject: 'First payout released',
+                title: 'First payout released',
                 message: `Your post for "${collab.campaignTitle}" has been verified by admin. The first payout was released.`,
-                html: buildEmailHtml({
-                    title: 'First payout released',
-                    message: `Your post for "${collab.campaignTitle}" has been verified by admin. The first payout was released.`,
-                }),
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
             }),
         ]);
 
@@ -1293,23 +1334,21 @@ router.patch('/:id/stop', async (req, res) => {
         ]);
         const stopMessage = `The collaboration "${collab.campaignTitle}" was stopped by ${stoppedBy}.`;
         await Promise.all([
-            sendOptionalEmail({
+            sendCampaignEmailNotification({
                 email: brandUser?.email,
                 subject: `Collaboration stopped by ${stoppedBy}`,
+                title: 'Collaboration stopped',
                 message: stopMessage,
-                html: buildEmailHtml({
-                    title: 'Collaboration stopped',
-                    message: stopMessage,
-                }),
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
             }),
-            sendOptionalEmail({
+            sendCampaignEmailNotification({
                 email: influencerUser?.email,
                 subject: `Collaboration stopped by ${stoppedBy}`,
+                title: 'Collaboration stopped',
                 message: stopMessage,
-                html: buildEmailHtml({
-                    title: 'Collaboration stopped',
-                    message: stopMessage,
-                }),
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
             }),
         ]);
 

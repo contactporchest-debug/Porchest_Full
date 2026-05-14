@@ -585,7 +585,7 @@ export default function BrandCollaborationsPage() {
                                         boxShadow: activeTab === key ? '0 8px 24px rgba(194,52,10,0.15)' : 'none',
                                     }}
                                 >
-                                    {tab.label}
+                                    {TAB_CONFIG[key].label}
                                 </button>
                             ))}
                         </div>

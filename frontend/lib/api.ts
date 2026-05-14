@@ -117,11 +117,6 @@ export const brandAPI = {
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
     updateRequest: (id: string, data: { status: string; rejectionReason?: string; agreedPrice?: number; counterOfferPrice?: number; counterOfferMessage?: string; brandMessage?: string }) =>
         api.patch(`/brand/requests/${id}`, data),
-    // Notifications
-    getNotifications: (params?: Record<string, unknown>) => api.get('/brand/notifications', { params }),
-    getUnreadCount: () => api.get('/brand/notifications/count'),
-    markNotificationRead: (id: string) => api.patch(`/brand/notifications/${id}/read`),
-    markAllNotificationsRead: () => api.patch('/brand/notifications/read-all'),
     // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
     // ── Brand Instagram OAuth (separate from influencer) ──
@@ -153,11 +148,6 @@ export const influencerAPI = {
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
     respondToRequest: (id: string, data: { status: string; rejectionReason?: string; counterOfferPrice?: number; counterOfferMessage?: string }) =>
         api.patch(`/influencer/requests/${id}`, data),
-    // Notifications
-    getNotifications: (params?: Record<string, unknown>) => api.get('/influencer/notifications', { params }),
-    getUnreadCount: () => api.get('/influencer/notifications/count'),
-    markNotificationRead: (id: string) => api.patch(`/influencer/notifications/${id}/read`),
-    markAllNotificationsRead: () => api.patch('/influencer/notifications/read-all'),
     // Content verification
     submitVerification: (data: { campaignRequestId: string; postUrl: string }) =>
         api.post('/influencer/verify', data),

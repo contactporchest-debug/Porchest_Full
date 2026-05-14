@@ -206,6 +206,7 @@ const campaignRequestSchema = new mongoose.Schema(
         campaignStartDate: { type: Date },
         campaignEndDate: { type: Date },
         gracePeriodDays: { type: Number, default: 3 },
+        campaignReminderLastSentAt: { type: Date },
 
         timeline: {
             campaignStartDate: { type: Date },

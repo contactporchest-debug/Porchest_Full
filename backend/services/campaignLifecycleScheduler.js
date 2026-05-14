@@ -3,11 +3,12 @@ const CampaignRequest = require('../models/CampaignRequest');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { releaseDueSecondPayouts } = require('./trackingService');
-const { buildEmailHtml, sendOptionalEmail } = require('./notificationDeliveryService');
+const { sendCampaignEmailNotification, sendOptionalEmail, buildEmailHtml } = require('./notificationDeliveryService');
 
 const PENDING_STATUSES = ['sent', 'viewed', 'pending', 'countered', 'negotiation', 'brand_payment_pending'];
 const ACTIVE_STATUSES = ['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'];
 const CLOSABLE_STATUSES = [...ACTIVE_STATUSES];
+const REMINDER_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function toDate(value) {
     if (!value) return null;
@@ -182,6 +183,68 @@ async function autoCloseOverdueCampaigns(io) {
     return overdue.length;
 }
 
+async function sendRunningReminders(io) {
+    const now = new Date();
+    const reminderCutoff = new Date(now.getTime() - REMINDER_INTERVAL_MS);
+    const due = await CampaignRequest.find({
+        status: { $in: ACTIVE_STATUSES },
+        campaignCompletedAt: { $exists: false },
+        campaignActiveAt: { $exists: true, $ne: null, $lte: now },
+        $or: [
+            { campaignReminderLastSentAt: { $exists: false } },
+            { campaignReminderLastSentAt: null },
+            { campaignReminderLastSentAt: { $lte: reminderCutoff } },
+        ],
+    }).select('brandUserId influencerUserId campaignTitle campaignReminderLastSentAt campaignActiveAt campaignEndAt').lean();
+
+    for (const collab of due) {
+        const reminderMessage = `Reminder: "${collab.campaignTitle || 'Campaign'}" is still running. Review progress and keep an eye on the remaining timeline.`;
+        await CampaignRequest.findByIdAndUpdate(
+            collab._id,
+            {
+                $set: {
+                    campaignReminderLastSentAt: now,
+                },
+            },
+            { strict: false, new: true }
+        );
+
+        const [brandUser, influencerUser] = await Promise.all([
+            User.findById(collab.brandUserId).select('email fullName').lean(),
+            User.findById(collab.influencerUserId).select('email fullName').lean(),
+        ]);
+
+        await Promise.all([
+            sendCampaignEmailNotification({
+                email: brandUser?.email,
+                subject: 'Campaign running reminder',
+                title: 'Campaign running reminder',
+                message: reminderMessage,
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+                accent: '#7A5030',
+            }),
+            sendCampaignEmailNotification({
+                email: influencerUser?.email,
+                subject: 'Campaign running reminder',
+                title: 'Campaign running reminder',
+                message: reminderMessage,
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+                accent: '#7A5030',
+            }),
+        ]);
+
+        emitLifecycleEvent(io, [collab.brandUserId, collab.influencerUserId], {
+            collaborationId: collab._id,
+            status: 'campaign_active',
+            action: 'running-reminder',
+        });
+    }
+
+    return due.length;
+}
+
 function startCampaignLifecycleScheduler(io) {
     cron.schedule('15 * * * *', async () => {
         console.log('[CampaignLifecycle] Starting campaign lifecycle pass —', new Date().toISOString());
@@ -189,8 +252,9 @@ function startCampaignLifecycleScheduler(io) {
             const released = await releaseDueSecondPayouts();
             const expired = await expireOverdueRequests(io);
             const closed = await autoCloseOverdueCampaigns(io);
+            const reminders = await sendRunningReminders(io);
 
-            console.log(`[CampaignLifecycle] Completed lifecycle pass. Released=${released?.released || 0}, Expired=${expired}, Closed=${closed}`);
+            console.log(`[CampaignLifecycle] Completed lifecycle pass. Released=${released?.released || 0}, Expired=${expired}, Closed=${closed}, Reminders=${reminders}`);
         } catch (error) {
             console.error('[CampaignLifecycle] Lifecycle job failed:', error);
         }

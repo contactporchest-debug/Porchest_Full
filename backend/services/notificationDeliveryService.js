@@ -26,6 +26,16 @@ async function sendOptionalEmail({ email, subject, message, html }) {
     }
 }
 
+function getPortalUrl(path = '') {
+    const base = process.env.FRONTEND_URL || process.env.PORCHEST_PUBLIC_SITE_URL || '';
+    if (!base) return path;
+    try {
+        return new URL(path, base).toString();
+    } catch {
+        return path;
+    }
+}
+
 async function createNotification({
     recipientUserId,
     type,
@@ -48,15 +58,49 @@ async function createNotification({
     });
 }
 
-function buildEmailHtml({ title, message, accent = '#C2340A' }) {
+function buildEmailHtml({ title, message, accent = '#C2340A', actionText = null, actionHref = null }) {
     return `
         <div style="font-family: Arial, sans-serif; color: #1A0A00; background: #FDF6EE; padding: 24px;">
             <div style="max-width: 640px; margin: 0 auto; background: rgba(255,255,255,0.72); border: 1px solid #EDD9BC; border-radius: 18px; padding: 28px; backdrop-filter: blur(12px);">
                 <h2 style="margin: 0 0 12px; color: ${accent}; font-size: 26px;">${title}</h2>
                 <p style="margin: 0; line-height: 1.7; color: #7A5030; font-size: 15px;">${message}</p>
+                ${actionText && actionHref ? `
+                    <div style="margin-top: 24px;">
+                        <a href="${actionHref}" style="display:inline-flex; align-items:center; justify-content:center; padding: 12px 18px; border-radius: 999px; background: ${accent}; color: #fff; text-decoration: none; font-weight: 700; font-size: 14px;">
+                            ${actionText}
+                        </a>
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;
+}
+
+async function sendCampaignEmailNotification({
+    email,
+    subject,
+    title,
+    message,
+    actionText = null,
+    actionHref = null,
+    accent = '#C2340A',
+}) {
+    if (!email) {
+        return { sent: false };
+    }
+
+    return sendOptionalEmail({
+        email,
+        subject: subject || title,
+        message: message || title,
+        html: buildEmailHtml({
+            title,
+            message: message || title,
+            accent,
+            actionText,
+            actionHref: actionHref ? getPortalUrl(actionHref) : null,
+        }),
+    });
 }
 
 async function deliverUserNotification({
@@ -140,5 +184,6 @@ module.exports = {
     createNotification,
     deliverAdminsNotification,
     deliverUserNotification,
+    sendCampaignEmailNotification,
     sendOptionalEmail,
 };

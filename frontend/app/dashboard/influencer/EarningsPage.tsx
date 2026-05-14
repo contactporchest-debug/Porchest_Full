@@ -259,7 +259,7 @@ export default function EarningsPage() {
                     Track payouts and request withdrawals
                 </h1>
                 <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.7, color: colors.brown, maxWidth: 720 }}>
-                    Your balance is built from released campaign payouts. Cashout requests move through admin review and are confirmed by email and in-app notifications.
+                    Your balance is built from released campaign payouts. Cashout requests move through admin review and are confirmed by email.
                 </p>
             </div>
 
