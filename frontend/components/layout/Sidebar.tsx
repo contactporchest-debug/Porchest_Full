@@ -44,7 +44,7 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Profile',        href: '/dashboard/software-client/profile',   icon: <User size={18} /> },
         { label: 'Projects',       href: '/dashboard/software-client/projects',  icon: <FolderKanban size={18} /> },
     ],
-};
+}; 
 
 export default function Sidebar({
     role,
