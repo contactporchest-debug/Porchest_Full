@@ -32,6 +32,7 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Collaborations', href: '/dashboard/brand/collaborations',      icon: <Handshake size={18} /> },
         { label: 'Analytics',      href: '/dashboard/brand/analytics',           icon: <BarChart3 size={18} /> },
         { label: 'Performance',    href: '/dashboard/brand/performance',         icon: <TrendingUp size={18} /> },
+        { label: 'Tracking Setup', href: '/brand/webhook-setup',                 icon: <Briefcase size={18} /> },
         { label: 'Smart Matching', href: '/dashboard/brand/matching',            icon: <Sparkles size={18} /> },
         { label: 'Notifications',  href: '/dashboard/brand/notifications',       icon: <Bell size={18} /> },
     ],
