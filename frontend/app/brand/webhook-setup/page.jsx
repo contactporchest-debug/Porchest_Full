@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import api, { shopifyAPI, trackingAPI, woocommerceAPI } from '@/lib/api';
-import { Check, Copy, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react';
+import { BadgeStatus, GlassCard, GlowButton } from '@/components/ui';
+import { Check, Copy, ExternalLink, RefreshCw, Store, Webhook } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 function prettyStatus(value) {
     if (!value) return 'Not Started';
@@ -13,7 +17,6 @@ function prettyStatus(value) {
 
 export default function WebhookSetupPage() {
     const [secret, setSecret] = useState('YOUR_PORCHEST_WEBHOOK_SECRET');
-    const [copied, setCopied] = useState(false);
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -75,8 +78,6 @@ await fetch('${webhookEndpoint}', {
 
     async function copy(text) {
         await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
     }
 
     async function startSetup() {
@@ -179,311 +180,373 @@ await fetch('${webhookEndpoint}', {
     const wooCommerceConnected = Boolean(status?.availableIntegrations?.woocommerce?.connected);
 
     return (
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
-            <div className="rounded-3xl border border-orange-500/20 bg-orange-500/10 p-6 text-white/90 backdrop-blur">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-300">Brand tracking setup</p>
-                <h1 className="mt-2 text-2xl font-semibold text-white">Tracking verification and purchase setup</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
-                    Start your tracking setup, confirm a test order, and see whether campaign links, website tracking, and sales tracking are active.
-                </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {progress.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400">{item.label}</p>
-                        <p className={`mt-2 text-lg font-semibold ${item.done ? 'text-emerald-400' : 'text-amber-300'}`}>{item.done ? 'Ready' : 'Pending'}</p>
-                    </div>
-                ))}
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-                <section className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Overview</p>
-                            <h2 className="mt-2 text-lg font-semibold text-white">Live tracking status</h2>
+        <ProtectedRoute allowedRoles={['brand']}>
+            <DashboardLayout>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1280, margin: '0 auto' }}>
+                    <GlassCard padding="28px">
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                            <div style={{ maxWidth: 760 }}>
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Brand Tracking Setup</p>
+                                <h1 style={{ marginTop: 8, fontSize: 30, fontWeight: 800, color: '#1A0A00', letterSpacing: '-0.03em' }}>Tracking verification and purchase setup</h1>
+                                <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
+                                    Start your tracking setup, confirm a test order, and verify campaign links, website tracking, and sales reporting in one place.
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                <GlowButton variant="outline" onClick={load} loading={loading || refreshing}>
+                                    <RefreshCw size={14} />
+                                    Refresh
+                                </GlowButton>
+                                <GlowButton onClick={() => void checkTestStatus()} loading={refreshing}>
+                                    <Check size={14} />
+                                    Check Test Status
+                                </GlowButton>
+                            </div>
                         </div>
-                        <button onClick={load} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                            <RefreshCw className="mr-1 inline h-4 w-4" />
-                            Refresh
-                        </button>
+                    </GlassCard>
+
+                    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                        {progress.map((item) => (
+                            <GlassCard key={item.label} padding="18px" noHover>
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</p>
+                                <p style={{ marginTop: 8, fontSize: 18, fontWeight: 800, color: item.done ? '#059669' : '#b45309' }}>{item.done ? 'Ready' : 'Pending'}</p>
+                            </GlassCard>
+                        ))}
                     </div>
-                    {loading ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">Loading tracking status...</div>
-                    ) : (
-                        <div className="space-y-3 text-sm text-gray-300">
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Campaign Links</span>
-                                <span className="font-semibold text-white">{prettyStatus(status?.linksStatus)}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Sales Tracking</span>
-                                <span className="font-semibold text-white">{prettyStatus(status?.salesStatus)}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Pixel</span>
-                                <span className="font-semibold text-white">{prettyStatus(status?.pixelStatus)}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Webhook</span>
-                                <span className="font-semibold text-white">{prettyStatus(status?.webhookStatus)}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Platform</span>
-                                <span className="font-semibold text-white">{prettyStatus(status?.platform)}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Last verified</span>
-                                <span className="font-semibold text-white">{status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                                <span>Last event received</span>
-                                <span className="font-semibold text-white">{status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</span>
-                            </div>
-                            {status?.lastError ? (
-                                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
-                                    <p className="font-semibold text-red-300">Issue Detected</p>
-                                    <p className="mt-1">{status.lastError}</p>
+
+                    <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+                        <GlassCard padding="24px">
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Overview</p>
+                                    <h2 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Live tracking status</h2>
                                 </div>
-                            ) : null}
-                        </div>
-                    )}
-                    <div className="flex flex-wrap gap-2 pt-2">
-                        <button onClick={() => void startSetup()} disabled={refreshing} className="inline-flex items-center gap-2 rounded-xl border border-orange-500/30 bg-orange-500/20 px-4 py-2 text-sm font-semibold text-orange-200 transition-colors hover:bg-orange-500/30 disabled:cursor-not-allowed disabled:opacity-60">
-                            <ShieldCheck className="h-4 w-4" />
-                            Start Setup
-                        </button>
-                        <button onClick={() => void checkTestStatus()} disabled={refreshing} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60">
-                            <Check className="h-4 w-4" />
-                            Check Test Status
-                        </button>
-                    </div>
-                </section>
-
-                <section className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Test tracking</p>
-                    <h2 className="text-lg font-semibold text-white">Open the campaign and place a test order</h2>
-                    <p className="text-sm leading-6 text-gray-300">
-                        Open the latest tracked campaign, complete a test checkout on the brand site, then return here and check the test status.
-                    </p>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Checklist</p>
-                        <ol className="mt-2 list-inside list-decimal space-y-2">
-                            <li>Open the tracking link from your latest campaign.</li>
-                            <li>Complete a test purchase.</li>
-                            <li>Return to Porchest and click Check Test Status.</li>
-                            <li>Confirm the dashboard shows Tracking Active.</li>
-                        </ol>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button onClick={async () => {
-                            try {
-                                const res = await trackingAPI.getTestCampaign();
-                                const data = res.data || {};
-                                if (!data?.trackingLink) return;
-                                window.open(data.trackingLink, '_blank', 'noopener,noreferrer');
-                            } catch {
-                                // no-op
-                            }
-                        }} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                            <ExternalLink className="h-4 w-4" />
-                            Open Tracking Link
-                        </button>
-                        <button onClick={() => void copy(pixelCode)} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                            <Copy className="h-4 w-4" />
-                            Copy Pixel Script
-                        </button>
-                    </div>
-                </section>
-            </div>
-
-            <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Website tracking code</p>
-                        <h2 className="mt-2 text-lg font-semibold text-white">Use the shared pixel or the server webhook</h2>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button onClick={() => void copy(code)} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                            <Copy className="mr-2 inline h-4 w-4" />
-                            Copy Webhook Code
-                        </button>
-                        <a href={pixelScriptUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                            <ExternalLink className="h-4 w-4" />
-                            Pixel Script
-                        </a>
-                    </div>
-                </div>
-                <div className="grid gap-4 lg:grid-cols-2">
-                    <pre className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-xs text-gray-300">{code}</pre>
-                    <pre className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-xs text-gray-300">{pixelCode}</pre>
-                </div>
-                <div className="grid gap-3 md:grid-cols-3">
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Pixel script URL</p>
-                        <p className="mt-1 break-all">{pixelScriptUrl}</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Pixel purchase endpoint</p>
-                        <p className="mt-1 break-all">{pixelEndpoint}</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Webhook purchase endpoint</p>
-                        <p className="mt-1 break-all">{webhookEndpoint}</p>
-                    </div>
-                </div>
-            </section>
-
-            <section className="grid gap-4 lg:grid-cols-3">
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Shopify Integration</p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">Connect your Shopify store</h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-300">
-                        Connect Shopify so Porchest can receive order events and match purchases using influencer promo codes.
-                    </p>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">Phase 1 matches promo-code orders only</p>
-                    {shopifyConnected ? (
-                        <div className="mt-4 space-y-3">
-                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                                <p className="font-semibold text-emerald-200">Shopify Connected</p>
-                                <p className="mt-1 text-emerald-100/80">Store: {status?.shopDomain || status?.availableIntegrations?.shopify?.shopDomain || '—'}</p>
-                                <p className="mt-1 text-emerald-100/80">Order Webhook: {prettyStatus(status?.webhookStatus)}</p>
-                                <p className="mt-1 text-emerald-100/80">Sales Tracking: {prettyStatus(status?.salesStatus)}</p>
-                                <p className="mt-1 text-emerald-100/80">Last Event: {status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</p>
-                                <p className="mt-1 text-emerald-100/80">Last Verified: {status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</p>
+                                <GlowButton variant="outline" size="sm" onClick={() => void load(true)} loading={refreshing}>
+                                    <RefreshCw size={14} />
+                                    Refresh
+                                </GlowButton>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                <button onClick={() => void checkTestStatus()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    <Check className="h-4 w-4" />
-                                    Check Test Status
-                                </button>
-                                <button onClick={() => void disconnectShopify()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    Disconnect Shopify
-                                </button>
-                                <a href="/dashboard/brand/tracking" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    <ExternalLink className="h-4 w-4" />
-                                    View Tracking Activity
+
+                            {loading ? (
+                                <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 18, fontSize: 14, color: '#7A5030' }}>
+                                    Loading tracking status...
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gap: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Campaign Links</span>
+                                        <BadgeStatus status={status?.linksStatus || 'not_started'} />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Sales Tracking</span>
+                                        <BadgeStatus status={status?.salesStatus || 'not_started'} />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Pixel</span>
+                                        <BadgeStatus status={status?.pixelStatus || 'not_installed'} />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Webhook</span>
+                                        <BadgeStatus status={status?.webhookStatus || 'not_configured'} />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Platform</span>
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: '#1A0A00' }}>{prettyStatus(status?.platform)}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Last verified</span>
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: '#1A0A00' }}>{status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Last event received</span>
+                                        <span style={{ fontSize: 14, fontWeight: 700, color: '#1A0A00' }}>{status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</span>
+                                    </div>
+                                    {status?.lastError ? (
+                                        <div style={{ borderRadius: 12, border: '1px solid rgba(220,38,38,0.18)', background: 'rgba(220,38,38,0.06)', padding: 16 }}>
+                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Issue Detected</p>
+                                            <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', lineHeight: 1.6 }}>{status.lastError}</p>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            )}
+                        </GlassCard>
+
+                        <GlassCard padding="24px">
+                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Test tracking</p>
+                            <h2 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Open the campaign and place a test order</h2>
+                            <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
+                                Open the latest tracked campaign, complete a test checkout on the brand site, then return here and check the test status.
+                            </p>
+
+                            <div style={{ marginTop: 16, borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Checklist</p>
+                                <ol style={{ marginTop: 10, paddingLeft: 18, display: 'grid', gap: 8, color: '#7A5030', fontSize: 13, lineHeight: 1.65 }}>
+                                    <li>Open the tracking link from your latest campaign.</li>
+                                    <li>Complete a test purchase.</li>
+                                    <li>Return to Porchest and click Check Test Status.</li>
+                                    <li>Confirm the dashboard shows Tracking Active.</li>
+                                </ol>
+                            </div>
+
+                            <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                <GlowButton variant="outline" onClick={() => void openCampaign()}>
+                                    <ExternalLink size={14} />
+                                    Open Tracking Link
+                                </GlowButton>
+                                <GlowButton variant="outline" onClick={() => void copy(pixelCode)}>
+                                    <Copy size={14} />
+                                    Copy Pixel Script
+                                </GlowButton>
+                            </div>
+                        </GlassCard>
+                    </div>
+
+                    <GlassCard padding="24px">
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                            <div>
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Website tracking code</p>
+                                <h2 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Use the shared pixel or the server webhook</h2>
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                <GlowButton variant="outline" size="sm" onClick={() => void copy(code)}>
+                                    <Copy size={14} />
+                                    Copy Webhook Code
+                                </GlowButton>
+                                <a href={pixelScriptUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                                    <GlowButton variant="outline" size="sm">
+                                        <ExternalLink size={14} />
+                                        Pixel Script
+                                    </GlowButton>
                                 </a>
                             </div>
                         </div>
-                    ) : (
-                        <div className="mt-4 space-y-3">
-                            <input
-                                type="text"
-                                value={shopDomain}
-                                onChange={(e) => setShopDomain(e.target.value)}
-                                placeholder="your-store.myshopify.com"
-                                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none"
-                            />
-                            <button onClick={() => void connectShopify()} className="inline-flex items-center gap-2 rounded-xl border border-orange-500/30 bg-orange-500/20 px-4 py-2 text-sm font-semibold text-orange-200 transition-colors hover:bg-orange-500/30">
-                                <ShieldCheck className="h-4 w-4" />
-                                Connect Shopify
-                            </button>
-                        </div>
-                    )}
-                </div>
 
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">WooCommerce Integration</p>
-                    <h3 className="mt-2 text-lg font-semibold text-white">Connect your WooCommerce store</h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-300">
-                        Connect your WooCommerce store so Porchest can receive order events and match purchases using influencer promo codes.
-                    </p>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">Phase 1 matches WooCommerce orders using Porchest promo/coupon codes</p>
-                    {wooCommerceConnected ? (
-                        <div className="mt-4 space-y-3">
-                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                                <p className="font-semibold text-emerald-200">WooCommerce Connected</p>
-                                <p className="mt-1 text-emerald-100/80">Store URL: {status?.availableIntegrations?.woocommerce?.storeUrl || status?.storeUrl || '—'}</p>
-                                <p className="mt-1 text-emerald-100/80">Webhook Status: {prettyStatus(status?.webhookStatus)}</p>
-                                <p className="mt-1 text-emerald-100/80">Sales Tracking: {prettyStatus(status?.salesStatus)}</p>
-                                <p className="mt-1 text-emerald-100/80">Last Event: {status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</p>
-                                <p className="mt-1 text-emerald-100/80">Last Verified: {status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</p>
+                        <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginTop: 16 }}>
+                            <pre style={{ margin: 0, overflowX: 'auto', borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.60)', padding: 16, fontSize: 12, lineHeight: 1.7, color: '#5E4324', whiteSpace: 'pre-wrap' }}>{code}</pre>
+                            <pre style={{ margin: 0, overflowX: 'auto', borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.60)', padding: 16, fontSize: 12, lineHeight: 1.7, color: '#5E4324', whiteSpace: 'pre-wrap' }}>{pixelCode}</pre>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: 16 }}>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Pixel script URL</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{pixelScriptUrl}</p>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                <button onClick={() => void checkTestStatus()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    <Check className="h-4 w-4" />
-                                    Check Test Status
-                                </button>
-                                <button onClick={() => void disconnectWooCommerce()} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    Disconnect WooCommerce
-                                </button>
-                                <a href="/dashboard/brand/tracking" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/10">
-                                    <ExternalLink className="h-4 w-4" />
-                                    View Tracking Activity
-                                </a>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Pixel purchase endpoint</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{pixelEndpoint}</p>
+                            </div>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Webhook purchase endpoint</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{webhookEndpoint}</p>
                             </div>
                         </div>
-                    ) : (
-                        <div className="mt-4 space-y-3">
-                            <input
-                                type="url"
-                                value={wooStoreUrl}
-                                onChange={(e) => {
-                                    setWooStoreUrl(e.target.value);
-                                    setWooError('');
-                                }}
-                                placeholder="https://yourstore.com"
-                                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none"
-                            />
-                            <input
-                                type="text"
-                                value={wooConsumerKey}
-                                onChange={(e) => {
-                                    setWooConsumerKey(e.target.value);
-                                    setWooError('');
-                                }}
-                                placeholder="Consumer Key"
-                                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none"
-                            />
-                            <input
-                                type="password"
-                                value={wooConsumerSecret}
-                                onChange={(e) => {
-                                    setWooConsumerSecret(e.target.value);
-                                    setWooError('');
-                                }}
-                                placeholder="Consumer Secret"
-                                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-gray-500 outline-none"
-                            />
-                            {wooError ? <p className="text-sm font-medium text-red-300">{wooError}</p> : null}
-                            <button onClick={() => void connectWooCommerce()} disabled={wooLoading} className="inline-flex items-center gap-2 rounded-xl border border-orange-500/30 bg-orange-500/20 px-4 py-2 text-sm font-semibold text-orange-200 transition-colors hover:bg-orange-500/30 disabled:cursor-not-allowed disabled:opacity-60">
-                                <ShieldCheck className="h-4 w-4" />
-                                {wooLoading ? 'Connecting...' : 'Connect WooCommerce'}
-                            </button>
+                    </GlassCard>
+
+                    <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+                        <GlassCard padding="24px">
+                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Shopify Integration</p>
+                            <h3 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Connect your Shopify store</h3>
+                            <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
+                                Connect Shopify so Porchest can receive order events and match purchases using influencer promo codes.
+                            </p>
+                            <p style={{ marginTop: 12, fontSize: 12, fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Phase 1 matches promo-code orders only</p>
+                            {shopifyConnected ? (
+                                <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                                    <div style={{ borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                        <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>Shopify Connected</p>
+                                        <div style={{ marginTop: 8, display: 'grid', gap: 4, color: '#7A5030', fontSize: 13 }}>
+                                            <div>Store: {status?.shopDomain || status?.availableIntegrations?.shopify?.shopDomain || '—'}</div>
+                                            <div>Order Webhook: {prettyStatus(status?.webhookStatus)}</div>
+                                            <div>Sales Tracking: {prettyStatus(status?.salesStatus)}</div>
+                                            <div>Last Event: {status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</div>
+                                            <div>Last Verified: {status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                        <GlowButton variant="outline" size="sm" onClick={() => void checkTestStatus()}>
+                                            <Check size={14} />
+                                            Check Test Status
+                                        </GlowButton>
+                                        <GlowButton variant="outline" size="sm" onClick={() => void disconnectShopify()}>
+                                            Disconnect Shopify
+                                        </GlowButton>
+                                        <Link href="/dashboard/brand/tracking" style={{ textDecoration: 'none' }}>
+                                            <GlowButton variant="outline" size="sm">
+                                                <ExternalLink size={14} />
+                                                View Tracking Activity
+                                            </GlowButton>
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#1A0A00' }}>Shopify store domain</label>
+                                        <input
+                                            type="text"
+                                            value={shopDomain}
+                                            onChange={(e) => setShopDomain(e.target.value)}
+                                            placeholder="your-store.myshopify.com"
+                                            style={{
+                                                width: '100%',
+                                                borderRadius: 10,
+                                                border: '1px solid #EDD9BC',
+                                                background: 'rgba(255,255,255,0.70)',
+                                                padding: '12px 14px',
+                                                fontSize: 14,
+                                                color: '#1A0A00',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                    </div>
+                                    <GlowButton onClick={() => void connectShopify()}>
+                                        <Store size={14} />
+                                        Connect Shopify
+                                    </GlowButton>
+                                </div>
+                            )}
+                        </GlassCard>
+
+                        <GlassCard padding="24px">
+                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>WooCommerce Integration</p>
+                            <h3 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Connect your WooCommerce store</h3>
+                            <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
+                                Connect your WooCommerce store so Porchest can receive order events and match purchases using influencer promo codes.
+                            </p>
+                            <p style={{ marginTop: 12, fontSize: 12, fontWeight: 800, color: '#B45309', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Phase 1 matches WooCommerce orders using Porchest promo/coupon codes</p>
+                            {wooCommerceConnected ? (
+                                <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                                    <div style={{ borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                        <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>WooCommerce Connected</p>
+                                        <div style={{ marginTop: 8, display: 'grid', gap: 4, color: '#7A5030', fontSize: 13 }}>
+                                            <div>Store URL: {status?.availableIntegrations?.woocommerce?.storeUrl || status?.storeUrl || '—'}</div>
+                                            <div>Webhook Status: {prettyStatus(status?.webhookStatus)}</div>
+                                            <div>Sales Tracking: {prettyStatus(status?.salesStatus)}</div>
+                                            <div>Last Event: {status?.lastEventReceivedAt ? new Date(status.lastEventReceivedAt).toLocaleString() : '—'}</div>
+                                            <div>Last Verified: {status?.lastVerifiedAt ? new Date(status.lastVerifiedAt).toLocaleString() : '—'}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                        <GlowButton variant="outline" size="sm" onClick={() => void checkTestStatus()}>
+                                            <Check size={14} />
+                                            Check Test Status
+                                        </GlowButton>
+                                        <GlowButton variant="outline" size="sm" onClick={() => void disconnectWooCommerce()}>
+                                            Disconnect WooCommerce
+                                        </GlowButton>
+                                        <Link href="/dashboard/brand/tracking" style={{ textDecoration: 'none' }}>
+                                            <GlowButton variant="outline" size="sm">
+                                                <ExternalLink size={14} />
+                                                View Tracking Activity
+                                            </GlowButton>
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#1A0A00' }}>Store URL</label>
+                                        <input
+                                            type="url"
+                                            value={wooStoreUrl}
+                                            onChange={(e) => {
+                                                setWooStoreUrl(e.target.value);
+                                                setWooError('');
+                                            }}
+                                            placeholder="https://yourstore.com"
+                                            style={{
+                                                width: '100%',
+                                                borderRadius: 10,
+                                                border: '1px solid #EDD9BC',
+                                                background: 'rgba(255,255,255,0.70)',
+                                                padding: '12px 14px',
+                                                fontSize: 14,
+                                                color: '#1A0A00',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#1A0A00' }}>Consumer Key</label>
+                                        <input
+                                            type="text"
+                                            value={wooConsumerKey}
+                                            onChange={(e) => {
+                                                setWooConsumerKey(e.target.value);
+                                                setWooError('');
+                                            }}
+                                            placeholder="ck_..."
+                                            style={{
+                                                width: '100%',
+                                                borderRadius: 10,
+                                                border: '1px solid #EDD9BC',
+                                                background: 'rgba(255,255,255,0.70)',
+                                                padding: '12px 14px',
+                                                fontSize: 14,
+                                                color: '#1A0A00',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#1A0A00' }}>Consumer Secret</label>
+                                        <input
+                                            type="password"
+                                            value={wooConsumerSecret}
+                                            onChange={(e) => {
+                                                setWooConsumerSecret(e.target.value);
+                                                setWooError('');
+                                            }}
+                                            placeholder="cs_..."
+                                            style={{
+                                                width: '100%',
+                                                borderRadius: 10,
+                                                border: '1px solid #EDD9BC',
+                                                background: 'rgba(255,255,255,0.70)',
+                                                padding: '12px 14px',
+                                                fontSize: 14,
+                                                color: '#1A0A00',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                    </div>
+                                    {wooError ? (
+                                        <div style={{ borderRadius: 12, border: '1px solid rgba(220,38,38,0.18)', background: 'rgba(220,38,38,0.06)', padding: 14 }}>
+                                            <p style={{ margin: 0, fontSize: 13, color: '#dc2626', fontWeight: 700 }}>{wooError}</p>
+                                        </div>
+                                    ) : null}
+                                    <GlowButton onClick={() => void connectWooCommerce()} loading={wooLoading}>
+                                        <Webhook size={14} />
+                                        {wooLoading ? 'Connecting...' : 'Connect WooCommerce'}
+                                    </GlowButton>
+                                </div>
+                            )}
+                        </GlassCard>
+                    </div>
+
+                    <GlassCard padding="24px">
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Troubleshooting</p>
+                        <div style={{ marginTop: 16, display: 'grid', gap: 14, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>Waiting For Test Order</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', lineHeight: 1.7 }}>Open the tracking link, complete a test order, then click Check Test Status.</p>
+                            </div>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>Tracking Issue Detected</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', lineHeight: 1.7 }}>The order was received, but it could not be matched to a campaign. Make sure the link or promo code was used.</p>
+                            </div>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>No Campaign Links</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', lineHeight: 1.7 }}>No campaign links are available yet. Create or accept a collaboration first.</p>
+                            </div>
+                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.56)', padding: 16 }}>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#1A0A00' }}>Need the advanced details?</p>
+                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', lineHeight: 1.7 }}>Use the brand dashboard tracking page for activity, status, and purchase summaries.</p>
+                            </div>
                         </div>
-                    )}
+                    </GlassCard>
                 </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Google Tag Manager</p>
-                    <p className="mt-2 text-sm leading-6 text-gray-300">Tag-based install option for advanced custom websites.</p>
-                    <div className="mt-4 inline-flex rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-300">Coming Soon</div>
-                </div>
-            </section>
-
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400">Troubleshooting</p>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Waiting For Test Order</p>
-                        <p className="mt-2">Open the tracking link, complete a test order, then click Check Test Status.</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Tracking Issue Detected</p>
-                        <p className="mt-2">The order was received, but it could not be matched to a campaign. Make sure the link or promo code was used.</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">No Campaign Links</p>
-                        <p className="mt-2">No campaign links are available yet. Create or accept a collaboration first.</p>
-                    </div>
-                    <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-                        <p className="font-semibold text-white">Need the advanced details?</p>
-                        <p className="mt-2">Use the brand dashboard tracking page for activity, status, and purchase summaries.</p>
-                    </div>
-                </div>
-            </section>
-        </div>
+            </DashboardLayout>
+        </ProtectedRoute>
     );
 }
