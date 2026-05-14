@@ -279,7 +279,7 @@ async function registerShopifyOrderWebhook({ shop, accessToken }) {
         throw new Error('Shopify access token is required');
     }
 
-    const endpoint = `${getShopifyAppUrl()}/api/integrations/shopify/webhooks/orders`;
+    const endpoint = `${getShopifyAppUrl()}/api/webhooks/shopify`;
     const attempts = ['orders/paid', 'orders/create'];
 
     for (const topic of attempts) {

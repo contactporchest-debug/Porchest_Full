@@ -1,7 +1,10 @@
 const CampaignRequest = require('../models/CampaignRequest');
 const PurchaseEvent = require('../models/PurchaseEvent');
 const BrandTrackingConnection = require('../models/BrandTrackingConnection');
+const BrandProfile = require('../models/BrandProfile');
+const User = require('../models/User');
 const { verifyAttributionToken } = require('./attributionTokenService');
+const { sendCampaignEmailNotification } = require('./notificationDeliveryService');
 
 const DEFAULT_SOURCE = 'pixel';
 
@@ -82,6 +85,36 @@ async function readCampaignByPromoCode(promoCode) {
     return query.select(
         'brandId influencerId campaignStartDate campaignEndDate campaignStartAt campaignEndAt timeline agreedFee pricing financials metrics status brief gracePeriodDays'
     ).lean();
+}
+
+async function loadBrandContact(brandId) {
+    if (!brandId) return null;
+
+    const brandProfile = await BrandProfile.findById(brandId).select('userId businessName brandName companyName').lean();
+    if (!brandProfile?.userId) return { brandProfile, user: null };
+
+    const user = await User.findById(brandProfile.userId).select('email fullName').lean();
+    return { brandProfile, user };
+}
+
+async function sendSaleNotificationEmail({ collab, orderId, orderValue, currency, source, withinWindow }) {
+    const { brandProfile, user } = await loadBrandContact(collab?.brandId);
+    if (!user?.email) return;
+
+    const campaignName = collab?.campaignTitle || collab?.brief?.keyMessage || 'Campaign';
+    const brandName = brandProfile?.businessName || brandProfile?.brandName || brandProfile?.companyName || 'Porchest brand';
+    const trackingMessage = withinWindow
+        ? `A new ${source} sale was matched for "${campaignName}".`
+        : `A new ${source} sale was recorded for "${campaignName}", but it fell outside the campaign window.`;
+
+    await sendCampaignEmailNotification({
+        email: user.email,
+        subject: `New sale tracked for ${campaignName}`,
+        title: 'Sale tracked',
+        message: `${trackingMessage} Brand: ${brandName}. Order ID: ${orderId}. Order value: ${Number(orderValue).toFixed(2)} ${currency}.`,
+        actionText: 'View tracking activity',
+        actionHref: `/dashboard/brand/tracking?campaign=${collab?._id || ''}`,
+    });
 }
 
 async function getTrackingConnection(brandId, platform = 'custom') {
@@ -175,10 +208,16 @@ async function processTrackedPurchase(payload = {}) {
     );
     const tokenBrandId = normalizeString(attribution?.brandId || null);
     const resolvedBrandId = normalizeString(directBrandId || tokenBrandId || null);
-    const existingConnection = resolvedBrandId ? await BrandTrackingConnection.findOne({ brandId: resolvedBrandId }).lean() : null;
-    const connectionPlatform = existingConnection?.platform || (
-        source === 'shopify' ? 'shopify' : source === 'webhook' ? 'manual' : 'custom'
-    );
+    const connectionPlatform = source === 'shopify'
+        ? 'shopify'
+        : source === 'woocommerce'
+            ? 'woocommerce'
+            : source === 'webhook'
+                ? 'manual'
+                : 'custom';
+    const existingConnection = resolvedBrandId
+        ? await BrandTrackingConnection.findOne({ brandId: resolvedBrandId, platform: connectionPlatform }).lean()
+        : null;
 
     let collab = null;
     if (collaborationId) {
@@ -344,6 +383,15 @@ async function processTrackedPurchase(payload = {}) {
             { strict: false, new: true }
         );
     }
+
+    await sendSaleNotificationEmail({
+        collab,
+        orderId,
+        orderValue,
+        currency,
+        source,
+        withinWindow,
+    });
 
     await upsertTrackingConnectionStatus({
         brandId: String(collab.brandId),

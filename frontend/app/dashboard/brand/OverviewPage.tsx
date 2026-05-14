@@ -83,7 +83,7 @@ export default function OverviewPage({
 
     const trackingProgress = [
         { label: 'Campaign Links Ready', done: trackingStatus?.linksStatus === 'active' },
-        { label: 'Website Tracking Installed', done: ['installed', 'active'].includes(trackingStatus?.pixelStatus) },
+        { label: 'Webhook Tracking Installed', done: ['configured', 'active'].includes(trackingStatus?.webhookStatus) },
         { label: 'Test Purchase Received', done: trackingStatus?.salesStatus === 'active' },
         { label: 'Tracking Active', done: trackingStatus?.salesStatus === 'active' && !trackingStatus?.lastError },
     ];
@@ -266,9 +266,9 @@ export default function OverviewPage({
                             <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030' }}>Confirms whether a test purchase was received and matched.</p>
                         </div>
                         <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: '18px' }}>
-                            <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Pixel / Webhook</p>
-                            <p style={{ marginTop: '8px', fontSize: '18px', fontWeight: 700, color: '#1A0A00' }}>{[trackingStatus?.pixelStatus, trackingStatus?.webhookStatus].filter(Boolean).join(' • ') || 'Not Started'}</p>
-                            <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030' }}>Install the pixel or webhook in your checkout flow.</p>
+                            <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Webhook</p>
+                            <p style={{ marginTop: '8px', fontSize: '18px', fontWeight: 700, color: '#1A0A00' }}>{trackingStatus?.webhookStatus ? String(trackingStatus.webhookStatus).replace(/_/g, ' ').replace(/\b\w/g, (m: string) => m.toUpperCase()) : 'Not Started'}</p>
+                            <p style={{ marginTop: '6px', fontSize: '13px', color: '#7A5030' }}>Install the webhook in your checkout flow.</p>
                         </div>
                         <div style={{ borderRadius: '12px', border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: '18px' }}>
                             <p style={{ fontSize: '11px', fontWeight: 500, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Platform</p>

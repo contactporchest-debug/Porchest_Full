@@ -100,7 +100,7 @@ export default function BrandTrackingPage() {
 
     const progress = [
         { label: 'Campaign Links Ready', done: status?.linksStatus === 'active' },
-        { label: 'Website Tracking Installed', done: ['installed', 'active'].includes(status?.pixelStatus) || ['configured', 'active'].includes(status?.webhookStatus) },
+        { label: 'Webhook Tracking Installed', done: ['configured', 'active'].includes(status?.webhookStatus) },
         { label: 'Test Purchase Received', done: status?.salesStatus === 'active' },
         { label: 'Tracking Active', done: status?.salesStatus === 'active' && !status?.lastError },
     ];
@@ -160,7 +160,6 @@ export default function BrandTrackingPage() {
                                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                         <StatusPill value={status?.linksStatus} />
                                         <StatusPill value={status?.salesStatus} />
-                                        <StatusPill value={status?.pixelStatus} />
                                         <StatusPill value={status?.webhookStatus} />
                                     </div>
                                 </div>
@@ -182,7 +181,7 @@ export default function BrandTrackingPage() {
                                                 <div>Order Webhook: {status?.webhookStatus ? String(status.webhookStatus).replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()) : '—'}</div>
                                             </div>
                                         ) : (
-                                            <p style={{ marginTop: 8, fontSize: 12, color: '#7A5030' }}>Custom website tracking is ready for your checkout flow.</p>
+                                            <p style={{ marginTop: 8, fontSize: 12, color: '#7A5030' }}>Custom webhook tracking is ready for your checkout flow.</p>
                                         )}
                                     </div>
                                     <div style={{ borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.58)', padding: 18 }}>

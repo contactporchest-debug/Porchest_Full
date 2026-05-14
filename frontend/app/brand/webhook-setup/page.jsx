@@ -51,8 +51,6 @@ export default function WebhookSetupPage() {
     }, []);
 
     const webhookEndpoint = status?.setupInstructions?.webhookPurchaseEndpoint || 'https://api.porchest.com/api/webhook/purchase';
-    const pixelScriptUrl = status?.setupInstructions?.pixelScriptUrl || 'https://www.porchest.com/pixel.js';
-    const pixelEndpoint = status?.setupInstructions?.pixelPurchaseEndpoint || 'https://api.porchest.com/api/pixel/purchase';
 
     const code = `// Add this to your checkout success handler
 await fetch('${webhookEndpoint}', {
@@ -66,15 +64,6 @@ await fetch('${webhookEndpoint}', {
     webhookSecret: '${secret}'
   })
 });`;
-
-    const pixelCode = `<script src="${pixelScriptUrl}"></script>
-<script>
-  window.Porchest.trackPurchase({
-    orderId: order.id,
-    orderValue: order.total,
-    currency: 'USD'
-  });
-</script>`;
 
     async function copy(text) {
         await navigator.clipboard.writeText(text);
@@ -171,7 +160,7 @@ await fetch('${webhookEndpoint}', {
 
     const progress = useMemo(() => ([
         { label: 'Campaign Links Ready', done: status?.linksStatus === 'active' },
-        { label: 'Website Tracking Installed', done: ['installed', 'active'].includes(status?.pixelStatus) || ['configured', 'active'].includes(status?.webhookStatus) },
+        { label: 'Webhook Tracking Installed', done: ['configured', 'active'].includes(status?.webhookStatus) },
         { label: 'Test Purchase Received', done: status?.salesStatus === 'active' },
         { label: 'Tracking Active', done: status?.salesStatus === 'active' && !status?.lastError },
     ]), [status]);
@@ -242,10 +231,6 @@ await fetch('${webhookEndpoint}', {
                                         <BadgeStatus status={status?.salesStatus || 'not_started'} />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                        <span style={{ fontSize: 13, color: '#7A5030' }}>Pixel</span>
-                                        <BadgeStatus status={status?.pixelStatus || 'not_installed'} />
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                                         <span style={{ fontSize: 13, color: '#7A5030' }}>Webhook</span>
                                         <BadgeStatus status={status?.webhookStatus || 'not_configured'} />
                                     </div>
@@ -288,53 +273,34 @@ await fetch('${webhookEndpoint}', {
                                 </ol>
                             </div>
 
-                            <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                                <GlowButton variant="outline" onClick={() => void openCampaign()}>
-                                    <ExternalLink size={14} />
-                                    Open Tracking Link
-                                </GlowButton>
-                                <GlowButton variant="outline" onClick={() => void copy(pixelCode)}>
-                                    <Copy size={14} />
-                                    Copy Pixel Script
-                                </GlowButton>
+                                    <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                                        <GlowButton variant="outline" onClick={() => void openCampaign()}>
+                                            <ExternalLink size={14} />
+                                            Open Tracking Link
+                                        </GlowButton>
+                                    </div>
+                                </GlassCard>
                             </div>
-                        </GlassCard>
-                    </div>
 
                     <GlassCard padding="24px">
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                             <div>
-                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Website tracking code</p>
-                                <h2 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Use the shared pixel or the server webhook</h2>
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Webhook tracking code</p>
+                                <h2 style={{ marginTop: 6, fontSize: 18, fontWeight: 800, color: '#1A0A00' }}>Use the server webhook for purchase tracking</h2>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                                 <GlowButton variant="outline" size="sm" onClick={() => void copy(code)}>
                                     <Copy size={14} />
                                     Copy Webhook Code
                                 </GlowButton>
-                                <a href={pixelScriptUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                                    <GlowButton variant="outline" size="sm">
-                                        <ExternalLink size={14} />
-                                        Pixel Script
-                                    </GlowButton>
-                                </a>
                             </div>
                         </div>
 
                         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginTop: 16 }}>
                             <pre style={{ margin: 0, overflowX: 'auto', borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.60)', padding: 16, fontSize: 12, lineHeight: 1.7, color: '#5E4324', whiteSpace: 'pre-wrap' }}>{code}</pre>
-                            <pre style={{ margin: 0, overflowX: 'auto', borderRadius: 14, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.60)', padding: 16, fontSize: 12, lineHeight: 1.7, color: '#5E4324', whiteSpace: 'pre-wrap' }}>{pixelCode}</pre>
                         </div>
 
                         <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', marginTop: 16 }}>
-                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
-                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Pixel script URL</p>
-                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{pixelScriptUrl}</p>
-                            </div>
-                            <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
-                                <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Pixel purchase endpoint</p>
-                                <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{pixelEndpoint}</p>
-                            </div>
                             <div style={{ borderRadius: 12, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16 }}>
                                 <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Webhook purchase endpoint</p>
                                 <p style={{ marginTop: 6, fontSize: 13, color: '#7A5030', wordBreak: 'break-all' }}>{webhookEndpoint}</p>
