@@ -14,9 +14,21 @@ const profileRoutes = require('./routes/profileRoutes');
 const influencerDiscoveryRoutes = require('./routes/influencerDiscoveryRoutes');
 const collaborationRoutes = require('./routes/collaborationRoutes');
 const clientRoutes = require('./routes/client');
+const trackingSetupRoutes = require('./routes/trackingSetupRoutes');
+const pixelScriptRoutes = require('./routes/pixelScriptRoutes');
+const shopifyIntegrationRoutes = require('./routes/shopifyIntegrationRoutes');
+const woocommerceIntegrationRoutes = require('./routes/woocommerceIntegrationRoutes');
 const errorHandler = require('./middleware/errorHandler');
+const { enforceHttps, securityHeaders } = require('./middleware/securityHeaders');
 
 const app = express();
+
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
+app.use(securityHeaders);
+app.use(enforceHttps);
 
 // CORS
 const corsOptionsDelegate = function (req, callback) {
@@ -71,7 +83,12 @@ app.use(cors(corsOptionsDelegate));
 app.options('*', cors(corsOptionsDelegate));
 
 // Body parser
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+    limit: '10mb',
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    },
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
@@ -94,6 +111,10 @@ app.use('/api/client', clientRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/discover', influencerDiscoveryRoutes);
 app.use('/api/collaborations', collaborationRoutes);
+app.use('/api/integrations/shopify', shopifyIntegrationRoutes);
+app.use('/api/integrations/woocommerce', woocommerceIntegrationRoutes);
+app.use(trackingSetupRoutes);
+app.use(pixelScriptRoutes);
 
 // 404
 app.use('*', (req, res) => {

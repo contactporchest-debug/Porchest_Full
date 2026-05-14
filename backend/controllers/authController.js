@@ -4,6 +4,12 @@ const sendEmail = require('../utils/sendEmail');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { PUBLIC_SIGNUP_ROLES, isAdminRole } = require('../utils/accessRoles');
 const { OAuth2Client } = require('google-auth-library');
+const {
+    getRemainingLockMs,
+    isLoginLocked,
+    registerFailedLoginAttempt,
+    resetLoginProtection,
+} = require('../utils/loginProtection');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const InfluencerProfile = require('../models/InfluencerProfile');
@@ -89,11 +95,14 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 // @desc    Register user (brand or influencer)
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
     try {
         const { email, password, termsAccepted, ...profileData } = req.body;
+        const normalizedEmail = normalizeEmail(email);
         const role = normalizeSignupRole(req.body.role);
 
         if (!PUBLIC_SIGNUP_ROLES.includes(role)) {
@@ -104,12 +113,12 @@ exports.register = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'You must accept the Terms & Conditions to register.' });
         }
 
-        const existing = await User.findOne({ email });
+        const existing = await User.findOne({ email: normalizedEmail });
         if (existing) {
             return res.status(400).json({ success: false, message: 'Email already registered' });
         }
 
-        const userData = { role, email, password, ...profileData };
+        const userData = { role, email: normalizedEmail, password, ...profileData };
         if (role === 'influencer' && termsAccepted) {
             userData.termsAccepted = true;
             userData.termsAcceptedAt = new Date();
@@ -165,13 +174,14 @@ exports.register = async (req, res, next) => {
 exports.verifyOTP = async (req, res, next) => {
     try {
         const { email, otp } = req.body;
+        const normalizedEmail = normalizeEmail(email);
 
-        if (!email || !otp) {
+        if (!normalizedEmail || !otp) {
             return res.status(400).json({ success: false, message: 'Email and OTP are required' });
         }
 
         const user = await User.findOne({
-            email,
+            email: normalizedEmail,
             otp,
             otpExpires: { $gt: Date.now() }
         });
@@ -254,8 +264,9 @@ exports.googleAuth = async (req, res, next) => {
         });
 
         const { email, name, picture } = ticket.getPayload();
+        const normalizedEmail = normalizeEmail(email);
 
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email: normalizedEmail });
 
         if (!user) {
             // New user Signup (only requires email for Google, no password needed)
@@ -270,7 +281,7 @@ exports.googleAuth = async (req, res, next) => {
             user = await User.create({
                 userCode,
                 role,
-                email,
+                email: normalizedEmail,
                 loginProvider: 'google',
                 isVerified: true,
                 status: 'active'
@@ -320,12 +331,13 @@ exports.googleAuth = async (req, res, next) => {
 exports.resendOTP = async (req, res, next) => {
     try {
         const { email } = req.body;
+        const normalizedEmail = normalizeEmail(email);
 
-        if (!email) {
+        if (!normalizedEmail) {
             return res.status(400).json({ success: false, message: 'Email is required' });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: normalizedEmail });
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -360,18 +372,38 @@ exports.resendOTP = async (req, res, next) => {
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        const normalizedEmail = normalizeEmail(email);
 
-        if (!email || !password) {
+        if (!normalizedEmail || !password) {
             return res.status(400).json({ success: false, message: 'Email and password are required' });
         }
 
-        const account = await User.findOne({ email });
+        const account = await User.findOne({ email: normalizedEmail });
         if (!account) {
             return res.status(401).json({ success: false, message: 'Wrong credentials' });
         }
 
+        if (isLoginLocked(account)) {
+            const remainingMs = getRemainingLockMs(account);
+            const remainingMinutes = Math.max(1, Math.ceil(remainingMs / 60000));
+            return res.status(429).json({
+                success: false,
+                message: `Too many failed login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`,
+            });
+        }
+
         const isMatch = await account.comparePassword(password);
         if (!isMatch) {
+            const lockResult = registerFailedLoginAttempt(account);
+            await account.save();
+
+            if (lockResult.locked) {
+                return res.status(429).json({
+                    success: false,
+                    message: 'Too many failed login attempts. Please try again in 15 minutes.',
+                });
+            }
+
             return res.status(401).json({ success: false, message: 'Wrong credentials' });
         }
 
@@ -382,6 +414,10 @@ exports.login = async (req, res, next) => {
         if (account.status === 'pending' && !account.isVerified) {
             return res.status(403).json({ success: false, message: 'Please verify your email before logging in.', needsVerification: true, email: account.email });
         }
+
+        resetLoginProtection(account);
+        account.lastLoginAt = Date.now();
+        await account.save();
 
         const token = generateToken(account);
         res.json({ success: true, token, user: account.toJSON() });

@@ -6,6 +6,7 @@ const CampaignRequest = require('../models/CampaignRequest');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { isAdminRole } = require('../utils/accessRoles');
+const { signAttributionToken } = require('../services/attributionTokenService');
 
 const router = express.Router();
 
@@ -26,34 +27,19 @@ router.get('/r', async (req, res) => {
     });
 
     try {
-        const destinationUrl = new URL(decodedDestination);
-        destinationUrl.searchParams.set('pcid', cid || '');
-        destinationUrl.searchParams.set('piid', iid || '');
+        let collab = null;
+        if (cid) {
+            collab = await CampaignRequest.findById(cid).select('brandId influencerId campaignStartDate campaignEndDate status gracePeriodDays').lean();
+        }
 
-        res.redirect(302, destinationUrl.toString());
-    } catch (error) {
-        res.redirect(302, decodedDestination);
-    }
+        const now = new Date();
+        const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+        const userAgent = req.headers['user-agent'] || '';
+        const sessionId = crypto.randomBytes(4).toString('hex');
+        let clickDoc = null;
 
-    setImmediate(async () => {
-        try {
-            if (!cid || !iid) return;
-
-            const collab = await CampaignRequest.findById(cid).select('brandId influencerId campaignStartDate campaignEndDate status gracePeriodDays').lean();
-            if (!collab) return;
-
-            const now = new Date();
-            if (collab.campaignStartDate && now < new Date(collab.campaignStartDate)) return;
-
-            const graceDays = Number(collab.gracePeriodDays || 3);
-            const campaignEnd = collab.campaignEndDate ? new Date(collab.campaignEndDate) : null;
-            if (campaignEnd && now > new Date(campaignEnd.getTime() + graceDays * 24 * 60 * 60 * 1000)) return;
-
-            const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-            const userAgent = req.headers['user-agent'] || '';
-            const sessionId = crypto.randomBytes(4).toString('hex');
+        if (collab && cid && iid) {
             const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-
             const recentClick = await ClickEvent.findOne({
                 collaborationId: cid,
                 ip,
@@ -63,7 +49,7 @@ router.get('/r', async (req, res) => {
 
             const isUnique = !recentClick;
 
-            await ClickEvent.create({
+            clickDoc = await ClickEvent.create({
                 collaborationId: cid,
                 influencerId: iid,
                 brandId: collab.brandId,
@@ -82,10 +68,36 @@ router.get('/r', async (req, res) => {
             if (isUnique) metricsUpdate.$inc['metrics.visits'] = 1;
 
             await CampaignRequest.findByIdAndUpdate(cid, metricsUpdate, { strict: false, new: true });
-        } catch (error) {
-            console.error('[TrackingRedirect] Error logging click:', error.message);
         }
-    });
+
+        try {
+            const destinationUrl = new URL(decodedDestination);
+            if (!['http:', 'https:'].includes(destinationUrl.protocol)) {
+                throw new Error('Unsupported destination protocol');
+            }
+            if (cid) destinationUrl.searchParams.set('pcid', cid);
+            if (iid) destinationUrl.searchParams.set('piid', iid);
+
+            if (collab && cid && iid) {
+                const token = signAttributionToken({
+                    brandId: collab.brandId,
+                    collaborationId: cid,
+                    influencerId: iid,
+                    clickId: clickDoc?._id || null,
+                    issuedAt: now,
+                });
+                destinationUrl.searchParams.set('pc_attrib', token);
+            }
+
+            return res.redirect(302, destinationUrl.toString());
+        } catch (error) {
+            console.warn('[TrackingRedirect] Invalid destination URL, falling back to safe redirect:', error.message);
+            return res.redirect(302, 'https://porchest.com');
+        }
+    } catch (error) {
+        console.error('[TrackingRedirect] Error logging click:', error.message);
+        return res.redirect(302, 'https://porchest.com');
+    }
 });
 
 router.get('/api/tracking/collaboration/:collaborationId/clicks', authMiddleware, async (req, res) => {

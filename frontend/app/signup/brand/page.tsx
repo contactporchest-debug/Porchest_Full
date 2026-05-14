@@ -17,6 +17,10 @@ const IS: React.CSSProperties = {
     outline: 'none', fontFamily: 'Inter, sans-serif', transition: 'border-color 0.15s',
 };
 
+const isStrongPassword = (value: string) => {
+    return value.length >= 8 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /[0-9]/.test(value);
+};
+
 export default function BrandSignupPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -29,7 +33,7 @@ export default function BrandSignupPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.email || !form.password) return toast.error('Please fill all required fields');
-        if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
+        if (!isStrongPassword(form.password)) return toast.error('Password must be at least 8 characters and include uppercase, lowercase, and a number');
         setLoading(true);
         try {
             await authAPI.register({ email: form.email, password: form.password, role: 'brand' });
@@ -85,7 +89,7 @@ export default function BrandSignupPage() {
                                     <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#7A5030', letterSpacing: '0.03em', marginBottom: '6px' }}>Password</label>
                                     <div style={{ position: 'relative' }}>
                                         <Lock size={15} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', pointerEvents: 'none' }} />
-                                        <input style={{ ...IS, paddingLeft: '40px', paddingRight: '40px' }} type={showPass ? 'text' : 'password'} placeholder="Minimum 6 characters" value={form.password} onChange={e => set('password', e.target.value)} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                                        <input style={{ ...IS, paddingLeft: '40px', paddingRight: '40px' }} type={showPass ? 'text' : 'password'} placeholder="8+ chars with upper, lower, number" value={form.password} onChange={e => set('password', e.target.value)} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                                         <button type="button" onClick={() => setShowPass(v => !v)} style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}>
                                             {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                                         </button>

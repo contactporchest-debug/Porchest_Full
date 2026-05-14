@@ -3,15 +3,14 @@ import axios from 'axios';
 /**
  * API base URL resolution:
  *
- *  - On Vercel (production/preview):
- *      NEXT_PUBLIC_API_URL should be set to "/api" in Vercel dashboard.
- *      This makes all requests go to the same domain, hitting our
- *      serverless function at api/index.js (no CORS issues).
+ *  - On Vercel with a separate backend domain:
+ *      NEXT_PUBLIC_API_URL should point to the backend API root,
+ *      for example "https://api.porchest.com/api".
  *
  *  - Locally:
  *      NEXT_PUBLIC_API_URL in frontend/.env.local → "http://localhost:5001/api"
  *
- *  Fallback: "/api" (works correctly on Vercel even without env var set).
+ *  Fallback: "/api" for same-origin development/proxy setups.
  */
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -167,4 +166,25 @@ export const softwareClientAPI = {
     getDashboard: () => api.get('/software-client/dashboard'),
     getProfile: () => api.get('/software-client/profile'),
     getProjects: () => api.get('/software-client/projects'),
+};
+
+export const trackingAPI = {
+    getStatus: () => api.get('/tracking/status'),
+    startSetup: (data: { platform?: string; method?: string }) => api.post('/tracking/setup/start', data),
+    testStatus: () => api.post('/tracking/test-status'),
+    getTestCampaign: () => api.get('/tracking/test-campaign'),
+    getActivity: () => api.get('/tracking/activity'),
+};
+
+export const shopifyAPI = {
+    getStatus: () => api.get('/integrations/shopify/status'),
+    disconnect: () => api.post('/integrations/shopify/disconnect'),
+    getInstallUrl: (shopDomain: string) => `${API_URL}/integrations/shopify/install?shop=${encodeURIComponent(shopDomain)}`,
+    startShopifyInstall: (shopDomain: string) => `${API_URL}/integrations/shopify/install?shop=${encodeURIComponent(shopDomain)}`,
+};
+
+export const woocommerceAPI = {
+    connect: (data: { storeUrl: string; consumerKey: string; consumerSecret: string }) => api.post('/integrations/woocommerce/connect', data),
+    getStatus: () => api.get('/integrations/woocommerce/status'),
+    disconnect: () => api.post('/integrations/woocommerce/disconnect'),
 };

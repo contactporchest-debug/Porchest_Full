@@ -37,6 +37,9 @@ const userSchema = new mongoose.Schema(
         instagramConnected: { type: Boolean, default: false },
         lastLoginAt: { type: Date },
         tokenVersion: { type: Number, default: 0 },
+        failedLoginAttempts: { type: Number, default: 0 },
+        firstFailedLoginAt: { type: Date },
+        lockUntil: { type: Date },
         
         // Linkage fields for the profile-centric architecture
         influencerProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'InfluencerProfile' },
@@ -68,6 +71,9 @@ userSchema.methods.toJSON = function () {
     delete obj.password;
     delete obj.otp;
     delete obj.otpExpires;
+    delete obj.failedLoginAttempts;
+    delete obj.firstFailedLoginAt;
+    delete obj.lockUntil;
     return obj;
 };
 

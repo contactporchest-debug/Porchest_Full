@@ -40,18 +40,23 @@ npm run dev            # Starts on http://localhost:3000
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your_secret
 PORT=5000
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=https://www.porchest.com
+PORCHEST_PUBLIC_SITE_URL=https://www.porchest.com
+PORCHEST_PUBLIC_API_URL=https://api.porchest.com
+SHOPIFY_APP_URL=https://api.porchest.com
 ```
 
 **.env.local** (frontend):
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://api.porchest.com/api
+NEXT_PUBLIC_SOCKET_URL=https://api.porchest.com
+NEXT_PUBLIC_APP_URL=https://www.porchest.com
 ```
 
 ## Deployment
-- **Frontend**: Vercel (`vercel deploy`)
-- **Backend**: Vercel serverless via `api/index.js` or a separate host like Render/Railway if you want a long-running Socket.IO server
+- **Frontend**: Vercel project for `www.porchest.com`
+- **Backend**: Vercel project for `api.porchest.com`
+- **Note**: Socket.IO requires a long-running backend host. If the backend is deployed as Vercel serverless, live socket updates will need a different runtime or a separate realtime service.
 
 ## Features
 - ✅ 3 role portals: Admin, Brand, Influencer

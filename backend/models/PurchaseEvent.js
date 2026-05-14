@@ -16,6 +16,7 @@ const purchaseEventSchema = new mongoose.Schema(
     { timestamps: true, collection: 'purchase_events' }
 );
 
-purchaseEventSchema.index({ orderId: 1, brandId: 1 }, { unique: true });
+purchaseEventSchema.index({ orderId: 1, source: 1, collaborationId: 1 }, { unique: true });
+purchaseEventSchema.index({ brandId: 1, timestamp: -1 });
 
 module.exports = mongoose.model('PurchaseEvent', purchaseEventSchema);
