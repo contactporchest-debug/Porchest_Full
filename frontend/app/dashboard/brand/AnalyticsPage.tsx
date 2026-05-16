@@ -760,7 +760,7 @@ export default function BrandAnalyticsPage() {
                             influencers.map((item) => {
                                 const itemId = item.influencerId || item.influencerProfileId || item._id || '';
                                 const active = itemId === selectedId;
-                                const avatar = item.profilePictureUrl || null;
+                                const avatar = item.profilePictureUrl || (item as any).profileImageURL || (item as any).instagramDPURL || (item as any).profilePictureURL || (item as any).igProfileUrl || null;
                                 const fallback = (item.fullName || 'IN').trim().slice(0, 2).toUpperCase();
                                 return (
                                     <button
@@ -779,7 +779,7 @@ export default function BrandAnalyticsPage() {
                                         onMouseEnter={(event) => { if (!active) event.currentTarget.style.background = '#fff'; }}
                                         onMouseLeave={(event) => { if (!active) event.currentTarget.style.background = 'rgba(255,255,255,0.6)'; }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                                             <div
                                                 style={{
                                                     width: 52,
@@ -807,17 +807,17 @@ export default function BrandAnalyticsPage() {
                                             </div>
 
                                             <div style={{ minWidth: 0, flex: 1 }}>
-                                                <p style={{ fontSize: 14, fontWeight: 800, color: COLORS.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <p style={{ fontSize: 14, fontWeight: 800, color: COLORS.ink, margin: 0, lineHeight: 1.2, wordBreak: 'break-word' }}>
                                                     {item.fullName || 'Influencer'}
                                                 </p>
-                                                <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 4, lineHeight: 1.2, wordBreak: 'break-word' }}>
                                                     {item.username ? `@${item.username}` : 'No username'}
                                                 </p>
-                                                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 11, fontWeight: 700 }}>
+                                                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap', minWidth: 0 }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 11, fontWeight: 700, maxWidth: '100%' }}>
                                                         {item.niche || 'General'}
                                                     </span>
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.muted, fontSize: 11, fontWeight: 700 }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.muted, fontSize: 11, fontWeight: 700, maxWidth: '100%' }}>
                                                         {item.country || 'Global'}
                                                     </span>
                                                 </div>
