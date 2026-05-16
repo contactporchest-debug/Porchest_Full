@@ -573,10 +573,6 @@ export default function BrandAnalyticsPage() {
                             <RefreshCw size={14} />
                             Refresh 60d Data
                         </GlowButton>
-                        <GlowButton onClick={() => setRequestOpen(true)} disabled={!requestTarget}>
-                            <Send size={14} />
-                            Send Request
-                        </GlowButton>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.18)', color: COLORS.orange, fontSize: 13, fontWeight: 800 }}>
                             <Star size={14} />
                             Last 60 Days Only
@@ -704,7 +700,13 @@ export default function BrandAnalyticsPage() {
                                         </div>
                                         <div>
                                             <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Selected Influencer</p>
-                                            <h2 style={{ marginTop: 8, fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>{influencer.name}</h2>
+                                            <div style={{ marginTop: 8, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <h2 style={{ margin: 0, fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>{influencer.name}</h2>
+                                                <GlowButton onClick={() => setRequestOpen(true)} disabled={!requestTarget}>
+                                                    <Send size={14} />
+                                                    Send Request
+                                                </GlowButton>
+                                            </div>
                                             <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
                                                 A clean 60-day snapshot with engagement, content, follower growth, authenticity, and audience demographics.
                                             </p>
