@@ -618,14 +618,14 @@ export default function BrandAnalyticsPage() {
         { name: 'Saves', value: 0 },
     ].filter((item) => item.value > 0);
 
-    const engagementTrendNegative = Boolean(
-        data?.trends?.engagement_rate_over_time?.length >= 2 &&
-        data.trends.engagement_rate_over_time[0].engagementRate > data.trends.engagement_rate_over_time[data.trends.engagement_rate_over_time.length - 1].engagementRate
-    );
-    const followerTrendNegative = Boolean(
-        data?.trends?.follower_count_over_time?.length >= 2 &&
-        data.trends.follower_count_over_time[0].followers > data.trends.follower_count_over_time[data.trends.follower_count_over_time.length - 1].followers
-    );
+    const engagementTrendSeries = data?.trends?.engagement_rate_over_time || [];
+    const followerTrendSeries = data?.trends?.follower_count_over_time || [];
+    const engagementTrendNegative = engagementTrendSeries.length >= 2
+        ? engagementTrendSeries[0].engagementRate > engagementTrendSeries[engagementTrendSeries.length - 1].engagementRate
+        : false;
+    const followerTrendNegative = followerTrendSeries.length >= 2
+        ? followerTrendSeries[0].followers > followerTrendSeries[followerTrendSeries.length - 1].followers
+        : false;
 
     const roi = data?.roi || {
         predicted_roi: summary?.predicted_roi ?? null,
