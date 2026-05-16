@@ -760,13 +760,15 @@ export default function BrandAnalyticsPage() {
                             influencers.map((item) => {
                                 const itemId = item.influencerId || item.influencerProfileId || item._id || '';
                                 const active = itemId === selectedId;
+                                const avatar = item.profilePictureUrl || null;
+                                const fallback = (item.fullName || 'IN').trim().slice(0, 2).toUpperCase();
                                 return (
                                     <button
                                         key={itemId || item.userId}
                                         onClick={() => itemId && setSelectedId(itemId)}
                                         style={{
                                             textAlign: 'left',
-                                            padding: '16px',
+                                            padding: '14px',
                                             borderRadius: 16,
                                             border: active ? '1px solid #C2340A' : '1px solid #EDD9BC',
                                             background: active ? 'rgba(194,52,10,0.05)' : 'rgba(255,255,255,0.6)',
@@ -777,25 +779,49 @@ export default function BrandAnalyticsPage() {
                                         onMouseEnter={(event) => { if (!active) event.currentTarget.style.background = '#fff'; }}
                                         onMouseLeave={(event) => { if (!active) event.currentTarget.style.background = 'rgba(255,255,255,0.6)'; }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                                            <div style={{ minWidth: 0 }}>
-                                                <p style={{ fontSize: 14, fontWeight: 700, color: COLORS.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            <div
+                                                style={{
+                                                    width: 52,
+                                                    height: 52,
+                                                    borderRadius: 16,
+                                                    overflow: 'hidden',
+                                                    background: 'rgba(255,255,255,0.72)',
+                                                    border: `1px solid ${COLORS.border}`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: COLORS.orange,
+                                                    fontSize: 16,
+                                                    fontWeight: 800,
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {avatar ? (
+                                                    <img
+                                                        src={avatar}
+                                                        alt={item.fullName || item.username || 'Influencer'}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                ) : fallback}
+                                            </div>
+
+                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                <p style={{ fontSize: 14, fontWeight: 800, color: COLORS.ink, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {item.fullName || 'Influencer'}
                                                 </p>
                                                 <p style={{ fontSize: 12, color: COLORS.muted, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {item.username ? `@${item.username}` : 'No username'} {item.niche ? `• ${item.niche}` : ''}
+                                                    {item.username ? `@${item.username}` : 'No username'}
                                                 </p>
+                                                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 11, fontWeight: 700 }}>
+                                                        {item.niche || 'General'}
+                                                    </span>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, color: COLORS.muted, fontSize: 11, fontWeight: 700 }}>
+                                                        {item.country || 'Global'}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                <p style={{ fontWeight: 800, fontSize: 20, color: COLORS.ink, margin: 0 }}>{formatNumber(item.metrics?.finalScore)}</p>
-                                                <p style={{ fontSize: 10, color: toneForRatingTier(item.metrics?.ratingTier), fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', margin: '4px 0 0' }}>
-                                                    {item.metrics?.ratingTier || '—'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 12, color: COLORS.muted, fontWeight: 500, gap: 10 }}>
-                                            <span>{formatNumber(item.followers)} followers</span>
-                                            <span>{item.country || 'Global'}</span>
                                         </div>
                                     </button>
                                 );
