@@ -348,9 +348,31 @@ export default function AIMatchingComponent() {
 
                                             <div style={{ marginBottom: '16px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.55)', border: '1px solid #EDD9BC' }}>
                                                 <p style={{ margin: 0, fontSize: '10px', color: '#7A5030', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Why this match</p>
-                                                <p style={{ marginTop: '6px', fontSize: '13px', color: '#1A0A00', lineHeight: 1.6 }}>
-                                                    {buildWhyMatchSummary(inf)}
-                                                </p>
+                                                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {buildWhyMatchSummary(inf)
+                                                        .split(' • ')
+                                                        .filter(Boolean)
+                                                        .map((reason) => (
+                                                            <span
+                                                                key={reason}
+                                                                style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '6px',
+                                                                    padding: '6px 10px',
+                                                                    borderRadius: '999px',
+                                                                    border: '1px solid rgba(194,52,10,0.16)',
+                                                                    background: 'rgba(194,52,10,0.08)',
+                                                                    color: '#C2340A',
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 700,
+                                                                    lineHeight: 1.2,
+                                                                }}
+                                                            >
+                                                                {reason}
+                                                            </span>
+                                                        ))}
+                                                </div>
                                             </div>
 
                                             <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
