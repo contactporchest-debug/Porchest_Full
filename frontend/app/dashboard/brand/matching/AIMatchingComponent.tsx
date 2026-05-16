@@ -151,7 +151,7 @@ export default function AIMatchingComponent() {
         const countryMatch = brandCountries.filter((country) =>
             country && (
                 influencerCountry.toLowerCase().includes(country.toLowerCase()) ||
-                audienceCountries.some((audienceCountry) => audienceCountry.toLowerCase().includes(country.toLowerCase()))
+                audienceCountries.some((audienceCountry: string) => audienceCountry.toLowerCase().includes(country.toLowerCase()))
             )
         );
         if (countryMatch.length) {
