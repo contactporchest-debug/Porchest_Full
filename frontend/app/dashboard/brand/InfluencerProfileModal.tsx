@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Instagram, ExternalLink, TrendingUp, BarChart3, Heart, MessageCircle, DollarSign, Film, Star, Calendar, PieChart as PieChartIcon, Users, Play, Zap, Shield, Target, TrendingDown, Award } from 'lucide-react';
@@ -326,6 +327,28 @@ export default function InfluencerProfileModal({ influencer, onClose, onRequestC
                                     >
                                         <ExternalLink size={14} /> View Full Profile
                                     </a>
+                                )}
+                                {profileUserId && (
+                                    <Link
+                                        href={`/dashboard/brand/influencers/${profileUserId}/analytics`}
+                                        style={{
+                                            padding: '12px 20px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(194,52,10,0.08)',
+                                            border: '1px solid rgba(194,52,10,0.18)',
+                                            color: '#C2340A',
+                                            fontSize: '13px',
+                                            fontWeight: 500,
+                                            textDecoration: 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px',
+                                            transition: 'all 150ms ease',
+                                        }}
+                                    >
+                                        <BarChart3 size={14} /> 60d Analytics
+                                    </Link>
                                 )}
                                 <button onClick={onRequestCollaboration} style={{ flex: 1, padding: '12px 20px', borderRadius: '8px', background: '#C2340A', border: 'none', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 150ms ease', fontFamily: 'inherit' }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#E8400A'; }} onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.background = '#C2340A'; }}>
                                     <Send size={14} /> Send Request

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -596,6 +597,16 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                                 {profile?.age ? <span>Age {profile.age}</span> : null}
                             </div>
                             <p style={{ maxWidth: 720, fontSize: 14, lineHeight: 1.6, color: COLORS.ink }}>{bio}</p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
+                                <Link href={`/dashboard/brand/influencers/${profile.userId}/analytics`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, background: 'rgba(194,52,10,0.1)', color: '#C2340A', textDecoration: 'none', fontWeight: 700, fontSize: 13, border: '1px solid rgba(194,52,10,0.2)' }}>
+                                    <BarChart3 size={14} /> View 60d Analytics
+                                </Link>
+                                {handle && (
+                                    <a href={`https://instagram.com/${handle}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', color: COLORS.ink, textDecoration: 'none', fontWeight: 700, fontSize: 13, border: `1px solid ${COLORS.border}` }}>
+                                        <Instagram size={14} /> Open Instagram
+                                    </a>
+                                )}
+                            </div>
                         </div>
                     </div>
 

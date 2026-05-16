@@ -104,6 +104,7 @@ export const brandAPI = {
     getCollaborationAnalytics: (id: string) => api.get(`/collaborations/${id}/analytics`),
     downloadCollaborationPdf: (id: string) => api.get(`/collaborations/${id}/pdf`, { responseType: 'blob' }),
     getCampaignTrackingLink: (id: string) => api.get(`/campaigns/${id}/tracking-link`),
+    getInfluencer60DayAnalytics: (id: string) => api.get(`/influencers/${id}/analytics`, { params: { period: 60 } }),
     updateCollaborationRequirements: (id: string, data: Record<string, unknown>) => api.patch(`/collaborations/${id}/requirements`, data),
     verifyCollaborationContent: (id: string) => api.patch(`/collaborations/${id}/verify-content`),
     stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
