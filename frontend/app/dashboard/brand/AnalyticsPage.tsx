@@ -42,7 +42,9 @@ import { GlassCard, GlowButton } from '@/components/ui';
 import { brandAPI } from '@/lib/api';
 
 type InfluencerListItem = {
+    _id?: string;
     influencerId: string;
+    influencerProfileId?: string;
     userId: string;
     fullName?: string;
     username?: string | null;
@@ -281,7 +283,7 @@ export default function BrandAnalyticsPage() {
     const [search, setSearch] = useState('');
     const [data, setData] = useState<BrandInfluencerAnalytics | null>(null);
     const [loadingList, setLoadingList] = useState(true);
-    const [loadingDetail, setLoadingDetail] = useState(true);
+    const [loadingDetail, setLoadingDetail] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState<'all' | 'photos' | 'reels' | 'videos'>('all');
@@ -291,11 +293,12 @@ export default function BrandAnalyticsPage() {
         try {
             const response = await withTimeout(brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
             const nextInfluencers = response.data?.influencers || [];
+            const resolveId = (item: InfluencerListItem) => item.influencerId || item.influencerProfileId || item._id || '';
             setInfluencers(nextInfluencers);
             setSelectedId((current) => {
-                if (targetInfluencerId && nextInfluencers.some((item: InfluencerListItem) => item.influencerId === targetInfluencerId)) return targetInfluencerId;
-                if (current && nextInfluencers.some((item: InfluencerListItem) => item.influencerId === current)) return current;
-                return nextInfluencers[0]?.influencerId || '';
+                if (targetInfluencerId && nextInfluencers.some((item: InfluencerListItem) => resolveId(item) === targetInfluencerId)) return targetInfluencerId;
+                if (current && nextInfluencers.some((item: InfluencerListItem) => resolveId(item) === current)) return current;
+                return resolveId(nextInfluencers[0] || ({} as InfluencerListItem));
             });
         } catch (err: any) {
             setError(err?.response?.data?.message || err?.message || 'Failed to load influencers.');
@@ -332,7 +335,7 @@ export default function BrandAnalyticsPage() {
     }, [selectedId, loadDetail]);
 
     const selectedInfluencer = useMemo(
-        () => influencers.find((item) => item.influencerId === selectedId) || null,
+        () => influencers.find((item) => (item.influencerId || item.influencerProfileId || item._id) === selectedId) || null,
         [influencers, selectedId]
     );
 
@@ -464,7 +467,7 @@ export default function BrandAnalyticsPage() {
 
     const handleSearch = () => void loadInfluencers(search);
 
-    if (loadingList || (loadingDetail && !data)) {
+    if (loadingList || (loadingDetail && selectedId && !data)) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <GlassCard padding="28px">
@@ -596,11 +599,12 @@ export default function BrandAnalyticsPage() {
                             <EmptyState title="No influencers found" copy="Profiles will appear here once influencer data is available in the platform." />
                         ) : (
                             influencers.map((item) => {
-                                const active = item.influencerId === selectedId;
+                                const itemId = item.influencerId || item.influencerProfileId || item._id || '';
+                                const active = itemId === selectedId;
                                 return (
                                     <button
-                                        key={item.influencerId}
-                                        onClick={() => setSelectedId(item.influencerId)}
+                                        key={itemId || item.userId}
+                                        onClick={() => itemId && setSelectedId(itemId)}
                                         style={{
                                             textAlign: 'left',
                                             padding: '16px',
