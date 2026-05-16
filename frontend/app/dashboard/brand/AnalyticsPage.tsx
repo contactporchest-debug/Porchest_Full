@@ -1,11 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
-    ArrowLeft,
     BadgeDollarSign,
     BarChart3,
     CheckCircle2,
@@ -18,7 +16,6 @@ import {
     CircleAlert,
     Send,
     Sparkles,
-    Star,
     TrendingUp,
     Users,
 } from 'lucide-react';
@@ -712,52 +709,6 @@ export default function BrandAnalyticsPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <GlassCard padding="28px">
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                    <div style={{ maxWidth: 820 }}>
-                        <Link href="/dashboard/brand" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: COLORS.orange, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
-                            <ArrowLeft size={14} />
-                            Back to dashboard
-                        </Link>
-                        <p style={{ marginTop: 10, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencers</p>
-                        <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>Influencer Analytics</h1>
-                        <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
-                            Brand evaluation is now focused on the last {selectedPeriod} days. Pick an influencer to review the same report used throughout the portal.
-                        </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail} disabled={!selectedId}>
-                            <RefreshCw size={14} />
-                            Refresh {selectedPeriod}d Data
-                        </GlowButton>
-                        <div style={{ display: 'inline-flex', gap: 8, padding: 6, borderRadius: 999, border: `1px solid ${COLORS.border}`, background: 'rgba(255,255,255,0.6)' }}>
-                            {([10, 30, 60] as AnalyticsPeriod[]).map((period) => {
-                                const active = selectedPeriod === period;
-                                return (
-                                    <button
-                                        key={period}
-                                        type="button"
-                                        onClick={() => setSelectedPeriod(period)}
-                                        style={{
-                                            border: 'none',
-                                            background: active ? 'rgba(194,52,10,0.14)' : 'transparent',
-                                            color: active ? COLORS.orange : COLORS.muted,
-                                            borderRadius: 999,
-                                            padding: '8px 12px',
-                                            fontSize: 12,
-                                            fontWeight: 800,
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        {period} Days
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            </GlassCard>
-
             <div style={{ display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
                 <GlassCard padding="24px">
                     <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencer Selector</p>
@@ -923,15 +874,35 @@ export default function BrandAnalyticsPage() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                        <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail}>
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end' }}>
+                                        <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail} disabled={!selectedId}>
                                             <RefreshCw size={14} />
                                             Refresh {selectedPeriod}d
                                         </GlowButton>
-                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.18)', color: COLORS.orange, fontSize: 13, fontWeight: 800 }}>
-                                            <Star size={14} />
-                                            Last {selectedPeriod} Days
-                                        </span>
+                                        <div style={{ display: 'inline-flex', gap: 8, padding: 6, borderRadius: 999, border: `1px solid ${COLORS.border}`, background: 'rgba(255,255,255,0.6)' }}>
+                                            {([10, 30, 60] as AnalyticsPeriod[]).map((period) => {
+                                                const active = selectedPeriod === period;
+                                                return (
+                                                    <button
+                                                        key={period}
+                                                        type="button"
+                                                        onClick={() => setSelectedPeriod(period)}
+                                                        style={{
+                                                            border: 'none',
+                                                            background: active ? 'rgba(194,52,10,0.14)' : 'transparent',
+                                                            color: active ? COLORS.orange : COLORS.muted,
+                                                            borderRadius: 999,
+                                                            padding: '8px 12px',
+                                                            fontSize: 12,
+                                                            fontWeight: 800,
+                                                            cursor: 'pointer',
+                                                        }}
+                                                    >
+                                                        {period} Days
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             </GlassCard>
