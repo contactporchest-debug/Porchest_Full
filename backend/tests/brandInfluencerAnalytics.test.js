@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const MediaRaw = require('../models/MediaRaw');
 const InsightsRaw = require('../models/InsightsRaw');
-const { getInfluencer60DayAnalytics } = require('../services/brandInfluencerAnalyticsService');
+const { getInfluencerAnalytics } = require('../services/brandInfluencerAnalyticsService');
 
 const originalFindOne = InfluencerProfile.findOne;
 const originalMediaFind = MediaRaw.find;
@@ -16,16 +16,16 @@ function restoreModels() {
     InsightsRaw.find = originalInsightsFind;
 }
 
-test('getInfluencer60DayAnalytics enforces the 60 day window', async () => {
+test('getInfluencerAnalytics rejects unsupported periods', async () => {
     await assert.rejects(
-        () => getInfluencer60DayAnalytics({ id: 'abc123', period: 30 }),
-        (error) => error.statusCode === 400 && /60 days/i.test(error.message)
+        () => getInfluencerAnalytics({ id: 'abc123', period: 20 }),
+        (error) => error.statusCode === 400 && /10, 30, or 60 days/i.test(error.message)
     );
 });
 
-test('getInfluencer60DayAnalytics returns a 60 day summary from profile data', async (t) => {
+test('getInfluencerAnalytics returns a period summary from profile data', async (t) => {
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const twentyDaysAgo = new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000);
     const fiftyDaysAgo = new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000);
 
     InfluencerProfile.findOne = () => ({
@@ -39,7 +39,7 @@ test('getInfluencer60DayAnalytics returns a 60 day summary from profile data', a
             engagementRate: 4.6,
             historicalSnapshots: [
                 { capturedAt: fiftyDaysAgo.toISOString(), followersCount: 10000, engagementRate: 4.1 },
-                { capturedAt: thirtyDaysAgo.toISOString(), followersCount: 12000, engagementRate: 4.8 },
+                { capturedAt: twentyDaysAgo.toISOString(), followersCount: 12000, engagementRate: 4.8 },
             ],
             demographics: {
                 genderDistribution: { Female: 58, Male: 40, Other: 2 },
@@ -49,7 +49,7 @@ test('getInfluencer60DayAnalytics returns a 60 day summary from profile data', a
             recentMediaSummary: [
                 {
                     mediaId: 'post-1',
-                    timestamp: thirtyDaysAgo.toISOString(),
+                    timestamp: twentyDaysAgo.toISOString(),
                     mediaType: 'REEL',
                     likeCount: 600,
                     commentsCount: 42,
@@ -75,9 +75,9 @@ test('getInfluencer60DayAnalytics returns a 60 day summary from profile data', a
 
     t.after(restoreModels);
 
-    const result = await getInfluencer60DayAnalytics({ id: 'brand-test-user', period: 60 });
+    const result = await getInfluencerAnalytics({ id: 'brand-test-user', period: 30 });
 
-    assert.equal(result.period_days, 60);
+    assert.equal(result.period_days, 30);
     assert.equal(result.influencer.name, 'Test Creator');
     assert.equal(result.summary.total_posts, 1);
     assert.equal(result.summary.average_likes, 600);

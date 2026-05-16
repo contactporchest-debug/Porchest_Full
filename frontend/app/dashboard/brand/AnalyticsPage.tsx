@@ -15,6 +15,7 @@ import {
     Radar,
     RefreshCw,
     Search,
+    CircleAlert,
     Send,
     Sparkles,
     Star,
@@ -138,6 +139,8 @@ type BrandInfluencerAnalytics = {
     posts: AnalyticsPost[];
 };
 
+type AnalyticsPeriod = 10 | 30 | 60;
+
 const COLORS = {
     ink: '#1A0A00',
     muted: '#7A5030',
@@ -210,28 +213,159 @@ function toneForRatingTier(tier?: string) {
     return COLORS.red;
 }
 
-function MetricCard({ label, value, tone, note }: { label: string; value: string; tone: string; note?: string }) {
+function HelpBubble({ text }: { text: string }) {
+    const [open, setOpen] = useState(false);
+
     return (
-        <GlassCard padding="18px" noHover>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</p>
+        <div style={{ position: 'relative', flexShrink: 0 }} onMouseLeave={() => setOpen(false)}>
+            <button
+                type="button"
+                onClick={() => setOpen((current) => !current)}
+                title={text}
+                aria-label={text}
+                style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    border: '1px solid rgba(122,80,48,0.20)',
+                    background: 'rgba(255,255,255,0.75)',
+                    color: COLORS.muted,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                }}
+            >
+                !
+            </button>
+            {open ? (
+                <div
+                    style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 'calc(100% + 8px)',
+                        zIndex: 20,
+                        width: 240,
+                        borderRadius: 12,
+                        border: `1px solid ${COLORS.border}`,
+                        background: 'rgba(255,255,255,0.96)',
+                        boxShadow: '0 18px 36px rgba(26,10,0,0.12)',
+                        padding: 12,
+                        color: COLORS.muted,
+                        fontSize: 12,
+                        lineHeight: 1.6,
+                    }}
+                >
+                    {text}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+function MetricCard({
+    label,
+    value,
+    tone,
+    note,
+    helpText,
+    accent,
+}: {
+    label: string;
+    value: string;
+    tone: string;
+    note?: string;
+    helpText?: string;
+    accent?: string;
+}) {
+    return (
+        <GlassCard
+            padding="18px"
+            noHover
+            style={{
+                borderColor: accent || undefined,
+                boxShadow: accent ? `0 0 0 1px ${accent} inset, 0 2px 16px rgba(26,10,0,0.06)` : undefined,
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</p>
+                {helpText ? <HelpBubble text={helpText} /> : null}
+            </div>
             <p style={{ marginTop: 10, fontSize: 26, fontWeight: 800, color: tone, letterSpacing: '-0.03em' }}>{value}</p>
             {note ? <p style={{ marginTop: 8, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>{note}</p> : null}
         </GlassCard>
     );
 }
 
-function ChartShell({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function ChartShell({ title, subtitle, icon, helpText, accent, children }: { title: string; subtitle?: string; icon?: React.ReactNode; helpText?: string; accent?: string; children: React.ReactNode }) {
     return (
-        <GlassCard padding="24px">
+        <GlassCard
+            padding="24px"
+            style={{
+                borderColor: accent || undefined,
+                boxShadow: accent ? `0 0 0 1px ${accent} inset, 0 2px 16px rgba(26,10,0,0.06)` : undefined,
+            }}
+        >
             <div style={{ marginBottom: 18, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                 <div>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</p>
+                        {helpText ? <HelpBubble text={helpText} /> : null}
+                    </div>
                     {subtitle ? <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>{subtitle}</p> : null}
                 </div>
                 {icon ? <div style={{ color: COLORS.muted, flexShrink: 0 }}>{icon}</div> : null}
             </div>
             {children}
         </GlassCard>
+    );
+}
+
+const RADAR_HELP: Record<string, string> = {
+    Engagement: 'How much the audience interacts with the influencer’s posts.',
+    'View Rate': 'How many views the posts get relative to the follower base.',
+    Authenticity: 'How healthy the engagement looks compared with the follower size.',
+    Growth: 'How the audience base is changing across the selected period.',
+    'Cost Efficiency': 'How efficiently the influencer appears to turn budget into views.',
+    Consistency: 'How regularly the influencer has posted in the selected period.',
+};
+
+function RadarTick({ payload, x, y, textAnchor }: any) {
+    const label = payload?.value || '';
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text textAnchor={textAnchor} fill={COLORS.muted} fontSize={12} fontWeight={700}>
+                <title>{RADAR_HELP[label] || label}</title>
+                {label}
+            </text>
+        </g>
+    );
+}
+
+function ChartTooltip({ active, payload, label, description }: any) {
+    if (!active || !payload?.length) return null;
+    const entry = payload[0];
+    const value = entry?.value ?? entry?.payload?.value ?? entry?.payload?.engagementRate ?? entry?.payload?.followers ?? entry?.payload?.postsCount ?? entry?.payload?.percent ?? 0;
+    const name = entry?.name || entry?.dataKey || label || entry?.payload?.metric || entry?.payload?.name || 'Metric';
+
+    return (
+        <div
+            style={{
+                background: 'rgba(255,255,255,0.98)',
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 12,
+                padding: '10px 12px',
+                boxShadow: '0 12px 28px rgba(26,10,0,0.12)',
+                color: COLORS.ink,
+                maxWidth: 240,
+            }}
+        >
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 800 }}>{label || name}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: COLORS.orange, fontWeight: 800 }}>{String(value)}</p>
+            {description ? <p style={{ margin: '6px 0 0', fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>{description}</p> : null}
+        </div>
     );
 }
 
@@ -297,6 +431,7 @@ export default function BrandAnalyticsPage() {
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
+    const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>(60);
     const [filter, setFilter] = useState<'all' | 'photos' | 'reels' | 'videos'>('all');
     const [avatarError, setAvatarError] = useState(false);
     const [requestOpen, setRequestOpen] = useState(false);
@@ -322,12 +457,12 @@ export default function BrandAnalyticsPage() {
         }
     }, [targetInfluencerId]);
 
-    const loadDetail = useCallback(async (id: string, silent = false) => {
+    const loadDetail = useCallback(async (id: string, period: AnalyticsPeriod, silent = false) => {
         if (!id) return;
         if (!silent) setLoadingDetail(true);
         else setRefreshing(true);
         try {
-            const response = await withTimeout(brandAPI.getInfluencer60DayAnalytics(id));
+            const response = await withTimeout(brandAPI.getInfluencerAnalytics(id, period));
             setData(response.data || null);
             setError('');
         } catch (err: any) {
@@ -344,8 +479,8 @@ export default function BrandAnalyticsPage() {
     }, [loadInfluencers]);
 
     useEffect(() => {
-        if (selectedId) void loadDetail(selectedId);
-    }, [selectedId, loadDetail]);
+        if (selectedId) void loadDetail(selectedId, selectedPeriod);
+    }, [selectedId, selectedPeriod, loadDetail]);
 
     const selectedInfluencer = useMemo(
         () => influencers.find((item) => (item.influencerId || item.influencerProfileId || item._id) === selectedId) || null,
@@ -397,60 +532,73 @@ export default function BrandAnalyticsPage() {
         consistency_score: 0,
     };
 
+    const authenticityLow = (summary?.authenticity_score ?? 0) < 50;
+    const costPerEngagementHigh = summary?.cost_per_engagement != null && summary.cost_per_engagement >= 0.12;
+
     const summaryCards = summary ? [
         {
             label: 'Final Score',
             value: formatNumber(summary.final_score ?? data?.roi?.final_score),
             tone: toneForRatingTier(summary.rating_tier || data?.roi?.rating_tier),
-            note: 'Overall evaluation across engagement, growth, authenticity, consistency, and cost efficiency.',
+            note: `Overall evaluation across engagement, growth, authenticity, consistency, and cost efficiency in the last ${selectedPeriod} days.`,
+            helpText: 'This is the blended score used to compare creators quickly. Higher means stronger overall performance.',
         },
         {
             label: 'Rating Tier',
             value: summary.rating_tier || data?.roi?.rating_tier || 'Needs Review',
             tone: toneForRatingTier(summary.rating_tier || data?.roi?.rating_tier),
-            note: 'A quick brand-friendly signal of how strong the influencer looks right now.',
+            note: 'A simple label that translates the score into a quick brand decision signal.',
+            helpText: 'Elite is strongest, Good is healthy, Average is mixed, and Needs Review means the profile needs closer inspection.',
         },
         {
-            label: 'Avg Engagement Rate (60d)',
+            label: `Avg Engagement Rate (${selectedPeriod}d)`,
             value: formatPercent(summary.average_engagement_rate, 2),
             tone: toneForMetric(summary.average_engagement_rate || 0, 'engagement'),
-            note: 'Average engagement across posts in the last 60 days.',
+            note: `Average engagement across posts in the last ${selectedPeriod} days.`,
+            helpText: 'Shows how much of the audience usually interacts with each post.',
         },
         {
             label: 'Average Views',
             value: formatCompact(summary.average_views),
             tone: COLORS.ink,
-            note: 'Average views across the last 60 days of tracked posts.',
+            note: `Average views across the last ${selectedPeriod} days of tracked posts.`,
+            helpText: 'This is the average view count per post in the selected period.',
         },
         {
             label: 'Posts Analyzed',
             value: formatNumber(summary.total_posts),
             tone: COLORS.ink,
-            note: 'Number of posts included in the 60-day analytics window.',
+            note: `Number of posts included in the ${selectedPeriod}-day analytics window.`,
+            helpText: 'This is the sample size behind the report. More posts usually means more reliable averages.',
         },
         {
             label: 'View Rate',
             value: formatPercent(summary.view_rate, 2),
             tone: '#0284c7',
             note: 'Average views as a share of the current follower base.',
+            helpText: 'A simple way to see how much of the follower base actually sees the content.',
         },
         {
             label: 'Growth Rate',
             value: formatPercent(summary.follower_growth_rate, 1),
             tone: toneForMetric(summary.follower_growth_rate || 0, 'growth'),
-            note: 'Follower change measured across the last 60 days.',
+            note: `Follower change measured across the last ${selectedPeriod} days.`,
+            helpText: 'Positive numbers mean the audience grew. Negative numbers mean the audience shrank.',
         },
         {
             label: 'Cost / View',
             value: formatCurrency(summary.cost_per_view),
             tone: COLORS.amber,
             note: 'Estimated cost efficiency based on stored pricing and performance data.',
+            helpText: 'How much the expected campaign budget would pay for one view.',
         },
         {
             label: 'Cost / Engagement',
             value: formatCurrency(summary.cost_per_engagement),
             tone: COLORS.amber,
-            note: 'Estimated cost per interaction in the 60-day window.',
+            note: 'Estimated cost per interaction in the selected period.',
+            helpText: 'How much the expected campaign budget would pay for one like, comment, share, or save.',
+            accent: costPerEngagementHigh ? 'rgba(245,158,11,0.35)' : undefined,
         },
     ] : [];
 
@@ -470,6 +618,15 @@ export default function BrandAnalyticsPage() {
         { name: 'Saves', value: 0 },
     ].filter((item) => item.value > 0);
 
+    const engagementTrendNegative = Boolean(
+        data?.trends?.engagement_rate_over_time?.length >= 2 &&
+        data.trends.engagement_rate_over_time[0].engagementRate > data.trends.engagement_rate_over_time[data.trends.engagement_rate_over_time.length - 1].engagementRate
+    );
+    const followerTrendNegative = Boolean(
+        data?.trends?.follower_count_over_time?.length >= 2 &&
+        data.trends.follower_count_over_time[0].followers > data.trends.follower_count_over_time[data.trends.follower_count_over_time.length - 1].followers
+    );
+
     const roi = data?.roi || {
         predicted_roi: summary?.predicted_roi ?? null,
         estimated_media_value: summary?.estimated_media_value ?? null,
@@ -479,7 +636,7 @@ export default function BrandAnalyticsPage() {
 
     const handleRefresh = async () => {
         if (!selectedId) return;
-        await loadDetail(selectedId, true);
+        await loadDetail(selectedId, selectedPeriod, true);
     };
 
     const requestTarget = useMemo(() => {
@@ -542,7 +699,7 @@ export default function BrandAnalyticsPage() {
             <GlassCard padding="24px">
                 <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencers</p>
                 <h1 style={{ marginTop: 8, fontSize: 28, fontWeight: 800, color: COLORS.ink }}>Unable to load influencer analytics</h1>
-                <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>{error || 'Select an influencer to view the 60-day analytics report.'}</p>
+                <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>{error || `Select an influencer to view the ${selectedPeriod}-day analytics report.`}</p>
                 <div style={{ marginTop: 16 }}>
                     <GlowButton onClick={() => void loadInfluencers(search)}>
                         <RefreshCw size={14} />
@@ -563,20 +720,40 @@ export default function BrandAnalyticsPage() {
                             Back to dashboard
                         </Link>
                         <p style={{ marginTop: 10, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencers</p>
-                        <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>60-Day Influencer Analytics</h1>
+                        <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>Influencer Analytics</h1>
                         <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
-                            Brand evaluation is now focused on the last 60 days only. Pick an influencer to review the same report used throughout the portal.
+                            Brand evaluation is now focused on the last {selectedPeriod} days. Pick an influencer to review the same report used throughout the portal.
                         </p>
                     </div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                         <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail} disabled={!selectedId}>
                             <RefreshCw size={14} />
-                            Refresh 60d Data
+                            Refresh {selectedPeriod}d Data
                         </GlowButton>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.18)', color: COLORS.orange, fontSize: 13, fontWeight: 800 }}>
-                            <Star size={14} />
-                            Last 60 Days Only
-                        </span>
+                        <div style={{ display: 'inline-flex', gap: 8, padding: 6, borderRadius: 999, border: `1px solid ${COLORS.border}`, background: 'rgba(255,255,255,0.6)' }}>
+                            {([10, 30, 60] as AnalyticsPeriod[]).map((period) => {
+                                const active = selectedPeriod === period;
+                                return (
+                                    <button
+                                        key={period}
+                                        type="button"
+                                        onClick={() => setSelectedPeriod(period)}
+                                        style={{
+                                            border: 'none',
+                                            background: active ? 'rgba(194,52,10,0.14)' : 'transparent',
+                                            color: active ? COLORS.orange : COLORS.muted,
+                                            borderRadius: 999,
+                                            padding: '8px 12px',
+                                            fontSize: 12,
+                                            fontWeight: 800,
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {period} Days
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </GlassCard>
@@ -584,7 +761,7 @@ export default function BrandAnalyticsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '320px minmax(0,1fr)', gap: 24, alignItems: 'start' }}>
                 <GlassCard padding="24px">
                     <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencer Selector</p>
-                    <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>Choose a creator to view their 60-day performance report.</p>
+                    <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>Choose a creator to view their {selectedPeriod}-day performance report.</p>
                     <div style={{ position: 'relative', marginTop: 14 }}>
                         <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: COLORS.muted }} />
                         <input
@@ -678,7 +855,7 @@ export default function BrandAnalyticsPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                     {!selectedInfluencer ? (
-                        <EmptyState title="Select an influencer" copy="Choose a creator from the list to review their 60-day analytics profile, scoring, and cost efficiency." />
+                        <EmptyState title="Select an influencer" copy={`Choose a creator from the list to review their ${selectedPeriod}-day analytics profile, scoring, and cost efficiency.`} />
                     ) : (
                         <>
                             <GlassCard padding="28px">
@@ -708,7 +885,7 @@ export default function BrandAnalyticsPage() {
                                                 </GlowButton>
                                             </div>
                                             <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
-                                                A clean 60-day snapshot with engagement, content, follower growth, authenticity, and audience demographics.
+                                                A clean {selectedPeriod}-day snapshot with engagement, content, follower growth, authenticity, and audience demographics.
                                             </p>
                                             <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 13, fontWeight: 700 }}>
@@ -724,17 +901,36 @@ export default function BrandAnalyticsPage() {
                                                         @{influencer.username}
                                                     </span>
                                                 ) : null}
+                                                {summary ? (
+                                                    <span
+                                                        style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: 8,
+                                                            padding: '8px 12px',
+                                                            borderRadius: 999,
+                                                            background: authenticityLow ? 'rgba(220,38,38,0.08)' : 'rgba(16,185,129,0.12)',
+                                                            border: `1px solid ${authenticityLow ? 'rgba(220,38,38,0.22)' : 'rgba(16,185,129,0.22)'}`,
+                                                            color: authenticityLow ? COLORS.red : COLORS.green,
+                                                            fontSize: 13,
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        {authenticityLow ? <CircleAlert size={14} /> : <CheckCircle2 size={14} />}
+                                                        Authenticity {formatPercent(summary.authenticity_score, 0)}
+                                                    </span>
+                                                ) : null}
                                             </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                         <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail}>
                                             <RefreshCw size={14} />
-                                            Refresh
+                                            Refresh {selectedPeriod}d
                                         </GlowButton>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.18)', color: COLORS.orange, fontSize: 13, fontWeight: 800 }}>
                                             <Star size={14} />
-                                            Last 60 Days
+                                            Last {selectedPeriod} Days
                                         </span>
                                     </div>
                                 </div>
@@ -742,71 +938,71 @@ export default function BrandAnalyticsPage() {
 
                             <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
                                 {summaryCards.map((card) => (
-                                    <MetricCard key={card.label} label={card.label} value={card.value} tone={card.tone} note={card.note} />
+                                    <MetricCard key={card.label} label={card.label} value={card.value} tone={card.tone} note={card.note} helpText={card.helpText} accent={card.accent} />
                                 ))}
                             </div>
 
                             <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-                                <ChartShell title="Influencer Score Radar" subtitle="A normalized view of the influencer's 60-day fit across core decision factors." icon={<Radar size={16} />}>
+                                <ChartShell title="Influencer Score Radar" subtitle={`A normalized view of the influencer's ${selectedPeriod}-day fit across core decision factors.`} icon={<Radar size={16} />} helpText="This radar condenses the main scoring dimensions into a quick visual comparison." accent={authenticityLow ? 'rgba(220,38,38,0.30)' : undefined}>
                                     {radarData.length ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <RadarChart data={radarData}>
                                                 <PolarGrid stroke={COLORS.border} />
-                                                <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: COLORS.muted, fontWeight: 700 }} />
-                                                <Tooltip />
+                                                <PolarAngleAxis dataKey="metric" tick={RadarTick as any} />
+                                                <Tooltip content={<ChartTooltip description="Each axis shows how the influencer scores on a specific decision factor." />} />
                                                 <RechartsRadar dataKey="value" stroke={COLORS.orange} fill={COLORS.orange} fillOpacity={0.22} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <EmptyState title="Radar unavailable" copy="The score radar will appear once enough 60-day performance data exists." />
+                                        <EmptyState title="Radar unavailable" copy={`The score radar will appear once enough ${selectedPeriod}-day performance data exists.`} />
                                     )}
                                 </ChartShell>
 
-                                <ChartShell title="ROI / EMV" subtitle="A brand-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />}>
+                                <ChartShell title="ROI / EMV" subtitle="A brand-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />} helpText="ROI estimates are based on the stored campaign cost signals and the influencer's recent performance.">
                                     <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
-                                        <MetricCard label="Predicted ROI" value={formatPercent(roi?.predicted_roi, 1)} tone={toneForMetric(roi?.predicted_roi || 0, 'growth')} note="Estimated return on the campaign budget." />
-                                        <MetricCard label="Estimated Media Value" value={formatCurrency(roi?.estimated_media_value)} tone="#0284c7" note="Approximate media value using stored audience and reach signals." />
-                                        <MetricCard label="Final Score" value={formatNumber(roi?.final_score)} tone={toneForRatingTier(roi?.rating_tier)} note="Overall score used to compare creators quickly." />
-                                        <MetricCard label="Rating Tier" value={roi?.rating_tier || 'Needs Review'} tone={toneForRatingTier(roi?.rating_tier)} note="Simple label for brand decision-making." />
+                                        <MetricCard label="Predicted ROI" value={formatPercent(roi?.predicted_roi, 1)} tone={toneForMetric(roi?.predicted_roi || 0, 'growth')} note="Estimated return on the campaign budget." helpText="This is a rough estimate of return, not a guarantee." />
+                                        <MetricCard label="Estimated Media Value" value={formatCurrency(roi?.estimated_media_value)} tone="#0284c7" note="Approximate media value using stored audience and reach signals." helpText="This is the estimated value of the influencer's recent exposure." />
+                                        <MetricCard label="Final Score" value={formatNumber(roi?.final_score)} tone={toneForRatingTier(roi?.rating_tier)} note="Overall score used to compare creators quickly." helpText="The same final score used in the top summary cards." />
+                                        <MetricCard label="Rating Tier" value={roi?.rating_tier || 'Needs Review'} tone={toneForRatingTier(roi?.rating_tier)} note="Simple label for brand decision-making." helpText="A quick label that translates the score into a human-friendly ranking." />
                                     </div>
                                 </ChartShell>
                             </div>
 
-                            <ChartShell title="Cost Efficiency" subtitle="Budget signals brands can compare quickly before outreach." icon={<BadgeDollarSign size={16} />}>
+                            <ChartShell title="Cost Efficiency" subtitle="Budget signals brands can compare quickly before outreach." icon={<BadgeDollarSign size={16} />} helpText="These cards estimate how efficiently the influencer turns budget into views and engagements." accent={costPerEngagementHigh ? 'rgba(245,158,11,0.30)' : undefined}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
-                                    <MetricCard label="Cost / View" value={formatCurrency(analyticsSummary.cost_per_view)} tone={COLORS.amber} note="Estimated cost per view for the current 60-day performance window." />
-                                    <MetricCard label="Cost / Engagement" value={formatCurrency(analyticsSummary.cost_per_engagement)} tone={COLORS.amber} note="Estimated cost for each engagement signal." />
-                                    <MetricCard label="Estimated Cost / Post" value={formatCurrency(analyticsSummary.estimated_cost_per_post)} tone={COLORS.green} note="Stored average post price, if available." />
-                                    <MetricCard label="Estimated Cost / Reel" value={formatCurrency(analyticsSummary.estimated_cost_per_reel)} tone={COLORS.green} note="Stored average reel price, if available." />
+                                    <MetricCard label="Cost / View" value={formatCurrency(analyticsSummary.cost_per_view)} tone={COLORS.amber} note={`Estimated cost per view for the current ${selectedPeriod}-day performance window.`} helpText="How much budget is likely spent for each view in the selected period." />
+                                    <MetricCard label="Cost / Engagement" value={formatCurrency(analyticsSummary.cost_per_engagement)} tone={COLORS.amber} note="Estimated cost for each engagement signal." helpText="How much budget is likely spent for each interaction signal." accent={costPerEngagementHigh ? 'rgba(245,158,11,0.35)' : undefined} />
+                                    <MetricCard label="Estimated Cost / Post" value={formatCurrency(analyticsSummary.estimated_cost_per_post)} tone={COLORS.green} note="Stored average post price, if available." helpText="The average posted rate, if the influencer has provided one." />
+                                    <MetricCard label="Estimated Cost / Reel" value={formatCurrency(analyticsSummary.estimated_cost_per_reel)} tone={COLORS.green} note="Stored average reel price, if available." helpText="The average reel price, if the influencer has provided one." />
                                 </div>
                             </ChartShell>
 
                             <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-                                <ChartShell title="Engagement Rate" subtitle="Daily engagement rate across the last 60 days." icon={<TrendingUp size={16} />}>
+                                <ChartShell title="Engagement Rate" subtitle={`Daily engagement rate across the last ${selectedPeriod} days.`} icon={<TrendingUp size={16} />} helpText="This line shows how audience interaction changed day by day." accent={authenticityLow ? 'rgba(220,38,38,0.28)' : undefined}>
                                     {Array.isArray(data.trends.engagement_rate_over_time) && data.trends.engagement_rate_over_time.length ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <LineChart data={data.trends.engagement_rate_over_time}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                                                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                                 <YAxis tick={{ fontSize: 12, fill: COLORS.muted }} />
-                                                <Tooltip />
-                                                <Line type="monotone" dataKey="engagementRate" stroke={COLORS.orange} strokeWidth={3} dot={{ r: 3 }} />
+                                                <Tooltip content={<ChartTooltip description="Each point shows the follower count snapshot for that date." />} />
+                                                <Line type="monotone" dataKey="engagementRate" stroke={engagementTrendNegative ? COLORS.red : COLORS.orange} strokeWidth={3} dot={{ r: 3 }} />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <EmptyState title="No engagement data yet" copy="There are no posts in the last 60 days to chart engagement performance." />
+                                        <EmptyState title="No engagement data yet" copy={`There are no posts in the last ${selectedPeriod} days to chart engagement performance.`} />
                                     )}
                                 </ChartShell>
 
-                                <ChartShell title="Follower Count" subtitle="Snapshot trend for the same 60-day window." icon={<Users size={16} />}>
+                                <ChartShell title="Follower Count" subtitle={`Snapshot trend for the same ${selectedPeriod}-day window.`} icon={<Users size={16} />} helpText="This chart shows the follower base at the time of each stored snapshot." >
                                     {Array.isArray(data.trends.follower_count_over_time) && data.trends.follower_count_over_time.length ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <LineChart data={data.trends.follower_count_over_time}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                                                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                                 <YAxis tick={{ fontSize: 12, fill: COLORS.muted }} />
-                                                <Tooltip />
-                                                <Line type="monotone" dataKey="followers" stroke="#0284c7" strokeWidth={3} dot={{ r: 3 }} />
+                                                <Tooltip content={<ChartTooltip description="Each bar shows how many posts appeared in that weekly bucket." />} />
+                                                <Line type="monotone" dataKey="followers" stroke={followerTrendNegative ? COLORS.red : '#0284c7'} strokeWidth={3} dot={{ r: 3 }} />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -816,23 +1012,23 @@ export default function BrandAnalyticsPage() {
                             </div>
 
                             <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-                                <ChartShell title="Posts per Week" subtitle="Posting activity grouped into weekly buckets." icon={<BarChart3 size={16} />}>
+                                    <ChartShell title="Posts per Week" subtitle="Posting activity grouped into weekly buckets." icon={<BarChart3 size={16} />} helpText="This shows how often the influencer posted during the selected period." >
                                     {(data.trends.posts_per_week || data.trends.posting_frequency_over_time)?.length ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <BarChart data={data.trends.posts_per_week || data.trends.posting_frequency_over_time}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                                                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                                 <YAxis tick={{ fontSize: 12, fill: COLORS.muted }} allowDecimals={false} />
-                                                <Tooltip />
+                                                <Tooltip content={<ChartTooltip description="Each slice shows the share of the selected post types in the current period." />} />
                                                 <Bar dataKey="postsCount" fill={COLORS.orange} radius={[8, 8, 0, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     ) : (
-                                        <EmptyState title="No posting activity found" copy="This influencer has no tracked posts in the last 60 days." />
+                                        <EmptyState title="No posting activity found" copy={`This influencer has no tracked posts in the last ${selectedPeriod} days.`} />
                                     )}
                                 </ChartShell>
 
-                                <ChartShell title="Content Distribution" subtitle="How the last 60 days of content is split by post type." icon={<PieChartIcon size={16} />}>
+                                <ChartShell title="Content Distribution" subtitle={`How the last ${selectedPeriod} days of content is split by post type.`} icon={<PieChartIcon size={16} />} helpText="This breaks the influencer's content into photo, video, reel, and story shares." >
                                     {contentData.length ? (
                                         <ResponsiveContainer width="100%" height={280}>
                                             <PieChart>
@@ -841,7 +1037,7 @@ export default function BrandAnalyticsPage() {
                                                         <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip content={<ChartTooltip description="Each bar shows the share of audience locations in the stored insights." />} />
                                                 <Legend />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -859,7 +1055,7 @@ export default function BrandAnalyticsPage() {
                                                 <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                                                 <XAxis type="number" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                                 <YAxis type="category" dataKey="region" tick={{ fontSize: 12, fill: COLORS.muted }} width={60} />
-                                                <Tooltip />
+                                                <Tooltip content={<ChartTooltip description="Each slice shows the audience gender mix from stored insights." />} />
                                                 <Bar dataKey="percent" fill={COLORS.orange} radius={[0, 8, 8, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
@@ -894,7 +1090,7 @@ export default function BrandAnalyticsPage() {
                                             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} horizontal={false} />
                                             <XAxis type="number" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                             <YAxis type="category" dataKey="range" tick={{ fontSize: 12, fill: COLORS.muted }} width={72} />
-                                            <Tooltip />
+                                            <Tooltip content={<ChartTooltip description="Each bar shows the share of audience age ranges in the stored insights." />} />
                                             <Bar dataKey="percent" fill={COLORS.orange} radius={[0, 8, 8, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -910,7 +1106,7 @@ export default function BrandAnalyticsPage() {
                                             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                                             <XAxis dataKey="name" tick={{ fontSize: 12, fill: COLORS.muted }} />
                                             <YAxis tick={{ fontSize: 12, fill: COLORS.muted }} />
-                                            <Tooltip />
+                                            <Tooltip content={<ChartTooltip description="Each bar shows the average interactions for the selected period." />} />
                                             <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                                                 {engagementBreakdown.map((entry, index) => (
                                                     <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -919,7 +1115,7 @@ export default function BrandAnalyticsPage() {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <EmptyState title="No engagement breakdown yet" copy="Interaction mix will appear once there are posts in the 60-day window." />
+                                    <EmptyState title="No engagement breakdown yet" copy={`Interaction mix will appear once there are posts in the ${selectedPeriod}-day window.`} />
                                 )}
                             </ChartShell>
 
@@ -927,7 +1123,7 @@ export default function BrandAnalyticsPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                                     <div>
                                         <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Posts</p>
-                                        <h2 style={{ marginTop: 6, fontSize: 20, fontWeight: 800, color: COLORS.ink }}>Last 60 days</h2>
+                                        <h2 style={{ marginTop: 6, fontSize: 20, fontWeight: 800, color: COLORS.ink }}>Last {selectedPeriod} days</h2>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                         {[
@@ -996,7 +1192,7 @@ export default function BrandAnalyticsPage() {
                                             </tbody>
                                         </table>
                                     ) : (
-                                        <EmptyState title="No posts in the last 60 days" copy="There are no tracked posts for this influencer in the selected period." />
+                                        <EmptyState title={`No posts in the last ${selectedPeriod} days`} copy="There are no tracked posts for this influencer in the selected period." />
                                     )}
                                 </div>
                             </GlassCard>

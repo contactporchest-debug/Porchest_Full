@@ -2,8 +2,6 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const MediaRaw = require('../models/MediaRaw');
 const InsightsRaw = require('../models/InsightsRaw');
 
-const PERIOD_DAYS = 60;
-const WINDOW_MS = PERIOD_DAYS * 24 * 60 * 60 * 1000;
 const DATE_OPTIONS = { month: 'short', day: 'numeric' };
 
 function clamp(value, min = 0, max = 100) {
@@ -226,10 +224,11 @@ function estimateExpectedEngagementRate(followers) {
     return 6.5;
 }
 
-function calculateAuthenticityScore({ averageEngagementRate, followerGrowthRate, postingConsistencyWeeks, followers }) {
+function calculateAuthenticityScore({ averageEngagementRate, followerGrowthRate, postingConsistencyWeeks, followers, periodWeeks }) {
     const benchmark = estimateExpectedEngagementRate(followers);
     const engagementAlignment = clamp((averageEngagementRate / benchmark) * 100, 0, 100);
-    const consistencyScore = clamp((postingConsistencyWeeks / 8) * 100, 0, 100);
+    const denominator = Math.max(1, Math.min(8, periodWeeks || 8));
+    const consistencyScore = clamp((postingConsistencyWeeks / denominator) * 100, 0, 100);
     const growthHealth = followerGrowthRate < -10
         ? 35
         : followerGrowthRate > 80
@@ -391,11 +390,11 @@ function buildPostTrend(posts) {
     };
 }
 
-function buildFollowerTrend(profile, posts) {
+function buildFollowerTrend(profile, posts, cutoff) {
     const snapshots = Array.isArray(profile?.historicalSnapshots) ? [...profile.historicalSnapshots] : [];
-    const cutoff = Date.now() - WINDOW_MS;
+    const cutoffTime = cutoff ? cutoff.getTime() : Date.now();
     const trend = snapshots
-        .filter((snapshot) => snapshot?.capturedAt && toDate(snapshot.capturedAt) && toDate(snapshot.capturedAt).getTime() >= cutoff)
+        .filter((snapshot) => snapshot?.capturedAt && toDate(snapshot.capturedAt) && toDate(snapshot.capturedAt).getTime() >= cutoffTime)
         .sort((a, b) => toDate(a.capturedAt).getTime() - toDate(b.capturedAt).getTime())
         .map((snapshot) => ({
             date: toDate(snapshot.capturedAt).toISOString().slice(0, 10),
@@ -500,16 +499,23 @@ function extractDemographicSource(insightDocs, profile) {
     };
 }
 
-async function getInfluencer60DayAnalytics({ id, period = 60 }) {
-    const requestedPeriod = Number(period || PERIOD_DAYS);
-    if (!Number.isFinite(requestedPeriod) || requestedPeriod !== PERIOD_DAYS) {
-        const error = new Error('Only the last 60 days are supported');
+function normalizePeriodDays(period) {
+    const requestedPeriod = Number(period || 60);
+    if ([10, 30, 60].includes(requestedPeriod)) return requestedPeriod;
+    return null;
+}
+
+async function getInfluencerAnalytics({ id, period = 60 }) {
+    const requestedPeriod = Number(period || 60);
+    const normalizedPeriod = normalizePeriodDays(requestedPeriod);
+    if (!Number.isFinite(requestedPeriod) || !normalizedPeriod) {
+        const error = new Error('Only 10, 30, or 60 days are supported');
         error.statusCode = 400;
         throw error;
     }
 
     const profile = await resolveInfluencerProfile(id);
-    const cutoff = new Date(Date.now() - WINDOW_MS);
+    const cutoff = new Date(Date.now() - (normalizedPeriod * 24 * 60 * 60 * 1000));
     const [mediaDocs, insightDocs] = await Promise.all([
         loadMediaDocs(profile, cutoff),
         loadInsightDocs(profile, cutoff),
@@ -575,16 +581,17 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
         story_count: 0,
     });
 
-    const trendData = buildPostTrend(posts);
-    const followerTrend = buildFollowerTrend(profile, posts);
+    const followerTrend = buildFollowerTrend(profile, posts, cutoff);
     const engagementTrend = buildEngagementTrend(posts);
     const weeklyPosts = buildWeeklyPostsTrend(posts);
     const uniqueWeeks = new Set(weeklyPosts.map((item) => item.label)).size;
+    const periodWeeks = Math.max(1, Math.min(8, Math.ceil(normalizedPeriod / 7)));
 
     const authenticityScore = calculateAuthenticityScore({
         averageEngagementRate,
         followerGrowthRate,
         postingConsistencyWeeks: uniqueWeeks,
+        periodWeeks,
         followers: followersNow,
     });
 
@@ -634,7 +641,7 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
 
     return {
         influencerId: String(profile._id),
-        period_days: PERIOD_DAYS,
+        period_days: normalizedPeriod,
         influencer: {
             id: String(profile._id),
             userId: String(profile.userId),
@@ -707,5 +714,6 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
 }
 
 module.exports = {
-    getInfluencer60DayAnalytics,
+    getInfluencerAnalytics,
+    getInfluencer60DayAnalytics: getInfluencerAnalytics,
 };
