@@ -316,13 +316,16 @@ async function resolveInfluencerProfile(influencerIdentifier) {
     const query = {
         $or: [
             { userId: id },
-            { _id: id },
             { influencerProfileId: id },
             { instagramAccountId: id },
             { instagramUsername: id },
             { igUserId: id },
         ],
     };
+
+    if (/^[a-f\d]{24}$/i.test(id)) {
+        query.$or.unshift({ _id: id });
+    }
 
     const profile = await InfluencerProfile.findOne(query).lean();
     if (!profile) {
