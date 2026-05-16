@@ -5,6 +5,7 @@ const BrandProfile = require('../models/BrandProfile');
 const CampaignRequest = require('../models/CampaignRequest');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { ensureTrackingAssets } = require('../services/trackingService');
+const { buildCampaignPerformanceReport } = require('../services/campaignPerformanceService');
 
 const router = express.Router();
 
@@ -106,6 +107,23 @@ router.get('/:campaignId/tracking-link', async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message || 'Unable to load tracking link' });
+    }
+});
+
+router.get('/performance', async (req, res) => {
+    try {
+        const brandProfile = await resolveBrandProfile(req);
+        if (!brandProfile) {
+            return res.status(404).json({ success: false, error: 'Brand profile not found' });
+        }
+
+        const report = await buildCampaignPerformanceReport({ brandProfileId: brandProfile._id });
+        return res.json({
+            success: true,
+            ...report,
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message || 'Unable to load campaign performance' });
     }
 });
 
