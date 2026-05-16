@@ -347,6 +347,25 @@ export default function BrandAnalyticsPage() {
     const genders = data?.demographics.genders || [];
     const ages = data?.demographics.ages || [];
     const locations = data?.demographics.locations || [];
+    const analyticsSummary = summary ?? {
+        average_engagement_rate: 0,
+        average_likes: 0,
+        average_comments: 0,
+        total_posts: 0,
+        follower_growth_rate: 0,
+        authenticity_score: 0,
+        average_views: 0,
+        view_rate: 0,
+        cost_per_view: null,
+        cost_per_engagement: null,
+        estimated_cost_per_post: null,
+        estimated_cost_per_reel: null,
+        estimated_media_value: null,
+        predicted_roi: null,
+        final_score: 0,
+        rating_tier: 'Needs Review',
+        consistency_score: 0,
+    };
 
     const summaryCards = summary ? [
         {
@@ -688,10 +707,10 @@ export default function BrandAnalyticsPage() {
 
                             <ChartShell title="Cost Efficiency" subtitle="Budget signals brands can compare quickly before outreach." icon={<BadgeDollarSign size={16} />}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
-                                    <MetricCard label="Cost / View" value={formatCurrency(summary.cost_per_view)} tone={COLORS.amber} note="Estimated cost per view for the current 60-day performance window." />
-                                    <MetricCard label="Cost / Engagement" value={formatCurrency(summary.cost_per_engagement)} tone={COLORS.amber} note="Estimated cost for each engagement signal." />
-                                    <MetricCard label="Estimated Cost / Post" value={formatCurrency(summary.estimated_cost_per_post)} tone={COLORS.green} note="Stored average post price, if available." />
-                                    <MetricCard label="Estimated Cost / Reel" value={formatCurrency(summary.estimated_cost_per_reel)} tone={COLORS.green} note="Stored average reel price, if available." />
+                                    <MetricCard label="Cost / View" value={formatCurrency(analyticsSummary.cost_per_view)} tone={COLORS.amber} note="Estimated cost per view for the current 60-day performance window." />
+                                    <MetricCard label="Cost / Engagement" value={formatCurrency(analyticsSummary.cost_per_engagement)} tone={COLORS.amber} note="Estimated cost for each engagement signal." />
+                                    <MetricCard label="Estimated Cost / Post" value={formatCurrency(analyticsSummary.estimated_cost_per_post)} tone={COLORS.green} note="Stored average post price, if available." />
+                                    <MetricCard label="Estimated Cost / Reel" value={formatCurrency(analyticsSummary.estimated_cost_per_reel)} tone={COLORS.green} note="Stored average reel price, if available." />
                                 </div>
                             </ChartShell>
 
