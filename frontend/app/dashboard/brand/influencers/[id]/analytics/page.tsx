@@ -200,12 +200,15 @@ function MetricCard({ label, value, tone, note }: { label: string; value: string
     );
 }
 
-function ChartShell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+function ChartShell({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: React.ReactNode; children: React.ReactNode }) {
     return (
         <GlassCard padding="24px">
-            <div style={{ marginBottom: 18 }}>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</p>
-                {subtitle ? <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>{subtitle}</p> : null}
+            <div style={{ marginBottom: 18, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</p>
+                    {subtitle ? <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>{subtitle}</p> : null}
+                </div>
+                {icon ? <div style={{ color: COLORS.muted, flexShrink: 0 }}>{icon}</div> : null}
             </div>
             {children}
         </GlassCard>
