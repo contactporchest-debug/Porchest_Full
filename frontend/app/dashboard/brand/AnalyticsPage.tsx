@@ -996,7 +996,7 @@ export default function BrandAnalyticsPage() {
                                     )}
                                 </ChartShell>
 
-                                <ChartShell title="ROI / EMV" subtitle="A brand-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />} helpText="ROI estimates are based on the stored campaign cost signals and the influencer's recent performance.">
+                                <ChartShell title="ROI / EMV" subtitle="A business-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />} helpText="ROI estimates are based on the stored campaign cost signals and the influencer's recent performance.">
                                     <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                                         <MetricCard label="Predicted ROI" value={formatPercent(roi?.predicted_roi, 1)} tone={toneForMetric(roi?.predicted_roi || 0, 'growth')} note="Estimated return on the campaign budget." helpText="This is a rough estimate of return, not a guarantee." />
                                         <MetricCard label="Estimated Media Value" value={formatCurrency(roi?.estimated_media_value)} tone="#0284c7" note="Approximate media value using stored audience and reach signals." helpText="This is the estimated value of the influencer's recent exposure." />

@@ -536,7 +536,7 @@ export default function BrandCollaborationsPage() {
                     <GlassCard>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#7A5030' }}>
                             <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                            Loading brand profile...
+                            Loading profile...
                         </div>
                     </GlassCard>
                 ) : !profileComplete ? (
@@ -547,9 +547,9 @@ export default function BrandCollaborationsPage() {
                                 <p style={{ fontSize: '11px', fontWeight: 700, color: '#E8400A', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Profile incomplete</p>
                             </div>
                             <div>
-                                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1A0A00' }}>Complete your brand profile first</h1>
+                                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#1A0A00' }}>Complete your profile first</h1>
                                 <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.7, maxWidth: '760px' }}>
-                                    Finish your brand profile to unlock collaboration management, campaign controls, and analytics.
+                                    Finish your profile to unlock collaboration management, campaign controls, and analytics.
                                 </p>
                             </div>
                             <GlowButton onClick={() => router.push('/dashboard/brand/profile')}>Go to Profile</GlowButton>

@@ -310,7 +310,7 @@ export default function BrandInfluencer60DayAnalyticsPage() {
             label: 'Rating Tier',
             value: summary?.rating_tier || data?.roi?.rating_tier || 'Needs Review',
             tone: toneForRatingTier(summary?.rating_tier || data?.roi?.rating_tier),
-            note: 'A quick brand-friendly signal of how strong the influencer looks right now.',
+            note: 'A quick business-friendly signal of how strong the influencer looks right now.',
         },
         {
             label: 'Avg Engagement Rate (60d)',
@@ -504,7 +504,7 @@ export default function BrandInfluencer60DayAnalyticsPage() {
                             )}
                         </ChartShell>
 
-                        <ChartShell title="ROI / EMV" subtitle="A brand-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />}>
+                        <ChartShell title="ROI / EMV" subtitle="A business-friendly estimate of the creator's current commercial value." icon={<Sparkles size={16} />}>
                             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
                                 <MetricCard label="Predicted ROI" value={formatPercent(roi.predicted_roi, 1)} tone={toneForMetric(roi.predicted_roi || 0, 'growth')} note="Estimated return on the campaign budget." />
                                 <MetricCard label="Estimated Media Value" value={formatCurrency(roi.estimated_media_value)} tone="#0284c7" note="Approximate media value using stored audience and reach signals." />

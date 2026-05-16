@@ -156,7 +156,7 @@ export default function OverviewPage({
                         )}
                     </div>
                     <div style={{ flex: 1, minWidth: '220px' }}>
-                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7A5030' }}>Brand identity</p>
+                        <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#7A5030' }}>Your identity</p>
                         <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 700, color: '#1A0A00' }}>
                             {brandName || 'Your brand'}
                         </h3>
@@ -176,9 +176,9 @@ export default function OverviewPage({
                             </div>
                             <div>
                                 <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#E8400A', fontWeight: 600 }}>Action required</p>
-                                <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00', marginTop: '2px' }}>Complete your brand profile first</h2>
+                                <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00', marginTop: '2px' }}>Complete your profile first</h2>
                                 <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.65, maxWidth: '600px' }}>
-                                    You need a complete brand profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
+                            You need a complete profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
                                 </p>
                             </div>
                         </div>

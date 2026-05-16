@@ -78,7 +78,7 @@ export default function AIMatchingComponent() {
                     }));
                 }
                 if (nextInfluencers.length === 0) {
-                    toast.error('No direct matches found. Try broadening your brand profile preferences.');
+                    toast.error('No direct matches found. Try broadening your profile preferences.');
                 }
             } else {
                 toast.error(res.data.message || 'Failed to match influencers');
@@ -197,7 +197,7 @@ export default function AIMatchingComponent() {
         const uniqueReasons = [...new Set(reasons)].filter(Boolean).slice(0, 3);
         return uniqueReasons.length
             ? uniqueReasons.join(' • ')
-            : 'A strong strategic match based on your brand profile.';
+            : 'A strong strategic match based on your profile.';
     };
 
     const visibleInfluencers = influencers.slice(0, 5);
@@ -226,7 +226,7 @@ export default function AIMatchingComponent() {
                         Smart AI Matching
                     </h2>
                     <p style={{ fontSize: '15px', color: '#7A5030', maxWidth: '500px', lineHeight: 1.6 }}>
-                        Let our AI analyze your brand profile, target audience, and marketing goals to discover perfectly matched creators for your next campaign.
+                        Let our AI analyze your profile, target audience, and marketing goals to discover perfectly matched creators for your next campaign.
                     </p>
                 </div>
                 

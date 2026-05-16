@@ -203,7 +203,7 @@ export default function BrandPerformancePage() {
         { label: 'Ongoing campaigns', value: String(summary.campaignCount), tone: PRIMARY, hint: 'Active and accepted collaborations currently in progress.' },
         { label: 'Active campaigns', value: String(summary.activeCampaignCount), tone: '#059669', hint: 'Campaigns already in the live delivery phase.' },
         { label: 'Accepted campaigns', value: String(summary.acceptedCampaignCount), tone: '#0284c7', hint: 'Approved campaigns waiting on execution.' },
-        { label: 'Tracked spend', value: money(summary.totalSpend), tone: '#7C3AED', hint: 'Brand spend across ongoing campaigns.' },
+        { label: 'Tracked spend', value: money(summary.totalSpend), tone: '#7C3AED', hint: 'Your spend across ongoing campaigns.' },
         { label: 'Tracked revenue', value: money(summary.totalRevenue), tone: '#059669', hint: 'Revenue attributed through tracking links and webhooks.' },
         { label: 'Avg ROAS', value: summary.averageROAS ? `${summary.averageROAS.toFixed(2)}x` : '—', tone: '#0f766e', hint: 'Average return on ad spend across campaigns.' },
         { label: 'Clicks', value: summary.totalClicks.toLocaleString(), tone: '#C2340A', hint: 'Tracked link clicks.' },
@@ -246,7 +246,7 @@ export default function BrandPerformancePage() {
                                         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: PRIMARY }}>Campaign performance</span>
                                     </div>
                                     <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.1, letterSpacing: '-0.04em', fontWeight: 800, color: TEXT }}>
-                                        Brand campaign performance dashboard
+                                        Your campaign performance dashboard
                                     </h1>
                                     <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.7, color: MUTED, maxWidth: 820 }}>
                                         Track ongoing collaborations, uploaded media links, campaign age, and Shopify revenue from clicks and conversions. Expand any row to compare Today, 10, 20, and 30-day windows.

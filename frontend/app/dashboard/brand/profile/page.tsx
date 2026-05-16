@@ -16,7 +16,7 @@ type BrandProfileResponse = {
 export default function BrandProfilePage() {
     const { data: brandProfile } = useApi<BrandProfileResponse>('/profile/brand/me');
     const brandLogo = brandProfile?.logo || brandProfile?.logoUrl || '';
-    const brandName = brandProfile?.businessName || brandProfile?.brandName || 'Brand profile';
+    const brandName = brandProfile?.businessName || brandProfile?.brandName || 'Your profile';
 
     return (
         <ProtectedRoute allowedRoles={['brand']}>
@@ -51,7 +51,7 @@ export default function BrandProfilePage() {
                                     )}
                                 </div>
                                 <div>
-                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#7A5030', fontWeight: 700 }}>Brand profile</p>
+                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.2em', color: '#7A5030', fontWeight: 700 }}>Your profile</p>
                                 <h1 style={{ marginTop: '8px', fontSize: '30px', fontWeight: 800, letterSpacing: '-0.04em', color: '#1A0A00' }}>Profile Setup</h1>
                                 <p style={{ marginTop: '8px', maxWidth: '672px', fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>
                                     Complete your business, audience, and campaign preferences so Porchest can match you with the right creators.

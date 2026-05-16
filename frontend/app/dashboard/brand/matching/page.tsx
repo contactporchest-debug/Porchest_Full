@@ -44,7 +44,7 @@ export default function AiMatchingPage() {
                                 </div>
                                 <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#1A0A00', marginBottom: '10px', letterSpacing: '-0.01em' }}>Action Required: Complete Your Profile</h2>
                                 <p style={{ color: '#7A5030', fontSize: '14px', maxWidth: '420px', margin: '0 auto 28px', lineHeight: 1.65 }}>
-                                    Complete your brand profile to unlock tailored creator recommendations and discovery tools.
+                                    Complete your profile to unlock tailored creator recommendations and discovery tools.
                                 </p>
                                 <Link href="/dashboard/brand/profile" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 28px', borderRadius: '8px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s' }}>
                                     Go to Profile <ArrowRight size={15} />

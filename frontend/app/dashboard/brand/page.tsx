@@ -28,7 +28,7 @@ export default function BrandPortalOverview() {
             <DashboardLayout>
                 {loading ? (
                     <div style={{ padding: '24px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(12px)', fontSize: '14px', color: '#7A5030' }}>
-                        Loading brand profile...
+                        Loading profile...
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -49,9 +49,9 @@ export default function BrandPortalOverview() {
                                             <AlertCircle size={14} style={{ color: '#E8400A' }} />
                                             <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#E8400A', fontWeight: 600 }}>Action required</p>
                                         </div>
-                                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00' }}>Complete your brand profile first</h2>
+                        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00' }}>Complete your profile first</h2>
                                         <p style={{ marginTop: '8px', fontSize: '14px', color: '#7A5030', lineHeight: 1.65, maxWidth: '600px' }}>
-                                            You need a complete brand profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
+                                            You need a complete profile before you can browse influencers. Finish your business, audience, and campaign preferences in the profile page.
                                         </p>
                                     </div>
                                     <Link
