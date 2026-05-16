@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -200,14 +199,13 @@ export default function BrandPerformancePage() {
     const selectedMetrics = selectedCampaign?.timeframes?.[selectedWindow] || selectedCampaign?.timeframes?.['30days'] || null;
 
     const summaryCards = summary ? [
-        { label: 'Ongoing campaigns', value: String(summary.campaignCount), tone: PRIMARY, hint: 'Active and accepted collaborations currently in progress.' },
-        { label: 'Active campaigns', value: String(summary.activeCampaignCount), tone: '#059669', hint: 'Campaigns already in the live delivery phase.' },
-        { label: 'Accepted campaigns', value: String(summary.acceptedCampaignCount), tone: '#0284c7', hint: 'Approved campaigns waiting on execution.' },
+        { label: 'Ongoing campaigns', value: String(summary.campaignCount), tone: PRIMARY, hint: 'Live collaborations currently in progress.' },
         { label: 'Tracked spend', value: money(summary.totalSpend), tone: '#7C3AED', hint: 'Your spend across ongoing campaigns.' },
         { label: 'Tracked revenue', value: money(summary.totalRevenue), tone: '#059669', hint: 'Revenue attributed through tracking links and webhooks.' },
         { label: 'Avg ROAS', value: summary.averageROAS ? `${summary.averageROAS.toFixed(2)}x` : '—', tone: '#0f766e', hint: 'Average return on ad spend across campaigns.' },
-        { label: 'Clicks', value: summary.totalClicks.toLocaleString(), tone: '#C2340A', hint: 'Tracked link clicks.' },
-        { label: 'Conversions', value: summary.totalConversions.toLocaleString(), tone: '#b45309', hint: 'Orders or checkouts recorded by tracking.' },
+        { label: 'Overall clicks', value: summary.totalClicks.toLocaleString(), tone: '#C2340A', hint: 'All tracked link clicks across your ongoing campaigns.' },
+        { label: 'Conversion value', value: money(summary.totalRevenue), tone: '#b45309', hint: 'Total dollars generated from tracked conversions.' },
+        { label: 'Average CPA', value: money(summary.averageCPA), tone: '#0284c7', hint: 'Average cost required to acquire one conversion.' },
     ] : [];
 
     return (
@@ -228,73 +226,61 @@ export default function BrandPerformancePage() {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            style={{
-                                padding: 24,
-                                borderRadius: 24,
-                                border: '1px solid rgba(194,52,10,0.12)',
-                                background: 'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,248,241,0.98) 100%)',
-                                boxShadow: '0 24px 60px rgba(124,63,34,0.08)',
-                            }}
-                        >
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="lg:flex-row lg:items-end lg:justify-between">
-                                <div>
-                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.12)', marginBottom: 12 }}>
-                                        <TrendingUp size={14} style={{ color: PRIMARY }} />
-                                        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: PRIMARY }}>Campaign performance</span>
-                                    </div>
-                                    <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.1, letterSpacing: '-0.04em', fontWeight: 800, color: TEXT }}>
-                                        Your campaign performance dashboard
-                                    </h1>
-                                    <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.7, color: MUTED, maxWidth: 820 }}>
-                                        Track ongoing collaborations, uploaded media links, campaign age, and Shopify revenue from clicks and conversions. Expand any row to compare Today, 10, 20, and 30-day windows.
-                                    </p>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                            <div style={{ maxWidth: 820 }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.12)', marginBottom: 12 }}>
+                                    <TrendingUp size={14} style={{ color: PRIMARY }} />
+                                    <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: PRIMARY }}>Campaign performance</span>
                                 </div>
-
-                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                    <button
-                                        onClick={() => void loadPerformance(true)}
-                                        disabled={refreshing}
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: 10,
-                                            borderRadius: 14,
-                                            border: '1px solid #EDD9BC',
-                                            background: 'rgba(255,255,255,0.74)',
-                                            color: MUTED,
-                                            padding: '12px 16px',
-                                            fontSize: 13,
-                                            fontWeight: 700,
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        <RefreshCw size={14} style={{ animation: refreshing ? 'spin 1s linear infinite' : undefined }} />
-                                        Refresh
-                                    </button>
-                                    <Link
-                                        href="/dashboard/brand/collaborations"
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: 10,
-                                            borderRadius: 14,
-                                            background: PRIMARY,
-                                            color: '#fff',
-                                            padding: '12px 16px',
-                                            fontSize: 13,
-                                            fontWeight: 700,
-                                            textDecoration: 'none',
-                                        }}
-                                    >
-                                        <BarChart3 size={14} />
-                                        Open workflows
-                                    </Link>
-                                </div>
+                                <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.1, letterSpacing: '-0.04em', fontWeight: 800, color: TEXT }}>
+                                    Your campaign performance dashboard
+                                </h1>
+                                <p style={{ margin: '10px 0 0', fontSize: 14, lineHeight: 1.7, color: MUTED, maxWidth: 820 }}>
+                                    Track ongoing collaborations, uploaded media links, campaign age, and Shopify revenue from clicks and conversions. Expand any row to compare Today, 10, 20, and 30-day windows.
+                                </p>
                             </div>
-                        </motion.div>
+
+                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={() => void loadPerformance(true)}
+                                    disabled={refreshing}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        borderRadius: 14,
+                                        border: '1px solid #EDD9BC',
+                                        background: 'rgba(255,255,255,0.74)',
+                                        color: MUTED,
+                                        padding: '12px 16px',
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                    }}
+                                >
+                                    <RefreshCw size={14} style={{ animation: refreshing ? 'spin 1s linear infinite' : undefined }} />
+                                    Refresh
+                                </button>
+                                <Link
+                                    href="/dashboard/brand/collaborations"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        borderRadius: 14,
+                                        background: PRIMARY,
+                                        color: '#fff',
+                                        padding: '12px 16px',
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                    }}
+                                >
+                                    <BarChart3 size={14} />
+                                    Open workflows
+                                </Link>
+                            </div>
+                        </div>
 
                         {error && (
                             <div style={{ borderRadius: 16, border: '1px solid rgba(239,68,68,0.18)', background: 'rgba(254,242,242,0.9)', padding: 16, color: '#991B1B', fontSize: 14 }}>
