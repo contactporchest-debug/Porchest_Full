@@ -144,6 +144,7 @@ const COLORS = {
 };
 
 const PIE_COLORS = ['#C2340A', '#FF6B1A', '#C4A882', '#EDD9BC', '#E8400A'];
+const ANALYTICS_REQUEST_TIMEOUT_MS = 12000;
 
 function formatNumber(value: number | null | undefined, digits = 0) {
     if (value == null || Number.isNaN(value)) return '—';
@@ -263,6 +264,15 @@ function typeMatches(filter: string, type: string) {
     return true;
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs = ANALYTICS_REQUEST_TIMEOUT_MS, message = 'Request timed out.') {
+    return Promise.race<T>([
+        promise,
+        new Promise<T>((_, reject) => {
+            setTimeout(() => reject(new Error(message)), timeoutMs);
+        }),
+    ]);
+}
+
 export default function BrandAnalyticsPage() {
     const searchParams = useSearchParams();
     const targetInfluencerId = searchParams.get('influencerId') || '';
@@ -279,7 +289,7 @@ export default function BrandAnalyticsPage() {
     const loadInfluencers = useCallback(async (nextSearch = '') => {
         setLoadingList(true);
         try {
-            const response = await brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined);
+            const response = await withTimeout(brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
             const nextInfluencers = response.data?.influencers || [];
             setInfluencers(nextInfluencers);
             setSelectedId((current) => {
@@ -288,7 +298,7 @@ export default function BrandAnalyticsPage() {
                 return nextInfluencers[0]?.influencerId || '';
             });
         } catch (err: any) {
-            setError(err?.response?.data?.message || 'Failed to load influencers.');
+            setError(err?.response?.data?.message || err?.message || 'Failed to load influencers.');
             setInfluencers([]);
             setSelectedId('');
         } finally {
@@ -301,12 +311,12 @@ export default function BrandAnalyticsPage() {
         if (!silent) setLoadingDetail(true);
         else setRefreshing(true);
         try {
-            const response = await brandAPI.getInfluencer60DayAnalytics(id);
+            const response = await withTimeout(brandAPI.getInfluencer60DayAnalytics(id));
             setData(response.data || null);
             setError('');
         } catch (err: any) {
             setData(null);
-            setError(err?.response?.data?.message || 'Unable to fetch analytics.');
+            setError(err?.response?.data?.message || err?.message || 'Unable to fetch analytics.');
         } finally {
             setLoadingDetail(false);
             setRefreshing(false);
