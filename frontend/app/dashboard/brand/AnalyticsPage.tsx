@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
@@ -14,6 +15,7 @@ import {
     Radar,
     RefreshCw,
     Search,
+    Send,
     Sparkles,
     Star,
     TrendingUp,
@@ -40,6 +42,7 @@ import {
 } from 'recharts';
 import { GlassCard, GlowButton } from '@/components/ui';
 import { brandAPI } from '@/lib/api';
+const CreateRequestModal = dynamic(() => import('./CreateRequestModal'), { ssr: false });
 
 type InfluencerListItem = {
     _id?: string;
@@ -147,6 +150,14 @@ const COLORS = {
 
 const PIE_COLORS = ['#C2340A', '#FF6B1A', '#C4A882', '#EDD9BC', '#E8400A'];
 const ANALYTICS_REQUEST_TIMEOUT_MS = 12000;
+
+function resolveUserId(value: unknown) {
+    if (typeof value === 'string') return value;
+    if (value && typeof value === 'object' && '_id' in value) {
+        return String((value as { _id?: string })._id || '');
+    }
+    return '';
+}
 
 function formatNumber(value: number | null | undefined, digits = 0) {
     if (value == null || Number.isNaN(value)) return '—';
@@ -287,6 +298,8 @@ export default function BrandAnalyticsPage() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
     const [filter, setFilter] = useState<'all' | 'photos' | 'reels' | 'videos'>('all');
+    const [avatarError, setAvatarError] = useState(false);
+    const [requestOpen, setRequestOpen] = useState(false);
 
     const loadInfluencers = useCallback(async (nextSearch = '') => {
         setLoadingList(true);
@@ -338,6 +351,10 @@ export default function BrandAnalyticsPage() {
         () => influencers.find((item) => (item.influencerId || item.influencerProfileId || item._id) === selectedId) || null,
         [influencers, selectedId]
     );
+
+    useEffect(() => {
+        setAvatarError(false);
+    }, [selectedId]);
 
     const summary = data?.summary;
     const influencer = data?.influencer;
@@ -465,6 +482,20 @@ export default function BrandAnalyticsPage() {
         await loadDetail(selectedId, true);
     };
 
+    const requestTarget = useMemo(() => {
+        const requestUserId = resolveUserId(selectedInfluencer?.userId) || resolveUserId(influencer?.userId);
+
+        if (!requestUserId) return null;
+
+        return {
+            _id: requestUserId,
+            fullName: influencer?.name || selectedInfluencer?.fullName || 'Influencer',
+            email: '',
+            niche: selectedInfluencer?.niche || '',
+            followers: Number(selectedInfluencer?.followers ?? influencer?.followers ?? 0),
+        };
+    }, [influencer, selectedInfluencer]);
+
     const handleSearch = () => void loadInfluencers(search);
 
     if (loadingList || (loadingDetail && selectedId && !data)) {
@@ -509,8 +540,8 @@ export default function BrandAnalyticsPage() {
     if (error || !data || !influencer) {
         return (
             <GlassCard padding="24px">
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Brand Analytics</p>
-                <h1 style={{ marginTop: 8, fontSize: 28, fontWeight: 800, color: COLORS.ink }}>Unable to load analytics</h1>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencers</p>
+                <h1 style={{ marginTop: 8, fontSize: 28, fontWeight: 800, color: COLORS.ink }}>Unable to load influencer analytics</h1>
                 <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>{error || 'Select an influencer to view the 60-day analytics report.'}</p>
                 <div style={{ marginTop: 16 }}>
                     <GlowButton onClick={() => void loadInfluencers(search)}>
@@ -527,11 +558,11 @@ export default function BrandAnalyticsPage() {
             <GlassCard padding="28px">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                     <div style={{ maxWidth: 820 }}>
-                        <Link href="/dashboard/brand/influencers" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: COLORS.orange, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
+                        <Link href="/dashboard/brand" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: COLORS.orange, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
                             <ArrowLeft size={14} />
-                            Back to influencers
+                            Back to dashboard
                         </Link>
-                        <p style={{ marginTop: 10, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Brand Analytics</p>
+                        <p style={{ marginTop: 10, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Influencers</p>
                         <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>60-Day Influencer Analytics</h1>
                         <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
                             Brand evaluation is now focused on the last 60 days only. Pick an influencer to review the same report used throughout the portal.
@@ -541,6 +572,10 @@ export default function BrandAnalyticsPage() {
                         <GlowButton variant="outline" onClick={handleRefresh} loading={refreshing || loadingDetail} disabled={!selectedId}>
                             <RefreshCw size={14} />
                             Refresh 60d Data
+                        </GlowButton>
+                        <GlowButton onClick={() => setRequestOpen(true)} disabled={!requestTarget}>
+                            <Send size={14} />
+                            Send Request
                         </GlowButton>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, background: 'rgba(194,52,10,0.08)', border: '1px solid rgba(194,52,10,0.18)', color: COLORS.orange, fontSize: 13, fontWeight: 800 }}>
                             <Star size={14} />
@@ -652,26 +687,42 @@ export default function BrandAnalyticsPage() {
                         <>
                             <GlassCard padding="28px">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                                    <div style={{ maxWidth: 820 }}>
-                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Selected Influencer</p>
-                                        <h2 style={{ marginTop: 8, fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>{influencer.name}</h2>
-                                        <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
-                                            A clean 60-day snapshot with engagement, content, follower growth, authenticity, and audience demographics.
-                                        </p>
-                                        <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 13, fontWeight: 700 }}>
-                                                <Users size={14} />
-                                                {formatCompact(influencer.followers)} followers
-                                            </span>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)', color: COLORS.green, fontSize: 13, fontWeight: 700 }}>
-                                                <CheckCircle2 size={14} />
-                                                {influencer.verified ? 'Verified' : 'Profile visible'}
-                                            </span>
-                                            {influencer.username ? (
+                                    <div style={{ maxWidth: 820, display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                        <div style={{ width: 88, height: 88, borderRadius: 24, overflow: 'hidden', background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.orange, fontSize: 28, fontWeight: 800, flexShrink: 0 }}>
+                                            {(() => {
+                                                const avatar = selectedInfluencer?.profilePictureUrl || influencer?.profilePictureUrl || null;
+                                                const fallback = (influencer?.name || selectedInfluencer?.fullName || 'IN').trim().slice(0, 2).toUpperCase();
+                                                return avatar && !avatarError ? (
+                                                    <img
+                                                        src={avatar}
+                                                        alt={influencer?.name || selectedInfluencer?.fullName || 'Influencer'}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        onError={() => setAvatarError(true)}
+                                                    />
+                                                ) : fallback;
+                                            })()}
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Selected Influencer</p>
+                                            <h2 style={{ marginTop: 8, fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', color: COLORS.ink }}>{influencer.name}</h2>
+                                            <p style={{ marginTop: 8, fontSize: 14, color: COLORS.muted, lineHeight: 1.7 }}>
+                                                A clean 60-day snapshot with engagement, content, follower growth, authenticity, and audience demographics.
+                                            </p>
+                                            <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 13, fontWeight: 700 }}>
-                                                    @{influencer.username}
+                                                    <Users size={14} />
+                                                    {formatCompact(influencer.followers)} followers
                                                 </span>
-                                            ) : null}
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)', color: COLORS.green, fontSize: 13, fontWeight: 700 }}>
+                                                    <CheckCircle2 size={14} />
+                                                    {influencer.verified ? 'Verified' : 'Profile visible'}
+                                                </span>
+                                                {influencer.username ? (
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.6)', border: `1px solid ${COLORS.border}`, color: COLORS.ink, fontSize: 13, fontWeight: 700 }}>
+                                                        @{influencer.username}
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -951,6 +1002,16 @@ export default function BrandAnalyticsPage() {
                     )}
                 </div>
             </div>
+
+            {requestOpen && requestTarget ? (
+                <CreateRequestModal
+                    influencer={requestTarget}
+                    onClose={() => setRequestOpen(false)}
+                    onSuccess={() => {
+                        setRequestOpen(false);
+                    }}
+                />
+            ) : null}
         </div>
     );
 }
