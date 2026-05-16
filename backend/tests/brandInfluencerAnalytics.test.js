@@ -82,6 +82,10 @@ test('getInfluencer60DayAnalytics returns a 60 day summary from profile data', a
     assert.equal(result.summary.total_posts, 1);
     assert.equal(result.summary.average_likes, 600);
     assert.equal(result.summary.average_comments, 42);
+    assert.ok(Number.isFinite(result.summary.final_score));
+    assert.ok(result.summary.rating_tier);
+    assert.ok(Number.isFinite(result.summary.view_rate));
+    assert.ok(result.roi);
     assert.equal(result.content_distribution.reel_count, 1);
     assert.equal(result.demographics.locations[0].region, 'US');
     assert.ok(Array.isArray(result.posts));

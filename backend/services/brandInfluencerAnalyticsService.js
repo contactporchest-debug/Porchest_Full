@@ -249,6 +249,62 @@ function weeklyBucketLabel(dateValue) {
     return weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function average(values) {
+    const numbers = values.filter((value) => Number.isFinite(value) && value > 0);
+    if (!numbers.length) return 0;
+    return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+}
+
+function buildEngagementBreakdown(posts) {
+    const totals = posts.reduce((acc, post) => {
+        acc.likes += toNumber(post.likes);
+        acc.comments += toNumber(post.comments);
+        acc.shares += toNumber(post.shares);
+        acc.saves += toNumber(post.saves);
+        return acc;
+    }, { likes: 0, comments: 0, shares: 0, saves: 0 });
+
+    return [
+        { name: 'Likes', value: totals.likes },
+        { name: 'Comments', value: totals.comments },
+        { name: 'Shares', value: totals.shares },
+        { name: 'Saves', value: totals.saves },
+    ].filter((item) => item.value > 0);
+}
+
+function estimateBenchmarkCpm(followers) {
+    const count = Number(followers || 0);
+    if (count >= 1_000_000) return 18;
+    if (count >= 100_000) return 15;
+    if (count >= 10_000) return 12;
+    return 10;
+}
+
+function buildRatingTier(score) {
+    if (score >= 85) return 'Elite';
+    if (score >= 70) return 'Good';
+    if (score >= 50) return 'Average';
+    return 'Needs Review';
+}
+
+function buildRadarScore({
+    averageEngagementRate,
+    viewRate,
+    authenticityScore,
+    followerGrowthRate,
+    costEfficiencyScore,
+    consistencyScore,
+}) {
+    return [
+        { metric: 'Engagement', value: clamp((averageEngagementRate / 6) * 100) },
+        { metric: 'View Rate', value: clamp((viewRate / 15) * 100) },
+        { metric: 'Authenticity', value: clamp(authenticityScore) },
+        { metric: 'Growth', value: clamp(followerGrowthRate > 0 ? Math.min(followerGrowthRate * 2, 100) : 0) },
+        { metric: 'Cost Efficiency', value: clamp(costEfficiencyScore) },
+        { metric: 'Consistency', value: clamp(consistencyScore) },
+    ];
+}
+
 async function resolveInfluencerProfile(influencerIdentifier) {
     const id = normalizeString(influencerIdentifier);
     if (!id) {
@@ -391,6 +447,21 @@ function buildEngagementTrend(posts) {
         }));
 }
 
+function buildWeeklyPostsTrend(posts) {
+    const byWeek = new Map();
+
+    posts.forEach((post) => {
+        const timestamp = toDate(post.timestamp);
+        if (!timestamp) return;
+        const weekKey = weeklyBucketLabel(timestamp);
+        byWeek.set(weekKey, (byWeek.get(weekKey) || 0) + 1);
+    });
+
+    return [...byWeek.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([label, postsCount]) => ({ label, postsCount }));
+}
+
 async function loadInsightDocs(profile, cutoff) {
     return InsightsRaw.find({
         $or: [
@@ -480,12 +551,16 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
     const averageComments = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.comments), 0) / totalPosts : 0;
     const averageEngagementRate = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.engagement_rate), 0) / totalPosts : Number(profile.engagementRate || profile.avgEngagementRate || 0);
     const totalEngagements = posts.reduce((sum, post) => sum + toNumber(post.likes) + toNumber(post.comments), 0);
+    const totalShares = posts.reduce((sum, post) => sum + toNumber(post.shares), 0);
+    const totalSaves = posts.reduce((sum, post) => sum + toNumber(post.saves), 0);
+    const averageViews = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.impressions || post.views), 0) / totalPosts : 0;
 
     const startSnapshot = getNearestSnapshot(profile, cutoff, 'after') || getNearestSnapshot(profile, cutoff, 'before');
     const endSnapshot = getNearestSnapshot(profile, new Date(), 'before') || getNearestSnapshot(profile, new Date(), 'after');
     const followersStart = toNumber(startSnapshot?.followersCount || profile.followersCount || profile.igFollowersCount);
     const followersNow = toNumber(endSnapshot?.followersCount || profile.followersCount || profile.igFollowersCount);
     const followerGrowthRate = followersStart > 0 ? Number((((followersNow - followersStart) / followersStart) * 100).toFixed(2)) : 0;
+    const viewRate = followersNow > 0 ? Number(((averageViews / followersNow) * 100).toFixed(2)) : 0;
 
     const contentDistribution = posts.reduce((acc, post) => {
         const key = `${normalizeType(post.type)}_count`;
@@ -501,7 +576,8 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
     const trendData = buildPostTrend(posts);
     const followerTrend = buildFollowerTrend(profile, posts);
     const engagementTrend = buildEngagementTrend(posts);
-    const uniqueWeeks = new Set(trendData.weekly.map((item) => item.label)).size;
+    const weeklyPosts = buildWeeklyPostsTrend(posts);
+    const uniqueWeeks = new Set(weeklyPosts.map((item) => item.label)).size;
 
     const authenticityScore = calculateAuthenticityScore({
         averageEngagementRate,
@@ -510,14 +586,41 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
         followers: followersNow,
     });
 
+    const deliverableCosts = [toNumber(profile.avgPostPrice), toNumber(profile.avgReelPrice)].filter((value) => value > 0);
+    const averageDeliverableCost = average(deliverableCosts);
+    const campaignCostEstimate = averageDeliverableCost > 0 ? averageDeliverableCost * Math.max(totalPosts, 1) : 0;
+    const costPerView = campaignCostEstimate > 0 && averageViews > 0 ? Number((campaignCostEstimate / averageViews).toFixed(4)) : null;
+    const costPerEngagement = campaignCostEstimate > 0 && totalEngagements > 0 ? Number((campaignCostEstimate / totalEngagements).toFixed(2)) : null;
+    const estimatedCostPerPost = toNumber(profile.avgPostPrice) > 0 ? Number(profile.avgPostPrice) : null;
+    const estimatedCostPerReel = toNumber(profile.avgReelPrice) > 0 ? Number(profile.avgReelPrice) : null;
+
+    const benchmarkCpm = estimateBenchmarkCpm(followersNow);
+    const estimatedMediaValue = totalPosts > 0
+        ? Number(((Math.max(averageViews, followersNow * 0.2) / 1000) * benchmarkCpm).toFixed(2))
+        : null;
+    const predictedROI = campaignCostEstimate > 0 && estimatedMediaValue != null
+        ? Number((((estimatedMediaValue - campaignCostEstimate) / campaignCostEstimate) * 100).toFixed(2))
+        : null;
+
+    const engagementAlignment = clamp((averageEngagementRate / estimateExpectedEngagementRate(followersNow)) * 100, 0, 100);
+    const viewAlignment = clamp((viewRate / 12) * 100, 0, 100);
+    const costEfficiencyScore = costPerView == null ? 0 : clamp(100 - ((costPerView / 0.05) * 100), 0, 100);
+    const consistencyScore = clamp((uniqueWeeks / 8) * 100, 0, 100);
+    const growthScore = followerGrowthRate <= 0 ? 35 : followerGrowthRate >= 50 ? 100 : clamp(50 + followerGrowthRate, 0, 100);
+    const finalScore = Math.round(clamp(
+        (engagementAlignment * 0.28)
+        + (viewAlignment * 0.18)
+        + (authenticityScore * 0.24)
+        + (growthScore * 0.10)
+        + (costEfficiencyScore * 0.10)
+        + (consistencyScore * 0.10),
+        0,
+        100
+    ));
+    const ratingTier = buildRatingTier(finalScore);
+
     const demographicSource = extractDemographicSource(insightDocs, profile);
-    const locations = normalizeDemographicBuckets(
-        demographicSource?.countries
-            || demographicSource?.topCountries
-            || demographicSource?.locationDistribution
-            || demographicSource?.topCities,
-        'locations'
-    ).slice(0, 10);
+    const locations = parseLocationData(profile, insightDocs).slice(0, 10);
     const genders = parseGenderData({
         demographics: demographicSource,
         audience: profile?.audience,
@@ -541,23 +644,54 @@ async function getInfluencer60DayAnalytics({ id, period = 60 }) {
             platform: profile.platform || 'Instagram',
         },
         summary: {
+            avg_engagement_rate: Number(averageEngagementRate.toFixed(2)),
             average_engagement_rate: Number(averageEngagementRate.toFixed(2)),
+            avg_likes: Number(averageLikes.toFixed(2)),
             average_likes: Number(averageLikes.toFixed(2)),
+            avg_comments: Number(averageComments.toFixed(2)),
             average_comments: Number(averageComments.toFixed(2)),
+            posts_analyzed: totalPosts,
             total_posts: totalPosts,
             follower_growth_rate: followerGrowthRate,
             authenticity_score: authenticityScore,
+            average_views: Number(averageViews.toFixed(2)),
+            view_rate: viewRate,
+            cost_per_view: costPerView,
+            cost_per_engagement: costPerEngagement,
+            estimated_cost_per_post: estimatedCostPerPost,
+            estimated_cost_per_reel: estimatedCostPerReel,
+            estimated_media_value: estimatedMediaValue,
+            predicted_roi: predictedROI,
+            final_score: finalScore,
+            rating_tier: ratingTier,
+            consistency_score: Math.round(consistencyScore),
         },
         trends: {
             engagement_rate_over_time: engagementTrend,
             follower_count_over_time: followerTrend,
-            posting_frequency_over_time: trendData.weekly,
+            posting_frequency_over_time: weeklyPosts,
+            posts_per_week: weeklyPosts,
         },
         content_distribution: {
             photo_count: contentDistribution.photo_count || 0,
             video_count: contentDistribution.video_count || 0,
             reel_count: contentDistribution.reel_count || 0,
             story_count: contentDistribution.story_count || 0,
+        },
+        engagement_breakdown: buildEngagementBreakdown(posts),
+        radar: buildRadarScore({
+            averageEngagementRate,
+            viewRate,
+            authenticityScore,
+            followerGrowthRate,
+            costEfficiencyScore,
+            consistencyScore,
+        }),
+        roi: {
+            predicted_roi: predictedROI,
+            estimated_media_value: estimatedMediaValue,
+            final_score: finalScore,
+            rating_tier: ratingTier,
         },
         demographics: {
             locations,

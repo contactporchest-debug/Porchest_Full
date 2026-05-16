@@ -53,7 +53,6 @@ import {
     YAxis,
 } from 'recharts';
 import { analyticsAPI, brandAPI } from '@/lib/api';
-import InfluencerProfileMetrics from '@/components/brand/InfluencerProfileMetrics';
 
 type HistoricalSnapshot = {
     capturedAt?: string;
@@ -618,10 +617,6 @@ export default function InfluencerFullProfilePage({ influencerUserId }: FullProf
                     </div>
                 </div>
             </motion.section>
-
-            <div style={{ padding: '0 8px' }}>
-                <InfluencerProfileMetrics influencerId={profile?._id || influencerUserId} />
-            </div>
 
             <SectionCard title="Complete KPI Snapshot" subtitle="Stored profile facts plus Porchest-calculated benchmark metrics." icon={<Target size={16} />}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
