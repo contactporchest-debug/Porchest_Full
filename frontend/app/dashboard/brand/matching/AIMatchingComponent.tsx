@@ -24,6 +24,7 @@ export default function AIMatchingComponent() {
     const [brandProfile, setBrandProfile] = useState<any>(null);
     const [influencers, setInfluencers] = useState<any[]>([]);
     const [analysisFilters, setAnalysisFilters] = useState<any>(null);
+    const cacheKey = 'porchest_smart_matching_results';
     
     // Modal states
     const [selectedInfluencerProfile, setSelectedInfluencerProfile] = useState<any>(null);
@@ -44,18 +45,39 @@ export default function AIMatchingComponent() {
         };
     }, []);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const cached = window.localStorage.getItem(cacheKey);
+            if (!cached) return;
+            const parsed = JSON.parse(cached);
+            if (parsed?.aiReply) setAiReply(parsed.aiReply);
+            if (Array.isArray(parsed?.influencers)) setInfluencers(parsed.influencers.slice(0, 5));
+            if (parsed?.filters) setAnalysisFilters(parsed.filters);
+        } catch {
+            window.localStorage.removeItem(cacheKey);
+        }
+    }, []);
+
     const handleAnalyze = async () => {
         setLoading(true);
-        setInfluencers([]);
-        setAiReply('');
         
         try {
             const res = await brandAPI.profileMatching();
             if (res.data.success) {
                 setAiReply(res.data.aiReply);
-                setInfluencers(res.data.influencers || []);
+                const nextInfluencers = (res.data.influencers || []).slice(0, 5);
+                setInfluencers(nextInfluencers);
                 setAnalysisFilters(res.data.filters || null);
-                if (res.data.influencers?.length === 0) {
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem(cacheKey, JSON.stringify({
+                        aiReply: res.data.aiReply,
+                        influencers: nextInfluencers,
+                        filters: res.data.filters || null,
+                        savedAt: Date.now(),
+                    }));
+                }
+                if (nextInfluencers.length === 0) {
                     toast.error('No direct matches found. Try broadening your brand profile preferences.');
                 }
             } else {
@@ -178,6 +200,8 @@ export default function AIMatchingComponent() {
             : 'A strong strategic match based on your brand profile.';
     };
 
+    const visibleInfluencers = influencers.slice(0, 5);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Header */}
@@ -282,15 +306,15 @@ export default function AIMatchingComponent() {
             </AnimatePresence>
 
             {/* Results Grid */}
-             {influencers.length > 0 && (
+             {visibleInfluencers.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00', letterSpacing: '-0.01em' }}>Recommended Influencers ({influencers.length})</h3>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1A0A00', letterSpacing: '-0.01em' }}>Recommended Influencers ({visibleInfluencers.length})</h3>
                 </div>
             )}
-            {influencers.length > 0 && (
+            {visibleInfluencers.length > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
                     <AnimatePresence>
-                        {influencers.map((inf: any, i: number) => {
+                        {visibleInfluencers.map((inf: any, i: number) => {
                             const nc = NICHE_COLORS[inf.niche || ''] || '#E8400A';
                             const dp = inf.profilePictureUrl || inf.profileImageURL || inf.instagramDPURL || null;
                             const handle = inf.username || null;
