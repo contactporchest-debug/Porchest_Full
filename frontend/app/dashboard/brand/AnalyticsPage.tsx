@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
     BadgeDollarSign,
@@ -432,9 +432,12 @@ export default function BrandAnalyticsPage() {
     const [filter, setFilter] = useState<'all' | 'photos' | 'reels' | 'videos'>('all');
     const [avatarError, setAvatarError] = useState(false);
     const [requestOpen, setRequestOpen] = useState(false);
+    const searchSyncStarted = useRef(false);
 
-    const loadInfluencers = useCallback(async (nextSearch = '') => {
-        setLoadingList(true);
+    const loadInfluencers = useCallback(async (nextSearch = '', options?: { silent?: boolean }) => {
+        const silent = Boolean(options?.silent);
+        if (!silent) setLoadingList(true);
+        else setRefreshing(true);
         try {
             const response = await withTimeout(brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
             const nextInfluencers = response.data?.influencers || [];
@@ -450,7 +453,8 @@ export default function BrandAnalyticsPage() {
             setInfluencers([]);
             setSelectedId('');
         } finally {
-            setLoadingList(false);
+            if (!silent) setLoadingList(false);
+            else setRefreshing(false);
         }
     }, [targetInfluencerId]);
 
@@ -476,6 +480,19 @@ export default function BrandAnalyticsPage() {
     }, [loadInfluencers]);
 
     useEffect(() => {
+        if (!searchSyncStarted.current) {
+            searchSyncStarted.current = true;
+            return;
+        }
+
+        const handle = window.setTimeout(() => {
+            void loadInfluencers(search.trim(), { silent: true });
+        }, 250);
+
+        return () => window.clearTimeout(handle);
+    }, [loadInfluencers, search]);
+
+    useEffect(() => {
         if (selectedId) void loadDetail(selectedId, selectedPeriod);
     }, [selectedId, selectedPeriod, loadDetail]);
 
@@ -483,6 +500,27 @@ export default function BrandAnalyticsPage() {
         () => influencers.find((item) => (item.influencerId || item.influencerProfileId || item._id) === selectedId) || null,
         [influencers, selectedId]
     );
+
+    const visibleInfluencers = useMemo(() => {
+        const query = search.trim().toLowerCase();
+        if (!query) return influencers;
+
+        return influencers.filter((item) => {
+            const fullName = String(item.fullName || '').toLowerCase();
+            const username = String(item.username || '').toLowerCase();
+            const niche = String(item.niche || '').toLowerCase();
+            const country = String(item.country || '').toLowerCase();
+            const searchId = String(item.influencerId || item.influencerProfileId || item._id || '').toLowerCase();
+
+            return (
+                fullName.includes(query) ||
+                username.includes(query) ||
+                niche.includes(query) ||
+                country.includes(query) ||
+                searchId.includes(query)
+            );
+        });
+    }, [influencers, search]);
 
     useEffect(() => {
         setAvatarError(false);
@@ -650,7 +688,7 @@ export default function BrandAnalyticsPage() {
         };
     }, [influencer, selectedInfluencer]);
 
-    const handleSearch = () => void loadInfluencers(search);
+    const handleSearch = () => void loadInfluencers(search, { silent: true });
 
     if (loadingList || (loadingDetail && selectedId && !data)) {
         return (
@@ -738,6 +776,9 @@ export default function BrandAnalyticsPage() {
                             onBlur={(event) => { event.currentTarget.style.borderColor = '#EDD9BC'; }}
                         />
                     </div>
+                    <p style={{ margin: '8px 0 0', fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>
+                        Results update as you type. Press Search to force a fresh lookup.
+                    </p>
                     <div style={{ marginTop: 16 }}>
                         <GlowButton fullWidth onClick={handleSearch}>
                             <Search size={14} />
@@ -754,10 +795,10 @@ export default function BrandAnalyticsPage() {
                                     <SkeletonBox height={10} width="48%" style={{ marginTop: 12 }} />
                                 </GlassCard>
                             ))
-                        ) : influencers.length === 0 ? (
+                        ) : visibleInfluencers.length === 0 ? (
                             <EmptyState title="No influencers found" copy="Profiles will appear here once influencer data is available in the platform." />
                         ) : (
-                            influencers.map((item) => {
+                            visibleInfluencers.map((item) => {
                                 const itemId = item.influencerId || item.influencerProfileId || item._id || '';
                                 const active = itemId === selectedId;
                                 const avatar = item.profilePictureUrl || (item as any).profileImageURL || (item as any).instagramDPURL || (item as any).profilePictureURL || (item as any).igProfileUrl || null;
