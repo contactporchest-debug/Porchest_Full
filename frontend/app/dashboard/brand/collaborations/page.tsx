@@ -38,6 +38,8 @@ type Collaboration = {
     postingDeadline?: string;
     acceptedAt?: string;
     sentAt?: string;
+    campaignStartAt?: string;
+    campaignActiveAt?: string;
     cancelledAt?: string;
     content?: {
         driveLink?: string;
