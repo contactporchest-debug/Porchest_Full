@@ -218,7 +218,6 @@ function buildDiscoveryReadinessFilter() {
                 $or: [
                     { profileCompletionStatus: true },
                     { profileComplete: true },
-                    { isSearchable: true },
                 ],
             },
             {

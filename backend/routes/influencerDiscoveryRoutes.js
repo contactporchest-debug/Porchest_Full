@@ -21,7 +21,6 @@ router.get('/influencers', requireCompleteProfile, async (req, res) => {
                     $or: [
                         { profileCompletionStatus: true },
                         { profileComplete: true },
-                        { isSearchable: true },
                     ],
                 },
                 {
