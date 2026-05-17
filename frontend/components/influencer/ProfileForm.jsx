@@ -70,6 +70,7 @@ export default function ProfileForm() {
     const [form, setForm] = useState({
         fullName: '',
         contactEmail: '',
+        bio: '',
         country: '',
         city: '',
         niche: [],
@@ -84,6 +85,7 @@ export default function ProfileForm() {
         setForm({
             fullName: profile.fullName || '',
             contactEmail: profile.contactEmail || '',
+            bio: profile.bio || profile.igBio || '',
             country: profile.country || profile.countryOfResidence || '',
             city: profile.city || '',
             niche: parseList(profile.niche),
@@ -103,6 +105,7 @@ export default function ProfileForm() {
         return !!(
             form.fullName.trim() &&
             form.contactEmail.trim() &&
+            form.bio.trim() &&
             form.country &&
             form.city &&
             form.niche.length > 0 &&
@@ -155,6 +158,7 @@ export default function ProfileForm() {
             await influencerAPI.updateProfile({
                 fullName: form.fullName,
                 contactEmail: form.contactEmail,
+                bio: form.bio,
                 country: form.country,
                 city: form.city,
                 niche: form.niche,
@@ -177,7 +181,7 @@ export default function ProfileForm() {
 
     const profileComplete = Boolean(profile?.profileComplete);
 
-    if (!isEditing && profileComplete) {
+    if (!isEditing) {
         return (
             <div id="profile-form" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={sectionStyle()}>
@@ -185,11 +189,11 @@ export default function ProfileForm() {
                         <div>
                             <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Basic profile</p>
                             <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Profile Setup</h3>
-                            <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Your profile is ready. Click edit if you want to make changes.</p>
+                            <p style={{ marginTop: '4px', fontSize: '14px', color: '#7A5030' }}>Your profile details are saved. Click edit if you want to make changes.</p>
                         </div>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', justifyContent: 'flex-end' }}>
-                            <div style={{ display: 'inline-flex', borderRadius: '99px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.1)', color: '#059669', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
-                                Profile complete
+                            <div style={{ display: 'inline-flex', borderRadius: '99px', border: profileComplete ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(245,158,11,0.2)', background: profileComplete ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: profileComplete ? '#059669' : '#d97706', padding: '4px 12px', fontSize: '12px', fontWeight: 700 }}>
+                                {profileComplete ? 'Profile complete' : 'Saved, incomplete'}
                             </div>
                             <button
                                 type="button"
@@ -219,6 +223,10 @@ export default function ProfileForm() {
                         <div>
                             <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>City</p>
                             <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>{profile.city || '—'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Bio</p>
+                            <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 500, color: '#1A0A00', lineHeight: 1.7 }}>{profile.bio || profile.igBio || '—'}</p>
                         </div>
                         <div>
                             <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Niche</p>
@@ -303,6 +311,20 @@ export default function ProfileForm() {
                             </select>
                             <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
                         </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="md:col-span-2">
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Bio</label>
+                        <textarea
+                            required
+                            rows={4}
+                            style={{ ...inputStyle(), resize: 'vertical', minHeight: '120px' }}
+                            placeholder="Write a short bio for your audience and brand partners"
+                            value={form.bio}
+                            onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, bio: event.target.value })); }}
+                            onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }}
+                            onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}
+                        />
                     </div>
                 </div>
             </div>

@@ -12,9 +12,13 @@ function computeProfileCompletion(profile) {
 
     const checks = [
         { key: 'displayName', label: 'Add display name', done: !!(profile.fullName || profile.displayName) },
+        { key: 'contactEmail', label: 'Add contact email', done: !!profile.contactEmail },
         { key: 'bio', label: 'Add bio', done: !!(profile.bio || profile.instagramBiography) },
         { key: 'niche', label: 'Select niche/category', done: !!profile.niche },
         { key: 'country', label: 'Set audience region / country', done: !!profile.country },
+        { key: 'city', label: 'Set city', done: !!profile.city },
+        { key: 'languages', label: 'Select languages', done: Array.isArray(profile.languages) && profile.languages.length > 0 },
+        { key: 'contentStyleTags', label: 'Pick content style', done: Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 },
         { key: 'followers', label: 'Sync follower count', done: (profile.followersCount || 0) > 0 },
         { key: 'engagement', label: 'Sync engagement data', done: (profile.engagementRate || 0) > 0 },
         { key: 'postPrice', label: 'Set average post price', done: (profile.avgPostPrice || 0) > 0 },
@@ -110,6 +114,16 @@ exports.updateProfile = async (req, res, next) => {
     try {
         // Just extracting fields manually to bypass strict legacy validator mismatch
         const updates = req.body;
+        const normalizeList = (value) => {
+            if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+            if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
+            return [];
+        };
+        const normalizeRate = (value) => {
+            if (value === '' || value == null) return undefined;
+            const next = Number(value);
+            return Number.isFinite(next) ? next : undefined;
+        };
         const mappedUpdates = {
             fullName: updates.fullName || updates.displayName || req.user?.name || req.user?.email?.split('@')[0] || 'Influencer',
             displayName: updates.displayName || updates.fullName,
@@ -117,10 +131,16 @@ exports.updateProfile = async (req, res, next) => {
             age: updates.age,
             country: updates.countryOfResidence || updates.country,
             city: updates.city,
-            niche: updates.niche,
+            niche: normalizeList(updates.niche),
             bio: updates.shortBio || updates.bio,
-            avgPostPrice: updates.avgPostCostUSD !== undefined ? updates.avgPostCostUSD : updates.avgPostPrice,
-            avgReelPrice: updates.avgReelCostUSD !== undefined ? updates.avgReelCostUSD : updates.avgReelPrice,
+            languages: normalizeList(updates.languages),
+            contentStyleTags: normalizeList(updates.contentStyleTags),
+            rates: {
+                reelPrice: normalizeRate(updates.rates?.reelPrice ?? updates.avgReelCostUSD ?? updates.avgReelPrice),
+                postPrice: normalizeRate(updates.rates?.postPrice ?? updates.avgPostCostUSD ?? updates.avgPostPrice),
+            },
+            avgPostPrice: normalizeRate(updates.avgPostCostUSD ?? updates.avgPostPrice),
+            avgReelPrice: normalizeRate(updates.avgReelCostUSD ?? updates.avgReelPrice),
             profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl,
             avatar: updates.profileImageURL || updates.profilePictureUrl,
         };
