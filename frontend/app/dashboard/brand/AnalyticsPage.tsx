@@ -40,83 +40,12 @@ import {
 } from 'recharts';
 import { GlassCard, GlowButton } from '@/components/ui';
 import { brandAPI } from '@/lib/api';
-import type { BrandInfluencerCard, BrandInfluencerRequestTarget } from '@/types/brandInfluencer';
+import type {
+    BrandInfluencerAnalyticsResponse,
+    BrandInfluencerCard,
+    BrandInfluencerRequestTarget,
+} from '@/types/brandInfluencer';
 const CreateRequestModal = dynamic(() => import('./CreateRequestModal'), { ssr: false });
-
-type AnalyticsPost = {
-    postId: string;
-    timestamp: string;
-    type: 'photo' | 'video' | 'reel' | 'story' | string;
-    likes: number;
-    comments: number;
-    shares?: number;
-    saves?: number;
-    engagement_rate: number;
-    reach: number;
-    impressions: number;
-    permalink?: string | null;
-    caption?: string | null;
-};
-
-type BrandInfluencerAnalytics = {
-    influencerId: string;
-    period_days: number;
-    influencer: {
-        id: string;
-        userId: string;
-        name: string;
-        username: string | null;
-        profilePictureUrl: string | null;
-        followers: number;
-        verified: boolean;
-        platform: string;
-    };
-    summary: {
-        average_engagement_rate: number;
-        average_likes: number;
-        average_comments: number;
-        total_posts: number;
-        follower_growth_rate: number;
-        authenticity_score: number;
-        average_views?: number;
-        view_rate?: number;
-        cost_per_view?: number | null;
-        cost_per_engagement?: number | null;
-        estimated_cost_per_post?: number | null;
-        estimated_cost_per_reel?: number | null;
-        estimated_media_value?: number | null;
-        predicted_roi?: number | null;
-        final_score?: number;
-        rating_tier?: string;
-        consistency_score?: number;
-    };
-    trends: {
-        engagement_rate_over_time: Array<{ date: string; label: string; engagementRate: number }>;
-        follower_count_over_time: Array<{ date: string; label: string; followers: number }>;
-        posts_per_week?: Array<{ label: string; postsCount: number }>;
-        posting_frequency_over_time?: Array<{ label: string; postsCount: number }>;
-    };
-    content_distribution: {
-        photo_count: number;
-        video_count: number;
-        reel_count: number;
-        story_count: number;
-    };
-    engagement_breakdown?: Array<{ name: string; value: number }>;
-    radar?: Array<{ metric: string; value: number }>;
-    roi?: {
-        predicted_roi: number | null;
-        estimated_media_value: number | null;
-        final_score: number;
-        rating_tier: string;
-    };
-    demographics: {
-        locations: Array<{ region: string; percent: number }>;
-        genders: Array<{ gender: string; percent: number }>;
-        ages: Array<{ range: string; percent: number }>;
-    };
-    posts: AnalyticsPost[];
-};
 
 type AnalyticsPeriod = 10 | 30 | 60;
 
@@ -405,7 +334,7 @@ export default function BrandAnalyticsPage() {
     const [influencers, setInfluencers] = useState<BrandInfluencerCard[]>([]);
     const [selectedId, setSelectedId] = useState('');
     const [search, setSearch] = useState('');
-    const [data, setData] = useState<BrandInfluencerAnalytics | null>(null);
+    const [data, setData] = useState<BrandInfluencerAnalyticsResponse | null>(null);
     const [loadingList, setLoadingList] = useState(true);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [refreshing, setRefreshing] = useState(false);

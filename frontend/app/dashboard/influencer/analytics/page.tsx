@@ -38,96 +38,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { GlassCard } from '@/components/ui';
 import { useApi } from '@/hooks/useApi';
 import { influencerAPI } from '@/lib/api';
-
-type InfluencerProfile = {
-    _id?: string;
-    fullName?: string;
-    bio?: string;
-    igBio?: string;
-    igUsername?: string;
-    instagramUsername?: string;
-    profilePictureUrl?: string;
-    instagramDPURL?: string;
-    followersCount?: number;
-    igFollowersCount?: number;
-    verified?: boolean;
-    instagramConnected?: boolean;
-    instagramConnectionStatus?: string;
-};
-
-type AnalyticsPost = {
-    postId: string;
-    timestamp: string;
-    type: 'photo' | 'video' | 'reel' | 'story' | string;
-    likes: number;
-    comments: number;
-    shares?: number;
-    saves?: number;
-    engagement_rate: number;
-    reach: number;
-    impressions: number;
-    permalink?: string | null;
-    caption?: string | null;
-};
-
-type Influencer60DayAnalytics = {
-    influencerId: string;
-    period_days: number;
-    influencer: {
-        id: string;
-        userId: string;
-        name: string;
-        username: string | null;
-        profilePictureUrl: string | null;
-        followers: number;
-        verified: boolean;
-        platform: string;
-    };
-    summary: {
-        average_engagement_rate: number;
-        average_likes: number;
-        average_comments: number;
-        total_posts: number;
-        follower_growth_rate: number;
-        authenticity_score: number;
-        average_views?: number;
-        view_rate?: number;
-        cost_per_view?: number | null;
-        cost_per_engagement?: number | null;
-        estimated_cost_per_post?: number | null;
-        estimated_cost_per_reel?: number | null;
-        estimated_media_value?: number | null;
-        predicted_roi?: number | null;
-        final_score?: number;
-        rating_tier?: string;
-        consistency_score?: number;
-    };
-    trends: {
-        engagement_rate_over_time: Array<{ date: string; label: string; engagementRate: number }>;
-        follower_count_over_time: Array<{ date: string; label: string; followers: number }>;
-        posts_per_week?: Array<{ label: string; postsCount: number }>;
-    };
-    content_distribution: {
-        photo_count: number;
-        video_count: number;
-        reel_count: number;
-        story_count: number;
-    };
-    engagement_breakdown?: Array<{ name: string; value: number }>;
-    radar?: Array<{ metric: string; value: number }>;
-    roi?: {
-        predicted_roi: number | null;
-        estimated_media_value: number | null;
-        final_score: number;
-        rating_tier: string;
-    };
-    demographics: {
-        locations: Array<{ region: string; percent: number }>;
-        genders: Array<{ gender: string; percent: number }>;
-        ages: Array<{ range: string; percent: number }>;
-    };
-    posts: AnalyticsPost[];
-};
+import type { BrandInfluencerAnalyticsResponse, BrandInfluencerProfile } from '@/types/brandInfluencer';
 
 const COLORS = {
     ink: '#1A0A00',
@@ -313,8 +224,8 @@ function EmptyState({ title, copy }: { title: string; copy: string }) {
 }
 
 export default function InfluencerInstagramAnalyticsPage() {
-    const { data: profile, loading: profileLoading } = useApi<InfluencerProfile>('/profile/influencer/me');
-    const [analytics, setAnalytics] = useState<Influencer60DayAnalytics | null>(null);
+    const { data: profile, loading: profileLoading } = useApi<BrandInfluencerProfile>('/profile/influencer/me');
+    const [analytics, setAnalytics] = useState<BrandInfluencerAnalyticsResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 

@@ -63,7 +63,9 @@ export type BrandInfluencerProfile = {
     fullName?: string;
     displayName?: string;
     username?: string;
+    igUsername?: string;
     bio?: string;
+    igBio?: string;
     instagramBiography?: string;
     niche?: string;
     categories?: string[];
@@ -76,6 +78,9 @@ export type BrandInfluencerProfile = {
     instagramUsername?: string;
     instagramProfileURL?: string;
     platform?: string;
+    instagramConnected?: boolean;
+    instagramConnectionStatus?: string;
+    igFollowersCount?: number;
     followersCount?: number;
     followingCount?: number;
     mediaCount?: number;
@@ -144,4 +149,84 @@ export type BrandInfluencerProfile = {
     scoreBreakdown?: Record<string, number>;
     lastSyncAt?: string;
     recentMediaSummary?: MediaItem[];
+};
+
+export type BrandInfluencerAnalyticsPost = {
+    postId: string;
+    timestamp: string;
+    type: 'photo' | 'video' | 'reel' | 'story' | string;
+    likes: number;
+    comments: number;
+    shares?: number;
+    saves?: number;
+    engagement_rate: number;
+    reach: number;
+    impressions: number;
+    permalink?: string | null;
+    caption?: string | null;
+};
+
+export type BrandInfluencerAnalyticsSummary = {
+    average_engagement_rate: number;
+    average_likes: number;
+    average_comments: number;
+    total_posts: number;
+    follower_growth_rate: number;
+    authenticity_score: number;
+    average_views?: number;
+    view_rate?: number;
+    cost_per_view?: number | null;
+    cost_per_engagement?: number | null;
+    estimated_cost_per_post?: number | null;
+    estimated_cost_per_reel?: number | null;
+    estimated_media_value?: number | null;
+    predicted_roi?: number | null;
+    final_score?: number;
+    rating_tier?: string;
+    consistency_score?: number;
+};
+
+export type BrandInfluencerAnalyticsResponse = {
+    influencerId: string;
+    period_days: number;
+    influencer: {
+        id: string;
+        userId: string;
+        name: string;
+        username: string | null;
+        profilePictureUrl: string | null;
+        followers: number;
+        verified: boolean;
+        platform: string;
+        avgPostPrice?: number | null;
+        avgReelPrice?: number | null;
+        rates?: BrandInfluencerRates;
+    };
+    summary: BrandInfluencerAnalyticsSummary;
+    trends: {
+        engagement_rate_over_time: Array<{ date: string; label: string; engagementRate: number }>;
+        follower_count_over_time: Array<{ date: string; label: string; followers: number }>;
+        posts_per_week?: Array<{ label: string; postsCount: number }>;
+        posting_frequency_over_time?: Array<{ label: string; postsCount: number }>;
+    };
+    content_distribution: {
+        photo_count: number;
+        video_count: number;
+        reel_count: number;
+        story_count: number;
+    };
+    engagement_breakdown?: Array<{ name: string; value: number }>;
+    radar?: Array<{ metric: string; value: number }>;
+    roi?: {
+        predicted_roi: number | null;
+        estimated_media_value: number | null;
+        final_score: number;
+        rating_tier: string;
+    };
+    demographics: {
+        locations: Array<{ region: string; percent: number }>;
+        genders: Array<{ gender: string; percent: number }>;
+        ages: Array<{ range: string; percent: number }>;
+    };
+    posts: BrandInfluencerAnalyticsPost[];
 };
