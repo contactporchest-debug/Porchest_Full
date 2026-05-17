@@ -5,6 +5,8 @@ const financeController = require('../controllers/influencerFinanceController');
 const instagramController = require('../controllers/instagramController');
 const campaignRequestController = require('../controllers/campaignRequestController');
 const notificationController = require('../controllers/notificationController');
+const CampaignRequest = require('../models/CampaignRequest');
+const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { getInfluencerAnalytics } = require('../services/brandInfluencerAnalyticsService');
 const { buildInfluencerPerformanceReport } = require('../services/influencerPerformanceService');
@@ -77,6 +79,96 @@ router.get('/performance', async (req, res, next) => {
         return res.json({
             success: true,
             ...report,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+function normalizeInProductionCampaign(campaign, brandProfile) {
+    const agreedFee = Number(
+        campaign?.pricing?.agreedFee
+        ?? campaign?.pricing?.brandOffer
+        ?? campaign?.agreedFee
+        ?? campaign?.agreedPrice
+        ?? campaign?.brandOfferedFee
+        ?? 0
+    ) || 0;
+    return {
+        ...campaign,
+        brandProfile: brandProfile || null,
+        pricing: {
+            ...(campaign.pricing || {}),
+            agreedFee,
+            brandOffer: Number(campaign?.pricing?.brandOffer ?? campaign?.brandOfferedFee ?? agreedFee) || agreedFee,
+            currency: campaign?.pricing?.currency || campaign?.currency || 'USD',
+        },
+        brief: {
+            ...(campaign.brief || {}),
+            trackingLink: campaign?.brief?.trackingLink || campaign?.trackingLink || '',
+            promoCode: campaign?.brief?.promoCode || campaign?.promoCode || '',
+        },
+        content: {
+            driveLink: campaign?.content?.driveLink || campaign?.draftDriveLink || '',
+            driveSubmittedAt: campaign?.content?.driveSubmittedAt || campaign?.draftSubmittedAt || null,
+            brandApprovedDrive: campaign?.content?.brandApprovedDrive ?? Boolean(campaign?.draftApprovedAt),
+            brandApprovedAt: campaign?.content?.brandApprovedAt || campaign?.draftApprovedAt || null,
+            postLink: campaign?.content?.postLink || campaign?.postLink || '',
+            postSubmittedAt: campaign?.content?.postSubmittedAt || campaign?.postSubmittedAt || null,
+            brandVerifiedPost: campaign?.content?.brandVerifiedPost ?? campaign?.brandVerifiedPost ?? false,
+            brandVerifiedAt: campaign?.content?.brandVerifiedAt || campaign?.brandVerifiedAt || null,
+            adminVerified: campaign?.content?.adminVerified ?? campaign?.adminVerifiedPost ?? false,
+            adminVerifiedAt: campaign?.content?.adminVerifiedAt || campaign?.adminVerifiedAt || null,
+        },
+        payment: {
+            ...(campaign.payment || {}),
+            status: campaign?.payment?.status || 'pending',
+        },
+        trackingEnabledForCampaign: Boolean(campaign?.trackingEnabledForCampaign),
+        trackingAcceptedByInfluencer: Boolean(campaign?.trackingAcceptedByInfluencer),
+        trackingDetails: campaign?.trackingDetails || {},
+    };
+}
+
+router.get('/campaigns/in-production', async (req, res, next) => {
+    try {
+        const profile = await InfluencerProfile.findOne({
+            $or: [
+                { userId: req.user._id },
+                req.user?.influencerProfileId ? { _id: req.user.influencerProfileId } : null,
+            ].filter(Boolean),
+        }).select('_id userId').lean();
+        if (!profile) {
+            return res.status(404).json({ success: false, error: 'Influencer profile not found' });
+        }
+
+        const statuses = ['brand_payment_pending', 'brand_paid_work_can_start', 'content_submitted', 'content_approved', 'posted'];
+        const campaigns = await CampaignRequest.find({
+            $and: [
+                {
+                    $or: [
+                        { influencerId: profile._id },
+                        { influencerUserId: req.user._id },
+                        { influencerProfileId: profile._id },
+                    ],
+                },
+                { status: { $in: statuses } },
+            ],
+        })
+            .sort({ acceptedAt: -1, createdAt: -1 })
+            .lean();
+
+        const brandIds = [...new Set(campaigns.map((item) => String(item.brandId || item.brandProfileId || '')).filter(Boolean))];
+        const brandProfiles = brandIds.length
+            ? await BrandProfile.find({ _id: { $in: brandIds } })
+                .select('businessName igUsername igProfileUrl logo website userId')
+                .lean()
+            : [];
+        const brandMap = new Map(brandProfiles.map((brand) => [String(brand._id), brand]));
+
+        return res.json({
+            success: true,
+            campaigns: campaigns.map((campaign) => normalizeInProductionCampaign(campaign, brandMap.get(String(campaign.brandId || campaign.brandProfileId)))),
         });
     } catch (error) {
         next(error);

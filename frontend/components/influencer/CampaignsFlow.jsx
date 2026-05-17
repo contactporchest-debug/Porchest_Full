@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, ShieldCheck } from 'lucide-react';
-import { useApi, apiPatch } from '../../hooks/useApi';
+import { useApi, apiPatch, apiPost } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
 import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -63,8 +63,11 @@ export default function CampaignsFlow() {
     const [postLinkMap, setPostLinkMap]   = useState({});
     const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
 
-    const { data, loading, refetch } = useApi(`/collaborations?status=${STATUS_TABS[activeTab].key}`);
-    const collabs = data?.collaborations || [];
+    const collaborationsEndpoint = activeTab === 1
+        ? '/influencer/campaigns/in-production'
+        : `/collaborations?status=${STATUS_TABS[activeTab].key}`;
+    const { data, loading, refetch } = useApi(collaborationsEndpoint);
+    const collabs = data?.collaborations || data?.campaigns || [];
 
     useEffect(() => {
         const handleUpdated = () => {
@@ -100,6 +103,38 @@ export default function CampaignsFlow() {
             window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
         } catch (error) {
             const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to update collaboration';
+            toast.error(message);
+        } finally {
+            setActing(false);
+        }
+    }
+
+    async function submitDriveLink(collab) {
+        setActing(true);
+        try {
+            await apiPost(`/collaborations/${collab._id}/submit-drive-link`, { url: driveLinkMap[collab._id] });
+            toast.success('Drive link submitted.');
+            setDriveLinkMap((map) => ({ ...map, [collab._id]: '' }));
+            await refetch();
+            window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
+        } catch (error) {
+            const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to submit drive link';
+            toast.error(message);
+        } finally {
+            setActing(false);
+        }
+    }
+
+    async function submitInstagramLink(collab) {
+        setActing(true);
+        try {
+            await apiPost(`/collaborations/${collab._id}/submit-instagram-link`, { url: postLinkMap[collab._id] });
+            toast.success('Instagram link submitted.');
+            setPostLinkMap((map) => ({ ...map, [collab._id]: '' }));
+            await refetch();
+            window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
+        } catch (error) {
+            const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to submit Instagram link';
             toast.error(message);
         } finally {
             setActing(false);
@@ -246,6 +281,13 @@ export default function CampaignsFlow() {
         ];
         const filled = fields.filter(Boolean).length;
         return { filled, total: fields.length, pct: Math.round((filled / fields.length) * 100) };
+    }
+
+    function latestFeedback(collab) {
+        const feedback = collab?.brandFeedback;
+        if (Array.isArray(feedback)) return feedback.filter(Boolean).slice(-2);
+        if (typeof feedback === 'string' && feedback.trim()) return [feedback.trim()];
+        return [];
     }
 
     return (
@@ -518,7 +560,7 @@ export default function CampaignsFlow() {
                                     className={inputClass}
                                 />
                                 <button
-                                    onClick={() => action(c._id, 'submit-drive', { driveLink: driveLinkMap[c._id] })}
+                                    onClick={() => submitDriveLink(c)}
                                     disabled={acting || !driveLinkMap[c._id]}
                                     className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                                 >
@@ -561,7 +603,7 @@ export default function CampaignsFlow() {
                                     className={inputClass}
                                 />
                                 <button
-                                    onClick={() => action(c._id, 'submit-post', { postLink: postLinkMap[c._id] })}
+                                    onClick={() => submitInstagramLink(c)}
                                     disabled={acting || !postLinkMap[c._id]}
                                     className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                                 >
@@ -585,9 +627,22 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Metrics */}
-                    {['posted', 'campaign_active'].includes(c.status) && (
+                    {['content_submitted', 'content_approved', 'posted', 'campaign_active'].includes(c.status) && (
                         <div className="pt-2">
-                            <CampaignMetricsCard collaborationId={c._id} />
+                            <CampaignMetricsCard collaborationId={c._id} brandFeedback={c.brandFeedback || []} />
+                        </div>
+                    )}
+
+                    {latestFeedback(c).length > 0 && (
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] mt-4 backdrop-blur-[12px]">
+                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-2">Brand feedback</p>
+                            <div className="space-y-2">
+                                {latestFeedback(c).map((feedback, idx) => (
+                                    <p key={`${c._id}-feedback-${idx}`} className="text-sm text-[#1A0A00] leading-7">
+                                        {feedback}
+                                    </p>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </motion.div>

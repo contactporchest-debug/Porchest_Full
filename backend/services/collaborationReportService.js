@@ -196,22 +196,26 @@ async function buildCollaborationAnalytics(collaboration) {
         };
     }
 
+    const periodDaysInput = Number(collaboration?.analyticsPeriodDays || collaboration?.periodDays || collaboration?.analytics?.periodDays || 30);
+    const periodDays = [1, 10, 20, 30].includes(periodDaysInput) ? periodDaysInput : 30;
+    const windowStart = new Date(Date.now() - (periodDays * 24 * 60 * 60 * 1000));
+
     const [clicks, purchases] = await Promise.all([
-        ClickEvent.find({ collaborationId })
+        ClickEvent.find({ collaborationId, timestamp: { $gte: windowStart } })
             .sort({ timestamp: -1 })
             .limit(20)
             .lean(),
-        PurchaseEvent.find({ collaborationId })
+        PurchaseEvent.find({ collaborationId, timestamp: { $gte: windowStart } })
             .sort({ timestamp: -1 })
             .limit(20)
             .lean(),
     ]);
 
-    const clickCount = await ClickEvent.countDocuments({ collaborationId });
-    const uniqueClicks = await ClickEvent.countDocuments({ collaborationId, isUnique: true });
-    const purchaseCount = await PurchaseEvent.countDocuments({ collaborationId });
+    const clickCount = await ClickEvent.countDocuments({ collaborationId, timestamp: { $gte: windowStart } });
+    const uniqueClicks = await ClickEvent.countDocuments({ collaborationId, isUnique: true, timestamp: { $gte: windowStart } });
+    const purchaseCount = await PurchaseEvent.countDocuments({ collaborationId, timestamp: { $gte: windowStart } });
     const revenueAgg = await PurchaseEvent.aggregate([
-        { $match: { collaborationId } },
+        { $match: { collaborationId, timestamp: { $gte: windowStart } } },
         { $group: { _id: null, revenue: { $sum: '$orderValue' } } },
     ]);
     const revenue = toNumber(revenueAgg?.[0]?.revenue, 0);
@@ -231,6 +235,7 @@ async function buildCollaborationAnalytics(collaboration) {
             price: toNumber(collaboration.pricing?.agreedFee ?? collaboration.agreedFee ?? collaboration.pricing?.brandOffer ?? collaboration.brandOfferedFee, 0),
             deadline: formatDate(deadline),
             daysRemaining: Number.isFinite(daysRemaining) ? daysRemaining : null,
+            periodDays,
             clickCount,
             uniqueClicks,
             purchaseCount,

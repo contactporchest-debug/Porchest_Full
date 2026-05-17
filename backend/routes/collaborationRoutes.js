@@ -74,6 +74,134 @@ function throwStatusError(currentStatus, res) {
     });
 }
 
+function isValidHttpUrl(value) {
+    try {
+        const url = new URL(String(value || '').trim());
+        return ['http:', 'https:'].includes(url.protocol);
+    } catch (error) {
+        return false;
+    }
+}
+
+function getRevertStatusForRevision(collab) {
+    const status = String(collab?.status || '').toLowerCase();
+    if (status === 'content_submitted') return 'brand_paid_work_can_start';
+    if (status === 'posted') return 'content_approved';
+    if (status === 'content_approved') return 'content_submitted';
+    return 'brand_paid_work_can_start';
+}
+
+async function submitDriveLink(req, res, collab, driveLink) {
+    if (!inStatusList(collab.status, ['brand_paid_work_can_start', 'content_submitted'])) {
+        return throwStatusError(collab.status, res);
+    }
+
+    if (!isValidHttpUrl(driveLink)) {
+        return res.status(400).json({ success: false, error: 'driveLink must be a valid URL' });
+    }
+
+    const now = new Date();
+    const updated = await CampaignRequest.findByIdAndUpdate(
+        collab._id,
+        {
+            $set: {
+                status: 'content_submitted',
+                draftDriveLink: driveLink,
+                draftSubmittedAt: now,
+                'content.driveLink': driveLink,
+                'content.driveSubmittedAt': now,
+            },
+        },
+        { new: true, strict: false }
+    ).lean();
+
+    return res.json(await enrichCollaboration(updated));
+}
+
+async function submitInstagramLink(req, res, collab, postLink) {
+    if (String(collab.status) !== 'content_approved') return throwStatusError(collab.status, res);
+
+    if (!isValidHttpUrl(postLink) || !/instagram\.com/i.test(postLink)) {
+        return res.status(400).json({ success: false, error: 'instagram link must be a valid Instagram URL' });
+    }
+
+    const now = new Date();
+    await CampaignRequest.findByIdAndUpdate(
+        collab._id,
+        {
+            $set: {
+                status: 'posted',
+                postLink,
+                postSubmittedAt: now,
+                'content.postLink': postLink,
+                'content.postSubmittedAt': now,
+            },
+        },
+        { new: true, strict: false }
+    );
+
+    const [admins] = await Promise.all([
+        getAdminRecipients(),
+        Notification.create({
+            recipientUserId: collab.brandUserId,
+            type: 'system',
+            title: 'Post submitted for verification',
+            message: `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}".`,
+            campaignRequestId: collab._id,
+            metadata: { action: 'submit-post', postLink },
+        }).catch((notificationError) => {
+            console.error('[collaborationRoutes] Brand notification create failed:', notificationError);
+        }),
+    ]);
+
+    if (admins.length > 0) {
+        await Notification.insertMany(admins.map((admin) => ({
+            recipientUserId: admin._id,
+            type: 'system',
+            title: 'Collaboration ready for admin review',
+            message: `${collab.influencerName || 'An influencer'} submitted "${collab.campaignTitle}" for verification.`,
+            campaignRequestId: collab._id,
+            metadata: { action: 'submit-post', postLink, collabStatus: 'posted' },
+        }))).catch((notificationError) => {
+            console.error('[collaborationRoutes] Admin notification create failed:', notificationError);
+        });
+    }
+
+    const [brandUser] = await Promise.all([
+        User.findById(collab.brandUserId).select('email fullName').lean(),
+    ]);
+    const approvalMessage = `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}" and it is ready for review.`;
+    await Promise.all([
+        sendCampaignEmailNotification({
+            email: brandUser?.email,
+            subject: 'Content submitted for approval',
+            title: 'Content submitted for approval',
+            message: approvalMessage,
+            actionText: 'Review collaboration',
+            actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+        }),
+        ...admins.map((admin) => sendCampaignEmailNotification({
+            email: admin.email,
+            subject: 'Campaign ready for admin review',
+            title: 'Campaign ready for admin review',
+            message: `${collab.influencerName || 'The influencer'} submitted "${collab.campaignTitle}" for verification.`,
+            actionText: 'Open admin collaboration queue',
+            actionHref: `/dashboard/admin/collaborations?request=${collab._id}`,
+            accent: '#7A5030',
+        })),
+    ]);
+
+    emitCollaborationEvent(req, [collab.brandUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
+        collaborationId: collab._id,
+        status: 'posted',
+        action: 'submit-post',
+    });
+
+    syncCollaborationMetrics(req.params.id).catch(() => {});
+    const updated = await CampaignRequest.findById(req.params.id).lean();
+    return res.json(await enrichCollaboration(updated));
+}
+
 function emitCollaborationEvent(req, userIds, event, payload) {
     const io = req.app?.locals?.io;
     if (!io) return;
@@ -1066,27 +1194,21 @@ router.patch('/:id/decline', async (req, res) => {
     }
 });
 
+router.post('/:id/submit-drive-link', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        return submitDriveLink(req, res, collab, req.body.url || req.body.driveLink);
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.patch('/:id/submit-drive', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (!inStatusList(collab.status, ['brand_paid_work_can_start', 'content_submitted'])) return throwStatusError(collab.status, res);
-
-        const now = new Date();
-        const updated = await CampaignRequest.findByIdAndUpdate(
-            req.params.id,
-            {
-                $set: {
-                    status: 'content_submitted',
-                    draftDriveLink: req.body.driveLink,
-                    draftSubmittedAt: now,
-                    'content.driveLink': req.body.driveLink,
-                    'content.driveSubmittedAt': now,
-                },
-            },
-            { new: true, strict: false }
-        ).lean();
-        return res.json(await enrichCollaboration(updated));
+        return submitDriveLink(req, res, collab, req.body.driveLink);
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
     }
@@ -1147,91 +1269,83 @@ router.patch('/:id/reject-drive', roleMiddleware('brand'), requireCompleteProfil
     }
 });
 
+router.post('/:id/submit-instagram-link', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        return submitInstagramLink(req, res, collab, req.body.url || req.body.postLink);
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.patch('/:id/submit-post', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (String(collab.status) !== 'content_approved') return throwStatusError(collab.status, res);
+        return submitInstagramLink(req, res, collab, req.body.postLink);
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
 
-        const postLink = String(req.body.postLink || '').trim();
-        if (!/instagram\.com/i.test(postLink)) {
-            return res.status(400).json({ success: false, error: 'postLink must be an Instagram URL' });
+router.post('/:id/feedback', roleMiddleware('brand', 'admin'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+
+        const allowed = await canManageBrandCollaboration(collab, req.user);
+        if (!allowed && !isAdmin(req.user)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
         }
 
-        const now = new Date();
-        await CampaignRequest.findByIdAndUpdate(
-            req.params.id,
-            {
-                $set: {
-                    status: 'posted',
-                    postLink,
-                    postSubmittedAt: now,
-                    'content.postLink': postLink,
-                    'content.postSubmittedAt': now,
-                },
+        const message = String(req.body.message || '').trim();
+        const requestRevision = Boolean(req.body.requestRevision);
+        if (!message) {
+            return res.status(400).json({ success: false, error: 'Feedback message is required' });
+        }
+
+        const nextStatus = requestRevision ? getRevertStatusForRevision(collab) : String(collab.status || '');
+        const update = {
+            $push: { brandFeedback: message },
+            $set: {
+                rejectionReason: message,
             },
-            { new: true, strict: false }
-        );
+        };
 
-        const [admins] = await Promise.all([
-            getAdminRecipients(),
-            Notification.create({
-                recipientUserId: collab.brandUserId,
-                type: 'system',
-                title: 'Post submitted for verification',
-                message: `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}".`,
-                campaignRequestId: collab._id,
-                metadata: { action: 'submit-post', postLink },
-            }).catch((notificationError) => {
-                console.error('[collaborationRoutes] Brand notification create failed:', notificationError);
-            }),
-        ]);
-
-        if (admins.length > 0) {
-            await Notification.insertMany(admins.map((admin) => ({
-                recipientUserId: admin._id,
-                type: 'system',
-                title: 'Collaboration ready for admin review',
-                message: `${collab.influencerName || 'An influencer'} submitted "${collab.campaignTitle}" for verification.`,
-                campaignRequestId: collab._id,
-                metadata: { action: 'submit-post', postLink, collabStatus: 'posted' },
-            }))).catch((notificationError) => {
-                console.error('[collaborationRoutes] Admin notification create failed:', notificationError);
-            });
+        if (requestRevision) {
+            update.$set.status = nextStatus;
+            if (nextStatus === 'brand_paid_work_can_start') {
+                update.$set['content.driveLink'] = '';
+                update.$set['content.driveSubmittedAt'] = null;
+                update.$set['content.brandApprovedDrive'] = false;
+                update.$set['content.brandApprovedAt'] = null;
+                update.$set.draftDriveLink = '';
+                update.$set.draftSubmittedAt = null;
+                update.$set.draftApprovedAt = null;
+            }
+            if (nextStatus === 'content_submitted') {
+                update.$set['content.postLink'] = '';
+                update.$set['content.postSubmittedAt'] = null;
+                update.$set.postLink = '';
+                update.$set.postSubmittedAt = null;
+                update.$set['content.brandVerifiedPost'] = false;
+                update.$set['content.brandVerifiedAt'] = null;
+                update.$set.brandVerifiedPost = false;
+                update.$set.brandVerifiedAt = null;
+            }
         }
 
-        const [brandUser] = await Promise.all([
-            User.findById(collab.brandUserId).select('email fullName').lean(),
-        ]);
-        const approvalMessage = `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}" and it is ready for review.`;
-        await Promise.all([
-            sendCampaignEmailNotification({
-                email: brandUser?.email,
-                subject: 'Content submitted for approval',
-                title: 'Content submitted for approval',
-                message: approvalMessage,
-                actionText: 'Review collaboration',
-                actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
-            }),
-            ...admins.map((admin) => sendCampaignEmailNotification({
-                email: admin.email,
-                subject: 'Campaign ready for admin review',
-                title: 'Campaign ready for admin review',
-                message: `${collab.influencerName || 'The influencer'} submitted "${collab.campaignTitle}" for verification.`,
-                actionText: 'Open admin collaboration queue',
-                actionHref: `/dashboard/admin/collaborations?request=${collab._id}`,
-                accent: '#7A5030',
-            })),
-        ]);
-
-        emitCollaborationEvent(req, [collab.brandUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
-            collaborationId: collab._id,
-            status: 'posted',
-            action: 'submit-post',
+        const updated = await CampaignRequest.findByIdAndUpdate(req.params.id, update, { new: true, strict: false }).lean();
+        const influencerUser = await User.findById(collab.influencerUserId).select('email').lean();
+        await sendCampaignEmailNotification({
+            email: influencerUser?.email,
+            subject: requestRevision ? 'Revision requested' : 'Campaign feedback',
+            title: requestRevision ? 'Revision requested' : 'Campaign feedback',
+            message,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
         });
-
-        syncCollaborationMetrics(req.params.id).catch(() => {});
-        const updated = await CampaignRequest.findById(req.params.id).lean();
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
@@ -1504,10 +1618,12 @@ router.get('/:id/analytics', async (req, res) => {
         }
 
         const enriched = buildResponseCollab(collab, brandProfile, influencerProfile);
-        const analytics = await buildCollaborationAnalytics(enriched);
+        const periodDays = Number(req.query?.period || req.query?.days || 30);
+        const analytics = await buildCollaborationAnalytics({ ...enriched, analyticsPeriodDays: periodDays });
         return res.json({
             success: true,
             collaboration: enriched,
+            periodDays: [10, 20, 30].includes(periodDays) ? periodDays : 30,
             ...analytics,
         });
     } catch (error) {
