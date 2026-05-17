@@ -211,22 +211,34 @@ function buildInfluencerSearchRegex(search) {
     return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 }
 
-function buildDiscoveryReadinessFilter() {
+function buildInstagramConnectedFilter() {
     return {
-        $and: [
-            {
-                $or: [
-                    { profileCompletionStatus: true },
-                    { profileComplete: true },
-                ],
-            },
-            {
-                $or: [
-                    { instagramConnected: true },
-                    { instagramConnectionStatus: 'connected' },
-                ],
-            },
+        $or: [
+            { instagramConnected: true },
+            { instagramConnectionStatus: 'connected' },
         ],
+    };
+}
+
+function isInfluencerDiscoverable(profile) {
+    if (!profile) return false;
+
+    const hasIdentity = !!(profile.fullName || profile.displayName) && !!profile.instagramUsername;
+    const hasBio = !!(profile.bio || profile.instagramBiography);
+    const hasNiche = !!profile.niche;
+    const hasLocation = !!profile.country;
+    const hasPricing = Number(profile.avgPostPrice || profile.rates?.postPrice || 0) > 0
+        || Number(profile.avgReelPrice || profile.rates?.reelPrice || 0) > 0;
+    const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
+    const profileComplete = Boolean(profile.profileComplete || profile.profileCompletionStatus || profile.isSearchable)
+        || (hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+
+    return Boolean(igConnected && profileComplete && hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+}
+
+function buildDiscoveryBaseFilter() {
+    return {
+        ...buildInstagramConnectedFilter(),
     };
 }
 
@@ -424,7 +436,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
         // Base filter: the influencer must have completed their profile.
         // We intentionally do not require synced Instagram stats here so that
         // new complete signups are discoverable immediately.
-        const filter = buildDiscoveryReadinessFilter();
+        const filter = buildDiscoveryBaseFilter();
 
         const searchRegex = buildInfluencerSearchRegex(search);
         if (searchRegex) {
@@ -471,14 +483,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             .lean();
 
         // Second-pass filter: ensure critical display fields exist
-        const eligible = influencerProfiles.filter(p => {
-            const hasIdentity = !!(p.fullName || p.displayName) && !!(p.instagramUsername);
-            const hasBio = !!(p.bio || p.instagramBiography);
-            const hasNiche = !!p.niche;
-            const hasLocation = !!p.country;
-            const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0 || (p.rates?.postPrice || 0) > 0 || (p.rates?.reelPrice || 0) > 0;
-            return hasIdentity && hasBio && hasNiche && hasLocation && hasPricing;
-        });
+        const eligible = influencerProfiles.filter(isInfluencerDiscoverable);
 
         const result = eligible.map(buildInfluencerCard);
         res.json({ success: true, influencers: result });
@@ -590,7 +595,7 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
         }
 
         // Build database query
-        const filter = buildDiscoveryReadinessFilter();
+        const filter = buildDiscoveryBaseFilter();
 
         if (f.niche) {
             filter.niche = { $regex: new RegExp(f.niche, 'i') };
@@ -637,11 +642,7 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
             .lean();
 
         // Pass through existing card builder to maintain consistency with Discover UI
-        const eligible = influencerProfiles.filter(p => {
-            const hasIdentity = !!(p.fullName || p.displayName) && !!(p.instagramUsername);
-            const hasBio = !!(p.bio || p.instagramBiography);
-            return hasIdentity && hasBio;
-        });
+        const eligible = influencerProfiles.filter(isInfluencerDiscoverable);
 
         const result = eligible.map(buildInfluencerCard);
 
@@ -769,7 +770,7 @@ exports.profileBasedMatching = async (req, res, next) => {
 
         // ── 3. Multi-Stage Database Query Cascade ────────────────────
         // Stage 1: Strict Match (Niche AND Country AND Budget)
-        const buildBaseFilter = () => buildDiscoveryReadinessFilter();
+        const buildBaseFilter = () => buildDiscoveryBaseFilter();
 
         const applyFilters = (base, filters, mode = 'strict') => {
             const query = { ...base };

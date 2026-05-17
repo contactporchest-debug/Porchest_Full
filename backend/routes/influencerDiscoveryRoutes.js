@@ -10,6 +10,22 @@ const router = express.Router();
 
 router.use(authMiddleware, roleMiddleware('brand', 'admin'));
 
+function isInfluencerDiscoverable(profile) {
+    if (!profile) return false;
+
+    const hasIdentity = !!(profile.fullName || profile.displayName) && !!profile.instagramUsername;
+    const hasBio = !!(profile.bio || profile.instagramBiography);
+    const hasNiche = !!profile.niche;
+    const hasLocation = !!profile.country;
+    const hasPricing = Number(profile.avgPostPrice || profile.rates?.postPrice || 0) > 0
+        || Number(profile.avgReelPrice || profile.rates?.reelPrice || 0) > 0;
+    const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
+    const profileComplete = Boolean(profile.profileComplete || profile.profileCompletionStatus || profile.isSearchable)
+        || (hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+
+    return Boolean(igConnected && profileComplete && hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+}
+
 router.get('/influencers', requireCompleteProfile, async (req, res) => {
     try {
         const page = Math.max(1, Number(req.query.page || 1));
@@ -58,11 +74,13 @@ router.get('/influencers', requireCompleteProfile, async (req, res) => {
             InfluencerProfile.countDocuments(filter),
         ]);
 
+        const visibleInfluencers = influencers.filter(isInfluencerDiscoverable);
+
         return res.json({
-            influencers,
-            total,
+            influencers: visibleInfluencers,
+            total: visibleInfluencers.length,
             page,
-            pages: Math.ceil(total / limit),
+            pages: Math.ceil(visibleInfluencers.length / limit),
         });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
