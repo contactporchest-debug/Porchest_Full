@@ -285,3 +285,67 @@ exports.deleteUser = async (req, res) => {
         return err(res, 'Failed to delete user');
     }
 };
+
+/* ─── GET /api/admin/requests ────────────────────────────── */
+exports.getRequests = async (req, res) => {
+    try {
+        const { status, search, page = 1, limit = 30 } = req.query;
+        const query = {};
+        if (status && status !== 'all') query.status = status;
+        if (search) {
+            query.$or = [
+                { campaignTitle: { $regex: search, $options: 'i' } },
+                { brandName: { $regex: search, $options: 'i' } },
+                { influencerName: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [requests, total] = await Promise.all([
+            CampaignRequest.find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit))
+                .lean(),
+            CampaignRequest.countDocuments(query),
+        ]);
+
+        return ok(res, { requests, total });
+    } catch (e) {
+        console.error('[Admin] getRequests error:', e);
+        return err(res, 'Failed to fetch requests');
+    }
+};
+
+/* ─── GET /api/admin/verifications ───────────────────────── */
+exports.getVerificationQueue = async (req, res) => {
+    try {
+        const { status = 'pending' } = req.query;
+        const users = await User.find({ status })
+            .select('-password -otp -otpExpires')
+            .sort({ createdAt: -1 })
+            .lean();
+        return ok(res, { verifications: users, total: users.length });
+    } catch (e) {
+        console.error('[Admin] getVerificationQueue error:', e);
+        return err(res, 'Failed to fetch verification queue');
+    }
+};
+
+/* ─── PATCH /api/admin/verifications/:id ─────────────────── */
+exports.reviewVerification = async (req, res) => {
+    try {
+        const { status, adminNote } = req.body;
+        const newStatus = status === 'verified' ? 'active' : 'suspended';
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { status: newStatus },
+            { new: true, select: '-password -otp -otpExpires' }
+        );
+        if (!user) return err(res, 'User not found', 404);
+        return ok(res, { user: sanitizeAdminUserFields(user.toObject()), adminNote });
+    } catch (e) {
+        console.error('[Admin] reviewVerification error:', e);
+        return err(res, 'Failed to review verification');
+    }
+};

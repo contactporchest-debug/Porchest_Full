@@ -185,8 +185,8 @@ async function submitInstagramLink(req, res, collab, postLink) {
             subject: 'Campaign ready for admin review',
             title: 'Campaign ready for admin review',
             message: `${collab.influencerName || 'The influencer'} submitted "${collab.campaignTitle}" for verification.`,
-            actionText: 'Open admin dashboard',
-            actionHref: `/dashboard/admin/users?request=${collab._id}`,
+            actionText: 'Open admin collaboration queue',
+            actionHref: `/dashboard/admin/collaborations?request=${collab._id}`,
             accent: '#7A5030',
         })),
     ]);
