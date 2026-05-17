@@ -121,7 +121,7 @@ export const brandAPI = {
     createRequest: (data: Record<string, unknown>) => api.post('/brand/requests', data),
     getRequests: (params?: Record<string, unknown>) => api.get('/brand/requests', { params }),
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
-    updateRequest: (id: string, data: { status: string; rejectionReason?: string; agreedPrice?: number; counterOfferPrice?: number; counterOfferMessage?: string; brandMessage?: string }) =>
+    updateRequest: (id: string, data: { status: string; rejectionReason?: string; agreedPrice?: number; brandMessage?: string }) =>
         api.patch(`/brand/requests/${id}`, data),
     // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
@@ -153,7 +153,7 @@ export const influencerAPI = {
     lookupPost: (postUrl: string) => api.post('/influencer/instagram/post-lookup', { postUrl }),
     // Incoming campaign requests
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
-    respondToRequest: (id: string, data: { status: string; rejectionReason?: string; counterOfferPrice?: number; counterOfferMessage?: string }) =>
+    respondToRequest: (id: string, data: { status: string; rejectionReason?: string }) =>
         api.patch(`/influencer/requests/${id}`, data),
     getPerformance: () => api.get('/influencer/performance'),
     getCampaignTracking: (id: string) => api.get(`/collaborations/${id}/influencer/tracking`),

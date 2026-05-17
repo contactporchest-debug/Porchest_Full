@@ -5,7 +5,7 @@ const Notification = require('../models/Notification');
 const { releaseDueSecondPayouts } = require('./trackingService');
 const { sendCampaignEmailNotification, sendOptionalEmail, buildEmailHtml } = require('./notificationDeliveryService');
 
-const PENDING_STATUSES = ['sent', 'viewed', 'pending', 'countered', 'negotiation', 'brand_payment_pending'];
+const PENDING_STATUSES = ['requested', 'sent', 'viewed', 'pending', 'brand_payment_pending'];
 const ACTIVE_STATUSES = ['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'];
 const CLOSABLE_STATUSES = [...ACTIVE_STATUSES];
 const REMINDER_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;

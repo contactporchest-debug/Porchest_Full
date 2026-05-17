@@ -24,7 +24,6 @@ import {
 
 type CollaborationStatus =
     | 'pending'
-    | 'countered'
     | 'brand_payment_pending'
     | 'brand_paid_work_can_start'
     | 'campaign_active'
@@ -45,7 +44,6 @@ interface CollaborationItem {
     pricing?: {
         agreedFee?: number;
         brandOffer?: number;
-        influencerCounter?: number;
         currency?: string;
     };
     brandName?: string;
@@ -133,7 +131,7 @@ interface CollaborationItem {
 
 const FILTERS = [
     { key: 'all', label: 'All collaborations' },
-    { key: 'pending,countered,brand_payment_pending', label: 'Requests' },
+    { key: 'pending,brand_payment_pending', label: 'Requests' },
     { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
     { key: 'declined,cancelled', label: 'Stopped' },
@@ -141,7 +139,6 @@ const FILTERS = [
 
 const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; icon: JSX.Element }> = {
     pending: { label: 'Pending', bg: 'rgba(56,189,248,0.10)', color: '#0284c7', border: 'rgba(56,189,248,0.20)', icon: <Clock3 size={12} /> },
-    countered: { label: 'Countered', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.20)', icon: <AlertTriangle size={12} /> },
     brand_payment_pending: { label: 'Payment pending', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.20)', icon: <Clock3 size={12} /> },
     brand_paid_work_can_start: { label: 'Payment confirmed', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.20)', icon: <CheckCircle2 size={12} /> },
     campaign_active: { label: 'Campaign active', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.20)', icon: <PlayCircle size={12} /> },

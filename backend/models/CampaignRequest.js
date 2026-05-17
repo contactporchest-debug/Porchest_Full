@@ -63,12 +63,10 @@ function hydrateLegacyShapes(doc) {
     if (doc.agreedFee == null && doc.agreedPrice != null) doc.agreedFee = doc.agreedPrice;
     if (doc.financials.brandOfferedFee == null && doc.brandOfferedFee != null) doc.financials.brandOfferedFee = doc.brandOfferedFee;
     if (doc.financials.agreedFee == null && doc.agreedFee != null) doc.financials.agreedFee = doc.agreedFee;
-    if (doc.financials.influencerCounterFee == null && doc.counterOfferPrice != null) doc.financials.influencerCounterFee = doc.counterOfferPrice;
     if (doc.financials.porchestCommission == null && doc.porchestCommission != null) doc.financials.porchestCommission = doc.porchestCommission;
     if (doc.financials.influencerPayable == null && doc.influencerPayable != null) doc.financials.influencerPayable = doc.influencerPayable;
     if (doc.financials.currency == null && doc.currency) doc.financials.currency = doc.currency;
     if (doc.pricing.brandOffer == null && doc.brandOfferedFee != null) doc.pricing.brandOffer = doc.brandOfferedFee;
-    if (doc.pricing.influencerCounter == null && doc.influencerCounterFee != null) doc.pricing.influencerCounter = doc.influencerCounterFee;
     if (doc.pricing.agreedFee == null && doc.agreedFee != null) doc.pricing.agreedFee = doc.agreedFee;
     if (doc.pricing.currency == null && doc.currency) doc.pricing.currency = doc.currency;
 
@@ -112,12 +110,10 @@ const campaignRequestSchema = new mongoose.Schema(
                 'pending_influencer',
                 'pending_brand_review',
                 'pending',
-                'countered',
                 'brand_payment_pending',
                 'brand_paid_work_can_start',
                 'sent',
                 'viewed',
-                'negotiation',
                 'accepted',
                 'active',
                 'content_submitted',
@@ -175,14 +171,12 @@ const campaignRequestSchema = new mongoose.Schema(
 
         pricing: {
             brandOffer: { type: Number },
-            influencerCounter: { type: Number },
             agreedFee: { type: Number },
             currency: { type: String, default: 'USD' },
         },
 
         financials: {
             brandOfferedFee: { type: Number },
-            influencerCounterFee: { type: Number },
             agreedFee: { type: Number },
             porchestCommission: { type: mongoose.Schema.Types.Mixed },
             influencerPayable: { type: Number },
@@ -191,16 +185,9 @@ const campaignRequestSchema = new mongoose.Schema(
 
         // Financials
         brandOfferedFee: { type: Number },
-        influencerCounterFee: { type: Number },
         agreedFee: { type: Number },
         porchestCommission: { type: mongoose.Schema.Types.Mixed },
         influencerPayable: { type: Number },
-        negotiationHistory: [{
-            offeredBy: { type: String },
-            amount: { type: Number },
-            message: { type: String },
-            timestamp: { type: Date, default: Date.now },
-        }],
 
         // Campaign window
         campaignStartDate: { type: Date },
@@ -342,14 +329,11 @@ const campaignRequestSchema = new mongoose.Schema(
         currency: { type: String, default: 'USD' },
         postingDeadline: { type: Date },
         brandMessage: { type: String },
-        counterOfferPrice: { type: Number },
-        counterOfferMessage: { type: String },
         rejectionReason: { type: String },
         sentAt: { type: Date, default: Date.now },
         viewedAt: { type: Date },
         acceptedAt: { type: Date },
         rejectedAt: { type: Date },
-        negotiationStartedAt: { type: Date },
         dealClosedAt: { type: Date },
         expiredAt: { type: Date },
         cancelledAt: { type: Date },
@@ -373,7 +357,6 @@ const MIRROR_PAIRS = [
     ['brandId', 'brandUserId'],
     ['influencerId', 'influencerUserId'],
     ['brandOfferedFee', 'agreedPrice'],
-    ['influencerCounterFee', 'counterOfferPrice'],
     ['agreedFee', 'agreedPrice'],
 ];
 

@@ -12,12 +12,11 @@ import toast from 'react-hot-toast';
 import { useCollaborationUpdates } from '@/lib/useSocket';
 import CollaborationMetrics from '@/components/brand/CollaborationMetrics';
 
-type Filter = 'all' | 'pending' | 'negotiation' | 'accepted' | 'rejected';
+type Filter = 'all' | 'pending' | 'accepted' | 'rejected';
 
 const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
     { key: 'all', label: 'All', color: '#1A0A00' },
     { key: 'pending', label: 'Pending / Viewed', color: '#C4A882' },
-    { key: 'negotiation', label: 'Negotiation', color: '#d97706' },
     { key: 'accepted', label: 'Active', color: '#059669' },
     { key: 'rejected', label: 'Rejected / Canceled', color: '#dc2626' },
 ];
@@ -25,7 +24,6 @@ const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
 const STATUS_CFG: Record<string, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
     sent: { label: 'Pending', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Clock size={11} /> },
     viewed: { label: 'Viewed', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Eye size={11} /> },
-    negotiation: { label: 'Negotiation', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <AlertCircle size={11} /> },
     accepted: { label: 'In-Process', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
     brand_payment_pending: { label: 'Payment pending', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <Clock size={11} /> },
     brand_paid_work_can_start: { label: 'Payment confirmed', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
@@ -35,9 +33,6 @@ const STATUS_CFG: Record<string, { label: string; bg: string; color: string; bor
 };
 
 function CampaignDetail({ request, verifications }: { request: any; verifications: any[] }) {
-    const [counterPrice, setCounterPrice] = useState(request.counterOfferPrice ? String(request.counterOfferPrice) : '');
-    const [counterMessage, setCounterMessage] = useState('');
-    const [submittingCounter, setSubmittingCounter] = useState(false);
     const verification = verifications.find(v => {
         const vId = typeof v.campaignRequestId === 'object' ? v.campaignRequestId?._id : v.campaignRequestId;
         return vId === request._id;
@@ -59,27 +54,6 @@ function CampaignDetail({ request, verifications }: { request: any; verification
         { label: 'Payment Terms', val: request.paymentTerms },
     ];
 
-    const submitBrandCounter = async () => {
-        if (!counterPrice.trim() || Number.isNaN(Number(counterPrice))) {
-            toast.error('Enter a valid counter offer amount.');
-            return;
-        }
-
-        try {
-            setSubmittingCounter(true);
-            await brandAPI.updateRequest(request._id, {
-                status: 'negotiation',
-                counterOfferPrice: Number(counterPrice),
-                counterOfferMessage: counterMessage.trim() || undefined,
-            });
-            toast.success('Counter offer sent to influencer.');
-        } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to send counter offer');
-        } finally {
-            setSubmittingCounter(false);
-        }
-    };
-
     const IS = {
         width: '100%', padding: '10px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC',
         color: '#1A0A00', fontSize: '13px', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit'
@@ -97,78 +71,6 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                         <p style={{ fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>{request.rejectionReason}</p>
                     </div>
                 )}
-                {request.status === 'negotiation' && (
-                    <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
-                        <p style={{ fontSize: '11px', color: '#d97706', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Counter Offer Received</p>
-                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '16px' }}>
-                            <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
-                                <p style={{ fontSize: '10px', color: '#7A5030', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Original Ask</p>
-                                <p style={{ fontSize: '14px', color: '#1A0A00', fontWeight: 700, textDecoration: 'line-through' }}>${request.agreedPrice?.toLocaleString()}</p>
-                            </div>
-                            <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                                <p style={{ fontSize: '10px', color: '#059669', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Counter Ask</p>
-                                <p style={{ fontSize: '18px', color: '#059669', fontWeight: 800 }}>${request.counterOfferPrice?.toLocaleString()}</p>
-                            </div>
-                        </div>
-                        {request.counterOfferMessage && (
-                            <p style={{ fontSize: '14px', color: '#7A5030', lineHeight: 1.6 }}>"{request.counterOfferMessage}"</p>
-                        )}
-                        <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        await brandAPI.updateRequest(request._id, { status: 'deal_closed', agreedPrice: request.counterOfferPrice });
-                                        toast.success('Counter accepted! Deal closed.');
-                                        const res = await brandAPI.getRequests();
-                                    } catch (err) {
-                                        toast.error('Failed to accept counter');
-                                    }
-                                }}
-                                style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#059669', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                Accept Counter
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        await brandAPI.updateRequest(request._id, { status: 'rejected', rejectionReason: 'Cannot meet counter offer terms' });
-                                        toast.success('Counter rejected.');
-                                        const res = await brandAPI.getRequests();
-                                    } catch (err) {
-                                        toast.error('Failed to reject counter');
-                                    }
-                                }}
-                                style={{ padding: '12px 24px', borderRadius: '12px', background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                                Reject
-                            </button>
-                        </div>
-                        <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(245,158,11,0.2)' }}>
-                            <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: 700 }}>Send New Counter Offer</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 160px) minmax(0, 1fr)', gap: '12px', marginBottom: '12px' }}>
-                                <input
-                                    value={counterPrice}
-                                    onChange={(e) => setCounterPrice(e.target.value)}
-                                    placeholder="Counter amount"
-                                    style={IS} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
-                                />
-                                <input
-                                    value={counterMessage}
-                                    onChange={(e) => setCounterMessage(e.target.value)}
-                                    placeholder="Add a message for the influencer"
-                                    style={IS} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'}
-                                />
-                            </div>
-                            <button
-                                onClick={submitBrandCounter}
-                                disabled={submittingCounter}
-                                style={{ padding: '12px 24px', borderRadius: '12px', background: '#d97706', color: '#fff', border: 'none', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit', transition: 'opacity 0.15s', opacity: submittingCounter ? 0.6 : 1 }}>
-                                {submittingCounter ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <AlertCircle size={16} />}
-                                Send Counter
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-
                 {/* Request document */}
                 <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Campaign Request Document</p>
                 <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.4)', border: '1px solid #EDD9BC' }}>
@@ -191,7 +93,7 @@ function CampaignDetail({ request, verifications }: { request: any; verification
                 </div>
 
                 {/* Verification block */}
-                {(['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status) || request.status === 'deal_closed') && (
+                {(['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status)) && (
                     <>
                         <p style={{ fontSize: '11px', color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>Verification Status</p>
                         {!verification ? (
@@ -303,7 +205,6 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
         let matchFilter = false;
         if (filter === 'all') matchFilter = true;
         else if (filter === 'pending') matchFilter = ['sent', 'viewed'].includes(r.status);
-        else if (filter === 'negotiation') matchFilter = r.status === 'negotiation';
         else if (filter === 'accepted') matchFilter = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'deal_closed'].includes(r.status);
         else if (filter === 'rejected') matchFilter = ['rejected', 'cancelled'].includes(r.status);
 
@@ -414,7 +315,7 @@ export default function CampaignsPage({ hideHeader }: { hideHeader?: boolean }) 
                                             Post {ver.status === 'verified' ? 'Verified ✓' : ver.status === 'rejected' ? 'Rejected' : 'Pending Review'}
                                         </span>
                                     )}
-                                    <p style={{ fontWeight: 800, fontSize: '20px', color: '#1A0A00' }}>${(r.counterOfferPrice && r.status === 'negotiation') ? r.counterOfferPrice.toLocaleString() : (r.agreedPrice?.toLocaleString() || 0)}</p>
+                                    <p style={{ fontWeight: 800, fontSize: '20px', color: '#1A0A00' }}>${r.agreedPrice?.toLocaleString() || 0}</p>
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '99px', background: displayStatus.bg, border: `1px solid ${displayStatus.border}`, color: displayStatus.color, fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                         {displayStatus.icon} {displayStatus.label}
                                     </span>

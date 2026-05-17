@@ -53,12 +53,11 @@ interface AdminCampaignRequest {
     brandName?: string;
     influencerName?: string;
     influencerNiche?: string;
-    status: 'sent' | 'viewed' | 'accepted' | 'rejected' | 'negotiation' | 'deal_closed' | 'expired' | 'cancelled';
+    status: 'sent' | 'viewed' | 'accepted' | 'rejected' | 'deal_closed' | 'expired' | 'cancelled';
     postingDeadline?: string;
     campaignStartDate?: string;
     campaignEndDate?: string;
     agreedPrice?: number;
-    counterOfferPrice?: number;
     createdAt?: string;
 }
 
@@ -83,7 +82,6 @@ const statusColors: Record<string, { bg: string; color: string; border: string }
     sent:        { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     accepted:    { bg: 'rgba(194,52,10,0.1)',  color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     rejected:    { bg: 'rgba(239,68,68,0.1)', color: '#dc2626', border: 'rgba(239,68,68,0.2)' },
-    negotiation: { bg: 'rgba(245,158,11,0.1)',  color: '#d97706', border: 'rgba(245,158,11,0.2)' },
     deal_closed: { bg: 'rgba(194,52,10,0.1)', color: '#C2340A', border: 'rgba(194,52,10,0.2)' },
     cancelled:   { bg: 'rgba(255,255,255,0.6)', color: '#7A5030', border: '#EDD9BC' },
     expired:     { bg: 'rgba(255,255,255,0.6)', color: '#7A5030', border: '#EDD9BC' },
@@ -526,7 +524,6 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                         <option value="">All Statuses</option>
                                         <option value="sent">Sent</option>
                                         <option value="viewed">Viewed</option>
-                                        <option value="negotiation">Negotiation</option>
                                         <option value="accepted">Accepted</option>
                                         <option value="deal_closed">Closed</option>
                                         <option value="rejected">Rejected</option>
@@ -594,8 +591,8 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                             </td>
 
                                                             {/* Budget */}
-                                                            <td style={{ padding: '16px 24px', color: (c.counterOfferPrice || c.agreedPrice) ? '#C2340A' : '#C4A882', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                                                {(c.counterOfferPrice || c.agreedPrice) ? `$${(c.counterOfferPrice || c.agreedPrice || 0).toLocaleString()}` : '—'}
+                                                            <td style={{ padding: '16px 24px', color: c.agreedPrice ? '#C2340A' : '#C4A882', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                                                {c.agreedPrice ? `$${(c.agreedPrice || 0).toLocaleString()}` : '—'}
                                                             </td>
 
                                                             {/* Actions */}
@@ -648,7 +645,7 @@ export function AdminDashboardView({ initialTab = 'users' }: { initialTab?: Tab 
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #EDD9BC' }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Budget</span>
-                                                    <span style={{ fontSize: 15, fontWeight: 700, color: '#C2340A' }}>{(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice) ? `$${(selectedCampaign.counterOfferPrice || selectedCampaign.agreedPrice || 0).toLocaleString()}` : '—'}</span>
+                                                    <span style={{ fontSize: 15, fontWeight: 700, color: '#C2340A' }}>{selectedCampaign.agreedPrice ? `$${(selectedCampaign.agreedPrice || 0).toLocaleString()}` : '—'}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 12 }}>
                                                     <span style={{ fontSize: 13, fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dates</span>

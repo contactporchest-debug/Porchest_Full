@@ -258,7 +258,7 @@ exports.getInfluencerRequests = async (req, res, next) => {
     try {
         const { status, page = 1, limit = 50 } = req.query;
         const filter = { influencerUserId: req.user._id };
-        const incomingStatuses = ['sent', 'viewed', 'pending', 'countered', 'negotiation', 'rejected', 'declined', 'deal_closed', 'expired', 'cancelled'];
+        const incomingStatuses = ['requested', 'sent', 'viewed', 'pending', 'accepted', 'brand_payment_pending', 'brand_paid_work_can_start', 'rejected', 'declined', 'deal_closed', 'expired', 'cancelled'];
         if (status && status !== 'all') {
             filter.status = status;
         } else {
@@ -306,18 +306,18 @@ exports.getInfluencerRequests = async (req, res, next) => {
     }
 };
 
-// @desc    Influencer responds to a request (accept/reject/negotiate)
+// @desc    Influencer responds to a request (accept/reject)
 // @route   PATCH /api/influencer/requests/:id
 exports.respondToRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { status, rejectionReason, counterOfferPrice, counterOfferMessage } = req.body;
+        const { status, rejectionReason } = req.body;
 
         if (!isValidObjectId(id)) {
             return res.status(400).json({ success: false, message: 'Invalid request ID' });
         }
 
-        const allowedStatuses = ['accepted', 'rejected', 'negotiation', 'deal_closed'];
+        const allowedStatuses = ['accepted', 'rejected'];
         if (!allowedStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
@@ -343,16 +343,10 @@ exports.respondToRequest = async (req, res, next) => {
             request.rejectedAt = new Date();
             request.rejectionReason = rejectionReason || '';
         }
-        if (status === 'negotiation') {
-            request.negotiationStartedAt = new Date();
-            request.counterOfferPrice = counterOfferPrice;
-            request.counterOfferMessage = counterOfferMessage;
-        }
-        if (status === 'deal_closed') request.dealClosedAt = new Date();
 
         await request.save();
 
-        if (status === 'accepted' || status === 'deal_closed') {
+        if (status === 'accepted') {
             await ensureTrackingAssets(request._id);
         }
 
@@ -360,20 +354,14 @@ exports.respondToRequest = async (req, res, next) => {
         const notifTypeMap = {
             accepted: 'request_accepted',
             rejected: 'request_rejected',
-            negotiation: 'negotiation',
-            deal_closed: 'deal_closed',
         };
         const notifTitleMap = {
             accepted: 'Request Accepted! 🎉',
             rejected: 'Request Declined',
-            negotiation: 'Counter Offer Received',
-            deal_closed: 'Deal Confirmed! ✅',
         };
         const notifMessageMap = {
             accepted: `${request.influencerName || 'Influencer'} accepted your request "${request.campaignTitle}". Brand payment is now required to start the collaboration.`,
             rejected: `${request.influencerName || 'Influencer'} declined your request "${request.campaignTitle}"`,
-            negotiation: `${request.influencerName || 'Influencer'} sent a counter offer for "${request.campaignTitle}"`,
-            deal_closed: `Deal confirmed for "${request.campaignTitle}" with ${request.influencerName || 'Influencer'}`,
         };
 
         await Notification.create({
@@ -384,11 +372,7 @@ exports.respondToRequest = async (req, res, next) => {
             campaignRequestId: request._id,
             senderName: request.influencerName,
             senderAvatar: request.influencerProfilePic,
-            metadata: {
-                counterOfferPrice,
-                counterOfferMessage,
-                rejectionReason,
-            },
+            metadata: { rejectionReason },
         });
 
         const brandUser = await User.findById(request.brandUserId).select('email fullName').lean();
@@ -429,18 +413,18 @@ exports.respondToRequest = async (req, res, next) => {
     }
 };
 
-// @desc    Brand responds to a request (e.g. accept counter offer, counter again, or reject)
+// @desc    Brand responds to a request
 // @route   PATCH /api/brand/requests/:id
 exports.brandRespondToRequest = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { status, agreedPrice, brandMessage, rejectionReason, counterOfferPrice, counterOfferMessage } = req.body;
+        const { status, agreedPrice, brandMessage, rejectionReason } = req.body;
 
         if (!isValidObjectId(id)) {
             return res.status(400).json({ success: false, message: 'Invalid request ID' });
         }
 
-        const allowedStatuses = ['accepted', 'rejected', 'negotiation', 'deal_closed', 'cancelled'];
+        const allowedStatuses = ['accepted', 'rejected', 'cancelled'];
         if (!allowedStatuses.includes(status)) {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
@@ -455,49 +439,38 @@ exports.brandRespondToRequest = async (req, res, next) => {
         }
 
         request.status = status;
-        if (status === 'deal_closed' || status === 'accepted') {
-            request.status = 'deal_closed';
+        if (status === 'accepted') {
+            request.status = 'accepted';
             request.dealClosedAt = new Date();
             if (agreedPrice != null) request.agreedPrice = Number(agreedPrice);
-            if (counterOfferPrice != null) request.agreedPrice = Number(counterOfferPrice);
-            request.counterOfferPrice = undefined;
-            request.counterOfferMessage = undefined;
         } else if (status === 'rejected' || status === 'cancelled') {
             request.status = 'cancelled';
             request.cancelledAt = new Date();
             request.rejectionReason = rejectionReason || '';
-        } else if (status === 'negotiation') {
-            request.negotiationStartedAt = new Date();
-            if (counterOfferPrice == null || Number.isNaN(Number(counterOfferPrice))) {
-                return res.status(400).json({ success: false, message: 'Counter offer price is required' });
-            }
-            request.counterOfferPrice = Number(counterOfferPrice);
-            request.counterOfferMessage = counterOfferMessage || brandMessage || '';
         }
 
         await request.save();
 
-        if (request.status === 'accepted' || request.status === 'deal_closed') {
+        if (request.status === 'accepted') {
             await ensureTrackingAssets(request._id);
         }
 
         const notifTypeMap = {
-            deal_closed: 'deal_closed',
+            accepted: 'request_accepted',
+            rejected: 'request_rejected',
             cancelled: 'request_rejected',
-            negotiation: 'negotiation',
         };
         const notifTitleMap = {
-            deal_closed: 'Deal Confirmed! 🎉',
+            accepted: 'Request Accepted! 🎉',
+            rejected: 'Request Rejected',
             cancelled: 'Request Cancelled',
-            negotiation: 'New Counter Offer from Brand',
         };
         const notifMessageMap = {
-            deal_closed: `${request.brandName || 'The brand'} accepted the terms and confirmed the deal for "${request.campaignTitle}".`,
+            accepted: `${request.brandName || 'The brand'} accepted the request for "${request.campaignTitle}".`,
+            rejected: `${request.brandName || 'The brand'} rejected the request for "${request.campaignTitle}".`,
             cancelled: `${request.brandName || 'The brand'} cancelled the request for "${request.campaignTitle}".`,
-            negotiation: `${request.brandName || 'The brand'} sent a new counter offer for "${request.campaignTitle}".`,
         };
-
-        const targetStatus = (status === 'deal_closed' || status === 'accepted') ? 'deal_closed' : (status === 'rejected' || status === 'cancelled') ? 'cancelled' : 'negotiation';
+        const targetStatus = ['accepted', 'rejected', 'cancelled'].includes(status) ? status : 'rejected';
 
         await Notification.create({
             recipientUserId: request.influencerUserId,
@@ -507,13 +480,7 @@ exports.brandRespondToRequest = async (req, res, next) => {
             campaignRequestId: request._id,
             senderName: request.brandName,
             senderAvatar: request.brandLogoUrl,
-            metadata: {
-                agreedPrice,
-                counterOfferPrice,
-                counterOfferMessage,
-                brandMessage,
-                rejectionReason,
-            },
+            metadata: { agreedPrice, brandMessage, rejectionReason },
         });
 
         const influencerUser = await User.findById(request.influencerUserId).select('email fullName').lean();
@@ -546,10 +513,10 @@ exports.brandRespondToRequest = async (req, res, next) => {
             });
         }
 
-        console.log(`[API Success] Brand ${request.brandUserId} responded ${status} to counter offer on request ${id}`);
+        console.log(`[API Success] Brand ${request.brandUserId} responded ${status} on request ${id}`);
         res.json({ success: true, request });
     } catch (error) {
-        console.error(`[API Error] Brand responding to counter offer:`, error);
+        console.error(`[API Error] Brand responding to request:`, error);
         next(error);
     }
 };

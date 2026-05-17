@@ -6,14 +6,13 @@ import { useApi, apiPatch } from '../../hooks/useApi';
 import CollaborationMetrics from './CollaborationMetrics';
 
 const TABS = [
-    { key: 'pending,countered,brand_payment_pending', label: 'Requests sent' },
+    { key: 'pending,brand_payment_pending', label: 'Requests sent' },
     { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];
 
 const STATUS_BADGE = {
     pending:          { bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',      color: 'color: #0284c7',      label: 'Pending' },
-    countered:        { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)',    color: 'color: #d97706',     label: 'Countered' },
     brand_payment_pending: { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)', color: 'color: #d97706', label: 'Payment pending' },
     brand_paid_work_can_start: { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)', color: 'color: #059669', label: 'Paid' },
     accepted:         { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Accepted' },
@@ -142,49 +141,6 @@ export default function CollaborationsFlow() {
                             )}
                         </div>
                     </div>
-
-                    {/* ── REQUESTS TAB ── Countered by influencer */}
-                    {c.status === 'countered' && c.pricing?.influencerCounter && (
-                        <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '16px', backdropFilter: 'blur(12px)' }}>
-                            <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                                <div>
-                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Your offer</p>
-                                    <p style={{ color: '#C2340A', fontWeight: 700, fontSize: '20px', textDecoration: 'line-through' }}>
-                                        ${Number(c.pricing.brandOffer || 0).toLocaleString()}
-                                    </p>
-                                </div>
-                                <div style={{ color: '#C2340A' }}>
-                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '10px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Influencer counter</p>
-                                    <p style={{ color: '#1A0A00', fontWeight: 700, fontSize: '24px' }}>
-                                        ${Number(c.pricing.influencerCounter).toLocaleString()}
-                                    </p>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button
-                                    onClick={() => action(c._id, 'accept-counter')}
-                                    disabled={acting}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
-                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#E8400A'; }}
-                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#C2340A'; }}
-                                >
-                                    Accept Counter (${Number(c.pricing.influencerCounter).toLocaleString()})
-                                </button>
-                                <button
-                                    onClick={() => action(c._id, 'decline')}
-                                    disabled={acting}
-                                    style={{ padding: '12px 24px', borderRadius: '12px', border: '1px solid rgba(220,38,38,0.2)', background: 'rgba(255,255,255,0.45)', color: '#dc2626', fontSize: '14px', fontWeight: 700, cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit', backdropFilter: 'blur(12px)' }}
-                                    onMouseEnter={e => { if (!acting) e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; }}
-                                    onMouseLeave={e => { if (!acting) e.currentTarget.style.background = 'rgba(255,255,255,0.45)'; }}
-                                >
-                                    Decline
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {c.status === 'brand_payment_pending' && (
                         <div style={{ padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', display: 'flex', flexDirection: 'column', gap: '12px', backdropFilter: 'blur(12px)' }}>

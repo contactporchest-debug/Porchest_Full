@@ -150,7 +150,7 @@ exports.getStats = async (req, res) => {
             CampaignRequest.countDocuments(),
             CampaignRequest.countDocuments({ status: 'sent' }),
             CampaignRequest.countDocuments({ status: 'accepted' }),
-            CampaignRequest.countDocuments({ status: { $in: ['accepted', 'negotiation', 'deal_closed'] } }),
+            CampaignRequest.countDocuments({ status: { $in: ['accepted', 'deal_closed'] } }),
         ]);
 
         return ok(res, {

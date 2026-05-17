@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { influencerAPI } from '@/lib/api';
 import {
     Loader2, Inbox, Calendar, Clock, CheckCircle, XCircle,
-    MessageSquare, Send, ChevronDown, ChevronUp, Eye, Handshake, X, Download,
+    Send, ChevronDown, ChevronUp, Eye, X, Download,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -16,8 +16,6 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
     brand_payment_pending: { label: 'Payment pending', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: <Clock size={11} /> },
     brand_paid_work_can_start: { label: 'Payment confirmed', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <CheckCircle size={11} /> },
     rejected: { label: 'Declined', color: '#dc2626', bg: 'rgba(220,38,38,0.08)', icon: <XCircle size={11} /> },
-    negotiation: { label: 'Negotiation', color: '#d97706', bg: 'rgba(217,119,6,0.08)', icon: <MessageSquare size={11} /> },
-    deal_closed: { label: 'Deal Closed', color: '#059669', bg: 'rgba(5,150,105,0.08)', icon: <Handshake size={11} /> },
     expired: { label: 'Expired', color: '#7A5030', bg: 'rgba(255,255,255,0.22)', icon: <Clock size={11} /> },
     cancelled: { label: 'Cancelled', color: '#7A5030', bg: 'rgba(255,255,255,0.22)', icon: <XCircle size={11} /> },
 };
@@ -90,13 +88,6 @@ function downloadRequestPdf(request: any) {
                 <p>${escapeHtml(request.contentGuidelines)}</p>
             </section>
         ` : '',
-        request.counterOfferPrice ? `
-            <section class="section">
-                <h3>Counter Offer</h3>
-                <p><strong>Price:</strong> $${escapeHtml(request.counterOfferPrice.toLocaleString())}</p>
-                ${request.counterOfferMessage ? `<p><strong>Message:</strong> ${escapeHtml(request.counterOfferMessage)}</p>` : ''}
-            </section>
-        ` : '',
     ].join('');
 
     popup.document.write(`
@@ -163,16 +154,12 @@ function downloadRequestPdf(request: any) {
 }
 
 function RequestDetailPanel({ request, onRespond, responding }: { request: any; onRespond: (id: string, action: string, data?: any) => void; responding: boolean }) {
-    const [counterPrice, setCounterPrice] = useState('');
-    const [counterMsg, setCounterMsg] = useState('');
     const [rejectionReason, setRejectionReason] = useState('');
-    const [showNegotiate, setShowNegotiate] = useState(false);
     const [showReject, setShowReject] = useState(false);
     const [postUrl, setPostUrl] = useState('');
     const [submittingVer, setSubmittingVer] = useState(false);
 
-    const canRespond = ['requested', 'sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
-    const canNegotiate = ['requested', 'sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
+    const canRespond = ['requested', 'sent', 'viewed', 'pending'].includes(request.status);
     const isAccepted = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status);
 
     const handleVerifySubmit = async (e: React.FormEvent) => {
@@ -296,15 +283,7 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                     </div>
                 )}
 
-                    {request.status === 'negotiation' && request.counterOfferPrice && (
-                    <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)' }}>
-                        <p style={{ fontSize: '11px', color: '#C2340A', fontWeight: '700', marginBottom: '6px' }}>Current Counter Offer</p>
-                        <p style={{ fontWeight: '800', fontSize: '20px', color: '#C2340A' }}>${request.counterOfferPrice.toLocaleString()}</p>
-                        {request.counterOfferMessage && <p style={{ fontSize: '12px', color: MUTED, marginTop: '4px' }}>{request.counterOfferMessage}</p>}
-                    </div>
-                )}
-
-                {(canRespond || canNegotiate) && (
+                {canRespond && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                             {canRespond && (
@@ -313,48 +292,13 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                                     <CheckCircle size={14} /> Accept Request
                                 </button>
                             )}
-                            {canNegotiate && (
-                                <button onClick={() => { setShowNegotiate(!showNegotiate); setShowReject(false); }}
-                                    style={{ flex: 1, padding: '12px 20px', borderRadius: '14px', background: 'rgba(255,255,255,0.45)', border: '1px solid #EDD9BC', color: '#C2340A', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', fontFamily: 'inherit', backdropFilter: 'blur(12px)' }}>
-                                    <MessageSquare size={14} /> Counter Offer
-                                </button>
-                            )}
                             {canRespond && (
-                                <button onClick={() => { setShowReject(!showReject); setShowNegotiate(false); }}
+                                <button onClick={() => { setShowReject(!showReject); }}
                                     style={{ padding: '12px 20px', borderRadius: '14px', background: 'rgba(255,255,255,0.45)', border: '1px solid rgba(220,38,38,0.22)', color: '#dc2626', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '7px', fontFamily: 'inherit', backdropFilter: 'blur(12px)' }}>
                                     <XCircle size={14} /> Decline
                                 </button>
                             )}
                         </div>
-
-                        <AnimatePresence>
-                            {showNegotiate && (
-                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                                    <div style={{ padding: '18px', borderRadius: '16px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.18)' }}>
-                                        <p style={{ fontSize: '12px', color: '#C2340A', fontWeight: '700', marginBottom: '12px' }}>Send a Counter Offer</p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px', marginBottom: '12px' }}>
-                                            <div>
-                                                <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Your Price (USD)</label>
-                                                <input type="number" min={0} value={counterPrice} onChange={(e) => setCounterPrice(e.target.value)}
-                                                    placeholder="e.g. 500" className="input-dark" style={{ fontSize: '14px', height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
-                                            </div>
-                                            <div>
-                                                <label style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>Message (optional)</label>
-                                                <input value={counterMsg} onChange={(e) => setCounterMsg(e.target.value)}
-                                                    placeholder="Explain your offer…" className="input-dark" style={{ fontSize: '13px', height: '42px', background: SURFACE, border: `1px solid ${BORDER}`, color: TEXT }} />
-                                            </div>
-                                        </div>
-                                        <button onClick={() => {
-                                            if (!counterPrice) return toast.error('Enter your counter offer price');
-                                            onRespond(request._id, 'negotiation', { counterOfferPrice: Number(counterPrice), counterOfferMessage: counterMsg });
-                                        }} disabled={responding}
-                                            style={{ padding: '10px 24px', borderRadius: '12px', background: 'linear-gradient(135deg, #C2340A, #E8400A)', border: 'none', color: '#fff', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'inherit' }}>
-                                            <Send size={13} /> Send Counter Offer
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
 
                         <AnimatePresence>
                             {showReject && (
@@ -433,9 +377,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
             toast.success(
                 action === 'accepted'
                     ? 'Request accepted. It moved to Collaborations.'
-                    : action === 'rejected'
-                        ? 'Request declined.'
-                        : 'Counter offer sent! 💬'
+                    : 'Request declined.'
             );
             await loadRequests();
             onChanged?.();
@@ -449,7 +391,6 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
     const FILTERS = [
         { key: 'all', label: 'All', color: '#C2340A' },
         { key: 'requested,sent,viewed,pending', label: 'New', color: '#C2340A' },
-        { key: 'countered,negotiation', label: 'Countered', color: '#d97706' },
         { key: 'rejected,declined,cancelled', label: 'Declined', color: '#dc2626' },
         { key: 'deal_closed', label: 'Deals', color: '#059669' },
     ];

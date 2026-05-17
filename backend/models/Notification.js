@@ -10,8 +10,6 @@ const notificationSchema = new mongoose.Schema(
                 'request_viewed',
                 'request_accepted',
                 'request_rejected',
-                'negotiation',
-                'counter_offer',
                 'deal_closed',
                 'request_expired',
                 'request_cancelled',

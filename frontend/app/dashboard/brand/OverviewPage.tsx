@@ -62,7 +62,7 @@ export default function OverviewPage({
             .finally(() => setLoading(false));
     }, [authLoading, token, user?.role, profileCompleteOverride]);
 
-    const pending = requests.filter((r) => ['sent', 'viewed', 'negotiation', 'brand_payment_pending'].includes(r.status));
+    const pending = requests.filter((r) => ['sent', 'viewed', 'brand_payment_pending'].includes(r.status));
     const active = requests.filter((r) => ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(r.status));
     const completed = requests.filter((r) => r.status === 'deal_closed');
     const rejected = requests.filter((r) => ['rejected', 'cancelled'].includes(r.status));

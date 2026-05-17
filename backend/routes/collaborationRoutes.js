@@ -33,7 +33,6 @@ router.use(authMiddleware);
 
 const EXPLICIT_STATUSES = [
     'pending',
-    'countered',
     'accepted',
     'content_submitted',
     'content_approved',
@@ -141,13 +140,11 @@ function normalizeBriefInput(brief = {}) {
 
 function normalizePricingInput(pricing = {}, legacy = {}) {
     const brandOffer = toNumber(pricing.brandOffer ?? legacy.brandOfferedFee ?? legacy.agreedPrice, 0);
-    const influencerCounter = toNumber(pricing.influencerCounter ?? legacy.influencerCounterFee ?? legacy.counterOfferPrice, 0);
     const agreedFee = toNumber(pricing.agreedFee ?? legacy.agreedFee ?? legacy.agreedPrice, 0);
     const currency = pricing.currency || legacy.currency || 'USD';
 
     return {
         brandOffer,
-        influencerCounter,
         agreedFee,
         currency,
     };
@@ -638,11 +635,9 @@ router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, re
                 ...pricing,
                 brandOffer: agreedFee,
                 agreedFee,
-                influencerCounter: pricing.influencerCounter || 0,
             },
             financials: {
                 brandOfferedFee: agreedFee,
-                influencerCounterFee: pricing.influencerCounter,
                 agreedFee,
                 currency: pricing.currency,
             },
@@ -755,7 +750,7 @@ router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (!inStatusList(collab.status, ['pending', 'countered'])) return throwStatusError(collab.status, res);
+        if (!inStatusList(collab.status, ['pending'])) return throwStatusError(collab.status, res);
 
         const { influencerProfile } = await getUserProfiles(req.user._id);
         if (!canAccessCollaboration(collab, req.user, null, influencerProfile)) {
@@ -787,63 +782,11 @@ router.patch('/:id/confirm-brand-payment', roleMiddleware('brand'), requireCompl
     }
 });
 
-router.patch('/:id/counter', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
-    try {
-        const collab = await CampaignRequest.findById(req.params.id).lean();
-        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (String(collab.status) !== 'pending') return throwStatusError(collab.status, res);
-
-        const amount = toNumber(req.body.counterAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'counterAmount must be positive' });
-        }
-
-        const updated = await CampaignRequest.findByIdAndUpdate(
-            req.params.id,
-            {
-                $set: {
-                    status: 'countered',
-                    counterOfferPrice: amount,
-                    influencerCounterFee: amount,
-                    'pricing.influencerCounter': amount,
-                    counterOfferMessage: req.body.message || '',
-                    negotiationStartedAt: new Date(),
-                },
-            },
-            { new: true, strict: false }
-        ).lean();
-
-        const influencerUser = await User.findById(collab.influencerUserId).select('email fullName').lean();
-        await sendCampaignEmailNotification({
-            email: influencerUser?.email,
-            subject: 'Content approved',
-            title: 'Content approved',
-            message: `Your draft for "${collab.campaignTitle}" was approved. Please verify the final content before posting.`,
-            actionText: 'View collaboration',
-            actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
-        });
-        return res.json(await enrichCollaboration(updated));
-    } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-router.patch('/:id/accept-counter', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
-    try {
-        const collab = await CampaignRequest.findById(req.params.id).lean();
-        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (String(collab.status) !== 'countered') return throwStatusError(collab.status, res);
-
-        const { brandProfile } = await getUserProfiles(req.user._id);
-        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
-            return res.status(403).json({ success: false, error: 'Access denied' });
-        }
-
-        const updated = await finalizeAcceptance(req.params.id, collab);
-        return res.json(await enrichCollaboration(updated));
-    } catch (error) {
-        return res.status(500).json({ success: false, error: error.message });
-    }
+router.patch('/:id/counter', (_req, res) => {
+    res.status(410).json({
+        success: false,
+        error: 'Counter offers are no longer supported. Porchest now uses fixed-price collaborations only.',
+    });
 });
 
 router.get('/:id/tracking/status', async (req, res) => {
@@ -982,7 +925,7 @@ router.patch('/:id/requirements', roleMiddleware('brand'), requireCompleteProfil
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (!inStatusList(collab.status, ['pending', 'countered', 'accepted', 'brand_payment_pending', 'brand_paid_work_can_start'])) {
+        if (!inStatusList(collab.status, ['pending', 'accepted', 'brand_payment_pending', 'brand_paid_work_can_start'])) {
             return throwStatusError(collab.status, res);
         }
 

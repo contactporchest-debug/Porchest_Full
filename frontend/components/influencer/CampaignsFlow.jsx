@@ -9,7 +9,7 @@ import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const STATUS_TABS = [
-    { key: 'requested,sent,viewed,pending,countered,negotiation', label: 'Requested' },
+    { key: 'requested,sent,viewed,pending', label: 'Requested' },
     { key: 'accepted,brand_payment_pending,brand_paid_work_can_start,content_submitted,content_approved,posted', label: 'In Production' },
     { key: 'campaign_active,active', label: 'Ongoing' },
 ];
@@ -61,7 +61,6 @@ export default function CampaignsFlow() {
     // Per-card input state — keyed by collab _id to prevent bleed-over
     const [driveLinkMap, setDriveLinkMap] = useState({});
     const [postLinkMap, setPostLinkMap]   = useState({});
-    const [counterMap, setCounterMap]     = useState({});
     const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
 
     const { data, loading, refetch } = useApi(`/collaborations?status=${STATUS_TABS[activeTab].key}`);
@@ -84,16 +83,14 @@ export default function CampaignsFlow() {
                 throw new Error(result?.error || result?.message || 'Unable to update collaboration');
             }
             const nextStatus = result?.status || result?.request?.status || result?.data?.status;
-            if (endpoint === 'accept' || endpoint === 'accept-counter') {
+            if (endpoint === 'accept') {
                 if (!['brand_payment_pending', 'brand_paid_work_can_start', 'campaign_active'].includes(String(nextStatus || ''))) {
                     throw new Error('The collaboration did not move to the next stage.');
                 }
             }
-            if (endpoint === 'accept' || endpoint === 'accept-counter') {
+            if (endpoint === 'accept') {
                 setActiveTab(1);
                 toast.success('Request accepted. It moved to Collaborations.');
-            } else if (endpoint === 'counter') {
-                toast.success('Counter offer sent.');
             } else if (endpoint === 'decline') {
                 toast.success('Request declined.');
             } else {
@@ -363,7 +360,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Actions — requested */}
-                    {['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(c.status) && (
+                    {['sent', 'viewed', 'pending'].includes(c.status) && (
                         <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-[#EDD9BC]">
                             <button
                                 onClick={() => handleDownloadPdf(c)}
@@ -374,7 +371,7 @@ export default function CampaignsFlow() {
                                 Download PDF
                             </button>
 
-                            {['requested', 'sent', 'viewed', 'pending', 'countered'].includes(c.status) && (
+                            {['requested', 'sent', 'viewed', 'pending'].includes(c.status) && (
                                 <button
                                     onClick={() => action(c._id, 'accept')}
                                     disabled={acting}
@@ -385,25 +382,6 @@ export default function CampaignsFlow() {
                             )}
 
                             {['requested', 'sent', 'viewed', 'pending'].includes(c.status) && (
-                                <div className="flex gap-2 flex-1">
-                                    <input
-                                        type="number"
-                                        placeholder="Counter amount"
-                                        value={counterMap[c._id] || ''}
-                                        onChange={(e) => setCounterMap((m) => ({ ...m, [c._id]: e.target.value }))}
-                                        className={inputClass}
-                                    />
-                                    <button
-                                        onClick={() => action(c._id, 'counter', { counterAmount: Number(counterMap[c._id]) })}
-                                        disabled={acting || !counterMap[c._id]}
-                                        className="px-6 py-3 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-sm hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40"
-                                    >
-                                        Counter
-                                    </button>
-                                </div>
-                            )}
-
-                            {['requested', 'sent', 'viewed', 'pending', 'countered'].includes(c.status) && (
                                 <button
                                     onClick={() => action(c._id, 'decline')}
                                     disabled={acting}
@@ -412,19 +390,6 @@ export default function CampaignsFlow() {
                                     Reject
                                 </button>
                             )}
-                        </div>
-                    )}
-
-                    {/* Countered — waiting for brand */}
-                    {c.status === 'countered' && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#d97706] font-bold text-sm">Waiting for brand response</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">You countered at ${Number(c.pricing?.influencerCounter || 0).toLocaleString()}</p>
-                            </div>
                         </div>
                     )}
 

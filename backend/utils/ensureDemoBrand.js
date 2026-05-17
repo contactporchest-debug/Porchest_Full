@@ -88,12 +88,9 @@ const DEMO_CAMPAIGNS = [
         campaignStartDate: daysAgo(1),
         campaignEndDate: daysFromNow(16),
         brandMessage: 'We want to test a performance-meets-self-care angle with your audience.',
-        status: 'negotiation',
-        counterOfferPrice: 455,
-        counterOfferMessage: 'Can we include one extra feed post for product education?',
+        status: 'pending',
         sentAt: daysAgo(4),
         viewedAt: daysAgo(4),
-        negotiationStartedAt: daysAgo(2),
     },
     {
         influencerEmail: 'inf6@porchest.com',
@@ -230,14 +227,11 @@ async function seedDemoBrandRequests({ brandUser, brandProfile }) {
             campaignEndDate: item.campaignEndDate,
             brandMessage: item.brandMessage,
             status: item.status,
-            counterOfferPrice: item.counterOfferPrice,
-            counterOfferMessage: item.counterOfferMessage,
             rejectionReason: item.rejectionReason,
             sentAt: item.sentAt,
             viewedAt: item.viewedAt,
             acceptedAt: item.acceptedAt,
             rejectedAt: item.rejectedAt,
-            negotiationStartedAt: item.negotiationStartedAt,
             dealClosedAt: item.dealClosedAt,
             brandName: brandProfile.brandName,
             brandLogoUrl: brandProfile.logoUrl || brandProfile.instagramDPURL,
@@ -247,7 +241,7 @@ async function seedDemoBrandRequests({ brandUser, brandProfile }) {
             influencerProfilePic: influencerProfile.profilePictureUrl,
             influencerNiche: influencerProfile.niche,
             createdAt: item.sentAt,
-            updatedAt: item.dealClosedAt || item.negotiationStartedAt || item.acceptedAt || item.rejectedAt || item.viewedAt || item.sentAt,
+            updatedAt: item.dealClosedAt || item.acceptedAt || item.rejectedAt || item.viewedAt || item.sentAt,
         });
     }
 }
@@ -310,4 +304,3 @@ module.exports = {
     DEMO_BRAND_EMAIL,
     DEMO_BRAND_PASSWORD,
 };
-
