@@ -27,6 +27,7 @@ const INFLUENCER_CARD_FIELDS = [
     'avgComments',
     'avgPostPrice',
     'avgReelPrice',
+    'rates',
     'demographics',
     'instagramConnected',
     'instagramConnectionStatus',
@@ -50,6 +51,8 @@ const INFLUENCER_CARD_FIELDS = [
 function computeDynamicFitScore(profile) {
     let score = 0;
     const reasons = [];
+    const postPrice = Number(profile.avgPostPrice || profile.rates?.postPrice || 0);
+    const reelPrice = Number(profile.avgReelPrice || profile.rates?.reelPrice || 0);
 
     // 1. Engagement Rate (max 40 pts)
     const er = profile.engagementRate || 0;
@@ -79,7 +82,7 @@ function computeDynamicFitScore(profile) {
     if (profile.bio || profile.instagramBiography)                    dataPts += 5;
     if (profile.niche && (Array.isArray(profile.niche) ? profile.niche.length > 0 : profile.niche.trim())) dataPts += 5;
     if (profile.country && profile.country.trim())                    dataPts += 5;
-    if ((profile.avgPostPrice || 0) > 0 || (profile.avgReelPrice || 0) > 0) {
+    if (postPrice > 0 || reelPrice > 0) {
         dataPts += 5; reasons.push('Pricing published');
     } else {
         reasons.push('Pricing not set');
@@ -119,6 +122,8 @@ function computeDynamicFitScore(profile) {
  */
 function buildInfluencerCard(profile) {
     const { finalScore, qualityLabel, starRating, reasons } = computeDynamicFitScore(profile);
+    const postPrice = profile.avgPostPrice || profile.rates?.postPrice || 0;
+    const reelPrice = profile.avgReelPrice || profile.rates?.reelPrice || 0;
 
     return {
         _id:                   profile._id,
@@ -142,8 +147,8 @@ function buildInfluencerCard(profile) {
         avgComments:           profile.avgComments    || 0,
 
         // Canonical field names for frontend consumption
-        avgPostCostUSD:        profile.avgPostPrice   || 0,
-        avgReelCostUSD:        profile.avgReelPrice   || 0,
+        avgPostCostUSD:        postPrice   || 0,
+        avgReelCostUSD:        reelPrice   || 0,
 
         audienceDemographics:  profile.demographics   || null,
 
@@ -389,15 +394,14 @@ exports.updateProfile = async (req, res, next) => {
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
         const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
+        const maxPostCostNumber = maxPostCost ? Number(maxPostCost) : null;
 
-        // Base filter: must have connected Instagram AND completed profile
+        // Base filter: must have connected Instagram and enough profile data to be useful
         const filter = { 
-            profileCompletionStatus: true,
             $or: [
                 { instagramConnectionStatus: 'connected' },
                 { instagramConnected: true }
             ],
-            // ── Profile Completion Gate ──
             followersCount: { $gt: 0 },
             engagementRate: { $gt: 0 },
         };
@@ -411,7 +415,15 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             if (maxFollowers) filter.followersCount.$lte = Number(maxFollowers);
         }
         if (minEngagement) filter.engagementRate = { $gte: Number(minEngagement) };
-        if (maxPostCost) filter.avgPostPrice = { $lte: Number(maxPostCost), $gt: 0 };
+        if (maxPostCostNumber) {
+            filter.$or = [
+                ...(filter.$or || []),
+                { avgPostPrice: { $lte: maxPostCostNumber, $gt: 0 } },
+                { avgReelPrice: { $lte: maxPostCostNumber, $gt: 0 } },
+                { 'rates.postPrice': { $lte: maxPostCostNumber, $gt: 0 } },
+                { 'rates.reelPrice': { $lte: maxPostCostNumber, $gt: 0 } },
+            ];
+        }
 
         const influencerProfiles = await InfluencerProfile.find(filter)
             .select(INFLUENCER_CARD_FIELDS)
@@ -427,7 +439,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             const hasLocation = !!p.country;
             const hasFollowers = (p.followersCount || 0) > 0;
             const hasEngagement = (p.engagementRate || 0) > 0;
-            const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0;
+            const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0 || (p.rates?.postPrice || 0) > 0 || (p.rates?.reelPrice || 0) > 0;
             const hasInstagram = p.instagramConnected || p.instagramConnectionStatus === 'connected';
             return hasIdentity && hasBio && hasNiche && hasLocation && hasFollowers && hasEngagement && hasPricing && hasInstagram;
         });

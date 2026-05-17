@@ -980,6 +980,20 @@ export default function BrandAnalyticsPage() {
                                 ))}
                             </div>
 
+                            {summary && summary.total_posts === 0 ? (
+                                <GlassCard padding="18px" noHover style={{ borderColor: 'rgba(217,119,6,0.25)', background: 'rgba(255,255,255,0.42)' }}>
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                        <CircleAlert size={18} style={{ color: COLORS.amber, flexShrink: 0, marginTop: 2 }} />
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: COLORS.ink }}>No posts found in the selected {selectedPeriod}-day window</p>
+                                            <p style={{ marginTop: 6, fontSize: 13, color: COLORS.muted, lineHeight: 1.6 }}>
+                                                The report is still loading the profile snapshot, but there are no posts published within this timeframe yet, so charts and engagement metrics stay empty.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </GlassCard>
+                            ) : null}
+
                             <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
                                 <ChartShell title="Influencer Score Radar" subtitle={`A normalized view of the influencer's ${selectedPeriod}-day fit across core decision factors.`} icon={<Radar size={16} />} helpText="This radar condenses the main scoring dimensions into a quick visual comparison." accent={authenticityLow ? 'rgba(220,38,38,0.30)' : undefined}>
                                     {radarData.length ? (

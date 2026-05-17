@@ -557,7 +557,7 @@ async function getInfluencerAnalytics({ id, period = 60 }) {
     const totalPosts = posts.length;
     const averageLikes = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.likes), 0) / totalPosts : 0;
     const averageComments = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.comments), 0) / totalPosts : 0;
-    const averageEngagementRate = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.engagement_rate), 0) / totalPosts : Number(profile.engagementRate || profile.avgEngagementRate || 0);
+    const averageEngagementRate = totalPosts ? posts.reduce((sum, post) => sum + toNumber(post.engagement_rate), 0) / totalPosts : 0;
     const totalEngagements = posts.reduce((sum, post) => sum + toNumber(post.likes) + toNumber(post.comments), 0);
     const totalShares = posts.reduce((sum, post) => sum + toNumber(post.shares), 0);
     const totalSaves = posts.reduce((sum, post) => sum + toNumber(post.saves), 0);

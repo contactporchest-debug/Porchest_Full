@@ -51,7 +51,22 @@ type InfluencerProfileResponse = {
 
 function hasInfluencerProfileRecord(profile?: InfluencerProfileResponse | null) {
     if (!profile) return false;
-    return Object.entries(profile).some(([key, value]) => key !== 'userId' && key !== 'profileComplete' && key !== 'profileCompletionStatus' && key !== 'profileCompletion' && value !== undefined && value !== null && value !== '');
+    const candidate = (profile.influencerProfile && typeof profile.influencerProfile === 'object')
+        ? profile.influencerProfile
+        : profile;
+
+    return Object.entries(candidate).some(([key, value]) =>
+        key !== 'userId' &&
+        key !== 'profileComplete' &&
+        key !== 'profileCompletionStatus' &&
+        key !== 'profileCompletion' &&
+        key !== 'success' &&
+        key !== 'message' &&
+        key !== 'error' &&
+        value !== undefined &&
+        value !== null &&
+        value !== ''
+    );
 }
 
 export default function InfluencerCollaborationsRoute() {

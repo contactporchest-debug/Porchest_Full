@@ -10,6 +10,9 @@ const { generateUniqueCode } = require('../utils/generateCode');
 function computeProfileCompletion(profile) {
     if (!profile) return { percentage: 0, isComplete: false, checklist: [] };
 
+    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
+    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
+
     const checks = [
         { key: 'displayName', label: 'Add display name', done: !!(profile.fullName || profile.displayName) },
         { key: 'contactEmail', label: 'Add contact email', done: !!profile.contactEmail },
@@ -21,8 +24,8 @@ function computeProfileCompletion(profile) {
         { key: 'contentStyleTags', label: 'Pick content style', done: Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 },
         { key: 'followers', label: 'Sync follower count', done: (profile.followersCount || 0) > 0 },
         { key: 'engagement', label: 'Sync engagement data', done: (profile.engagementRate || 0) > 0 },
-        { key: 'postPrice', label: 'Set average post price', done: (profile.avgPostPrice || 0) > 0 },
-        { key: 'reelPrice', label: 'Set average reel price', done: (profile.avgReelPrice || 0) > 0 },
+        { key: 'postPrice', label: 'Set average post price', done: postPrice > 0 },
+        { key: 'reelPrice', label: 'Set average reel price', done: reelPrice > 0 },
         { key: 'instagram', label: 'Connect Instagram account', done: !!(profile.instagramConnected || profile.instagramConnectionStatus === 'connected') },
     ];
 
@@ -124,6 +127,8 @@ exports.updateProfile = async (req, res, next) => {
             const next = Number(value);
             return Number.isFinite(next) ? next : undefined;
         };
+        const reelPrice = normalizeRate(updates.rates?.reelPrice ?? updates.avgReelCostUSD ?? updates.avgReelPrice);
+        const postPrice = normalizeRate(updates.rates?.postPrice ?? updates.avgPostCostUSD ?? updates.avgPostPrice);
         const mappedUpdates = {
             fullName: updates.fullName || updates.displayName || req.user?.name || req.user?.email?.split('@')[0] || 'Influencer',
             displayName: updates.displayName || updates.fullName,
@@ -136,11 +141,11 @@ exports.updateProfile = async (req, res, next) => {
             languages: normalizeList(updates.languages),
             contentStyleTags: normalizeList(updates.contentStyleTags),
             rates: {
-                reelPrice: normalizeRate(updates.rates?.reelPrice ?? updates.avgReelCostUSD ?? updates.avgReelPrice),
-                postPrice: normalizeRate(updates.rates?.postPrice ?? updates.avgPostCostUSD ?? updates.avgPostPrice),
+                reelPrice,
+                postPrice,
             },
-            avgPostPrice: normalizeRate(updates.avgPostCostUSD ?? updates.avgPostPrice),
-            avgReelPrice: normalizeRate(updates.avgReelCostUSD ?? updates.avgReelPrice),
+            avgPostPrice: postPrice,
+            avgReelPrice: reelPrice,
             profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl,
             avatar: updates.profileImageURL || updates.profilePictureUrl,
         };
@@ -158,6 +163,13 @@ exports.updateProfile = async (req, res, next) => {
         } else {
             Object.assign(influencerProfile, mappedUpdates);
             await influencerProfile.save();
+        }
+
+        if ((influencerProfile.avgPostPrice == null || influencerProfile.avgPostPrice === 0) && influencerProfile.rates?.postPrice > 0) {
+            influencerProfile.avgPostPrice = influencerProfile.rates.postPrice;
+        }
+        if ((influencerProfile.avgReelPrice == null || influencerProfile.avgReelPrice === 0) && influencerProfile.rates?.reelPrice > 0) {
+            influencerProfile.avgReelPrice = influencerProfile.rates.reelPrice;
         }
 
         // Compute strict profile completion based on all required fields
