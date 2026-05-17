@@ -22,6 +22,11 @@ const IS: React.CSSProperties = {
     color: '#1A0A00', fontSize: '14px', outline: 'none', transition: 'border-color 0.15s', fontFamily: 'inherit'
 };
 
+const formatMoney = (value: number | string | undefined | null) => {
+    const amount = Number(value || 0);
+    return `$${Number.isFinite(amount) ? amount.toLocaleString() : '0'}`;
+};
+
 export default function CreateRequestModal({ influencer, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
@@ -138,11 +143,22 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                                     </button>
                                 ))}
                             </div>
+                            <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'rgba(255,255,255,0.62)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '12px', fontWeight: 700 }}>
+                                    Reel {formatMoney(reelRate)}
+                                </span>
+                                <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'rgba(255,255,255,0.62)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '12px', fontWeight: 700 }}>
+                                    Post {formatMoney(postRate)}
+                                </span>
+                            </div>
                         </Field>
 
                         <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
                             <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculated total</p>
-                            <p style={{ fontSize: '28px', fontWeight: 800, color: '#1A0A00', marginTop: '4px' }}>${Number(totalPrice || 0).toLocaleString()}</p>
+                            <p style={{ fontSize: '28px', fontWeight: 800, color: '#1A0A00', marginTop: '4px' }}>{formatMoney(totalPrice)}</p>
+                            <p style={{ marginTop: '6px', fontSize: '12px', color: '#7A5030' }}>
+                                The total updates automatically when you select Reel, Post, or both.
+                            </p>
                         </div>
 
                         {/* Row 1 */}

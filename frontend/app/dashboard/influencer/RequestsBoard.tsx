@@ -171,8 +171,8 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
     const [postUrl, setPostUrl] = useState('');
     const [submittingVer, setSubmittingVer] = useState(false);
 
-    const canRespond = ['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
-    const canNegotiate = ['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
+    const canRespond = ['requested', 'sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
+    const canNegotiate = ['requested', 'sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(request.status);
     const isAccepted = ['accepted', 'brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted'].includes(request.status);
 
     const handleVerifySubmit = async (e: React.FormEvent) => {
@@ -448,7 +448,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
 
     const FILTERS = [
         { key: 'all', label: 'All', color: '#C2340A' },
-        { key: 'sent,viewed,pending', label: 'New', color: '#C2340A' },
+        { key: 'requested,sent,viewed,pending', label: 'New', color: '#C2340A' },
         { key: 'countered,negotiation', label: 'Countered', color: '#d97706' },
         { key: 'rejected,declined,cancelled', label: 'Declined', color: '#dc2626' },
         { key: 'deal_closed', label: 'Deals', color: '#059669' },

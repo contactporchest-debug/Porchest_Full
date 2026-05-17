@@ -9,7 +9,7 @@ import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const STATUS_TABS = [
-    { key: 'sent,viewed,pending,countered,negotiation', label: 'Requested' },
+    { key: 'requested,sent,viewed,pending,countered,negotiation', label: 'Requested' },
     { key: 'accepted,brand_payment_pending,brand_paid_work_can_start,content_submitted,content_approved,posted', label: 'In Production' },
     { key: 'campaign_active,active', label: 'Ongoing' },
 ];
@@ -374,7 +374,7 @@ export default function CampaignsFlow() {
                                 Download PDF
                             </button>
 
-                            {['pending', 'countered'].includes(c.status) && (
+                            {['requested', 'sent', 'viewed', 'pending', 'countered'].includes(c.status) && (
                                 <button
                                     onClick={() => action(c._id, 'accept')}
                                     disabled={acting}
@@ -384,7 +384,7 @@ export default function CampaignsFlow() {
                                 </button>
                             )}
 
-                            {c.status === 'pending' && (
+                            {['requested', 'sent', 'viewed', 'pending'].includes(c.status) && (
                                 <div className="flex gap-2 flex-1">
                                     <input
                                         type="number"
@@ -403,7 +403,7 @@ export default function CampaignsFlow() {
                                 </div>
                             )}
 
-                            {['pending', 'countered'].includes(c.status) && (
+                            {['requested', 'sent', 'viewed', 'pending', 'countered'].includes(c.status) && (
                                 <button
                                     onClick={() => action(c._id, 'decline')}
                                     disabled={acting}

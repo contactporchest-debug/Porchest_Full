@@ -6,6 +6,11 @@ import { apiPost } from '../../hooks/useApi';
 const CONTENT_TYPES = ['Reel', 'Feed Post', 'Carousel', 'Live', 'Giveaway'];
 const OBJECTIVES = ['Awareness', 'Sales', 'App installs', 'Lead generation', 'Engagement'];
 
+const formatMoney = (value) => {
+    const amount = Number(value || 0);
+    return `$${Number.isFinite(amount) ? amount.toLocaleString() : '0'}`;
+};
+
 export default function RequestCollaborationButton({ influencerId, influencerName, rates, autoOpen = false }) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState(1);
@@ -112,7 +117,12 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {step === 1 && (
                                 <>
-                                    {rates && <p style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Rates: Reel ${rates.reelPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
+                                    {rates && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Reel {rates.reelPrice ? formatMoney(rates.reelPrice) : '—'}</span>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Post {rates.postPrice ? formatMoney(rates.postPrice) : '—'}</span>
+                                        </div>
+                                    )}
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {['Reel', 'Post'].map((type) => (
                                             <button
@@ -138,7 +148,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                     </div>
                                     <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
                                         <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculated total</p>
-                                        <p style={{ marginTop: '4px', fontSize: '22px', fontWeight: 800, color: '#1A0A00' }}>${Number(calculatedTotal || 0).toLocaleString()}</p>
+                                        <p style={{ marginTop: '4px', fontSize: '22px', fontWeight: 800, color: '#1A0A00' }}>{formatMoney(calculatedTotal)}</p>
                                         <p style={{ marginTop: '6px', fontSize: '12px', color: '#7A5030' }}>Automatically calculated from the influencer’s declared fixed rates.</p>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

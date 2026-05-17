@@ -280,7 +280,7 @@ export default function ProfileForm() {
                         <div>
                             <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Rates</p>
                             <p style={{ marginTop: '6px', fontSize: '15px', fontWeight: 600, color: '#1A0A00' }}>
-                                Reel {profile.rates?.reelPrice ? `Rs ${profile.rates.reelPrice}` : '—'} · Post {profile.rates?.postPrice ? `Rs ${profile.rates.postPrice}` : '—'}
+                                Reel {profile.rates?.reelPrice ? `$${profile.rates.reelPrice}` : '—'} · Post {profile.rates?.postPrice ? `$${profile.rates.postPrice}` : '—'}
                             </p>
                         </div>
                     </div>
