@@ -68,22 +68,6 @@ export const adminAPI = {
     updateUserStatus: (id: string, status: string) => api.patch(`/admin/users/${id}/status`, { status }),
     updateUserRole: (id: string, role: string) => api.patch(`/admin/users/${id}/role`, { role }),
     deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
-    getCampaigns: (params?: Record<string, unknown>) => api.get('/admin/campaigns', { params }),
-    getCampaignById: (id: string) => api.get(`/admin/campaigns/${id}`),
-    updateCampaignStatus: (id: string, status: string) => api.patch(`/admin/campaigns/${id}/status`, { status }),
-    getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
-    getCollaboration: (id: string) => api.get(`/collaborations/${id}`),
-    stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
-    verifyCollaboration: (id: string) => api.patch(`/collaborations/${id}/verify-admin`),
-    // Campaign requests overview
-    getRequests: (params?: Record<string, unknown>) => api.get('/admin/requests', { params }),
-    // Verification queue
-    getVerificationQueue: (status = 'pending') => api.get('/admin/verifications', { params: { status } }),
-    reviewVerification: (id: string, status: string, adminNote?: string) =>
-        api.patch(`/admin/verifications/${id}`, { status, adminNote }),
-    getCashouts: (params?: Record<string, unknown>) => api.get('/admin/cashouts', { params }),
-    reviewCashout: (id: string, status: 'approved' | 'rejected', data?: { transactionId?: string; rejectionReason?: string }) =>
-        api.patch(`/admin/cashouts/${id}`, { status, ...data }),
 };
 
 export const analyticsAPI = {

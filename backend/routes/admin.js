@@ -8,12 +8,7 @@ const {
     updateUserStatus,
     updateUserRole,
     deleteUser,
-    getRequests,
-    getVerificationQueue,
-    reviewVerification,
 } = require('../controllers/adminController');
-const adminCampaignController = require('../controllers/adminCampaignController');
-const cashoutController = require('../controllers/cashoutController');
 
 // All admin routes require authentication + admin role
 router.use(authMiddleware, roleMiddleware('admin'));
@@ -26,21 +21,5 @@ router.get('/users',                   getUsers);
 router.patch('/users/:id/status',      updateUserStatus);
 router.patch('/users/:id/role',        updateUserRole);
 router.delete('/users/:id',            deleteUser);
-
-// ── Campaign Requests ──────────────────────────────────
-router.get('/requests',                getRequests);
-
-// ── Campaigns ──────────────────────────────────────────
-router.get('/campaigns',               adminCampaignController.getCampaigns);
-router.get('/campaigns/:id',           adminCampaignController.getCampaignById);
-router.patch('/campaigns/:id/status',  adminCampaignController.updateCampaignStatus);
-
-// ── Verification Queue ─────────────────────────────────
-router.get('/verifications',           getVerificationQueue);
-router.patch('/verifications/:id',     reviewVerification);
-
-// ── Cashouts ───────────────────────────────────────────
-router.get('/cashouts',                cashoutController.listCashouts);
-router.patch('/cashouts/:id',           cashoutController.reviewCashout);
 
 module.exports = router;
