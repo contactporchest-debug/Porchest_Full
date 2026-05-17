@@ -7,6 +7,7 @@ const campaignRequestController = require('../controllers/campaignRequestControl
 const notificationController = require('../controllers/notificationController');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { getInfluencerAnalytics } = require('../services/brandInfluencerAnalyticsService');
+const { buildInfluencerPerformanceReport } = require('../services/influencerPerformanceService');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
@@ -30,7 +31,12 @@ router.get('/instagram/profile', instagramController.getProfile);
 router.get('/instagram/analytics', instagramController.getAnalytics);
 router.get('/instagram/analytics/60', async (req, res, next) => {
     try {
-        const profile = await InfluencerProfile.findOne({ userId: req.user._id }).select('_id userId').lean();
+        const profile = await InfluencerProfile.findOne({
+            $or: [
+                { userId: req.user._id },
+                req.user?.influencerProfileId ? { _id: req.user.influencerProfileId } : null,
+            ].filter(Boolean),
+        }).select('_id userId').lean();
         if (!profile) {
             return res.status(404).json({ success: false, message: 'Influencer profile not found' });
         }
@@ -50,6 +56,32 @@ router.get('/instagram/analytics/60', async (req, res, next) => {
 });
 router.get('/instagram/media', instagramController.getMedia);
 router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
+
+router.get('/performance', async (req, res, next) => {
+    try {
+        const profile = await InfluencerProfile.findOne({
+            $or: [
+                { userId: req.user._id },
+                req.user?.influencerProfileId ? { _id: req.user.influencerProfileId } : null,
+            ].filter(Boolean),
+        }).select('_id userId').lean();
+        if (!profile) {
+            return res.status(404).json({ success: false, error: 'Influencer profile not found' });
+        }
+
+        const report = await buildInfluencerPerformanceReport({
+            influencerProfileId: profile._id,
+            influencerUserId: profile.userId,
+        });
+
+        return res.json({
+            success: true,
+            ...report,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 
 // ── Campaign Requests (incoming) ──
 router.get('/requests', campaignRequestController.getInfluencerRequests);

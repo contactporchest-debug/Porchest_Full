@@ -153,6 +153,7 @@ export const influencerAPI = {
     getRequests: (params?: Record<string, unknown>) => api.get('/influencer/requests', { params }),
     respondToRequest: (id: string, data: { status: string; rejectionReason?: string; counterOfferPrice?: number; counterOfferMessage?: string }) =>
         api.patch(`/influencer/requests/${id}`, data),
+    getPerformance: () => api.get('/influencer/performance'),
     // Content verification
     submitVerification: (data: { campaignRequestId: string; postUrl: string }) =>
         api.post('/influencer/verify', data),

@@ -16,9 +16,9 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
     influencer: [
         { label: 'Dashboard',      href: '/dashboard/influencer',                icon: <LayoutDashboard size={18} /> },
         { label: 'Profile',        href: '/dashboard/influencer/profile',        icon: <User size={18} /> },
-        { label: 'Analytics',      href: '/dashboard/influencer/analytics',      icon: <BarChart3 size={18} /> },
+        { label: 'Instagram Analytics', href: '/dashboard/influencer/analytics', icon: <BarChart3 size={18} /> },
         { label: 'Campaigns',      href: '/dashboard/influencer/collaborations', icon: <Briefcase size={18} /> },
-        { label: 'Outcomes',       href: '/dashboard/influencer/outcomes',       icon: <TrendingUp size={18} /> },
+        { label: 'Performance',    href: '/dashboard/influencer/performance',    icon: <TrendingUp size={18} /> },
         { label: 'Earnings',       href: '/dashboard/influencer/earnings',       icon: <DollarSign size={18} /> },
         { label: 'Requests',       href: '/dashboard/influencer/requests',       icon: <Inbox size={18} /> },
     ],
