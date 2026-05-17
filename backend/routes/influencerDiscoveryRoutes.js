@@ -16,7 +16,7 @@ function isInfluencerDiscoverable(profile) {
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
     const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
     const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
-    const profileComplete = Boolean(
+    const liveProfileComplete = Boolean(
         (profile.fullName || profile.displayName || '').trim() &&
         profile.contactEmail &&
         (profile.bio || profile.instagramBiography) &&
@@ -27,6 +27,12 @@ function isInfluencerDiscoverable(profile) {
         Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 &&
         postPrice > 0 &&
         reelPrice > 0
+    );
+    const profileComplete = Boolean(
+        profile.profileComplete === true ||
+        profile.profileCompletionStatus === true ||
+        profile.isSearchable === true ||
+        liveProfileComplete
     );
 
     return Boolean(igConnected && profileComplete);

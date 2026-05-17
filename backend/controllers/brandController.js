@@ -256,7 +256,12 @@ function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
-    const profileComplete = isInfluencerProfileComplete(profile);
+    const profileComplete = Boolean(
+        profile.profileComplete === true ||
+        profile.profileCompletionStatus === true ||
+        profile.isSearchable === true ||
+        isInfluencerProfileComplete(profile)
+    );
 
     return Boolean(igConnected && profileComplete);
 }
