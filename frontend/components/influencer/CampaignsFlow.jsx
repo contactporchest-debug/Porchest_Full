@@ -56,6 +56,7 @@ export default function CampaignsFlow() {
     const [analyticsOpen, setAnalyticsOpen] = useState(null);
     const [acting, setActing] = useState(false);
     const [pdfBusyId, setPdfBusyId] = useState(null);
+    const [trackingBusyId, setTrackingBusyId] = useState(null);
 
     // Per-card input state — keyed by collab _id to prevent bleed-over
     const [driveLinkMap, setDriveLinkMap] = useState({});
@@ -119,6 +120,104 @@ export default function CampaignsFlow() {
         } finally {
             setPdfBusyId(null);
         }
+    }
+
+    async function handleAcceptTracking(collab) {
+        try {
+            setTrackingBusyId(collab._id);
+            await influencerAPI.acceptCampaignTracking(collab._id);
+            toast.success('Tracking accepted for this collaboration.');
+            await refetch();
+            window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
+        } catch (error) {
+            const message = error?.response?.data?.error || error?.response?.data?.message || 'Failed to accept tracking.';
+            toast.error(message);
+        } finally {
+            setTrackingBusyId(null);
+        }
+    }
+
+    function renderTrackingTools(collab) {
+        const enabled = Boolean(collab.trackingEnabledForCampaign);
+        const accepted = Boolean(collab.trackingAcceptedByInfluencer);
+        const linkVisible = Boolean(enabled && accepted && (collab.brief?.trackingLink || collab.brief?.promoCode));
+
+        if (!enabled) {
+            return (
+                <div className="p-5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] space-y-2 backdrop-blur-[12px]">
+                    <p className="text-sm font-bold text-[#1A0A00]">Your Campaign Tools</p>
+                    <p className="text-sm text-[#7A5030] leading-7">Tracking is not enabled for this collaboration yet.</p>
+                </div>
+            );
+        }
+
+        if (!accepted) {
+            return (
+                <div className="p-5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] space-y-3 backdrop-blur-[12px]">
+                    <p className="text-sm font-bold text-[#1A0A00]">Your Campaign Tools</p>
+                    <p className="text-sm text-[#7A5030] leading-7">
+                        The brand enabled tracking for this collaboration. Accept it to reveal your tracking link and promo code.
+                    </p>
+                    <button
+                        onClick={() => handleAcceptTracking(collab)}
+                        disabled={trackingBusyId === collab._id}
+                        className="px-4 py-2.5 rounded-full bg-[#C2340A] text-white text-sm font-bold hover:bg-[#E8400A] transition-colors disabled:opacity-40"
+                    >
+                        {trackingBusyId === collab._id ? 'Accepting...' : 'Accept Tracking'}
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div className="p-5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] space-y-4 backdrop-blur-[12px]">
+                <p className="text-sm font-bold text-[#1A0A00]">Your Campaign Tools</p>
+                <div className="flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-[#059669]" />
+                    <p className="text-sm text-[#059669] font-semibold">Tracking accepted</p>
+                </div>
+                {linkVisible ? (
+                    <>
+                        {collab.brief?.trackingLink && (
+                            <div>
+                                <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
+                                <div className="flex gap-2">
+                                    <input
+                                        readOnly
+                                        value={collab.brief.trackingLink}
+                                        className="flex-1 px-4 py-2.5 rounded-[12px] bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] text-sm font-mono backdrop-blur-[12px]"
+                                    />
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(collab.brief.trackingLink)}
+                                        className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {collab.brief?.promoCode && (
+                            <div>
+                                <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Promo code</p>
+                                <div className="flex gap-3 items-center">
+                                    <span className="px-5 py-2.5 rounded-full bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] font-mono font-bold tracking-wider text-base backdrop-blur-[12px]">
+                                        {collab.brief.promoCode}
+                                    </span>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText(collab.brief.promoCode)}
+                                        className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <p className="text-sm text-[#7A5030] leading-7">The tracking assets are being prepared. Please check back shortly.</p>
+                )}
+            </div>
+        );
     }
 
     const inputClass = 'flex-1 px-4 py-2.5 rounded-[12px] bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] text-sm focus:outline-none focus:border-[#C2340A] placeholder:text-[#A88C6D] transition-all backdrop-blur-[12px]';
@@ -392,51 +491,7 @@ export default function CampaignsFlow() {
                     </div>
 
                     {/* Campaign tools — tracking link + promo code */}
-                    {(c.brief?.trackingLink || c.brief?.promoCode) && (
-                        <div className="p-5 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] space-y-4 backdrop-blur-[12px]">
-                            <p className="text-sm font-bold text-[#1A0A00]">Your Campaign Tools</p>
-                            {c.brief?.trackingLink && (
-                                <div>
-                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Tracking link (for bio/caption)</p>
-                                    <div className="flex gap-2">
-                                        <input
-                                            readOnly
-                                            value={c.brief.trackingLink}
-                                            className="flex-1 px-4 py-2.5 rounded-[12px] bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] text-sm font-mono backdrop-blur-[12px]"
-                                        />
-                                        <button
-                                            onClick={() => navigator.clipboard.writeText(c.brief.trackingLink)}
-                                            className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
-                                        >
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                            {c.brief?.promoCode && (
-                                <div>
-                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1.5">Promo code</p>
-                                    <div className="flex gap-3 items-center">
-                                        <span className="px-5 py-2.5 rounded-full bg-[rgba(255,255,255,0.55)] border border-[#EDD9BC] text-[#1A0A00] font-mono font-bold tracking-wider text-base backdrop-blur-[12px]">
-                                            {c.brief.promoCode}
-                                        </span>
-                                        <button
-                                            onClick={() => navigator.clipboard.writeText(c.brief.promoCode)}
-                                            className="px-4 py-2.5 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-sm font-bold hover:bg-[rgba(255,255,255,0.65)]"
-                                        >
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                            {c.brief?.requiredHashtags?.length > 0 && (
-                                <div>
-                                    <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-1">Required hashtags</p>
-                                    <p className="text-[#1A0A00] font-medium text-sm">{c.brief.requiredHashtags.join(' ')}</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {renderTrackingTools(c)}
 
                     {/* Progress steps */}
                     <div className="space-y-3 pt-2">

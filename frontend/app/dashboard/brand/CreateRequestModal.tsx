@@ -5,7 +5,17 @@ import { X, Send, AlertCircle } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
-interface Influencer { _id: string; fullName: string; email: string; niche: string; followers: number; }
+interface Influencer {
+    _id: string;
+    fullName: string;
+    email: string;
+    niche: string;
+    followers: number;
+    rates?: {
+        reelPrice?: number | string;
+        postPrice?: number | string;
+    };
+}
 interface Props { influencer: Influencer | null; onClose: () => void; onSuccess: () => void; }
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
@@ -34,9 +44,17 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         contentGuidelines: '',
         hashtags: '',
         disclosureRequirements: '#Ad #Sponsored',
-        agreedPrice: '',
     });
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [contentTypes, setContentTypes] = useState<string[]>([]);
+    const reelRate = Number(influencer?.rates?.reelPrice || 0);
+    const postRate = Number(influencer?.rates?.postPrice || 0);
+    const totalPrice = contentTypes.reduce((sum, type) => {
+        const normalized = type.toLowerCase();
+        if (normalized.includes('reel')) return sum + reelRate;
+        if (normalized.includes('post')) return sum + postRate;
+        return sum;
+    }, 0);
 
     const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
         setForm(f => ({ ...f, [k]: e.target.value }));
@@ -49,9 +67,16 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
             await brandAPI.createRequest({
                 influencerId: influencer._id,
                 ...form,
-                agreedPrice: Number(form.agreedPrice),
+                selectedContentTypes: contentTypes,
+                agreedPrice: Number(totalPrice),
+                pricing: { brandOffer: Number(totalPrice), agreedFee: Number(totalPrice) },
                 paymentTerms: '50% advance before campaign starts, 50% after deliverables are verified',
                 postingDeadline: new Date(form.postingDeadline).toISOString(),
+                brief: {
+                    ...form,
+                    contentType: contentTypes,
+                    contentTypes,
+                },
             });
             toast.success('Campaign request sent!');
             onSuccess();
@@ -91,7 +116,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                     </div>
 
                     {/* Important note */}
-                    <div style={{ margin: '24px 32px 0', padding: '16px', borderRadius: '12px', background: 'rgba(255,107,26,0.1)', border: '1px solid rgba(255,107,26,0.3)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                        <div style={{ margin: '24px 32px 0', padding: '16px', borderRadius: '12px', background: 'rgba(255,107,26,0.1)', border: '1px solid rgba(255,107,26,0.3)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                         <AlertCircle size={16} style={{ color: '#E8400A', flexShrink: 0, marginTop: '2px' }} />
                         <p style={{ fontSize: '13px', color: '#7A5030', lineHeight: 1.65, fontWeight: 500 }}>
                             All terms are <strong style={{ color: '#C2340A' }}>locked once submitted</strong>. The agreed price cannot be renegotiated. If the influencer rejects, you must create a new request.
@@ -99,6 +124,37 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                     </div>
 
                     <form onSubmit={handleSubmit} style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <Field label="Content Types" required>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {['Reel', 'Post'].map((type) => (
+                                    <button
+                                        key={type}
+                                        type="button"
+                                        onClick={() => setContentTypes((current) => current.includes(type) ? current.filter((value) => value !== type) : [...current, type])}
+                                        style={{
+                                            padding: '8px 16px',
+                                            borderRadius: '12px',
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            border: `1px solid ${contentTypes.includes(type) ? '#C2340A' : '#EDD9BC'}`,
+                                            background: contentTypes.includes(type) ? 'rgba(194,52,10,0.1)' : 'rgba(255,255,255,0.6)',
+                                            color: contentTypes.includes(type) ? '#C2340A' : '#7A5030',
+                                            transition: 'all 0.15s',
+                                            cursor: 'pointer',
+                                            fontFamily: 'inherit',
+                                        }}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
+                        </Field>
+
+                        <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                            <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculated total</p>
+                            <p style={{ fontSize: '28px', fontWeight: 800, color: '#1A0A00', marginTop: '4px' }}>${Number(totalPrice || 0).toLocaleString()}</p>
+                        </div>
+
                         {/* Row 1 */}
                         <Field label="Campaign Title" required>
                             <input required value={form.campaignTitle} onChange={set('campaignTitle')}
@@ -155,13 +211,6 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
 
                         {/* Price & Fixed Terms Block */}
                         <div style={{ padding: '24px', borderRadius: '16px', background: 'rgba(194,52,10,0.05)', border: '1px solid rgba(194,52,10,0.15)' }}>
-                            <Field label="Agreed Price (USD)" required>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#C4A882', fontWeight: 700, fontSize: '18px', pointerEvents: 'none' }}>$</span>
-                                    <input required type="number" min="1" value={form.agreedPrice} onChange={set('agreedPrice')}
-                                        placeholder="0.00" style={{ ...IS, paddingLeft: '36px', fontWeight: 700, fontSize: '18px', color: '#1A0A00' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
-                                </div>
-                            </Field>
                             <div style={{ marginTop: '20px', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
                                 <p style={{ fontSize: '13px', fontWeight: 700, color: '#1A0A00', marginBottom: '8px' }}>Standard Payment Terms</p>
                                 <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#7A5030', fontWeight: 500, display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -183,7 +232,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         </label>
 
                         {/* Submit */}
-                        <button type="submit" disabled={loading || !agreedToTerms}
+                        <button type="submit" disabled={loading || !agreedToTerms || contentTypes.length === 0}
                             style={{ width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s', background: loading || !agreedToTerms ? 'rgba(194,52,10,0.3)' : '#C2340A', color: loading || !agreedToTerms ? 'rgba(255,255,255,0.6)' : '#fff', border: 'none', cursor: loading || !agreedToTerms ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
                             onMouseEnter={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#E8400A'; }}
                             onMouseLeave={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#C2340A'; }}

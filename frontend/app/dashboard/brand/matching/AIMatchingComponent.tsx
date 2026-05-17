@@ -119,6 +119,10 @@ export default function AIMatchingComponent() {
             fullName: inf.fullName,
             niche:    inf.niche,
             followers: inf.followersCount || 0,
+            rates: inf.rates || {
+                reelPrice: inf.avgReelPrice,
+                postPrice: inf.avgPostPrice,
+            },
         });
     };
 

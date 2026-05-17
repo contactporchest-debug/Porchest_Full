@@ -288,6 +288,9 @@ const campaignRequestSchema = new mongoose.Schema(
         campaignEndAt: { type: Date },
         campaignActiveAt: { type: Date },
         campaignCompletedAt: { type: Date },
+        trackingEnabledForCampaign: { type: Boolean, default: false },
+        trackingAcceptedByInfluencer: { type: Boolean, default: false },
+        trackingDetails: { type: mongoose.Schema.Types.Mixed, default: {} },
 
         // Live metrics
         metrics: {

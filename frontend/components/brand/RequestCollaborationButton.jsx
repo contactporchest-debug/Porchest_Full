@@ -13,7 +13,6 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
     const [sent, setSent] = useState(false);
     const [error, setError] = useState('');
     const [form, setForm] = useState({
-        brandOffer: '',
         campaignObjective: '',
         brandIntro: '',
         productDetails: '',
@@ -38,6 +37,16 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
         setForm((f) => ({ ...f, [field]: f[field].includes(value) ? f[field].filter((x) => x !== value) : [...f[field], value] }));
     }
 
+    const reelRate = Number(rates?.reelPrice || 0);
+    const postRate = Number(rates?.postPrice || 0);
+    const selectedContentTypes = form.contentType || [];
+    const calculatedTotal = selectedContentTypes.reduce((sum, item) => {
+        const normalized = String(item).toLowerCase();
+        if (normalized.includes('reel')) return sum + reelRate;
+        if (normalized.includes('post') || normalized.includes('feed')) return sum + postRate;
+        return sum;
+    }, 0);
+
     useEffect(() => {
         if (autoOpen) setOpen(true);
     }, [autoOpen]);
@@ -51,8 +60,11 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                 ...form,
                 hashtags: form.hashtags.split(' ').filter(Boolean),
                 revisionRoundsAllowed: Number(form.revisionRoundsAllowed || 1),
+                contentType: form.contentType,
+                contentTypes: form.contentType,
             },
-            pricing: { brandOffer: Number(form.brandOffer) },
+            selectedContentTypes: form.contentType,
+            pricing: { brandOffer: Number(calculatedTotal || 0), agreedFee: Number(calculatedTotal || 0) },
         }).then((response) => {
             if (!response || response.success === false || response.error || !response._id) {
                 throw new Error(response?.error || response?.message || 'Failed to create collaboration request');
@@ -101,7 +113,34 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                             {step === 1 && (
                                 <>
                                     {rates && <p style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Rates: Reel ${rates.reelPrice || '-'} | Post ${rates.postPrice || '-'}</p>}
-                                    <input type="number" style={IS} placeholder="Your offer in USD" value={form.brandOffer} onChange={(e) => setForm((f) => ({ ...f, brandOffer: e.target.value }))} onFocus={e => e.target.style.borderColor = '#C2340A'} onBlur={e => e.target.style.borderColor = '#EDD9BC'} />
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {['Reel', 'Post'].map((type) => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => toggle('contentType', type)}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 700,
+                                                    border: `1px solid ${form.contentType.includes(type) ? '#C2340A' : '#EDD9BC'}`,
+                                                    background: form.contentType.includes(type) ? 'rgba(194,52,10,0.1)' : 'rgba(255,255,255,0.6)',
+                                                    color: form.contentType.includes(type) ? '#C2340A' : '#7A5030',
+                                                    transition: 'all 0.15s',
+                                                    cursor: 'pointer',
+                                                    fontFamily: 'inherit',
+                                                }}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
+                                        <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculated total</p>
+                                        <p style={{ marginTop: '4px', fontSize: '22px', fontWeight: 800, color: '#1A0A00' }}>${Number(calculatedTotal || 0).toLocaleString()}</p>
+                                        <p style={{ marginTop: '6px', fontSize: '12px', color: '#7A5030' }}>Automatically calculated from the influencer’s declared fixed rates.</p>
+                                    </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {OBJECTIVES.map((objective) => (
                                             <button key={objective} type="button" onClick={() => setForm((f) => ({ ...f, campaignObjective: objective }))} style={{ padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, border: `1px solid ${form.campaignObjective === objective ? '#C2340A' : '#EDD9BC'}`, background: form.campaignObjective === objective ? 'rgba(194,52,10,0.1)' : 'rgba(255,255,255,0.6)', color: form.campaignObjective === objective ? '#C2340A' : '#7A5030', transition: 'all 0.15s', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={e => { if (form.campaignObjective !== objective) { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#1A0A00'; } }} onMouseLeave={e => { if (form.campaignObjective !== objective) { e.currentTarget.style.background = 'rgba(255,255,255,0.6)'; e.currentTarget.style.color = '#7A5030'; } }}>
@@ -177,7 +216,7 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                 {step === 1 ? 'Cancel' : 'Back'}
                             </button>
                             {step < 3 ? (
-                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.brandOffer || !form.campaignObjective)} style={{ padding: '10px 24px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: (step === 1 && (!form.brandOffer || !form.campaignObjective)) ? 'not-allowed' : 'pointer', opacity: (step === 1 && (!form.brandOffer || !form.campaignObjective)) ? 0.5 : 1, fontFamily: 'inherit' }} onMouseEnter={e => { if (!(step === 1 && (!form.brandOffer || !form.campaignObjective))) e.currentTarget.style.background = '#E8400A' }} onMouseLeave={e => { if (!(step === 1 && (!form.brandOffer || !form.campaignObjective))) e.currentTarget.style.background = '#C2340A' }}>
+                                <button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && (!form.contentType.length || !form.campaignObjective)} style={{ padding: '10px 24px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: (step === 1 && (!form.contentType.length || !form.campaignObjective)) ? 'not-allowed' : 'pointer', opacity: (step === 1 && (!form.contentType.length || !form.campaignObjective)) ? 0.5 : 1, fontFamily: 'inherit' }} onMouseEnter={e => { if (!(step === 1 && (!form.contentType.length || !form.campaignObjective))) e.currentTarget.style.background = '#E8400A' }} onMouseLeave={e => { if (!(step === 1 && (!form.contentType.length || !form.campaignObjective))) e.currentTarget.style.background = '#C2340A' }}>
                                     Next
                                 </button>
                             ) : (

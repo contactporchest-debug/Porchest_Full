@@ -85,6 +85,20 @@ function resolveCampaignPrice(campaign) {
     ) || 0;
 }
 
+function resolveTrackingState(campaign) {
+    const enabled = Boolean(campaign?.trackingEnabledForCampaign);
+    const accepted = Boolean(campaign?.trackingAcceptedByInfluencer);
+    const link = campaign?.brief?.trackingLink || null;
+    const visible = enabled && accepted && link;
+    return {
+        trackingEnabledForCampaign: enabled,
+        trackingAcceptedByInfluencer: accepted,
+        trackingLinkVisible: Boolean(visible),
+        trackingLink: visible ? link : null,
+        promoCode: visible ? (campaign?.brief?.promoCode || null) : null,
+    };
+}
+
 function resolveCampaignInfluencer(campaign) {
     return campaign?.influencerName
         || campaign?.influencerUsername
@@ -98,7 +112,7 @@ async function loadBrandCampaigns(brandId) {
         status: { $nin: ['rejected', 'declined', 'cancelled', 'expired'] },
     })
         .sort({ updatedAt: -1, createdAt: -1 })
-        .select('_id campaignTitle influencerId influencerName influencerUsername agreedPrice agreedFee pricing financials campaignEndAt campaignEndDate timeline postingDeadline brief status')
+        .select('_id campaignTitle influencerId influencerName influencerUsername agreedPrice agreedFee pricing financials campaignEndAt campaignEndDate timeline postingDeadline brief status trackingEnabledForCampaign trackingAcceptedByInfluencer')
         .lean();
 
     return campaigns.map((campaign) => ({
@@ -108,7 +122,7 @@ async function loadBrandCampaigns(brandId) {
         price: resolveCampaignPrice(campaign),
         deadline: resolveCampaignDeadline(campaign),
         status: normalizeCampaignStatus(campaign.status),
-        trackingLink: campaign.brief?.trackingLink || null,
+        ...resolveTrackingState(campaign),
     }));
 }
 
@@ -270,10 +284,12 @@ router.get('/api/tracking/test-campaign', async (req, res, next) => {
         const latestCampaign = await CampaignRequest.findOne({
             brandId: brandProfile._id,
             'brief.trackingLink': { $exists: true, $ne: '' },
+            trackingEnabledForCampaign: true,
+            trackingAcceptedByInfluencer: true,
             status: { $nin: ['rejected', 'declined', 'cancelled', 'expired'] },
         })
             .sort({ updatedAt: -1, createdAt: -1 })
-            .select('_id brief campaignTitle influencerId influencerName influencerUsername brandId')
+            .select('_id brief campaignTitle influencerId influencerName influencerUsername brandId trackingEnabledForCampaign trackingAcceptedByInfluencer')
             .lean();
 
         if (!latestCampaign) {
@@ -293,9 +309,9 @@ router.get('/api/tracking/test-campaign', async (req, res, next) => {
         return res.json({
             success: true,
             collaborationId: String(latestCampaign._id),
-            trackingLink: latestCampaign.brief?.trackingLink || null,
+            trackingLink: resolveTrackingState(latestCampaign).trackingLink,
             influencerName: influencer?.fullName || latestCampaign.influencerName || latestCampaign.influencerUsername || influencer?.igUsername || influencer?.username || 'Influencer',
-            promoCode: latestCampaign.brief?.promoCode || null,
+            promoCode: resolveTrackingState(latestCampaign).promoCode,
         });
     } catch (error) {
         next(error);

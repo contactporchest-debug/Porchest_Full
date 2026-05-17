@@ -6,6 +6,7 @@ const BrandProfile = require('../models/BrandProfile');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
 const { ensureTrackingAssets } = require('../services/trackingService');
+const { computeFixedCampaignPricing, normalizeContentTypes } = require('../services/campaignPricingService');
 const {
     buildEmailHtml,
     sendOptionalEmail,
@@ -49,8 +50,20 @@ exports.createRequest = async (req, res, next) => {
             });
         }
 
+        const selectedContentTypes = normalizeContentTypes(
+            req.body.selectedContentTypes
+            || req.body.contentTypes
+            || req.body.contentType
+            || deliverables
+        );
+        const fixedPricing = computeFixedCampaignPricing(
+            influencerProfile,
+            selectedContentTypes,
+            agreedPrice || req.body.brandOffer || 0
+        );
+
         const requestCode = await generateUniqueCode('REQ', CampaignRequest, 'requestCode');
-        const agreedFee = agreedPrice ? Number(agreedPrice) : undefined;
+        const agreedFee = fixedPricing.totalPrice || (agreedPrice ? Number(agreedPrice) : undefined);
         const brandName = brandProfile.businessName || brandProfile.brandName || brandProfile.companyName;
         const influencerName = influencerProfile.fullName || influencerProfile.displayName || influencerProfile.instagramUsername;
 
@@ -69,7 +82,8 @@ exports.createRequest = async (req, res, next) => {
                 productDetails: campaignDescription || '',
                 targetAudience: JSON.stringify(brandProfile.targetAudience || {}),
                 keyMessage: campaignTitle,
-                contentTypes: Array.isArray(deliverables) ? deliverables : (deliverables ? String(deliverables).split(',').map((item) => item.trim()).filter(Boolean) : []),
+                contentTypes: selectedContentTypes,
+                contentType: selectedContentTypes,
                 creativeDirection: brandProfile.tone || 'professional',
                 mandatoryTalkingPoints: requiredElements ? [requiredElements] : [],
                 dos: [],
@@ -83,7 +97,7 @@ exports.createRequest = async (req, res, next) => {
                 visualRequirements: contentGuidelines || '',
                 postingSchedule: postingDeadline ? new Date(postingDeadline) : undefined,
                 revisionRounds: 0,
-                deliverables: Array.isArray(deliverables) ? deliverables : (deliverables ? String(deliverables).split(',').map((item) => item.trim()).filter(Boolean) : []),
+                deliverables: selectedContentTypes,
                 usageRights: false,
                 disclosureRequired: disclosureRequirements,
                 porchestContact: brandProfile.assignedEmployeeFK ? String(brandProfile.assignedEmployeeFK) : null,
@@ -102,13 +116,13 @@ exports.createRequest = async (req, res, next) => {
             campaignTitle,
             campaignDescription,
             campaignType: campaignType || 'sponsored_post',
-            deliverables,
+            deliverables: selectedContentTypes,
             requiredElements,
             videoLength,
             contentGuidelines,
             hashtags,
             disclosureRequirements,
-            agreedPrice: agreedPrice ? Number(agreedPrice) : undefined,
+            agreedPrice: agreedFee,
             budgetRangeMin: budgetRangeMin ? Number(budgetRangeMin) : undefined,
             budgetRangeMax: budgetRangeMax ? Number(budgetRangeMax) : undefined,
             paymentTerms,
@@ -118,6 +132,14 @@ exports.createRequest = async (req, res, next) => {
             brandMessage,
             status: 'sent',
             sentAt: new Date(),
+            trackingEnabledForCampaign: false,
+            trackingAcceptedByInfluencer: false,
+            trackingDetails: {
+                enabled: false,
+                accepted: false,
+                platform: 'shopify',
+                contentTypes: selectedContentTypes,
+            },
             metrics: {
                 clicks: 0,
                 visits: 0,

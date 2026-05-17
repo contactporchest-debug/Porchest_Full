@@ -104,6 +104,8 @@ export const brandAPI = {
     getCollaborationAnalytics: (id: string) => api.get(`/collaborations/${id}/analytics`),
     downloadCollaborationPdf: (id: string) => api.get(`/collaborations/${id}/pdf`, { responseType: 'blob' }),
     getCampaignTrackingLink: (id: string) => api.get(`/campaigns/${id}/tracking-link`),
+    getCampaignTrackingStatus: (id: string) => api.get(`/campaigns/${id}/tracking/status`),
+    enableCampaignTracking: (id: string, data: { enable: boolean; platform?: string }) => api.post(`/campaigns/${id}/tracking/enable`, data),
     getCampaignPerformance: () => api.get('/campaigns/performance'),
     getInfluencerAnalytics: (id: string, period: 10 | 30 | 60 = 60) => api.get(`/influencers/${id}/analytics`, { params: { period } }),
     getInfluencer60DayAnalytics: (id: string) => api.get(`/influencers/${id}/analytics`, { params: { period: 60 } }),
@@ -154,6 +156,8 @@ export const influencerAPI = {
     respondToRequest: (id: string, data: { status: string; rejectionReason?: string; counterOfferPrice?: number; counterOfferMessage?: string }) =>
         api.patch(`/influencer/requests/${id}`, data),
     getPerformance: () => api.get('/influencer/performance'),
+    getCampaignTracking: (id: string) => api.get(`/collaborations/${id}/influencer/tracking`),
+    acceptCampaignTracking: (id: string) => api.post(`/collaborations/${id}/influencer/tracking/accept`, { accept: true }),
     // Content verification
     submitVerification: (data: { campaignRequestId: string; postUrl: string }) =>
         api.post('/influencer/verify', data),

@@ -14,8 +14,20 @@ function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
-    const profileComplete = Boolean(profile.profileComplete || profile.profileCompletionStatus || profile.isSearchable)
-        || Boolean(profile.fullName || profile.displayName);
+    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
+    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
+    const profileComplete = Boolean(
+        (profile.fullName || profile.displayName || '').trim() &&
+        profile.contactEmail &&
+        (profile.bio || profile.instagramBiography) &&
+        (Array.isArray(profile.niche) ? profile.niche.length > 0 : String(profile.niche || '').trim()) &&
+        String(profile.country || '').trim() &&
+        String(profile.city || '').trim() &&
+        Array.isArray(profile.languages) && profile.languages.length > 0 &&
+        Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 &&
+        postPrice > 0 &&
+        reelPrice > 0
+    );
 
     return Boolean(igConnected && profileComplete);
 }

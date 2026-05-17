@@ -61,6 +61,21 @@ function resolvePrice(campaign) {
     return Number(value) || 0;
 }
 
+function resolveTrackingState(campaign) {
+    const enabled = Boolean(campaign?.trackingEnabledForCampaign);
+    const accepted = Boolean(campaign?.trackingAcceptedByInfluencer);
+    const link = campaign?.brief?.trackingLink || null;
+    const visible = enabled && accepted && link;
+    return {
+        trackingEnabledForCampaign: enabled,
+        trackingAcceptedByInfluencer: accepted,
+        trackingLinkGenerated: Boolean(link),
+        trackingLink: visible ? link : null,
+        promoCode: visible ? (campaign?.brief?.promoCode || null) : null,
+        trackingDetails: campaign?.trackingDetails || {},
+    };
+}
+
 router.get('/:campaignId/tracking-link', async (req, res) => {
     try {
         const brandProfile = await resolveBrandProfile(req);
@@ -70,23 +85,30 @@ router.get('/:campaignId/tracking-link', async (req, res) => {
 
         const campaignId = req.params.campaignId;
         const existing = await CampaignRequest.findOne({ _id: campaignId, brandId: brandProfile._id })
-            .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status')
+            .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
             .lean();
 
         if (!existing) {
             return res.status(404).json({ success: false, error: 'Campaign not found' });
         }
 
+        const trackingState = resolveTrackingState(existing);
         let campaign = existing;
-        if (!campaign.brief?.trackingLink) {
+        if (!trackingState.trackingLink) {
+            if (!trackingState.trackingEnabledForCampaign) {
+                return res.status(400).json({ success: false, error: 'Tracking is not enabled for this campaign yet' });
+            }
+            if (!trackingState.trackingAcceptedByInfluencer) {
+                return res.status(400).json({ success: false, error: 'Influencer has not accepted tracking for this campaign yet' });
+            }
             const generated = await ensureTrackingAssets(campaignId);
             if (!generated?.success) {
                 return res.status(400).json({ success: false, error: generated?.error || 'Unable to generate tracking link' });
             }
             campaign = await CampaignRequest.findOne({ _id: campaignId, brandId: brandProfile._id })
-                .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status')
+                .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
                 .lean();
-            if (!campaign?.brief?.trackingLink) {
+            if (!resolveTrackingState(campaign).trackingLink) {
                 return res.status(400).json({ success: false, error: 'Tracking link is not ready yet' });
             }
         }
@@ -98,15 +120,95 @@ router.get('/:campaignId/tracking-link', async (req, res) => {
         return res.json({
             success: true,
             campaignId: String(campaign._id),
-            trackingLink: campaign.brief?.trackingLink || null,
+            trackingLink: resolveTrackingState(campaign).trackingLink,
             name: resolveCampaignName(campaign),
             influencer: resolveInfluencerName(campaign, influencer),
             price: resolvePrice(campaign),
             deadline: resolveDeadline(campaign),
             status: normalizeStatus(campaign.status),
+            ...resolveTrackingState(campaign),
         });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message || 'Unable to load tracking link' });
+    }
+});
+
+router.get('/:campaignId/tracking/status', async (req, res) => {
+    try {
+        const brandProfile = await resolveBrandProfile(req);
+        if (!brandProfile) {
+            return res.status(404).json({ success: false, error: 'Brand profile not found' });
+        }
+
+        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, brandId: brandProfile._id })
+            .select('_id brief trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
+            .lean();
+        if (!campaign) {
+            return res.status(404).json({ success: false, error: 'Campaign not found' });
+        }
+
+        return res.json({
+            success: true,
+            campaignId: String(campaign._id),
+            ...resolveTrackingState(campaign),
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message || 'Unable to load tracking status' });
+    }
+});
+
+router.post('/:campaignId/tracking/enable', async (req, res) => {
+    try {
+        const brandProfile = await resolveBrandProfile(req);
+        if (!brandProfile) {
+            return res.status(404).json({ success: false, error: 'Brand profile not found' });
+        }
+
+        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, brandId: brandProfile._id })
+            .select('_id brandId influencerId brief trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
+            .lean();
+        if (!campaign) {
+            return res.status(404).json({ success: false, error: 'Campaign not found' });
+        }
+
+        const enable = req.body?.enable !== false;
+        const updates = {
+            trackingEnabledForCampaign: enable,
+            trackingAcceptedByInfluencer: enable ? Boolean(campaign.trackingAcceptedByInfluencer) : false,
+            trackingDetails: {
+                ...(campaign.trackingDetails || {}),
+                enabled: enable,
+                platform: req.body?.platform || campaign.trackingDetails?.platform || 'shopify',
+                enabledAt: enable ? new Date() : null,
+                disabledAt: enable ? null : new Date(),
+            },
+        };
+
+        if (enable) {
+            const generated = await ensureTrackingAssets(campaign._id);
+            if (generated?.success === false && generated?.error) {
+                return res.status(400).json({ success: false, error: generated.error });
+            }
+            updates.trackingDetails = {
+                ...(updates.trackingDetails || {}),
+                trackingLinkGenerated: true,
+                promoCodeGenerated: true,
+            };
+        }
+
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            campaign._id,
+            { $set: updates },
+            { new: true, strict: false }
+        ).lean();
+
+        return res.json({
+            success: true,
+            ...resolveTrackingState(updated),
+            campaignId: String(updated._id),
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message || 'Unable to update tracking status' });
     }
 });
 

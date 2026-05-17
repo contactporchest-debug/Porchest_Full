@@ -26,6 +26,10 @@ type Collaboration = {
         promoCode?: string;
         postingDeadline?: string;
     };
+    trackingEnabledForCampaign?: boolean;
+    trackingAcceptedByInfluencer?: boolean;
+    trackingLinkVisible?: boolean;
+    trackingDetails?: Record<string, unknown>;
     pricing?: {
         agreedFee?: number;
         brandOffer?: number;
@@ -380,6 +384,19 @@ function CollaborationTable({
         }
     };
 
+    const toggleTracking = async (collaboration: Collaboration, enable: boolean) => {
+        try {
+            setBusyId(collaboration._id);
+            await brandAPI.enableCampaignTracking(collaboration._id, { enable, platform: 'shopify' });
+            toast.success(enable ? 'Tracking enabled for this collaboration.' : 'Tracking disabled for this collaboration.');
+            await onRefresh();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to update tracking.');
+        } finally {
+            setBusyId(null);
+        }
+    };
+
     if (!collaborations.length) {
         const cfg = TAB_CONFIG[tabKey];
         return (
@@ -414,6 +431,9 @@ function CollaborationTable({
                             const canOpenDrive = Boolean((collaboration.content?.driveLink || collaboration.draftDriveLink) && isAccepted);
                             const canViewPost = Boolean((collaboration.content?.postLink || collaboration.postLink) && isActive);
                             const canVerify = isAccepted && collaboration.content?.driveLink && !collaboration.content?.brandApprovedDrive;
+                            const trackingEnabled = Boolean(collaboration.trackingEnabledForCampaign);
+                            const trackingAccepted = Boolean(collaboration.trackingAcceptedByInfluencer);
+                            const trackingVisible = Boolean(trackingEnabled && trackingAccepted && collaboration.brief?.trackingLink);
                             const requestAge = daysSince(collaboration.sentAt || collaboration.createdAt);
                             const acceptanceAge = daysSince(collaboration.acceptedAt || collaboration.createdAt);
                             const activeAge = daysSince(collaboration.campaignActiveAt || collaboration.campaignStartAt || collaboration.acceptedAt || collaboration.createdAt);
@@ -511,6 +531,29 @@ function CollaborationTable({
                                                 <GlowButton size="sm" onClick={() => verifyContent(collaboration._id)} loading={busyId === collaboration._id}>
                                                     <ShieldCheck size={14} />
                                                     Verify Content
+                                                </GlowButton>
+                                            )}
+
+                                            {isAccepted && (
+                                                <GlowButton
+                                                    size="sm"
+                                                    variant={trackingEnabled ? 'outline' : undefined}
+                                                    onClick={() => toggleTracking(collaboration, !trackingEnabled)}
+                                                    loading={busyId === collaboration._id}
+                                                >
+                                                    <ShieldCheck size={14} />
+                                                    {trackingEnabled ? 'Tracking enabled' : 'Enable tracking'}
+                                                </GlowButton>
+                                            )}
+
+                                            {trackingVisible && (
+                                                <GlowButton
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => window.open(collaboration.brief?.trackingLink || '#', '_blank', 'noopener,noreferrer')}
+                                                >
+                                                    <ExternalLink size={14} />
+                                                    Open Tracking Link
                                                 </GlowButton>
                                             )}
                                         </div>

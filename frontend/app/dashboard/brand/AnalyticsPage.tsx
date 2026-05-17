@@ -689,6 +689,10 @@ export default function BrandAnalyticsPage() {
             email: '',
             niche: selectedInfluencer?.niche || '',
             followers: Number(selectedInfluencer?.followers ?? influencer?.followers ?? 0),
+            rates: selectedInfluencer?.rates || influencer?.rates || {
+                reelPrice: selectedInfluencer?.avgReelPrice || influencer?.avgReelPrice,
+                postPrice: selectedInfluencer?.avgPostPrice || influencer?.avgPostPrice,
+            },
         };
     }, [influencer, selectedInfluencer]);
 

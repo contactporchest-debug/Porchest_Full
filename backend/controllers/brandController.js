@@ -16,9 +16,12 @@ const INFLUENCER_CARD_FIELDS = [
     'profilePictureUrl',
     'instagramBiography',
     'bio',
+    'contactEmail',
     'niche',
     'country',
     'city',
+    'languages',
+    'contentStyleTags',
     'followersCount',
     'followingCount',
     'mediaCount',
@@ -220,20 +223,46 @@ function buildInstagramConnectedFilter() {
     };
 }
 
+function isInfluencerProfileComplete(profile) {
+    if (!profile) return false;
+
+    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
+    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
+
+    const hasName = Boolean((profile.fullName || profile.displayName || '').trim?.() || profile.fullName || profile.displayName);
+    const hasEmail = Boolean(profile.contactEmail);
+    const hasBio = Boolean((profile.bio || profile.instagramBiography || '').trim?.() || profile.bio || profile.instagramBiography);
+    const hasNiche = Array.isArray(profile.niche) ? profile.niche.filter(Boolean).length > 0 : Boolean(String(profile.niche || '').trim());
+    const hasCountry = Boolean(String(profile.country || '').trim());
+    const hasCity = Boolean(String(profile.city || '').trim());
+    const hasLanguages = Array.isArray(profile.languages) ? profile.languages.filter(Boolean).length > 0 : false;
+    const hasContentStyle = Array.isArray(profile.contentStyleTags) ? profile.contentStyleTags.filter(Boolean).length > 0 : false;
+    const hasRates = postPrice > 0 && reelPrice > 0;
+
+    return Boolean(
+        hasName &&
+        hasEmail &&
+        hasBio &&
+        hasNiche &&
+        hasCountry &&
+        hasCity &&
+        hasLanguages &&
+        hasContentStyle &&
+        hasRates
+    );
+}
+
 function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
-    const profileComplete = Boolean(profile.profileComplete || profile.profileCompletionStatus || profile.isSearchable)
-        || Boolean(profile.fullName || profile.displayName);
+    const profileComplete = isInfluencerProfileComplete(profile);
 
     return Boolean(igConnected && profileComplete);
 }
 
 function buildDiscoveryBaseFilter() {
-    return {
-        ...buildInstagramConnectedFilter(),
-    };
+    return buildInstagramConnectedFilter();
 }
 
 // @desc    Brand dashboard overview
@@ -427,9 +456,9 @@ exports.getMatchedInfluencers = async (req, res, next) => {
         const { niche, country, search, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
         const maxPostCostNumber = maxPostCost ? Number(maxPostCost) : null;
 
-        // Base filter: the influencer must have completed their profile.
-        // We intentionally do not require synced Instagram stats here so that
-        // new complete signups are discoverable immediately.
+        // Base filter: the influencer must have Instagram connected.
+        // Completion is computed from the live profile document below so
+        // stale stored flags do not hide valid creators.
         const filter = buildDiscoveryBaseFilter();
 
         const searchRegex = buildInfluencerSearchRegex(search);
@@ -476,7 +505,7 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             .limit(100)
             .lean();
 
-        // Second-pass filter: ensure critical display fields exist
+        // Second-pass filter: ensure the live profile is complete and connected.
         const eligible = influencerProfiles.filter(isInfluencerDiscoverable);
 
         const result = eligible.map(buildInfluencerCard);

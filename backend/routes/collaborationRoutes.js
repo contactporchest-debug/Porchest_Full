@@ -13,7 +13,9 @@ const {
     generateTrackingLink,
     generatePromoCode,
     takeFollowerBaseline,
+    ensureTrackingAssets,
 } = require('../services/trackingService');
+const { computeFixedCampaignPricing, toNumber: toCampaignNumber } = require('../services/campaignPricingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
 const {
     sendCampaignEmailNotification,
@@ -148,6 +150,33 @@ function normalizePricingInput(pricing = {}, legacy = {}) {
         influencerCounter,
         agreedFee,
         currency,
+    };
+}
+
+function resolveRequestedContentTypes(body = {}, brief = {}) {
+    return normalizeContentTypes(
+        body.selectedContentTypes
+        || body.contentTypes
+        || body.contentType
+        || brief.contentType
+        || brief.contentTypes
+        || body.deliverables
+        || brief.deliverables
+    );
+}
+
+function resolveTrackingState(doc) {
+    const trackingEnabled = Boolean(doc?.trackingEnabledForCampaign);
+    const trackingAccepted = Boolean(doc?.trackingAcceptedByInfluencer);
+    const trackingLink = doc?.brief?.trackingLink || null;
+    const visible = trackingEnabled && trackingAccepted && trackingLink;
+    return {
+        trackingEnabledForCampaign: trackingEnabled,
+        trackingAcceptedByInfluencer: trackingAccepted,
+        trackingDetails: doc?.trackingDetails || {},
+        trackingLinkVisible: Boolean(visible),
+        trackingLink: visible ? trackingLink : null,
+        promoCode: visible ? (doc?.brief?.promoCode || null) : null,
     };
 }
 
@@ -295,6 +324,9 @@ function buildResponseCollab(doc, brandProfile, influencerProfile) {
     const payment = normalizePaymentForResponse(doc);
     const metrics = normalizeMetricsForResponse(doc);
     const followerSnapshot = normalizeFollowerSnapshot(doc);
+    const tracking = resolveTrackingState(doc);
+    brief.trackingLink = tracking.trackingLink;
+    brief.promoCode = tracking.promoCode;
 
     return {
         ...doc,
@@ -307,6 +339,10 @@ function buildResponseCollab(doc, brandProfile, influencerProfile) {
         payment,
         metrics,
         followerSnapshot,
+        trackingEnabledForCampaign: tracking.trackingEnabledForCampaign,
+        trackingAcceptedByInfluencer: tracking.trackingAcceptedByInfluencer,
+        trackingDetails: tracking.trackingDetails,
+        trackingLinkVisible: tracking.trackingLinkVisible,
     };
 }
 
@@ -575,7 +611,10 @@ router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, re
         }
 
         const brief = normalizeBriefInput(req.body.brief || {});
+        const selectedContentTypes = resolveRequestedContentTypes(req.body, brief);
+        const fixedPricing = computeFixedCampaignPricing(influencerProfile, selectedContentTypes, req.body?.pricing?.brandOffer ?? req.body?.agreedPrice ?? req.body?.brandOffer ?? 0);
         const pricing = normalizePricingInput(req.body.pricing || {}, req.body);
+        const agreedFee = fixedPricing.totalPrice > 0 ? fixedPricing.totalPrice : pricing.agreedFee || pricing.brandOffer || 0;
         const requestCode = await generateUniqueCode('REQ', CampaignRequest, 'requestCode');
         const porchestContact = await resolveContactName(brandProfile);
 
@@ -590,13 +629,21 @@ router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, re
             status: 'pending',
             brief: {
                 ...brief,
+                contentType: selectedContentTypes,
+                contentTypes: selectedContentTypes,
+                deliverables: selectedContentTypes,
                 porchestContact,
             },
-            pricing,
+            pricing: {
+                ...pricing,
+                brandOffer: agreedFee,
+                agreedFee,
+                influencerCounter: pricing.influencerCounter || 0,
+            },
             financials: {
-                brandOfferedFee: pricing.brandOffer,
+                brandOfferedFee: agreedFee,
                 influencerCounterFee: pricing.influencerCounter,
-                agreedFee: pricing.agreedFee || pricing.brandOffer,
+                agreedFee,
                 currency: pricing.currency,
             },
             campaignTitle: brief.campaignObjective || 'Collaboration request',
@@ -612,11 +659,19 @@ router.post('/', roleMiddleware('brand'), requireCompleteProfile, async (req, re
             influencerUsername: influencerProfile.igUsername,
             influencerProfilePic: influencerProfile.igProfileUrl || influencerProfile.avatar,
             influencerNiche: influencerProfile.niche,
-            brandOfferedFee: pricing.brandOffer,
-            agreedPrice: pricing.brandOffer,
-            brandOffer: pricing.brandOffer,
+            brandOfferedFee: agreedFee,
+            agreedPrice: agreedFee,
+            brandOffer: agreedFee,
             timeline: {
                 gracePeriodDays: 3,
+            },
+            trackingEnabledForCampaign: false,
+            trackingAcceptedByInfluencer: false,
+            trackingDetails: {
+                enabled: false,
+                accepted: false,
+                platform: 'shopify',
+                contentTypes: selectedContentTypes,
             },
         });
 
@@ -785,6 +840,138 @@ router.patch('/:id/accept-counter', roleMiddleware('brand'), requireCompleteProf
         }
 
         const updated = await finalizeAcceptance(req.params.id, collab);
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/:id/tracking/status', async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { brandProfile, influencerProfile } = await getBrandAndInfluencerProfiles(collab);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, influencerProfile)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const tracking = resolveTrackingState(collab);
+        return res.json({
+            success: true,
+            collaborationId: String(collab._id),
+            ...tracking,
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/:id/tracking/enable', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const enable = req.body?.enable !== false;
+        const updates = {
+            trackingEnabledForCampaign: enable,
+            trackingAcceptedByInfluencer: enable ? Boolean(collab.trackingAcceptedByInfluencer) : false,
+            trackingDetails: {
+                ...(collab.trackingDetails || {}),
+                enabled: enable,
+                platform: req.body?.platform || collab.trackingDetails?.platform || 'shopify',
+                enabledAt: enable ? new Date() : null,
+                disabledAt: enable ? null : new Date(),
+            },
+        };
+
+        if (enable) {
+            const ensured = await ensureTrackingAssets(collab._id);
+            if (ensured?.success === false && ensured?.error) {
+                return res.status(400).json({ success: false, error: ensured.error });
+            }
+            updates.trackingDetails = {
+                ...(updates.trackingDetails || {}),
+                trackingLinkGenerated: true,
+                promoCodeGenerated: true,
+            };
+        }
+
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            { $set: updates },
+            { new: true, strict: false }
+        ).lean();
+
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.get('/:id/influencer/tracking', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { influencerProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, null, influencerProfile)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const tracking = resolveTrackingState(collab);
+        return res.json({
+            success: true,
+            collaborationId: String(collab._id),
+            trackingEnabledForCampaign: tracking.trackingEnabledForCampaign,
+            trackingAcceptedByInfluencer: tracking.trackingAcceptedByInfluencer,
+            trackingLink: tracking.trackingLink,
+            promoCode: tracking.promoCode,
+            trackingDetails: tracking.trackingDetails,
+            message: tracking.trackingEnabledForCampaign
+                ? (tracking.trackingAcceptedByInfluencer ? 'Tracking active' : 'Please accept tracking for this campaign')
+                : 'Tracking not enabled for this collaboration',
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+router.post('/:id/influencer/tracking/accept', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        const { influencerProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, null, influencerProfile)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+        if (!collab.trackingEnabledForCampaign) {
+            return res.status(400).json({ success: false, error: 'Tracking has not been enabled for this collaboration yet' });
+        }
+
+        const ensured = await ensureTrackingAssets(collab._id);
+        if (ensured?.success === false && ensured?.error) {
+            return res.status(400).json({ success: false, error: ensured.error });
+        }
+
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    trackingAcceptedByInfluencer: true,
+                    trackingDetails: {
+                        ...(collab.trackingDetails || {}),
+                        accepted: true,
+                        acceptedAt: new Date(),
+                        acceptedByUserId: req.user._id,
+                    },
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
+
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
