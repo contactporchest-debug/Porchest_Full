@@ -5,6 +5,8 @@ const financeController = require('../controllers/influencerFinanceController');
 const instagramController = require('../controllers/instagramController');
 const campaignRequestController = require('../controllers/campaignRequestController');
 const notificationController = require('../controllers/notificationController');
+const InfluencerProfile = require('../models/InfluencerProfile');
+const { getInfluencerAnalytics } = require('../services/brandInfluencerAnalyticsService');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
@@ -26,6 +28,26 @@ router.post('/instagram/refresh', instagramController.refreshSync);
 // ── Instagram Data ──
 router.get('/instagram/profile', instagramController.getProfile);
 router.get('/instagram/analytics', instagramController.getAnalytics);
+router.get('/instagram/analytics/60', async (req, res, next) => {
+    try {
+        const profile = await InfluencerProfile.findOne({ userId: req.user._id }).select('_id userId').lean();
+        if (!profile) {
+            return res.status(404).json({ success: false, message: 'Influencer profile not found' });
+        }
+
+        const result = await getInfluencerAnalytics({
+            id: profile._id,
+            period: 60,
+        });
+
+        return res.json({
+            success: true,
+            ...result,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 router.get('/instagram/media', instagramController.getMedia);
 router.post('/instagram/post-lookup', instagramController.lookupPostByUrl);
 

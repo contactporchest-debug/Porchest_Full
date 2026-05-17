@@ -146,6 +146,7 @@ export const influencerAPI = {
     refreshInstagramSync: () => api.post('/influencer/instagram/refresh'),
     getInstagramProfile: () => api.get('/influencer/instagram/profile'),
     getInstagramAnalytics: () => api.get('/influencer/instagram/analytics'),
+    getInstagram60DayAnalytics: () => api.get('/influencer/instagram/analytics/60'),
     getInstagramMedia: () => api.get('/influencer/instagram/media'),
     lookupPost: (postUrl: string) => api.post('/influencer/instagram/post-lookup', { postUrl }),
     // Incoming campaign requests
