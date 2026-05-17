@@ -40,26 +40,8 @@ import {
 } from 'recharts';
 import { GlassCard, GlowButton } from '@/components/ui';
 import { brandAPI } from '@/lib/api';
+import type { BrandInfluencerCard, BrandInfluencerRequestTarget } from '@/types/brandInfluencer';
 const CreateRequestModal = dynamic(() => import('./CreateRequestModal'), { ssr: false });
-
-type InfluencerListItem = {
-    _id?: string;
-    influencerId: string;
-    influencerProfileId?: string;
-    userId: string;
-    fullName?: string;
-    username?: string | null;
-    followers?: number;
-    profilePictureUrl?: string | null;
-    niche?: string | null;
-    country?: string | null;
-    verified?: boolean;
-    metrics?: {
-        finalScore?: number;
-        ratingTier?: string;
-        engagementRate?: number;
-    };
-};
 
 type AnalyticsPost = {
     postId: string;
@@ -420,7 +402,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs = ANALYTICS_REQUEST_TIMEO
 export default function BrandAnalyticsPage() {
     const searchParams = useSearchParams();
     const targetInfluencerId = searchParams.get('influencerId') || '';
-    const [influencers, setInfluencers] = useState<InfluencerListItem[]>([]);
+    const [influencers, setInfluencers] = useState<BrandInfluencerCard[]>([]);
     const [selectedId, setSelectedId] = useState('');
     const [search, setSearch] = useState('');
     const [data, setData] = useState<BrandInfluencerAnalytics | null>(null);
@@ -441,12 +423,12 @@ export default function BrandAnalyticsPage() {
         try {
             const response = await withTimeout(brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
             const nextInfluencers = response.data?.influencers || [];
-            const resolveId = (item: InfluencerListItem) => item.influencerId || item.influencerProfileId || item._id || '';
+            const resolveId = (item: BrandInfluencerCard) => item.influencerId || item.influencerProfileId || item._id || '';
             setInfluencers(nextInfluencers);
             setSelectedId((current) => {
-                if (targetInfluencerId && nextInfluencers.some((item: InfluencerListItem) => resolveId(item) === targetInfluencerId)) return targetInfluencerId;
-                if (current && nextInfluencers.some((item: InfluencerListItem) => resolveId(item) === current)) return current;
-                return resolveId(nextInfluencers[0] || ({} as InfluencerListItem));
+                if (targetInfluencerId && nextInfluencers.some((item: BrandInfluencerCard) => resolveId(item) === targetInfluencerId)) return targetInfluencerId;
+                if (current && nextInfluencers.some((item: BrandInfluencerCard) => resolveId(item) === current)) return current;
+                return resolveId(nextInfluencers[0] || ({} as BrandInfluencerCard));
             });
         } catch (err: any) {
             setError(err?.response?.data?.message || err?.message || 'Failed to load influencers.');
@@ -678,7 +660,7 @@ export default function BrandAnalyticsPage() {
         await loadDetail(selectedId, selectedPeriod, true);
     };
 
-    const requestTarget = useMemo(() => {
+    const requestTarget = useMemo<BrandInfluencerRequestTarget | null>(() => {
         const requestUserId = resolveUserId(selectedInfluencer?.userId) || resolveUserId(influencer?.userId);
 
         if (!requestUserId) return null;

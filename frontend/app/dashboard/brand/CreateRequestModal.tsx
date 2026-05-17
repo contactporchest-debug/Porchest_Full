@@ -3,20 +3,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
+import type { BrandInfluencerRequestTarget } from '@/types/brandInfluencer';
 import toast from 'react-hot-toast';
 
-interface Influencer {
-    _id: string;
-    fullName: string;
-    email: string;
-    niche: string;
-    followers: number;
-    rates?: {
-        reelPrice?: number | string;
-        postPrice?: number | string;
-    };
-}
-interface Props { influencer: Influencer | null; onClose: () => void; onSuccess: () => void; }
+interface Props { influencer: BrandInfluencerRequestTarget | null; onClose: () => void; onSuccess: () => void; }
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

@@ -53,123 +53,7 @@ import {
     YAxis,
 } from 'recharts';
 import { analyticsAPI, brandAPI } from '@/lib/api';
-
-type HistoricalSnapshot = {
-    capturedAt?: string;
-    followersCount?: number;
-    engagementRate?: number;
-    accountReach?: number;
-    accountImpressions?: number;
-    influencerScore?: number;
-};
-
-type MediaItem = {
-    mediaId?: string;
-    mediaUrl?: string;
-    thumbnailUrl?: string;
-    permalink?: string;
-    mediaType?: string;
-    caption?: string;
-    likeCount?: number;
-    commentsCount?: number;
-    shareCount?: number;
-    saveCount?: number;
-    playCount?: number;
-    reachCount?: number;
-    impressionCount?: number;
-    engagementCount?: number;
-    viewCount?: number;
-    timestamp?: string;
-};
-
-type InfluencerProfile = {
-    _id: string;
-    userId: string;
-    fullName?: string;
-    displayName?: string;
-    username?: string;
-    bio?: string;
-    instagramBiography?: string;
-    niche?: string;
-    categories?: string[];
-    country?: string;
-    city?: string;
-    languages?: string[];
-    age?: number;
-    profilePictureUrl?: string;
-    instagramDPURL?: string;
-    instagramUsername?: string;
-    instagramProfileURL?: string;
-    platform?: string;
-    followersCount?: number;
-    followingCount?: number;
-    mediaCount?: number;
-    postsCount?: number;
-    reelsCount?: number;
-    profileViews?: number;
-    websiteClicks?: number;
-    accountReach?: number;
-    accountImpressions?: number;
-    onlineFollowers?: Record<string, number> | null;
-    engagementRate?: number;
-    avgLikes?: number;
-    avgComments?: number;
-    avgShares?: number;
-    avgViews?: number;
-    avgReach?: number;
-    avgImpressions?: number;
-    avgLikesPerPost?: number;
-    avgCommentsPerPost?: number;
-    avgEngagementPerPost?: number;
-    averageEngagement?: number;
-    averageReach?: number;
-    viewRate?: number;
-    likeToCommentRatio?: number;
-    postsAnalyzed?: number;
-    influencerEfficiencyRate?: number;
-    totalReach?: number;
-    totalImpressions?: number;
-    totalPlays?: number;
-    totalShares?: number;
-    totalSaved?: number;
-    totalEngagements?: number;
-    postingFrequency?: number;
-    postingFrequency7d?: number;
-    postingFrequency30d?: number;
-    consistencyRatio?: number;
-    consistencyScore?: number;
-    costPerView?: number | null;
-    costPerEngagement?: number | null;
-    authenticityScore?: number;
-    engagementQualityScore?: number;
-    viralityScore?: number;
-    influencerScore?: number;
-    topPerformingContentType?: string;
-    historicalSnapshots?: HistoricalSnapshot[];
-    demographics?: {
-        genderDistribution?: Record<string, number>;
-        ageDistribution?: Record<string, number>;
-        topCountries?: Record<string, number>;
-        countries?: Record<string, number>;
-        topCities?: Record<string, number>;
-        languages?: Record<string, number>;
-        audienceType?: string;
-        onlineFollowers?: Record<string, number>;
-    };
-    avgPostPrice?: number;
-    avgReelPrice?: number;
-    currency?: string;
-    profileScore?: number;
-    fitScore?: number;
-    qualityScore?: number;
-    topPostScore?: number;
-    topReelScore?: number;
-    credibilityScore?: number;
-    scoreLabel?: string;
-    scoreBreakdown?: Record<string, number>;
-    lastSyncAt?: string;
-    recentMediaSummary?: MediaItem[];
-};
+import type { BrandInfluencerProfile, HistoricalSnapshot, MediaItem } from '@/types/brandInfluencer';
 
 type AnalyticsMetrics = {
     followers: number;
@@ -398,7 +282,7 @@ function EmptyChart({ copy }: { copy: string }) {
 }
 
 export default function InfluencerFullProfilePage({ influencerUserId }: FullProfileProps) {
-    const [profile, setProfile] = useState<InfluencerProfile | null>(null);
+    const [profile, setProfile] = useState<BrandInfluencerProfile | null>(null);
     const [analytics, setAnalytics] = useState<AnalyticsDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
