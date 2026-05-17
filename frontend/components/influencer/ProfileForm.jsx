@@ -26,6 +26,10 @@ function parseList(value) {
     return [];
 }
 
+function getProfileCompleteState(profile) {
+    return Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus ?? profile?.profileCompletion?.isComplete);
+}
+
 function chipClass(selected, disabled = false) {
     return [
         'rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
@@ -200,7 +204,7 @@ export default function ProfileForm() {
         }
     }
 
-    const profileComplete = Boolean(profile?.profileComplete);
+    const profileComplete = getProfileCompleteState(profile);
 
     if (!isEditing) {
         return (

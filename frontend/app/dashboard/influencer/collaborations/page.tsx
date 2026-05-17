@@ -9,11 +9,19 @@ import { motion } from 'framer-motion';
 
 type InfluencerProfileResponse = {
     profileComplete?: boolean;
+    profileCompletionStatus?: boolean;
+    profileCompletion?: {
+        isComplete?: boolean;
+    };
 };
 
 export default function InfluencerCollaborationsRoute() {
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const profileComplete = !!profile?.profileComplete;
+    const profileComplete = Boolean(
+        profile?.profileComplete ??
+        profile?.profileCompletionStatus ??
+        profile?.profileCompletion?.isComplete
+    );
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
