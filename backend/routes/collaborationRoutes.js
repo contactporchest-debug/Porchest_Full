@@ -750,7 +750,7 @@ router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (!inStatusList(collab.status, ['pending'])) return throwStatusError(collab.status, res);
+        if (!inStatusList(collab.status, ['requested', 'sent', 'viewed', 'pending'])) return throwStatusError(collab.status, res);
 
         const { influencerProfile } = await getUserProfiles(req.user._id);
         if (!canAccessCollaboration(collab, req.user, null, influencerProfile)) {

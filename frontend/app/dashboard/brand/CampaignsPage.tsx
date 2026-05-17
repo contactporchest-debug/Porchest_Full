@@ -16,15 +16,15 @@ type Filter = 'all' | 'pending' | 'accepted' | 'rejected';
 
 const FILTER_TABS: { key: Filter; label: string; color: string }[] = [
     { key: 'all', label: 'All', color: '#1A0A00' },
-    { key: 'pending', label: 'Pending / Viewed', color: '#C4A882' },
+    { key: 'pending', label: 'Requested / Viewed', color: '#C4A882' },
     { key: 'accepted', label: 'Active', color: '#059669' },
     { key: 'rejected', label: 'Rejected / Canceled', color: '#dc2626' },
 ];
 
 const STATUS_CFG: Record<string, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
-    sent: { label: 'Pending', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Clock size={11} /> },
+    sent: { label: 'Requested', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Clock size={11} /> },
     viewed: { label: 'Viewed', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.2)', color: '#0284c7', icon: <Eye size={11} /> },
-    accepted: { label: 'In-Process', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
+    accepted: { label: 'In Production', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
     brand_payment_pending: { label: 'Payment pending', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)', color: '#d97706', icon: <Clock size={11} /> },
     brand_paid_work_can_start: { label: 'Payment confirmed', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },
     campaign_active: { label: 'Campaign active', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.2)', color: '#059669', icon: <PlayCircle size={11} /> },

@@ -85,7 +85,7 @@ const TAB_CONFIG: Record<TabKey, { label: string; statuses: string[]; emptyTitle
 const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string }> = {
     pending: { label: 'Requested', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.22)' },
     viewed: { label: 'Viewed', bg: 'rgba(56,189,248,0.10)', color: '#0284c7', border: 'rgba(56,189,248,0.22)' },
-    accepted: { label: 'Accepted', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.22)' },
+    accepted: { label: 'In Production', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.22)' },
     brand_payment_pending: { label: 'Payment Pending', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.22)' },
     brand_paid_work_can_start: { label: 'Ready to Create', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.22)' },
     content_submitted: { label: 'Content Submitted', bg: 'rgba(56,189,248,0.10)', color: '#0284c7', border: 'rgba(56,189,248,0.22)' },

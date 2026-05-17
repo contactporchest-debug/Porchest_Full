@@ -6,16 +6,16 @@ import { useApi, apiPatch } from '../../hooks/useApi';
 import CollaborationMetrics from './CollaborationMetrics';
 
 const TABS = [
-    { key: 'pending,brand_payment_pending', label: 'Requests sent' },
+    { key: 'pending,brand_payment_pending', label: 'Requested' },
     { key: 'brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
     { key: 'completed', label: 'Completed' },
 ];
 
 const STATUS_BADGE = {
-    pending:          { bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',      color: 'color: #0284c7',      label: 'Pending' },
+    pending:          { bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',      color: 'color: #0284c7',      label: 'Requested' },
     brand_payment_pending: { bg: 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2)', color: 'color: #d97706', label: 'Payment pending' },
     brand_paid_work_can_start: { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)', color: 'color: #059669', label: 'Paid' },
-    accepted:         { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Accepted' },
+    accepted:         { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'In Production' },
     active:           { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Active' },
     campaign_active:  { bg: 'background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2)',    color: 'color: #059669',     label: 'Campaign active' },
     content_submitted:{ bg: 'background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.2)',  color: 'color: #0284c7',    label: 'Content submitted' },
