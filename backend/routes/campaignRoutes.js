@@ -20,6 +20,17 @@ async function resolveBrandProfile(req) {
     return BrandProfile.findOne({ userId: req.user._id }).select('_id userId').lean();
 }
 
+function buildBrandOwnershipQuery(brandProfile) {
+    return {
+        $or: [
+            { brandId: brandProfile?._id },
+            { brandProfileId: brandProfile?._id },
+            { brandUserId: brandProfile?.userId },
+            { brandUserId: brandProfile?._id },
+        ].filter(Boolean),
+    };
+}
+
 function normalizeStatus(status) {
     const value = String(status || '').toLowerCase();
     if (['completed', 'deal_closed'].includes(value)) return 'completed';
@@ -84,7 +95,7 @@ router.get('/:campaignId/tracking-link', async (req, res) => {
         }
 
         const campaignId = req.params.campaignId;
-        const existing = await CampaignRequest.findOne({ _id: campaignId, brandId: brandProfile._id })
+        const existing = await CampaignRequest.findOne({ _id: campaignId, ...buildBrandOwnershipQuery(brandProfile) })
             .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
             .lean();
 
@@ -105,7 +116,7 @@ router.get('/:campaignId/tracking-link', async (req, res) => {
             if (!generated?.success) {
                 return res.status(400).json({ success: false, error: generated?.error || 'Unable to generate tracking link' });
             }
-            campaign = await CampaignRequest.findOne({ _id: campaignId, brandId: brandProfile._id })
+            campaign = await CampaignRequest.findOne({ _id: campaignId, ...buildBrandOwnershipQuery(brandProfile) })
                 .select('_id brandId influencerId campaignTitle brief pricing agreedPrice agreedFee brandOfferedFee campaignEndAt campaignEndDate timeline postingDeadline status trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
                 .lean();
             if (!resolveTrackingState(campaign).trackingLink) {
@@ -140,7 +151,7 @@ router.get('/:campaignId/tracking/status', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Brand profile not found' });
         }
 
-        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, brandId: brandProfile._id })
+        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, ...buildBrandOwnershipQuery(brandProfile) })
             .select('_id brief trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
             .lean();
         if (!campaign) {
@@ -164,7 +175,7 @@ router.post('/:campaignId/tracking/enable', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Brand profile not found' });
         }
 
-        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, brandId: brandProfile._id })
+        const campaign = await CampaignRequest.findOne({ _id: req.params.campaignId, ...buildBrandOwnershipQuery(brandProfile) })
             .select('_id brandId influencerId brief trackingEnabledForCampaign trackingAcceptedByInfluencer trackingDetails')
             .lean();
         if (!campaign) {
