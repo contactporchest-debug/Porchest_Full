@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -55,7 +56,7 @@ const FILTERS = [
     { key: 'declined,cancelled', label: 'Stopped' },
 ];
 
-const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
+const STATUS_META: Record<string, { label: string; bg: string; color: string; border: string; icon: ReactNode }> = {
     pending: { label: 'Pending', bg: 'rgba(56,189,248,0.10)', color: '#0284c7', border: 'rgba(56,189,248,0.20)', icon: <Clock3 size={12} /> },
     brand_payment_pending: { label: 'Payment pending', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.20)', icon: <Clock3 size={12} /> },
     brand_paid_work_can_start: { label: 'Payment confirmed', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.20)', icon: <CheckCircle2 size={12} /> },
