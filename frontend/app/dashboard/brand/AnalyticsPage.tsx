@@ -719,12 +719,13 @@ export default function BrandAnalyticsPage() {
                         ) : (
                             visibleInfluencers.map((item) => {
                                 const itemId = item.influencerId || item.influencerProfileId || item._id || '';
+                                const itemUserId = resolveUserId(item.userId);
                                 const active = itemId === selectedId;
                                 const avatar = item.profilePictureUrl || (item as any).profileImageURL || (item as any).instagramDPURL || (item as any).profilePictureURL || (item as any).igProfileUrl || null;
                                 const fallback = (item.fullName || 'IN').trim().slice(0, 2).toUpperCase();
                                 return (
                                     <button
-                                        key={itemId || item.userId}
+                                        key={itemId || itemUserId || item.fullName || 'influencer'}
                                         onClick={() => itemId && setSelectedId(itemId)}
                                         style={{
                                             textAlign: 'left',
