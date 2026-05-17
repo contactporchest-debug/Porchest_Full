@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Download, ShieldCheck } from 'lucide-react';
 import { useApi, apiPatch } from '../../hooks/useApi';
 import CampaignMetricsCard from './CampaignMetricsCard';
+import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const STATUS_TABS = [
-    { key: 'pending,countered,negotiation', label: 'Requests' },
-    { key: 'brand_payment_pending,brand_paid_work_can_start,campaign_active,content_submitted,content_approved,posted', label: 'Active' },
-    { key: 'completed', label: 'Completed' },
+    { key: 'sent,viewed,pending,countered,negotiation', label: 'Requested' },
+    { key: 'accepted,brand_payment_pending,brand_paid_work_can_start,content_submitted,content_approved,posted', label: 'In Production' },
+    { key: 'campaign_active,active', label: 'Ongoing' },
 ];
 
 const SURFACE = 'rgba(255,255,255,0.38)';
@@ -27,10 +29,33 @@ const PROGRESS_STEPS = [
     { label: 'Payment released',                done: (c) => c.payment?.status !== 'pending' },
 ];
 
+function daysSince(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    const diff = Math.max(0, Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)));
+    return Math.min(diff, 30);
+}
+
+async function downloadCollaborationPdf(id, campaignName) {
+    const res = await brandAPI.downloadCollaborationPdf(id);
+    const blob = new Blob([res.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${String(campaignName || 'collaboration').replace(/[^a-z0-9-_]+/gi, '_').replace(/_+/g, '_').toLowerCase() || 'collaboration'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+}
+
 export default function CampaignsFlow() {
     const [activeTab, setActiveTab] = useState(0);
     const [expanded, setExpanded] = useState(null);
+    const [analyticsOpen, setAnalyticsOpen] = useState(null);
     const [acting, setActing] = useState(false);
+    const [pdfBusyId, setPdfBusyId] = useState(null);
 
     // Per-card input state — keyed by collab _id to prevent bleed-over
     const [driveLinkMap, setDriveLinkMap] = useState({});
@@ -80,6 +105,19 @@ export default function CampaignsFlow() {
             toast.error(message);
         } finally {
             setActing(false);
+        }
+    }
+
+    async function handleDownloadPdf(collab) {
+        try {
+            setPdfBusyId(collab._id);
+            await downloadCollaborationPdf(collab._id, collab.campaignTitle || collab.brief?.campaignObjective || 'collaboration');
+            toast.success('PDF download started.');
+        } catch (error) {
+            const message = error?.response?.data?.error || error?.response?.data?.message || 'Failed to download PDF.';
+            toast.error(message);
+        } finally {
+            setPdfBusyId(null);
         }
     }
 
@@ -133,7 +171,7 @@ export default function CampaignsFlow() {
 
             {loading && <p className="text-[#7A5030] text-sm font-medium">Loading...</p>}
 
-            {/* ── REQUESTS TAB ── */}
+            {/* ── REQUESTED TAB ── */}
             {activeTab === 0 && collabs.map((c, i) => (
                 <motion.div
                     key={c._id}
@@ -146,13 +184,18 @@ export default function CampaignsFlow() {
                     <div className="flex items-start justify-between gap-4">
                         <div>
                             <p className="text-[#1A0A00] font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'Collaboration request'}
+                                {c.brief?.campaignObjective || c.campaignTitle || 'Requested collaboration'}
                             </p>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <span className="text-xs font-bold text-[#7A5030] uppercase tracking-wide">From</span>
                                 <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] text-xs font-bold border border-[#EDD9BC]">
                                     {c.brandProfile?.businessName || c.brandName || 'Brand'}
                                 </span>
+                                {typeof daysSince(c.createdAt || c.sentAt) === 'number' && (
+                                    <span className="px-2.5 py-1 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] text-xs font-bold border border-[#EDD9BC]">
+                                        {daysSince(c.createdAt || c.sentAt)}d since request
+                                    </span>
+                                )}
                             </div>
                         </div>
                         <div className="text-right">
@@ -220,41 +263,56 @@ export default function CampaignsFlow() {
                         </div>
                     )}
 
-                    {/* Actions — pending */}
-                    {c.status === 'pending' && (
+                    {/* Actions — requested */}
+                    {['sent', 'viewed', 'pending', 'countered', 'negotiation'].includes(c.status) && (
                         <div className="flex flex-col md:flex-row gap-3 pt-3 border-t border-[#EDD9BC]">
                             <button
-                                onClick={() => action(c._id, 'accept')}
-                                disabled={acting}
-                                className="flex-1 py-3 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
+                                onClick={() => handleDownloadPdf(c)}
+                                disabled={pdfBusyId === c._id}
+                                className="px-6 py-3 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-sm hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40 inline-flex items-center justify-center gap-2"
                             >
-                                Accept ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
+                                <Download size={14} />
+                                Download PDF
                             </button>
 
-                            <div className="flex gap-2 flex-1">
-                                <input
-                                    type="number"
-                                    placeholder="Counter amount"
-                                    value={counterMap[c._id] || ''}
-                                    onChange={(e) => setCounterMap((m) => ({ ...m, [c._id]: e.target.value }))}
-                                    className={inputClass}
-                                />
+                            {['pending', 'countered'].includes(c.status) && (
                                 <button
-                                    onClick={() => action(c._id, 'counter', { counterAmount: Number(counterMap[c._id]) })}
-                                    disabled={acting || !counterMap[c._id]}
-                                    className="px-6 py-3 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-sm hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40"
+                                    onClick={() => action(c._id, 'accept')}
+                                    disabled={acting}
+                                    className="flex-1 py-3 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
                                 >
-                                    Counter
+                                    Accept ${Number(c.pricing?.brandOffer || 0).toLocaleString()}
                                 </button>
-                            </div>
+                            )}
 
-                            <button
-                                onClick={() => action(c._id, 'decline')}
-                                disabled={acting}
-                                className="px-6 py-3 rounded-full bg-[#C2340A]/10 text-[#C2340A] font-bold text-sm hover:bg-[#C2340A]/15 transition-colors border border-[#EDD9BC] disabled:opacity-40"
-                            >
-                                Decline
-                            </button>
+                            {c.status === 'pending' && (
+                                <div className="flex gap-2 flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="Counter amount"
+                                        value={counterMap[c._id] || ''}
+                                        onChange={(e) => setCounterMap((m) => ({ ...m, [c._id]: e.target.value }))}
+                                        className={inputClass}
+                                    />
+                                    <button
+                                        onClick={() => action(c._id, 'counter', { counterAmount: Number(counterMap[c._id]) })}
+                                        disabled={acting || !counterMap[c._id]}
+                                        className="px-6 py-3 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-sm hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40"
+                                    >
+                                        Counter
+                                    </button>
+                                </div>
+                            )}
+
+                            {['pending', 'countered'].includes(c.status) && (
+                                <button
+                                    onClick={() => action(c._id, 'decline')}
+                                    disabled={acting}
+                                    className="px-6 py-3 rounded-full bg-[#C2340A]/10 text-[#C2340A] font-bold text-sm hover:bg-[#C2340A]/15 transition-colors border border-[#EDD9BC] disabled:opacity-40"
+                                >
+                                    Reject
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -285,7 +343,7 @@ export default function CampaignsFlow() {
                 </motion.div>
             ))}
 
-            {/* ── ACTIVE TAB ── */}
+            {/* ── IN PRODUCTION TAB ── */}
             {activeTab === 1 && collabs.map((c, i) => (
                 <motion.div
                     key={c._id}
@@ -298,9 +356,12 @@ export default function CampaignsFlow() {
                     <div className="flex items-start justify-between gap-4 border-b border-[#EDD9BC] pb-4">
                         <div>
                             <p className="text-[#1A0A00] font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'Active campaign'}
+                                {c.brief?.campaignObjective || c.campaignTitle || 'In production'}
                             </p>
                             <p className="text-sm font-medium text-[#7A5030] mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            {typeof daysSince(c.acceptedAt || c.createdAt) === 'number' && (
+                                <p className="text-xs font-semibold text-[#7A5030] mt-2">Days in production: {daysSince(c.acceptedAt || c.createdAt)} / 30</p>
+                            )}
                             {isMetricsLocked(c) && (
                                     <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-[10px] font-bold uppercase tracking-wide">
                                         Metrics locked until final post
@@ -313,6 +374,21 @@ export default function CampaignsFlow() {
                             </p>
                             <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">Agreed fee</p>
                         </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => handleDownloadPdf(c)}
+                            disabled={pdfBusyId === c._id}
+                            className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-xs hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40 inline-flex items-center justify-center gap-2"
+                        >
+                            <Download size={12} />
+                            Download PDF
+                        </button>
+                        <span className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs font-bold text-[#7A5030] inline-flex items-center gap-2">
+                            <ShieldCheck size={12} />
+                            {c.status === 'brand_paid_work_can_start' ? 'Ready to Create' : c.status === 'content_submitted' ? 'Draft Under Review' : c.status === 'content_approved' ? 'Approved to Post' : c.status === 'posted' ? 'Posted, waiting admin' : 'In production'}
+                        </span>
                     </div>
 
                     {/* Campaign tools — tracking link + promo code */}
@@ -489,7 +565,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Metrics */}
-                    {['brand_paid_work_can_start', 'campaign_active', 'content_submitted', 'content_approved', 'posted', 'completed'].includes(c.status) && (
+                    {['posted', 'campaign_active'].includes(c.status) && (
                         <div className="pt-2">
                             <CampaignMetricsCard collaborationId={c._id} />
                         </div>
@@ -497,7 +573,7 @@ export default function CampaignsFlow() {
                 </motion.div>
             ))}
 
-            {/* ── COMPLETED TAB ── */}
+            {/* ── ONGOING TAB ── */}
             {activeTab === 2 && collabs.map((c, i) => (
                 <motion.div
                     key={c._id}
@@ -506,28 +582,54 @@ export default function CampaignsFlow() {
                     transition={{ delay: i * 0.05 }}
                     className={cardClass}
                 >
-                    <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] pb-4">
+                    <div className="flex items-start justify-between gap-4 border-b border-[#EDD9BC] pb-4">
                         <div>
-                            <p className="text-white font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'Completed campaign'}
+                            <p className="text-[#1A0A00] font-bold text-lg">
+                                {c.brief?.campaignObjective || c.campaignTitle || 'Ongoing campaign'}
                             </p>
-                            <p className="text-sm font-medium text-white/40 mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            <p className="text-sm font-medium text-[#7A5030] mt-1">{c.brandProfile?.businessName || c.brandName}</p>
+                            {typeof daysSince(c.campaignActiveAt || c.campaignStartAt || c.createdAt) === 'number' && (
+                                <p className="text-xs font-semibold text-[#7A5030] mt-2">Days running: {daysSince(c.campaignActiveAt || c.campaignStartAt || c.createdAt)} / 30</p>
+                            )}
                             {isMetricsLocked(c) && (
-                                <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+                                <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-[10px] font-bold uppercase tracking-wide">
                                     Metrics locked until final post
                                 </span>
                             )}
                         </div>
                         <div className="text-right">
-                            <p className="text-2xl font-bold text-green-400">
+                            <p className="text-2xl font-bold text-[#C2340A]">
                                 ${Number(c.pricing?.agreedFee || 0).toLocaleString()}
                             </p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wide">
+                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">
                                 {c.payment?.status === 'released' ? 'Paid' : 'Payment pending'}
                             </p>
                         </div>
                     </div>
-                    <CampaignMetricsCard collaborationId={c._id} />
+
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => handleDownloadPdf(c)}
+                            disabled={pdfBusyId === c._id}
+                            className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-xs hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40 inline-flex items-center justify-center gap-2"
+                        >
+                            <Download size={12} />
+                            Download PDF
+                        </button>
+                        <button
+                            onClick={() => setAnalyticsOpen(analyticsOpen === c._id ? null : c._id)}
+                            className="px-4 py-2 rounded-full bg-[#C2340A] text-white font-bold text-xs hover:bg-[#E8400A] transition-colors inline-flex items-center justify-center gap-2"
+                        >
+                            <ShieldCheck size={12} />
+                            {analyticsOpen === c._id ? 'Hide Analytics' : 'View Analytics'}
+                        </button>
+                    </div>
+
+                    {analyticsOpen === c._id && (
+                        <div className="pt-2">
+                            <CampaignMetricsCard collaborationId={c._id} />
+                        </div>
+                    )}
                 </motion.div>
             ))}
 
@@ -536,17 +638,17 @@ export default function CampaignsFlow() {
                     <svg className="w-12 h-12 text-[#C4A882] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <p className="text-[#1A0A00] font-bold text-lg mb-1">
                         {activeTab === 0
-                            ? 'No Pending Requests'
+                            ? 'No Requested Campaigns'
                             : activeTab === 1
-                            ? 'No Active Campaigns'
-                            : 'No Completed Campaigns'}
+                            ? 'No In Production Campaigns'
+                            : 'No Ongoing Campaigns'}
                     </p>
                     <p className="text-[#7A5030] text-sm">
                         {activeTab === 0
                             ? "You're all caught up on your collaboration requests."
                             : activeTab === 1
-                            ? "You don't have any ongoing campaigns right now."
-                            : "Completed campaigns will appear here once finalized."}
+                            ? "You don't have any campaigns in production right now."
+                            : "Live campaigns will appear here once they’re running."}
                     </p>
                 </div>
             )}

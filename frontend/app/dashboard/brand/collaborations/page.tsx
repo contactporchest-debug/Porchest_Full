@@ -36,6 +36,9 @@ type Collaboration = {
     campaignEndAt?: string;
     campaignEndDate?: string;
     postingDeadline?: string;
+    acceptedAt?: string;
+    sentAt?: string;
+    cancelledAt?: string;
     content?: {
         driveLink?: string;
         postLink?: string;
@@ -117,6 +120,13 @@ function resolveInfluencer(collaboration: Collaboration) {
 
 function resolvePrice(collaboration: Collaboration) {
     return collaboration.pricing?.agreedFee ?? collaboration.agreedPrice ?? collaboration.pricing?.brandOffer ?? collaboration.brandOfferedFee ?? 0;
+}
+
+function daysSince(value?: string | null) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return Math.max(0, Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -402,6 +412,9 @@ function CollaborationTable({
                             const canOpenDrive = Boolean((collaboration.content?.driveLink || collaboration.draftDriveLink) && isAccepted);
                             const canViewPost = Boolean((collaboration.content?.postLink || collaboration.postLink) && isActive);
                             const canVerify = isAccepted && collaboration.content?.driveLink && !collaboration.content?.brandApprovedDrive;
+                            const requestAge = daysSince(collaboration.sentAt || collaboration.createdAt);
+                            const acceptanceAge = daysSince(collaboration.acceptedAt || collaboration.createdAt);
+                            const activeAge = daysSince(collaboration.campaignActiveAt || collaboration.campaignStartAt || collaboration.acceptedAt || collaboration.createdAt);
 
                             return (
                                 <tr
@@ -425,6 +438,11 @@ function CollaborationTable({
                                         <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A0A00', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Calendar size={14} color="#C4A882" />
                                             {fmtDate(deadline)}
+                                        </p>
+                                        <p style={{ marginTop: '6px', fontSize: '12px', color: '#7A5030' }}>
+                                            {isActive && activeAge !== null ? `${activeAge} day${activeAge === 1 ? '' : 's'} running` : null}
+                                            {isRequested && requestAge !== null ? `${requestAge} day${requestAge === 1 ? '' : 's'} since request` : null}
+                                            {isAccepted && acceptanceAge !== null ? `${acceptanceAge} day${acceptanceAge === 1 ? '' : 's'} since acceptance` : null}
                                         </p>
                                     </td>
                                     <td style={{ padding: '18px 20px', borderBottom: '1px solid rgba(237,217,188,0.8)' }}>
@@ -466,6 +484,13 @@ function CollaborationTable({
                                                 <GlowButton size="sm" onClick={() => onEdit(collaboration)}>
                                                     <PencilLine size={14} />
                                                     Edit Requirements
+                                                </GlowButton>
+                                            )}
+
+                                            {isRequested && (
+                                                <GlowButton size="sm" variant="danger" onClick={() => stopCampaign(collaboration)} loading={busyId === collaboration._id}>
+                                                    <PauseCircle size={14} />
+                                                    Reject / Withdraw
                                                 </GlowButton>
                                             )}
 
