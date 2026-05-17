@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
 import { influencerAPI } from '@/lib/api';
@@ -67,6 +67,7 @@ export default function ProfileForm() {
     const [isEditing, setIsEditing] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const hasInitializedProfile = useRef(false);
     const [form, setForm] = useState({
         fullName: '',
         contactEmail: '',
@@ -97,7 +98,27 @@ export default function ProfileForm() {
             },
         });
 
-        setIsEditing(!profile.profileComplete);
+        if (!hasInitializedProfile.current) {
+            const hasPersistedProfile = Boolean(
+                profile.fullName ||
+                profile.contactEmail ||
+                profile.bio ||
+                profile.igBio ||
+                profile.country ||
+                profile.countryOfResidence ||
+                profile.city ||
+                parseList(profile.niche).length ||
+                parseList(profile.languages).length ||
+                parseList(profile.contentStyleTags).length ||
+                profile.rates?.reelPrice ||
+                profile.avgReelPrice ||
+                profile.rates?.postPrice ||
+                profile.avgPostPrice
+            );
+
+            setIsEditing(!hasPersistedProfile);
+            hasInitializedProfile.current = true;
+        }
     }, [profile]);
 
     const isComplete = useMemo(() => {
