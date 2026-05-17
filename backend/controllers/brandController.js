@@ -223,17 +223,11 @@ function buildInstagramConnectedFilter() {
 function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
-    const hasIdentity = !!(profile.fullName || profile.displayName) && !!profile.instagramUsername;
-    const hasBio = !!(profile.bio || profile.instagramBiography);
-    const hasNiche = !!profile.niche;
-    const hasLocation = !!profile.country;
-    const hasPricing = Number(profile.avgPostPrice || profile.rates?.postPrice || 0) > 0
-        || Number(profile.avgReelPrice || profile.rates?.reelPrice || 0) > 0;
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
     const profileComplete = Boolean(profile.profileComplete || profile.profileCompletionStatus || profile.isSearchable)
-        || (hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+        || Boolean(profile.fullName || profile.displayName);
 
-    return Boolean(igConnected && profileComplete && hasIdentity && hasBio && hasNiche && hasLocation && hasPricing);
+    return Boolean(igConnected && profileComplete);
 }
 
 function buildDiscoveryBaseFilter() {
