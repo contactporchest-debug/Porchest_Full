@@ -13,6 +13,24 @@ type InfluencerProfileResponse = {
     profileCompletion?: {
         isComplete?: boolean;
     };
+    influencerProfile?: {
+        fullName?: string;
+        contactEmail?: string;
+        bio?: string;
+        igBio?: string;
+        country?: string;
+        countryOfResidence?: string;
+        city?: string;
+        niche?: string[] | string;
+        languages?: string[] | string;
+        contentStyleTags?: string[] | string;
+        rates?: {
+            reelPrice?: number | string;
+            postPrice?: number | string;
+        };
+        avgReelPrice?: number | string;
+        avgPostPrice?: number | string;
+    };
     fullName?: string;
     contactEmail?: string;
     bio?: string;
@@ -31,36 +49,14 @@ type InfluencerProfileResponse = {
     avgPostPrice?: number | string;
 };
 
-function parseList(value?: string[] | string) {
-    if (Array.isArray(value)) return value.filter(Boolean).map(String);
-    if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
-    return [];
-}
-
-function hasSavedInfluencerProfile(profile?: InfluencerProfileResponse | null) {
+function hasInfluencerProfileRecord(profile?: InfluencerProfileResponse | null) {
     if (!profile) return false;
-    const hasRates = Number(profile.rates?.reelPrice ?? profile.avgReelPrice ?? 0) > 0 && Number(profile.rates?.postPrice ?? profile.avgPostPrice ?? 0) > 0;
-    return Boolean(
-        (profile.fullName || '').trim() &&
-        (profile.contactEmail || '').trim() &&
-        (profile.bio || profile.igBio || '').trim() &&
-        (profile.country || profile.countryOfResidence || '').trim() &&
-        (profile.city || '').trim() &&
-        parseList(profile.niche).length > 0 &&
-        parseList(profile.languages).length > 0 &&
-        parseList(profile.contentStyleTags).length > 0 &&
-        hasRates
-    );
+    return Object.entries(profile).some(([key, value]) => key !== 'userId' && key !== 'profileComplete' && key !== 'profileCompletionStatus' && key !== 'profileCompletion' && value !== undefined && value !== null && value !== '');
 }
 
 export default function InfluencerCollaborationsRoute() {
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const profileComplete = Boolean(
-        profile?.profileComplete ??
-        profile?.profileCompletionStatus ??
-        profile?.profileCompletion?.isComplete ??
-        hasSavedInfluencerProfile(profile)
-    );
+    const hasProfileRecord = hasInfluencerProfileRecord(profile);
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
@@ -69,7 +65,7 @@ export default function InfluencerCollaborationsRoute() {
                     <div className="rounded-[14px] border border-[rgba(255,255,255,0.65)] bg-[rgba(255,255,255,0.38)] p-6 text-sm text-[#7A5030] backdrop-blur-[12px]">
                         Loading profile status...
                     </div>
-                ) : !profileComplete ? (
+                ) : !hasProfileRecord ? (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
