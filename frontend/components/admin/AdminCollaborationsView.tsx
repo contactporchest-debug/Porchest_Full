@@ -40,6 +40,7 @@ type CollaborationItem = {
     firstPayoutAmount?: number;
     secondPayoutAmount?: number;
     platformFeeAmount?: number;
+    brandPaymentStatus?: string;
     content?: CollaborationContent;
     brief?: {
         campaignObjective?: string;
