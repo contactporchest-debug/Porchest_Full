@@ -22,11 +22,8 @@ function computeProfileCompletion(profile) {
         { key: 'city', label: 'Set city', done: !!profile.city },
         { key: 'languages', label: 'Select languages', done: Array.isArray(profile.languages) && profile.languages.length > 0 },
         { key: 'contentStyleTags', label: 'Pick content style', done: Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 },
-        { key: 'followers', label: 'Sync follower count', done: (profile.followersCount || 0) > 0 },
-        { key: 'engagement', label: 'Sync engagement data', done: (profile.engagementRate || 0) > 0 },
         { key: 'postPrice', label: 'Set average post price', done: postPrice > 0 },
         { key: 'reelPrice', label: 'Set average reel price', done: reelPrice > 0 },
-        { key: 'instagram', label: 'Connect Instagram account', done: !!(profile.instagramConnected || profile.instagramConnectionStatus === 'connected') },
     ];
 
     const doneCount = checks.filter(c => c.done).length;

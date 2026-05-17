@@ -510,6 +510,8 @@ export default function BrandAnalyticsPage() {
             const username = String(item.username || '').toLowerCase();
             const niche = String(item.niche || '').toLowerCase();
             const country = String(item.country || '').toLowerCase();
+            const city = String((item as { city?: string }).city || '').toLowerCase();
+            const bio = String((item as { bio?: string }).bio || '').toLowerCase();
             const searchId = String(item.influencerId || item.influencerProfileId || item._id || '').toLowerCase();
 
             return (
@@ -517,6 +519,8 @@ export default function BrandAnalyticsPage() {
                 username.includes(query) ||
                 niche.includes(query) ||
                 country.includes(query) ||
+                city.includes(query) ||
+                bio.includes(query) ||
                 searchId.includes(query)
             );
         });

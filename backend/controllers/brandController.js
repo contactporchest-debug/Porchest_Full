@@ -205,6 +205,32 @@ function toNumber(value) {
     return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+function buildInfluencerSearchRegex(search) {
+    const value = String(search || '').trim();
+    if (!value) return null;
+    return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+}
+
+function buildDiscoveryReadinessFilter() {
+    return {
+        $and: [
+            {
+                $or: [
+                    { profileCompletionStatus: true },
+                    { profileComplete: true },
+                    { isSearchable: true },
+                ],
+            },
+            {
+                $or: [
+                    { instagramConnected: true },
+                    { instagramConnectionStatus: 'connected' },
+                ],
+            },
+        ],
+    };
+}
+
 // @desc    Brand dashboard overview
 exports.getDashboard = async (req, res, next) => {
     try {
@@ -393,24 +419,38 @@ exports.updateProfile = async (req, res, next) => {
 // STRICT: Only returns influencers with fully completed profiles
 exports.getMatchedInfluencers = async (req, res, next) => {
     try {
-        const { niche, country, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
+        const { niche, country, search, minFollowers, maxFollowers, minEngagement, maxPostCost } = req.query;
         const maxPostCostNumber = maxPostCost ? Number(maxPostCost) : null;
 
-        // Base filter: must have connected Instagram and enough profile data to be useful
-        const filter = { 
-            $or: [
-                { instagramConnectionStatus: 'connected' },
-                { instagramConnected: true }
-            ],
-            followersCount: { $gt: 0 },
-            engagementRate: { $gt: 0 },
-        };
+        // Base filter: the influencer must have completed their profile.
+        // We intentionally do not require synced Instagram stats here so that
+        // new complete signups are discoverable immediately.
+        const filter = buildDiscoveryReadinessFilter();
+
+        const searchRegex = buildInfluencerSearchRegex(search);
+        if (searchRegex) {
+            filter.$and = [
+                {
+                    $or: [
+                        { fullName: searchRegex },
+                        { displayName: searchRegex },
+                        { instagramUsername: searchRegex },
+                        { bio: searchRegex },
+                        { instagramBiography: searchRegex },
+                        { niche: searchRegex },
+                        { country: searchRegex },
+                        { city: searchRegex },
+                        { influencerProfileId: searchRegex },
+                    ],
+                },
+            ];
+        }
 
         // Apply user filters on top
-        if (niche && niche !== 'All') filter.niche = niche;
-        if (country && country !== 'Any') filter.country = country;
+        if (niche && niche !== 'All') filter.niche = { $regex: buildInfluencerSearchRegex(niche) || new RegExp(String(niche), 'i') };
+        if (country && country !== 'Any') filter.country = { $regex: buildInfluencerSearchRegex(country) || new RegExp(String(country), 'i') };
         if (minFollowers || maxFollowers) {
-            filter.followersCount = { $gt: 0 };
+            filter.followersCount = {};
             if (minFollowers) filter.followersCount.$gte = Number(minFollowers);
             if (maxFollowers) filter.followersCount.$lte = Number(maxFollowers);
         }
@@ -437,11 +477,8 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             const hasBio = !!(p.bio || p.instagramBiography);
             const hasNiche = !!p.niche;
             const hasLocation = !!p.country;
-            const hasFollowers = (p.followersCount || 0) > 0;
-            const hasEngagement = (p.engagementRate || 0) > 0;
             const hasPricing = (p.avgPostPrice || 0) > 0 || (p.avgReelPrice || 0) > 0 || (p.rates?.postPrice || 0) > 0 || (p.rates?.reelPrice || 0) > 0;
-            const hasInstagram = p.instagramConnected || p.instagramConnectionStatus === 'connected';
-            return hasIdentity && hasBio && hasNiche && hasLocation && hasFollowers && hasEngagement && hasPricing && hasInstagram;
+            return hasIdentity && hasBio && hasNiche && hasLocation && hasPricing;
         });
 
         const result = eligible.map(buildInfluencerCard);
@@ -554,15 +591,7 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
         }
 
         // Build database query
-        const filter = {
-            profileCompletionStatus: true,
-            $or: [
-                { instagramConnectionStatus: 'connected' },
-                { instagramConnected: true }
-            ],
-            followersCount: { $gt: 0 },
-            engagementRate: { $gt: 0 }
-        };
+        const filter = buildDiscoveryReadinessFilter();
 
         if (f.niche) {
             filter.niche = { $regex: new RegExp(f.niche, 'i') };
@@ -571,15 +600,21 @@ Only output the raw JSON format, no markdown tags. Avoid markdown blocks (\`\`\`
             filter.country = { $regex: new RegExp(f.country, 'i') };
         }
         if (f.minFollowers || f.maxFollowers) {
-            filter.followersCount = { $gt: 0 };
-            if (f.minFollowers) filter.followersCount.$gte = f.minFollowers;
-            if (f.maxFollowers) filter.followersCount.$lte = f.maxFollowers;
+            filter.followersCount = {};
+            if (f.minFollowers) filter.followersCount.$gte = Number(f.minFollowers);
+            if (f.maxFollowers) filter.followersCount.$lte = Number(f.maxFollowers);
         }
         if (f.minEngagement) {
             filter.engagementRate = { $gte: f.minEngagement };
         }
         if (f.maxPostCost) {
-            filter.avgPostPrice = { $lte: f.maxPostCost, $gt: 0 };
+            filter.$or = [
+                ...(filter.$or || []),
+                { avgPostPrice: { $lte: f.maxPostCost, $gt: 0 } },
+                { avgReelPrice: { $lte: f.maxPostCost, $gt: 0 } },
+                { 'rates.postPrice': { $lte: f.maxPostCost, $gt: 0 } },
+                { 'rates.reelPrice': { $lte: f.maxPostCost, $gt: 0 } },
+            ];
         }
 
         if (f.keywords && Array.isArray(f.keywords) && f.keywords.length > 0) {
@@ -734,16 +769,8 @@ exports.profileBasedMatching = async (req, res, next) => {
         const f = aiData.filters || {};
 
         // ── 3. Multi-Stage Database Query Cascade ────────────────────
-        // Stage 1: Strict Match (Niche AND Country AND Budget AND Engagement)
-        const buildBaseFilter = () => ({
-            profileCompletionStatus: true,
-            $or: [
-                { instagramConnectionStatus: 'connected' },
-                { instagramConnected: true }
-            ],
-            followersCount: { $gt: 0 },
-            engagementRate: { $gt: 0 }
-        });
+        // Stage 1: Strict Match (Niche AND Country AND Budget)
+        const buildBaseFilter = () => buildDiscoveryReadinessFilter();
 
         const applyFilters = (base, filters, mode = 'strict') => {
             const query = { ...base };
@@ -766,8 +793,15 @@ exports.profileBasedMatching = async (req, res, next) => {
             if (mode === 'strict') {
                 if (filters.minFollowers) query.followersCount = { ...query.followersCount, $gte: filters.minFollowers };
                 if (filters.maxFollowers) query.followersCount = { ...query.followersCount, $lte: filters.maxFollowers };
-                if (filters.minEngagement) query.engagementRate = { ...query.engagementRate, $gte: filters.minEngagement };
-                if (filters.maxPostCost) query.avgPostPrice = { $lte: filters.maxPostCost, $gt: 0 };
+                if (filters.maxPostCost) {
+                    query.$or = [
+                        ...(query.$or || []),
+                        { avgPostPrice: { $lte: filters.maxPostCost, $gt: 0 } },
+                        { avgReelPrice: { $lte: filters.maxPostCost, $gt: 0 } },
+                        { 'rates.postPrice': { $lte: filters.maxPostCost, $gt: 0 } },
+                        { 'rates.reelPrice': { $lte: filters.maxPostCost, $gt: 0 } },
+                    ];
+                }
             }
 
             return query;

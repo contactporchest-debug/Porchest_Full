@@ -14,17 +14,39 @@ router.get('/influencers', requireCompleteProfile, async (req, res) => {
     try {
         const page = Math.max(1, Number(req.query.page || 1));
         const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
-        // Show all influencer profiles — synced ones surface first via sort
-        const filter = {};
+        // Show only complete profiles with connected Instagram accounts
+        const filter = {
+            $and: [
+                {
+                    $or: [
+                        { profileCompletionStatus: true },
+                        { profileComplete: true },
+                        { isSearchable: true },
+                    ],
+                },
+                {
+                    $or: [
+                        { instagramConnected: true },
+                        { instagramConnectionStatus: 'connected' },
+                    ],
+                },
+            ],
+        };
 
         if (req.query.niche) filter.niche = { $in: String(req.query.niche).split(',').map((n) => n.trim()).filter(Boolean) };
         if (req.query.search) {
-            const search = new RegExp(String(req.query.search), 'i');
+            const search = new RegExp(String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
             filter.$or = [
                 { igUsername: search },
+                { instagramUsername: search },
                 { displayName: search },
                 { fullName: search },
                 { niche: search },
+                { country: search },
+                { city: search },
+                { bio: search },
+                { instagramBiography: search },
+                { influencerProfileId: search },
             ];
         }
 
