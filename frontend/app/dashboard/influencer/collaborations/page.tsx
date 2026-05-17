@@ -13,14 +13,53 @@ type InfluencerProfileResponse = {
     profileCompletion?: {
         isComplete?: boolean;
     };
+    fullName?: string;
+    contactEmail?: string;
+    bio?: string;
+    igBio?: string;
+    country?: string;
+    countryOfResidence?: string;
+    city?: string;
+    niche?: string[] | string;
+    languages?: string[] | string;
+    contentStyleTags?: string[] | string;
+    rates?: {
+        reelPrice?: number | string;
+        postPrice?: number | string;
+    };
+    avgReelPrice?: number | string;
+    avgPostPrice?: number | string;
 };
+
+function parseList(value?: string[] | string) {
+    if (Array.isArray(value)) return value.filter(Boolean).map(String);
+    if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
+    return [];
+}
+
+function hasSavedInfluencerProfile(profile?: InfluencerProfileResponse | null) {
+    if (!profile) return false;
+    const hasRates = Number(profile.rates?.reelPrice ?? profile.avgReelPrice ?? 0) > 0 && Number(profile.rates?.postPrice ?? profile.avgPostPrice ?? 0) > 0;
+    return Boolean(
+        (profile.fullName || '').trim() &&
+        (profile.contactEmail || '').trim() &&
+        (profile.bio || profile.igBio || '').trim() &&
+        (profile.country || profile.countryOfResidence || '').trim() &&
+        (profile.city || '').trim() &&
+        parseList(profile.niche).length > 0 &&
+        parseList(profile.languages).length > 0 &&
+        parseList(profile.contentStyleTags).length > 0 &&
+        hasRates
+    );
+}
 
 export default function InfluencerCollaborationsRoute() {
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
     const profileComplete = Boolean(
         profile?.profileComplete ??
         profile?.profileCompletionStatus ??
-        profile?.profileCompletion?.isComplete
+        profile?.profileCompletion?.isComplete ??
+        hasSavedInfluencerProfile(profile)
     );
 
     return (
