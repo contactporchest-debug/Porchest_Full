@@ -256,7 +256,7 @@ export default function CampaignsFlow() {
                                 <Fragment key={c._id}>
                                     <tr style={{ background: rowExpanded ? 'rgba(194,52,10,0.04)' : 'transparent' }}>
                                         <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
-                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TEXT }}>{c.brief?.campaignObjective || c.campaignTitle || 'Collaboration'}</p>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TEXT }}>{c.campaignTitle || c.brief?.campaignObjective || 'Collaboration'}</p>
                                             <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>{c.campaignTitle || c.brief?.keyMessage || 'Campaign details'}</p>
                                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
                                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.48)', border: `1px solid ${BORDER}`, color: MUTED, fontSize: 11, fontWeight: 700 }}>
@@ -601,7 +601,7 @@ export default function CampaignsFlow() {
                     <div className="flex items-start justify-between gap-4">
                         <div>
                             <p className="text-[#1A0A00] font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'Requested collaboration'}
+                                {c.campaignTitle || c.brief?.campaignObjective || 'Requested collaboration'}
                             </p>
                             <div className="flex items-center gap-2 mt-1.5">
                                 <span className="text-xs font-bold text-[#7A5030] uppercase tracking-wide">From</span>

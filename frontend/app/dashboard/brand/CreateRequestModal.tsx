@@ -43,18 +43,16 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         campaignTitle: '',
         campaignDescription: '',
         deliverables: '',
-        requiredElements: '',
         videoLength: '',
-        postingDeadline: '',
+        reelPostingDeadline: '',
+        postPostingDeadline: '',
         contentGuidelines: '',
         hashtags: '',
         disclosureRequirements: '#Ad #Sponsored',
         reelDeliverables: '',
         reelRequiredElements: '',
-        reelPostingSchedule: '',
         postDeliverables: '',
         postRequiredElements: '',
-        postPostingSchedule: '',
     });
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [contentTypes, setContentTypes] = useState<string[]>([]);
@@ -135,7 +133,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         const title = type === 'reel' ? 'Reel' : 'Post';
         const deliverablesKey = type === 'reel' ? 'reelDeliverables' : 'postDeliverables';
         const requiredKey = type === 'reel' ? 'reelRequiredElements' : 'postRequiredElements';
-        const scheduleKey = type === 'reel' ? 'reelPostingSchedule' : 'postPostingSchedule';
+        const deadlineKey = type === 'reel' ? 'reelPostingDeadline' : 'postPostingDeadline';
 
         if (!(type === 'reel' ? hasReel : hasPost)) return null;
 
@@ -145,6 +143,15 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                     <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title} details</p>
                     {renderRateChip(title, type === 'reel' ? reelRate : postRate)}
                 </div>
+                {type === 'reel' && (
+                    <Field label="Video Length" required>
+                        <select required value={form.videoLength} onChange={set('videoLength')} style={{ ...IS, cursor: 'pointer' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')}>
+                            <option value="">Select duration</option>
+                            {['15 seconds', '30 seconds', '60 seconds', '90 seconds', '2 minutes', '3–5 minutes'].map(v =>
+                                <option key={v} value={v}>{v}</option>)}
+                        </select>
+                    </Field>
+                )}
                 <Field label={`${title} deliverables`} required>
                     <textarea required value={form[deliverablesKey]} onChange={set(deliverablesKey)}
                         placeholder={type === 'reel' ? 'e.g. 1 × 30s Reel with product demo' : 'e.g. 1 × Feed Post with caption and tags'}
@@ -155,10 +162,8 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         placeholder={type === 'reel' ? 'e.g. Show packaging, include product demo, mention CTA' : 'e.g. Include product image, tag brand, mention offer'}
                         rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                 </Field>
-                <Field label={`${title} posting schedule`} required>
-                    <textarea required value={form[scheduleKey]} onChange={set(scheduleKey)}
-                        placeholder={type === 'reel' ? 'e.g. Publish Reel on Saturday evening' : 'e.g. Publish Post on Sunday afternoon'}
-                        rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                <Field label={`${title} posting deadline`} required>
+                    <input required type="date" min={new Date().toISOString().split('T')[0]} value={form[deadlineKey]} onChange={set(deadlineKey)} style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                 </Field>
             </div>
         );
@@ -170,16 +175,12 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         form.deliverables,
     ].filter(Boolean).join(' | ');
 
-    const combinedSchedule = [
-        hasReel ? `Reel: ${form.reelPostingSchedule}` : '',
-        hasPost ? `Post: ${form.postPostingSchedule}` : '',
-    ].filter(Boolean).join(' | ');
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!influencer) return;
         setLoading(true);
         try {
+            const selectedDeadline = hasReel ? form.reelPostingDeadline : form.postPostingDeadline;
             await brandAPI.createRequest({
                 influencerId: influencer._id,
                 ...form,
@@ -187,19 +188,20 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                 agreedPrice: Number(totalPrice),
                 pricing: { brandOffer: Number(totalPrice), agreedFee: Number(totalPrice) },
                 paymentTerms: '50% advance before campaign starts, 50% after deliverables are verified',
-                postingDeadline: new Date(form.postingDeadline).toISOString(),
+                postingDeadline: selectedDeadline ? new Date(selectedDeadline).toISOString() : undefined,
                 brief: {
                     ...form,
                     contentType: contentTypes,
                     contentTypes,
                     deliverables: combinedDeliverables,
-                    postingSchedule: combinedSchedule || form.postingDeadline,
+                    postingDeadline: selectedDeadline || '',
+                    reelPostingDeadline: hasReel ? form.reelPostingDeadline : '',
+                    postPostingDeadline: hasPost ? form.postPostingDeadline : '',
+                    reelVideoLength: hasReel ? form.videoLength : '',
                     reelDeliverables: hasReel ? form.reelDeliverables : '',
                     reelRequiredElements: hasReel ? form.reelRequiredElements : '',
-                    reelPostingSchedule: hasReel ? form.reelPostingSchedule : '',
                     postDeliverables: hasPost ? form.postDeliverables : '',
                     postRequiredElements: hasPost ? form.postRequiredElements : '',
-                    postPostingSchedule: hasPost ? form.postPostingSchedule : '',
                 },
             });
             toast.success('Campaign request sent!');
@@ -298,31 +300,19 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                                 rows={3} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
 
-                        <Field label="Shared Deliverables" required>
-                            <textarea required value={form.deliverables} onChange={set('deliverables')}
-                                placeholder="Shared campaign deliverables or summary" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
-                        </Field>
-
                         {(hasReel || hasPost) && (
-                            <div style={{ display: 'grid', gridTemplateColumns: hasReel && hasPost ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: '20px' }}>
-                                {renderTypeField('reel')}
-                                {renderTypeField('post')}
-                            </div>
-                        )}
+                            <>
+                                <Field label="Shared Deliverables" required>
+                                    <textarea required value={form.deliverables} onChange={set('deliverables')}
+                                        placeholder="Shared campaign deliverables or summary" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                                </Field>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <Field label="Video Length" required>
-                                <select required value={form.videoLength} onChange={set('videoLength')} style={{ ...IS, cursor: 'pointer' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')}>
-                                    <option value="">Select duration</option>
-                                    {['15 seconds', '30 seconds', '60 seconds', '90 seconds', '2 minutes', '3–5 minutes'].map(v =>
-                                        <option key={v} value={v}>{v}</option>)}
-                                </select>
-                            </Field>
-                            <Field label="Posting Deadline" required>
-                                <input required type="date" value={form.postingDeadline} onChange={set('postingDeadline')}
-                                    min={new Date().toISOString().split('T')[0]} style={IS} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
-                            </Field>
-                        </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: hasReel && hasPost ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: '20px' }}>
+                                    {renderTypeField('reel')}
+                                    {renderTypeField('post')}
+                                </div>
+                            </>
+                        )}
 
                         <Field label="Content Guidelines" required>
                             <textarea required value={form.contentGuidelines} onChange={set('contentGuidelines')}

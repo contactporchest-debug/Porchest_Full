@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
 import { influencerAPI } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment'];
 const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional', 'minimalist', 'bold', 'emotional'];
@@ -27,7 +28,7 @@ function parseList(value) {
 }
 
 function getProfileCompleteState(profile) {
-    return Boolean(profile?.profileComplete || profile?.profileCompletionStatus || profile?.profileCompletion?.isComplete);
+    return Boolean(profile?.profileComplete);
 }
 
 function chipClass(selected, disabled = false) {
@@ -67,6 +68,7 @@ function sectionStyle() {
 }
 
 export default function ProfileForm() {
+    const { user } = useAuth();
     const { data: profile, refetch } = useApi('/profile/influencer/me');
     const [isEditing, setIsEditing] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -81,6 +83,10 @@ export default function ProfileForm() {
         niche: [],
         languages: [],
         contentStyleTags: [],
+        instagramUsername: '',
+        instagramProfileURL: '',
+        instagramDPURL: '',
+        accountType: '',
         rates: { reelPrice: '', postPrice: '' },
     });
 
@@ -96,6 +102,10 @@ export default function ProfileForm() {
             niche: parseList(profile.niche),
             languages: parseList(profile.languages),
             contentStyleTags: parseList(profile.contentStyleTags),
+            instagramUsername: profile.instagramUsername || profile.igUsername || '',
+            instagramProfileURL: profile.instagramProfileURL || profile.profileUrl || profile.igProfileUrl || '',
+            instagramDPURL: profile.instagramDPURL || profile.profilePictureUrl || profile.profileImageURL || '',
+            accountType: profile.accountType || profile.instagramAccountType || profile.igAccountType || '',
             rates: {
                 reelPrice: profile.rates?.reelPrice ?? profile.avgReelPrice ?? '',
                 postPrice: profile.rates?.postPrice ?? profile.avgPostPrice ?? '',
@@ -114,6 +124,17 @@ export default function ProfileForm() {
                 parseList(profile.niche).length ||
                 parseList(profile.languages).length ||
                 parseList(profile.contentStyleTags).length ||
+                profile.instagramUsername ||
+                profile.igUsername ||
+                profile.instagramProfileURL ||
+                profile.profileUrl ||
+                profile.igProfileUrl ||
+                profile.instagramDPURL ||
+                profile.profilePictureUrl ||
+                profile.profileImageURL ||
+                profile.accountType ||
+                profile.instagramAccountType ||
+                profile.igAccountType ||
                 profile.rates?.reelPrice ||
                 profile.avgReelPrice ||
                 profile.rates?.postPrice ||
@@ -127,6 +148,7 @@ export default function ProfileForm() {
 
     const isComplete = useMemo(() => {
         const hasRates = Number(form.rates.reelPrice) > 0 && Number(form.rates.postPrice) > 0;
+        const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
         return !!(
             form.fullName.trim() &&
             form.contactEmail.trim() &&
@@ -137,9 +159,14 @@ export default function ProfileForm() {
             form.contentStyleTags.length > 0 &&
             form.languages.length > 0 &&
             form.languages.length <= 2 &&
+            form.instagramUsername.trim() &&
+            form.instagramProfileURL.trim() &&
+            form.instagramDPURL.trim() &&
+            form.accountType &&
             hasRates
+            && instagramConnected
         );
-    }, [form]);
+    }, [form, user?.instagramConnected, user?.instagramConnectionStatus]);
 
     function toggleArray(field, value) {
         setSaved(false);
@@ -189,6 +216,10 @@ export default function ProfileForm() {
                 niche: form.niche,
                 languages: form.languages,
                 contentStyleTags: form.contentStyleTags,
+                instagramUsername: form.instagramUsername,
+                instagramProfileURL: form.instagramProfileURL,
+                instagramDPURL: form.instagramDPURL,
+                accountType: form.accountType,
                 rates: form.rates,
             });
 
@@ -351,6 +382,44 @@ export default function ProfileForm() {
                             onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}
                         />
                     </div>
+                </div>
+            </div>
+
+            <div style={sectionStyle()}>
+                <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: '#7A5030' }}>Instagram profile</p>
+                    <h3 style={{ marginTop: '4px', fontSize: '20px', fontWeight: 800, color: '#1A0A00' }}>Instagram Identity</h3>
+                </div>
+                <div style={{ display: 'grid', gap: '16px' }} className="md:grid-cols-2">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Instagram Username</label>
+                        <input required style={inputStyle()} placeholder="@yourhandle" value={form.instagramUsername} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, instagramUsername: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Instagram Profile URL</label>
+                        <input required style={inputStyle()} placeholder="https://instagram.com/yourhandle" value={form.instagramProfileURL} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, instagramProfileURL: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Profile Picture URL</label>
+                        <input required style={inputStyle()} placeholder="https://cdn.example.com/profile.jpg" value={form.instagramDPURL} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, instagramDPURL: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#7A5030' }}>Account Type</label>
+                        <div style={{ position: 'relative' }}>
+                            <select required style={{ ...inputStyle(), appearance: 'none', paddingRight: '42px' }} value={form.accountType} onChange={(event) => { setSaved(false); setForm((current) => ({ ...current, accountType: event.target.value })); }} onFocus={(e) => { e.target.style.borderColor = '#C2340A'; }} onBlur={(e) => { e.target.style.borderColor = '#EDD9BC'; }}>
+                                <option value="">Select account type</option>
+                                <option value="Creator">Creator</option>
+                                <option value="Business">Business</option>
+                                <option value="Personal">Personal</option>
+                            </select>
+                            <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#7A5030' }}>⌄</div>
+                        </div>
+                    </div>
+                </div>
+                <div style={{ marginTop: '14px', padding: '12px 16px', borderRadius: '12px', background: instagramConnected ? 'rgba(74,222,128,0.08)' : 'rgba(245,158,11,0.08)', border: `1px solid ${instagramConnected ? 'rgba(74,222,128,0.18)' : 'rgba(245,158,11,0.18)'}` }}>
+                    <p style={{ fontSize: '12px', color: instagramConnected ? '#059669' : '#d97706', fontWeight: 700 }}>
+                        Instagram connection {instagramConnected ? 'is active' : 'must be connected to complete the profile'}
+                    </p>
                 </div>
             </div>
 

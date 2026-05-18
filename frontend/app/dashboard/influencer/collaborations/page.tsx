@@ -49,29 +49,9 @@ type InfluencerProfileResponse = {
     avgPostPrice?: number | string;
 };
 
-function hasInfluencerProfileRecord(profile?: InfluencerProfileResponse | null) {
-    if (!profile) return false;
-    const candidate = (profile.influencerProfile && typeof profile.influencerProfile === 'object')
-        ? profile.influencerProfile
-        : profile;
-
-    return Object.entries(candidate).some(([key, value]) =>
-        key !== 'userId' &&
-        key !== 'profileComplete' &&
-        key !== 'profileCompletionStatus' &&
-        key !== 'profileCompletion' &&
-        key !== 'success' &&
-        key !== 'message' &&
-        key !== 'error' &&
-        value !== undefined &&
-        value !== null &&
-        value !== ''
-    );
-}
-
 export default function InfluencerCollaborationsRoute() {
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const hasProfileRecord = hasInfluencerProfileRecord(profile);
+    const profileComplete = Boolean(profile?.profileComplete);
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
@@ -80,7 +60,7 @@ export default function InfluencerCollaborationsRoute() {
                     <div className="rounded-[14px] border border-[rgba(255,255,255,0.65)] bg-[rgba(255,255,255,0.38)] p-6 text-sm text-[#7A5030] backdrop-blur-[12px]">
                         Loading profile status...
                     </div>
-                ) : !hasProfileRecord ? (
+                ) : !profileComplete ? (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

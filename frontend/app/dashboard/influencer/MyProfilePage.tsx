@@ -80,16 +80,38 @@ export default function MyProfilePage() {
     }, [user]);
 
     const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+    const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
 
     const completionScore = (() => {
-        const fields = [form.fullName, form.country, form.niche, form.instagramUsername, form.avgPostCostUSD, form.avgReelCostUSD];
+        const fields = [
+            form.fullName,
+            form.country,
+            form.contactEmail,
+            form.niche,
+            form.bio,
+            form.instagramUsername,
+            form.instagramProfileURL,
+            form.instagramDPURL,
+            form.accountType,
+            form.avgPostCostUSD,
+            form.avgReelCostUSD,
+            instagramConnected ? 'connected' : '',
+        ];
         return Math.round((fields.filter(Boolean).length / fields.length) * 100);
     })();
 
     const handleSave = async () => {
         if (!form.fullName) return toast.error('Full name is required');
+        if (!form.country) return toast.error('Country of residence is required');
+        if (!form.contactEmail) return toast.error('Contact email is required');
+        if (!form.bio) return toast.error('Bio is required');
         if (!form.niche) return toast.error('Please select your niche');
+        if (!form.instagramUsername) return toast.error('Instagram username is required');
+        if (!form.instagramProfileURL) return toast.error('Instagram profile URL is required');
+        if (!form.instagramDPURL) return toast.error('Profile picture URL is required');
+        if (!form.accountType) return toast.error('Instagram account type is required');
         if (!form.avgPostCostUSD || !form.avgReelCostUSD) return toast.error('Pricing fields are required for brand discovery');
+        if (!instagramConnected) return toast.error('Connect Instagram before completing your profile');
         setSaving(true);
         try {
             const res = await influencerAPI.updateProfile({
