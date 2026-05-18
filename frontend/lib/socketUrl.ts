@@ -14,6 +14,11 @@ export function resolveSocketUrl() {
         return envSocket || appUrl || 'http://localhost:5000';
     }
 
+    const currentOrigin = window.location.origin;
+    if (currentOrigin) {
+        return currentOrigin;
+    }
+
     if (envSocket) {
         const origin = normalizeOrigin(envSocket);
         const isKnownBadHost = origin?.includes('api.porchest.com');
@@ -25,5 +30,5 @@ export function resolveSocketUrl() {
         if (origin) return origin;
     }
 
-    return window.location.origin;
+    return currentOrigin;
 }
