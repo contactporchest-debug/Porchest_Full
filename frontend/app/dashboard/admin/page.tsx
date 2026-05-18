@@ -153,12 +153,6 @@ export default function AdminLandingPage() {
                 icon: <Users size={20} />,
             },
             {
-                title: 'Campaigns',
-                description: 'Review campaign requests, statuses, and approvals in a focused workspace.',
-                href: '/dashboard/admin/campaigns',
-                icon: <BriefcaseBusiness size={20} />,
-            },
-            {
                 title: 'Collaborations',
                 description: 'Track collaboration stages, verification steps, and admin actions.',
                 href: '/dashboard/admin/collaborations',

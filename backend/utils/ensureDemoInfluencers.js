@@ -927,9 +927,12 @@ async function upsertDemoInfluencerAccount(config) {
     return { email: user.email, instagramUsername: profile.instagramUsername };
 }
 
-async function ensureDemoInfluencers() {
+async function ensureDemoInfluencers(options = {}) {
+    const limit = Number.isInteger(options.limit) && options.limit > 0
+        ? Math.min(options.limit, DEMO_INFLUENCERS.length)
+        : DEMO_INFLUENCERS.length;
     const created = [];
-    for (const influencer of DEMO_INFLUENCERS) {
+    for (const influencer of DEMO_INFLUENCERS.slice(0, limit)) {
         const result = await upsertDemoInfluencerAccount(influencer);
         created.push(result);
     }
