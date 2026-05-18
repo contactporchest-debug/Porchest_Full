@@ -110,10 +110,6 @@ export default function DashboardShell({
                     <div style={{ width: '38px' }} />
                 </div>
 
-                {/* Desktop topbar */}
-                <div className="hidden lg:block">
-                    <TopBar role={role} brandLogo={brandLogo} brandName={brandName} />
-                </div>
 
                 {/* Main content */}
                 <main style={{
