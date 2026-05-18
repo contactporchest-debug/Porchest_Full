@@ -109,8 +109,9 @@ export default function ProfileForm() {
             rates: {
                 reelPrice: profile.rates?.reelPrice ?? profile.avgReelPrice ?? '',
                 postPrice: profile.rates?.postPrice ?? profile.avgPostPrice ?? '',
-            },
-        });
+        },
+    });
+    const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
 
         if (!hasInitializedProfile.current) {
             const hasPersistedProfile = Boolean(
@@ -148,7 +149,6 @@ export default function ProfileForm() {
 
     const isComplete = useMemo(() => {
         const hasRates = Number(form.rates.reelPrice) > 0 && Number(form.rates.postPrice) > 0;
-        const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
         return !!(
             form.fullName.trim() &&
             form.contactEmail.trim() &&
