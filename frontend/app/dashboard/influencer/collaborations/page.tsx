@@ -54,10 +54,10 @@ type InfluencerProfileResponse = {
 export default function InfluencerCollaborationsRoute() {
     const { user } = useAuth();
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const profileComplete = buildInfluencerProfileCompletion(profile as any, {
+    const profileCompletion = buildInfluencerProfileCompletion(profile as any, {
         instagramConnected: user?.instagramConnected,
         instagramConnectionStatus: user?.instagramConnectionStatus,
-    }).isComplete;
+    });
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>
@@ -66,26 +66,29 @@ export default function InfluencerCollaborationsRoute() {
                     <div className="rounded-[14px] border border-[rgba(255,255,255,0.65)] bg-[rgba(255,255,255,0.38)] p-6 text-sm text-[#7A5030] backdrop-blur-[12px]">
                         Loading profile status...
                     </div>
-                ) : !profileComplete ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-[14px] border border-[#EDD9BC] bg-[rgba(255,255,255,0.45)] p-6 backdrop-blur-[12px]"
-                    >
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-[#C2340A]">Profile incomplete</p>
-                        <h1 className="mt-2 text-2xl font-semibold text-[#1A0A00]">Complete your profile first</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#7A5030]">
-                            Complete your profile first to see campaign opportunities and collaboration workflows.
-                        </p>
-                        <Link
-                            href="/dashboard/influencer/profile"
-                            className="mt-6 inline-flex items-center rounded-full bg-[#C2340A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E8400A]"
-                        >
-                            Go to profile
-                        </Link>
-                    </motion.div>
                 ) : (
-                    <CampaignsFlow />
+                    <>
+                        {!profileCompletion.isComplete && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 rounded-[14px] border border-[#EDD9BC] bg-[rgba(255,255,255,0.45)] p-6 backdrop-blur-[12px]"
+                            >
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-[#C2340A]">Profile incomplete</p>
+                                <h1 className="mt-2 text-2xl font-semibold text-[#1A0A00]">You can still review and respond to requests</h1>
+                                <p className="mt-3 max-w-2xl text-sm leading-7 text-[#7A5030]">
+                                    Your profile is not fully complete yet, but you can accept or decline collaboration requests while you finish setup.
+                                </p>
+                                <Link
+                                    href="/dashboard/influencer/profile"
+                                    className="mt-6 inline-flex items-center rounded-full bg-[#C2340A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E8400A]"
+                                >
+                                    Finish profile
+                                </Link>
+                            </motion.div>
+                        )}
+                        <CampaignsFlow />
+                    </>
                 )}
             </DashboardLayout>
         </ProtectedRoute>
