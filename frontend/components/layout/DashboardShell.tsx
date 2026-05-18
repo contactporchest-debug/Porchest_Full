@@ -64,63 +64,17 @@ export default function DashboardShell({
                 </div>
             )}
 
-            {/* Right column */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {/* Mobile header */}
-                <div
-                    className="lg:hidden"
-                    style={{
-                        height: '60px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0 16px',
-                        borderBottom: '1px solid #EDD9BC',
-                        background: 'rgba(253,246,238,0.85)',
-                        backdropFilter: 'blur(12px)',
-                        flexShrink: 0,
-                    }}
-                >
-                    <button
-                        onClick={() => setMobileOpen(v => !v)}
-                        style={{
-                            width: '38px', height: '38px',
-                            borderRadius: '8px',
-                            border: '1px solid #EDD9BC',
-                            background: 'rgba(255,255,255,0.60)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            color: '#7A5030',
-                        }}
-                    >
-                        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-                    </button>
 
-                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                        {role === 'brand' && brandLogo ? (
-                            <img src={brandLogo} alt={brandName || 'Brand logo'} style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #EDD9BC' }} />
-                        ) : (
-                            <Image src="/porchest-logo.png" alt="Porchest" width={28} height={28} style={{ borderRadius: '5px', objectFit: 'contain' }} />
-                        )}
-                        <span style={{ fontSize: '16px', fontWeight: 600, color: '#1A0A00' }}>{role === 'brand' && brandName ? brandName : 'Porchest'}</span>
-                    </Link>
-
-                    <div style={{ width: '38px' }} />
-                </div>
-
-
-                {/* Main content */}
-                <main style={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    padding: '24px',
-                    background: '#FDF6EE',
-                }}>
-                    {children}
-                </main>
-            </div>
+            {/* Main content */}
+            <main style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '24px',
+                background: '#FDF6EE',
+            }}>
+                {children}
+            </main>
         </div>
+        </div >
     );
 }
