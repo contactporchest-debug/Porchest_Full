@@ -4,6 +4,8 @@ import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import CampaignsFlow from '@/components/influencer/CampaignsFlow';
 import { useApi } from '@/hooks/useApi';
+import { useAuth } from '@/context/AuthContext';
+import { buildInfluencerProfileCompletion } from '@/lib/influencerProfileCompletion';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -50,8 +52,12 @@ type InfluencerProfileResponse = {
 };
 
 export default function InfluencerCollaborationsRoute() {
+    const { user } = useAuth();
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const profileComplete = Boolean(profile?.profileComplete);
+    const profileComplete = buildInfluencerProfileCompletion(profile, {
+        instagramConnected: user?.instagramConnected,
+        instagramConnectionStatus: user?.instagramConnectionStatus,
+    }).isComplete;
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>

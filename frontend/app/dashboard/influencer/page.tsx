@@ -11,6 +11,7 @@ import InstagramAnalytics from '@/components/influencer/InstagramAnalytics';
 import ConnectInstagramBanner from '@/components/shared/ConnectInstagramBanner';
 import { useApi } from '@/hooks/useApi';
 import { influencerAPI } from '@/lib/api';
+import { buildInfluencerProfileCompletion } from '@/lib/influencerProfileCompletion';
 import toast from 'react-hot-toast';
 
 type InfluencerProfileResponse = {
@@ -50,12 +51,10 @@ export default function InfluencerPortal() {
 
     useEffect(() => {
         if (!profile) return;
-        setProfileCompletion(
-            profile.profileComplete
-                ? { percentage: 100, isComplete: true, checklist: [] }
-                : { percentage: 0, isComplete: false, checklist: [] }
-        );
-    }, [profile]);
+        setProfileCompletion(buildInfluencerProfileCompletion(profile, {
+            instagramConnected,
+        }));
+    }, [profile, instagramConnected]);
 
     return (
         <ProtectedRoute allowedRoles={['influencer']}>

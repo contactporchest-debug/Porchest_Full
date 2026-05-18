@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
 import { influencerAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { buildInfluencerProfileCompletion } from '@/lib/influencerProfileCompletion';
 
 const NICHES = ['fashion', 'beauty', 'tech', 'food', 'travel', 'fitness', 'gaming', 'finance', 'education', 'lifestyle', 'business', 'entertainment'];
 const CONTENT_STYLES = ['aesthetic', 'luxury', 'casual', 'funny', 'professional', 'minimalist', 'bold', 'emotional'];
@@ -25,10 +26,6 @@ function parseList(value) {
     if (Array.isArray(value)) return value.filter(Boolean).map(String);
     if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
     return [];
-}
-
-function getProfileCompleteState(profile) {
-    return Boolean(profile?.profileComplete);
 }
 
 function chipClass(selected, disabled = false) {
@@ -235,7 +232,11 @@ export default function ProfileForm() {
         }
     }
 
-    const profileComplete = getProfileCompleteState(profile);
+    const profileCompletion = buildInfluencerProfileCompletion(profile, {
+        instagramConnected,
+        instagramConnectionStatus: user?.instagramConnectionStatus,
+    });
+    const profileComplete = profileCompletion.isComplete;
 
     if (!isEditing) {
         return (

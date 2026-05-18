@@ -9,6 +9,7 @@ import {
 import { influencerAPI } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import { buildInfluencerProfileCompletion } from '@/lib/influencerProfileCompletion';
 
 const NICHES = ['Fashion', 'Food', 'Fitness', 'Tech', 'Travel', 'Beauty', 'Gaming', 'Lifestyle', 'Education', 'Entertainment', 'Finance', 'Other'];
 const COUNTRIES = [
@@ -81,24 +82,8 @@ export default function MyProfilePage() {
 
     const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
     const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
-
-    const completionScore = (() => {
-        const fields = [
-            form.fullName,
-            form.country,
-            form.contactEmail,
-            form.niche,
-            form.bio,
-            form.instagramUsername,
-            form.instagramProfileURL,
-            form.instagramDPURL,
-            form.accountType,
-            form.avgPostCostUSD,
-            form.avgReelCostUSD,
-            instagramConnected ? 'connected' : '',
-        ];
-        return Math.round((fields.filter(Boolean).length / fields.length) * 100);
-    })();
+    const profileCompletion = buildInfluencerProfileCompletion(form, { instagramConnected });
+    const completionScore = profileCompletion.percentage;
 
     const handleSave = async () => {
         if (!form.fullName) return toast.error('Full name is required');
@@ -111,7 +96,7 @@ export default function MyProfilePage() {
         if (!form.instagramDPURL) return toast.error('Profile picture URL is required');
         if (!form.accountType) return toast.error('Instagram account type is required');
         if (!form.avgPostCostUSD || !form.avgReelCostUSD) return toast.error('Pricing fields are required for brand discovery');
-        if (!instagramConnected) return toast.error('Connect Instagram before completing your profile');
+        if (!profileCompletion.isComplete) return toast.error('Please complete all required fields before saving');
         setSaving(true);
         try {
             const res = await influencerAPI.updateProfile({
