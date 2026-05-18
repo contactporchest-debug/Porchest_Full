@@ -136,7 +136,10 @@ export default function CampaignsFlow() {
             await refetch();
             window.dispatchEvent(new CustomEvent('porchest-collaboration-updated'));
         } catch (error) {
-            const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to update collaboration';
+            const rawMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unable to update collaboration';
+            const message = /profile incomplete|complete your profile/i.test(String(rawMessage))
+                ? 'Unable to update collaboration'
+                : rawMessage;
             toast.error(message);
         } finally {
             setActing(false);

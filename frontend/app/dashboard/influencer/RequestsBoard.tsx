@@ -382,7 +382,11 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
             await loadRequests();
             onChanged?.();
         } catch (error: any) {
-            toast.error(error?.message || 'Failed to respond to request');
+            const rawMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Failed to respond to request';
+            const message = /profile incomplete|complete your profile/i.test(String(rawMessage))
+                ? 'Failed to respond to request'
+                : rawMessage;
+            toast.error(message);
         } finally {
             setResponding(false);
         }
@@ -437,7 +441,7 @@ export default function RequestsBoard({ onChanged }: { onChanged?: () => void })
                     </p>
                     <p style={{ color: MUTED, fontSize: '13px' }}>
                         {requests.length === 0
-                            ? 'Complete your profile to start receiving collaboration requests from brands.'
+                            ? 'No collaboration requests yet.'
                             : 'Try adjusting the filter above.'}
                     </p>
                 </div>
