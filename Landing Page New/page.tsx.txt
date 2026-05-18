@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
@@ -543,7 +543,7 @@ function FeatureGrid() {
 
 function BentoCard({ children, span, gridColumn }: { children: ReactNode; span?: string; gridColumn?: string }) {
     const ref = useRef<HTMLDivElement>(null);
-    const onMove = (e: MouseEvent<HTMLDivElement>) => {
+    const onMove = (e: React.MouseEvent) => {
         const el = ref.current; if (!el) return;
         const r = el.getBoundingClientRect();
         el.style.setProperty('--mx', `${e.clientX - r.left}px`);
@@ -719,7 +719,7 @@ function Showcase() {
                             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
                             gap: 40, alignItems: 'center',
                             direction: i % 2 ? 'rtl' : 'ltr',
-                        } as CSSProperties}>
+                        } as React.CSSProperties}>
                             <div style={{ direction: 'ltr' }}>
                                 <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: 999, background: 'rgba(194,52,10,0.10)', color: '#C2340A', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>{b.tag}</span>
                                 <h3 style={{ fontSize: 'clamp(24px, 2.5vw, 32px)', fontWeight: 700, color: '#1A0A00', letterSpacing: '-0.02em', lineHeight: 1.15, marginBottom: 14 }}>{b.title}</h3>
