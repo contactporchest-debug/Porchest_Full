@@ -76,7 +76,7 @@ export default function InfluencerDiscovery() {
                 <AnimatePresence>
                     {influencers.map((inf, i) => {
                         const primaryNiche = inf.niche?.[0] || 'lifestyle';
-                        const avatar = inf.avatar || inf.profilePictureURL || inf.igProfileUrl;
+                        const avatar = inf.avatar || inf.profilePictureURL || inf.profileImageURL || inf.instagramDPURL || inf.igProfileUrl;
                         const followerCount = inf.followersCount || inf.igFollowersCount || inf.audienceSize || 0;
                         const engagementRate = inf.avgEngagementRate || inf.engagementRate || inf.overallEngagementRate;
                         const pColor = getPillColor(primaryNiche);

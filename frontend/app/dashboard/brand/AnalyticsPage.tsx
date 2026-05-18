@@ -801,7 +801,7 @@ export default function BrandAnalyticsPage() {
                                     <div style={{ maxWidth: 820, display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
                                         <div style={{ width: 88, height: 88, borderRadius: 24, overflow: 'hidden', background: 'rgba(255,255,255,0.72)', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: COLORS.orange, fontSize: 28, fontWeight: 800, flexShrink: 0 }}>
                                             {(() => {
-                                                const avatar = selectedInfluencer?.profilePictureUrl || influencer?.profilePictureUrl || null;
+                                                const avatar = selectedInfluencer?.profilePictureUrl || selectedInfluencer?.profileImageURL || selectedInfluencer?.avatar || influencer?.profilePictureUrl || influencer?.profileImageURL || influencer?.avatar || null;
                                                 const fallback = (influencer?.name || selectedInfluencer?.fullName || 'IN').trim().slice(0, 2).toUpperCase();
                                                 return avatar && !avatarError ? (
                                                     <img

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, AlertCircle } from 'lucide-react';
 import { brandAPI } from '@/lib/api';
@@ -27,8 +27,18 @@ const formatMoney = (value: number | string | undefined | null) => {
     return `$${Number.isFinite(amount) ? amount.toLocaleString() : '0'}`;
 };
 
+const toPositiveNumber = (value: unknown) => {
+    const amount = Number(value || 0);
+    return Number.isFinite(amount) && amount > 0 ? amount : 0;
+};
+
 export default function CreateRequestModal({ influencer, onClose, onSuccess }: Props) {
     const [loading, setLoading] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [resolvedRates, setResolvedRates] = useState({
+        reelPrice: 0,
+        postPrice: 0,
+    });
     const [form, setForm] = useState({
         campaignTitle: '',
         campaignDescription: '',
@@ -39,20 +49,131 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
         contentGuidelines: '',
         hashtags: '',
         disclosureRequirements: '#Ad #Sponsored',
+        reelDeliverables: '',
+        reelRequiredElements: '',
+        reelPostingSchedule: '',
+        postDeliverables: '',
+        postRequiredElements: '',
+        postPostingSchedule: '',
     });
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [contentTypes, setContentTypes] = useState<string[]>([]);
-    const reelRate = Number(influencer?.rates?.reelPrice || 0);
-    const postRate = Number(influencer?.rates?.postPrice || 0);
-    const totalPrice = contentTypes.reduce((sum, type) => {
-        const normalized = type.toLowerCase();
-        if (normalized.includes('reel')) return sum + reelRate;
-        if (normalized.includes('post')) return sum + postRate;
+    const selectedTypes = useMemo(() => contentTypes.map((type) => type.toLowerCase()), [contentTypes]);
+    const reelRate = resolvedRates.reelPrice;
+    const postRate = resolvedRates.postPrice;
+    const hasReel = selectedTypes.includes('reel');
+    const hasPost = selectedTypes.includes('post');
+
+    const totalPrice = useMemo(() => selectedTypes.reduce((sum, type) => {
+        if (type === 'reel') return sum + reelRate;
+        if (type === 'post') return sum + postRate;
         return sum;
-    }, 0);
+    }, 0), [postRate, reelRate, selectedTypes]);
+
+    useEffect(() => {
+        if (!influencer) return;
+
+        let active = true;
+        const fallbackReel = toPositiveNumber(influencer?.rates?.reelPrice ?? influencer?.avgReelPrice);
+        const fallbackPost = toPositiveNumber(influencer?.rates?.postPrice ?? influencer?.avgPostPrice);
+        setResolvedRates({ reelPrice: fallbackReel, postPrice: fallbackPost });
+        setProfileLoading(Boolean(influencer?._id || influencer?.userId));
+
+        const influencerId = String(
+            influencer?._id ||
+            (typeof influencer?.userId === 'object' ? influencer?.userId?._id : influencer?.userId) ||
+            ''
+        );
+
+        if (!influencerId) {
+            setProfileLoading(false);
+            return () => {
+                active = false;
+            };
+        }
+
+        void brandAPI.getInfluencerDetail(influencerId)
+            .then((response) => {
+                if (!active) return;
+                const profile = response?.data?.profile || response?.data?.influencerProfile || {};
+                setResolvedRates({
+                    reelPrice: toPositiveNumber(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? response?.data?.avgReelCostUSD ?? fallbackReel),
+                    postPrice: toPositiveNumber(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? response?.data?.avgPostCostUSD ?? fallbackPost),
+                });
+            })
+            .catch(() => {
+                if (!active) return;
+                setResolvedRates({ reelPrice: fallbackReel, postPrice: fallbackPost });
+            })
+            .finally(() => {
+                if (!active) return;
+                setProfileLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [influencer]);
 
     const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
         setForm(f => ({ ...f, [k]: e.target.value }));
+
+    const toggleContentType = (type: string) => {
+        setContentTypes((current) => current.includes(type)
+            ? current.filter((value) => value !== type)
+            : [...current, type]
+        );
+    };
+
+    const renderRateChip = (label: string, rate: number) => (
+        <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'rgba(255,255,255,0.62)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '12px', fontWeight: 700 }}>
+            {rate > 0 ? `${label} ${formatMoney(rate)}` : `${label} rate unavailable`}
+        </span>
+    );
+
+    const renderTypeField = (type: 'reel' | 'post') => {
+        const title = type === 'reel' ? 'Reel' : 'Post';
+        const deliverablesKey = type === 'reel' ? 'reelDeliverables' : 'postDeliverables';
+        const requiredKey = type === 'reel' ? 'reelRequiredElements' : 'postRequiredElements';
+        const scheduleKey = type === 'reel' ? 'reelPostingSchedule' : 'postPostingSchedule';
+
+        if (!(type === 'reel' ? hasReel : hasPost)) return null;
+
+        return (
+            <div style={{ display: 'grid', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                    <p style={{ margin: 0, fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{title} details</p>
+                    {renderRateChip(title, type === 'reel' ? reelRate : postRate)}
+                </div>
+                <Field label={`${title} deliverables`} required>
+                    <textarea required value={form[deliverablesKey]} onChange={set(deliverablesKey)}
+                        placeholder={type === 'reel' ? 'e.g. 1 × 30s Reel with product demo' : 'e.g. 1 × Feed Post with caption and tags'}
+                        rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                </Field>
+                <Field label={`${title} required elements`} required>
+                    <textarea required value={form[requiredKey]} onChange={set(requiredKey)}
+                        placeholder={type === 'reel' ? 'e.g. Show packaging, include product demo, mention CTA' : 'e.g. Include product image, tag brand, mention offer'}
+                        rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                </Field>
+                <Field label={`${title} posting schedule`} required>
+                    <textarea required value={form[scheduleKey]} onChange={set(scheduleKey)}
+                        placeholder={type === 'reel' ? 'e.g. Publish Reel on Saturday evening' : 'e.g. Publish Post on Sunday afternoon'}
+                        rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                </Field>
+            </div>
+        );
+    };
+
+    const combinedDeliverables = [
+        hasReel ? form.reelDeliverables : '',
+        hasPost ? form.postDeliverables : '',
+        form.deliverables,
+    ].filter(Boolean).join(' | ');
+
+    const combinedSchedule = [
+        hasReel ? `Reel: ${form.reelPostingSchedule}` : '',
+        hasPost ? `Post: ${form.postPostingSchedule}` : '',
+    ].filter(Boolean).join(' | ');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -71,6 +192,14 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                     ...form,
                     contentType: contentTypes,
                     contentTypes,
+                    deliverables: combinedDeliverables,
+                    postingSchedule: combinedSchedule || form.postingDeadline,
+                    reelDeliverables: hasReel ? form.reelDeliverables : '',
+                    reelRequiredElements: hasReel ? form.reelRequiredElements : '',
+                    reelPostingSchedule: hasReel ? form.reelPostingSchedule : '',
+                    postDeliverables: hasPost ? form.postDeliverables : '',
+                    postRequiredElements: hasPost ? form.postRequiredElements : '',
+                    postPostingSchedule: hasPost ? form.postPostingSchedule : '',
                 },
             });
             toast.success('Campaign request sent!');
@@ -93,7 +222,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                 
                 <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }}
                     transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                    style={{ width: '100%', maxWidth: '700px', background: '#FDF6EE', border: '1px solid #EDD9BC', borderRadius: '24px', boxShadow: '0 16px 40px rgba(26,10,0,0.1)', overflow: 'hidden', margin: 'auto' }}>
+                    style={{ width: '100%', maxWidth: '720px', background: '#FDF6EE', border: '1px solid #EDD9BC', borderRadius: '24px', boxShadow: '0 16px 40px rgba(26,10,0,0.1)', overflow: 'hidden', margin: 'auto' }}>
 
                     {/* Header */}
                     <div style={{ padding: '24px 32px', borderBottom: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -125,7 +254,7 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                                     <button
                                         key={type}
                                         type="button"
-                                        onClick={() => setContentTypes((current) => current.includes(type) ? current.filter((value) => value !== type) : [...current, type])}
+                                        onClick={() => toggleContentType(type)}
                                         style={{
                                             padding: '8px 16px',
                                             borderRadius: '12px',
@@ -144,18 +273,14 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                                 ))}
                             </div>
                             <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'rgba(255,255,255,0.62)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '12px', fontWeight: 700 }}>
-                                    Reel {formatMoney(reelRate)}
-                                </span>
-                                <span style={{ padding: '6px 12px', borderRadius: '999px', background: 'rgba(255,255,255,0.62)', border: '1px solid #EDD9BC', color: '#7A5030', fontSize: '12px', fontWeight: 700 }}>
-                                    Post {formatMoney(postRate)}
-                                </span>
+                                {reelRate > 0 ? renderRateChip('Reel', reelRate) : <span style={{ fontSize: '12px', color: '#7A5030', fontWeight: 600 }}>Reel rate unavailable</span>}
+                                {postRate > 0 ? renderRateChip('Post', postRate) : <span style={{ fontSize: '12px', color: '#7A5030', fontWeight: 600 }}>Post rate unavailable</span>}
                             </div>
                         </Field>
 
                         <div style={{ padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.6)', border: '1px solid #EDD9BC' }}>
                             <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calculated total</p>
-                            <p style={{ fontSize: '28px', fontWeight: 800, color: '#1A0A00', marginTop: '4px' }}>{formatMoney(totalPrice)}</p>
+                            <p style={{ fontSize: '28px', fontWeight: 800, color: '#1A0A00', marginTop: '4px' }}>{contentTypes.length ? formatMoney(totalPrice) : 'Select Reel or Post'}</p>
                             <p style={{ marginTop: '6px', fontSize: '12px', color: '#7A5030' }}>
                                 The total updates automatically when you select Reel, Post, or both.
                             </p>
@@ -173,16 +298,17 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                                 rows={3} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <Field label="Deliverables" required>
+                        <Field label="Shared Deliverables" required>
                             <textarea required value={form.deliverables} onChange={set('deliverables')}
-                                    placeholder="e.g. 1 × 60s Reel, 1 × Carousel Post" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
+                                placeholder="Shared campaign deliverables or summary" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
                         </Field>
-                            <Field label="Required Elements" required>
-                                <textarea required value={form.requiredElements} onChange={set('requiredElements')}
-                                    placeholder="e.g. Show product unboxing, mention price, do CTA" rows={2} style={{ ...IS, resize: 'vertical' }} onFocus={e => (e.target.style.borderColor = '#C2340A')} onBlur={e => (e.target.style.borderColor = '#EDD9BC')} />
-                            </Field>
-                        </div>
+
+                        {(hasReel || hasPost) && (
+                            <div style={{ display: 'grid', gridTemplateColumns: hasReel && hasPost ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: '20px' }}>
+                                {renderTypeField('reel')}
+                                {renderTypeField('post')}
+                            </div>
+                        )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                             <Field label="Video Length" required>
@@ -238,12 +364,12 @@ export default function CreateRequestModal({ influencer, onClose, onSuccess }: P
                         </label>
 
                         {/* Submit */}
-                        <button type="submit" disabled={loading || !agreedToTerms || contentTypes.length === 0}
-                            style={{ width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s', background: loading || !agreedToTerms ? 'rgba(194,52,10,0.3)' : '#C2340A', color: loading || !agreedToTerms ? 'rgba(255,255,255,0.6)' : '#fff', border: 'none', cursor: loading || !agreedToTerms ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
-                            onMouseEnter={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#E8400A'; }}
-                            onMouseLeave={e => { if (!loading && agreedToTerms) e.currentTarget.style.background = '#C2340A'; }}
+                        <button type="submit" disabled={loading || profileLoading || !agreedToTerms || contentTypes.length === 0}
+                            style={{ width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.15s', background: loading || profileLoading || !agreedToTerms || contentTypes.length === 0 ? 'rgba(194,52,10,0.3)' : '#C2340A', color: loading || profileLoading || !agreedToTerms || contentTypes.length === 0 ? 'rgba(255,255,255,0.6)' : '#fff', border: 'none', cursor: loading || profileLoading || !agreedToTerms || contentTypes.length === 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            onMouseEnter={e => { if (!loading && !profileLoading && agreedToTerms && contentTypes.length > 0) e.currentTarget.style.background = '#E8400A'; }}
+                            onMouseLeave={e => { if (!loading && !profileLoading && agreedToTerms && contentTypes.length > 0) e.currentTarget.style.background = '#C2340A'; }}
                         >
-                            <Send size={18} /> {loading ? 'Sending Request…' : 'Send Campaign Request'}
+                            <Send size={18} /> {loading ? 'Sending Request…' : profileLoading ? 'Loading pricing…' : 'Send Campaign Request'}
                         </button>
                     </form>
                 </motion.div>

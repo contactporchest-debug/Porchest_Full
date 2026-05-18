@@ -11,6 +11,11 @@ const formatMoney = (value) => {
     return `$${Number.isFinite(amount) ? amount.toLocaleString() : '0'}`;
 };
 
+const formatRate = (value) => {
+    const amount = Number(value || 0);
+    return amount > 0 ? formatMoney(amount) : '—';
+};
+
 export default function RequestCollaborationButton({ influencerId, influencerName, rates, autoOpen = false }) {
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState(1);
@@ -119,8 +124,8 @@ export default function RequestCollaborationButton({ influencerId, influencerNam
                                 <>
                                     {rates && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Reel {rates.reelPrice ? formatMoney(rates.reelPrice) : '—'}</span>
-                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Post {rates.postPrice ? formatMoney(rates.postPrice) : '—'}</span>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Reel {formatRate(rates.reelPrice)}</span>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#C4A882' }}>Post {formatRate(rates.postPrice)}</span>
                                         </div>
                                     )}
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>

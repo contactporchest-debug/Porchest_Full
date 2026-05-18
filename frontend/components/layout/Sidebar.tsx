@@ -61,9 +61,11 @@ export default function Sidebar({
     onNavigate?: () => void;
 }) {
     const pathname = usePathname();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const router = useRouter();
     const nav = NAVS[role] || NAVS.brand;
+    const influencerAvatar = role === 'influencer' ? (user?.profileImageURL || user?.avatar || user?.instagramDPURL || '') : '';
+    const influencerName = role === 'influencer' ? (user?.fullName || user?.email?.split('@')[0] || 'Influencer') : '';
 
     const handleLogout = () => {
         logout();
@@ -97,16 +99,33 @@ export default function Sidebar({
                 gap: '10px',
                 flexShrink: 0,
             }}>
-                <Image
-                    src={role === 'brand' && brandLogo ? brandLogo : '/porchest-logo.png'}
-                    alt={role === 'brand' && brandLogo ? (brandName || 'Brand logo') : 'Porchest'}
-                    width={32}
-                    height={32}
-                    unoptimized={Boolean(role === 'brand' && brandLogo)}
-                    style={{ borderRadius: role === 'brand' && brandLogo ? '10px' : '6px', objectFit: 'cover' }}
-                />
+                {role === 'influencer' && influencerAvatar ? (
+                    <Image
+                        src={influencerAvatar}
+                        alt={influencerName || 'Influencer profile photo'}
+                        width={36}
+                        height={36}
+                        unoptimized
+                        style={{ borderRadius: '999px', objectFit: 'cover', border: '1px solid #EDD9BC' }}
+                    />
+                ) : role === 'influencer' ? (
+                    <div style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#C2340A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '13px', fontWeight: 700, flexShrink: 0 }}>
+                        {(influencerName || 'IN').slice(0, 2).toUpperCase()}
+                    </div>
+                ) : (
+                    <Image
+                        src={role === 'brand' && brandLogo ? brandLogo : '/porchest-logo.png'}
+                        alt={role === 'brand' && brandLogo ? (brandName || 'Brand logo') : 'Porchest'}
+                        width={32}
+                        height={32}
+                        unoptimized={Boolean(role === 'brand' && brandLogo)}
+                        style={{ borderRadius: role === 'brand' && brandLogo ? '10px' : '6px', objectFit: 'cover' }}
+                    />
+                )}
                 <div>
-                    <p style={{ fontSize: '17px', fontWeight: 600, color: '#1A0A00', lineHeight: 1.2 }}>{role === 'brand' && brandName ? brandName : 'Porchest'}</p>
+                    <p style={{ fontSize: '17px', fontWeight: 600, color: '#1A0A00', lineHeight: 1.2 }}>
+                        {role === 'brand' && brandName ? brandName : role === 'influencer' ? influencerName : 'Porchest'}
+                    </p>
                     <p style={{ fontSize: '10px', fontWeight: 500, color: '#C4A882', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Dashboard</p>
                 </div>
             </div>

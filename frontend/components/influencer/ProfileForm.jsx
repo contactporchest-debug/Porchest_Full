@@ -27,7 +27,7 @@ function parseList(value) {
 }
 
 function getProfileCompleteState(profile) {
-    return Boolean(profile?.profileComplete ?? profile?.profileCompletionStatus ?? profile?.profileCompletion?.isComplete);
+    return Boolean(profile?.profileComplete || profile?.profileCompletionStatus || profile?.profileCompletion?.isComplete);
 }
 
 function chipClass(selected, disabled = false) {
