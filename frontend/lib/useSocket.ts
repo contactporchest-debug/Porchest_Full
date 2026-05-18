@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+import { resolveSocketUrl } from './socketUrl';
 
 let socketInstance: Socket | null = null;
 
@@ -26,7 +25,7 @@ export function useSocket() {
         // Reuse existing connection or create new one
         if (!socketInstance) {
             const token = localStorage.getItem('porchest_token');
-            socketInstance = io(SOCKET_URL, {
+            socketInstance = io(resolveSocketUrl(), {
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
