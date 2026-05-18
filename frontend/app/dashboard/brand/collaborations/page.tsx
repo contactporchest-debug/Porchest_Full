@@ -716,19 +716,6 @@ function CollaborationTable({
         }
     };
 
-    const toggleTracking = async (collaboration: Collaboration, enable: boolean) => {
-        try {
-            setBusyId(collaboration._id);
-            await brandAPI.enableCampaignTracking(collaboration._id, { enable, platform: 'shopify' });
-            toast.success(enable ? 'Tracking enabled for this collaboration.' : 'Tracking disabled for this collaboration.');
-            await onRefresh();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to update tracking.');
-        } finally {
-            setBusyId(null);
-        }
-    };
-
     if (!collaborations.length) {
         const cfg = TAB_CONFIG[tabKey];
         return (
@@ -877,18 +864,6 @@ function CollaborationTable({
                                                 <GlowButton size="sm" onClick={() => onReviewContent(collaboration)}>
                                                     <ShieldCheck size={14} />
                                                     Review Drive Link
-                                                </GlowButton>
-                                            )}
-
-                                            {isAccepted && (
-                                                <GlowButton
-                                                    size="sm"
-                                                    variant={trackingEnabled ? 'outline' : undefined}
-                                                    onClick={() => toggleTracking(collaboration, !trackingEnabled)}
-                                                    loading={busyId === collaboration._id}
-                                                >
-                                                    <ShieldCheck size={14} />
-                                                    {trackingEnabled ? 'Tracking enabled' : 'Enable tracking'}
                                                 </GlowButton>
                                             )}
 
