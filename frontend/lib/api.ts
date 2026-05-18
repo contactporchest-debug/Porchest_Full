@@ -81,6 +81,11 @@ export const adminAPI = {
     getPayments: (params?: Record<string, unknown>) => api.get('/admin/payments', { params }),
     verifyPayment: (id: string) => api.patch(`/admin/payments/${id}/verify`),
     rejectPayment: (id: string, message?: string) => api.patch(`/admin/payments/${id}/reject`, { message }),
+    getFraudDetection: (params?: Record<string, unknown>) => api.get('/admin/fraud-detection', { params }),
+    analyzeFraudDetection: (data?: Record<string, unknown>) => api.post('/admin/fraud-detection/analyze', data || {}),
+    requestFraudVerification: (data: { influencerIds: string[]; message?: string }) => api.post('/admin/fraud-detection/request-verification', data),
+    flagFraudInfluencers: (data: { influencerIds: string[]; reason?: string }) => api.post('/admin/fraud-detection/flag', data),
+    hardDeleteFraudInfluencers: (data: { influencerIds: string[] }) => api.delete('/admin/fraud-detection/delete', { data }),
     getCashouts: (params?: Record<string, unknown>) => api.get('/admin/cashouts', { params }),
     reviewCashout: (id: string, status: 'approved' | 'rejected', data?: { transactionId?: string; rejectionReason?: string }) =>
         api.patch(`/admin/cashouts/${id}`, { status, ...data }),

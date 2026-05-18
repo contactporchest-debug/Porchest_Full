@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart3, BriefcaseBusiness, Users, Shield, Wallet, ShieldCheck } from 'lucide-react';
+import { ArrowRight, BarChart3, BriefcaseBusiness, Users, Shield, Wallet, ShieldCheck, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import DashboardLayout from '@/components/DashboardLayout';
@@ -176,6 +176,12 @@ export default function AdminLandingPage() {
                 href: '/dashboard/admin/cashouts',
                 icon: <Wallet size={20} />,
             },
+            {
+                title: 'Fraud Detection',
+                description: 'Scan influencer accounts, review new registrations, and request verification or flag risky profiles.',
+                href: '/dashboard/admin/fraud-detection',
+                icon: <ShieldAlert size={20} />,
+            },
         ],
         []
     );
@@ -213,7 +219,7 @@ export default function AdminLandingPage() {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                             gap: 16,
                         }}
                     >

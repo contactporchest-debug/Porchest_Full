@@ -15,6 +15,13 @@ const {
     verifyPayment,
     rejectPayment,
 } = require('../controllers/adminController');
+const {
+    getFraudDetection,
+    analyzeFraud,
+    requestFraudVerification,
+    flagFraudInfluencers,
+    hardDeleteFraudInfluencers,
+} = require('../controllers/adminFraudController');
 const adminCampaignController = require('../controllers/adminCampaignController');
 const cashoutController = require('../controllers/cashoutController');
 
@@ -46,6 +53,13 @@ router.patch('/campaigns/:id/status',  adminCampaignController.updateCampaignSta
 // ── Verification Queue ─────────────────────────────────
 router.get('/verifications',           getVerificationQueue);
 router.patch('/verifications/:id',     reviewVerification);
+
+// ── Fraud Detection ────────────────────────────────────
+router.get('/fraud-detection', getFraudDetection);
+router.post('/fraud-detection/analyze', analyzeFraud);
+router.post('/fraud-detection/request-verification', requestFraudVerification);
+router.post('/fraud-detection/flag', flagFraudInfluencers);
+router.delete('/fraud-detection/delete', hardDeleteFraudInfluencers);
 
 // ── Cashouts ───────────────────────────────────────────
 router.get('/cashouts',                cashoutController.listCashouts);

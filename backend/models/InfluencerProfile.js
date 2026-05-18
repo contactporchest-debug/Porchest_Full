@@ -198,6 +198,20 @@ const influencerProfileSchema = new mongoose.Schema(
         profileComplete: { type: Boolean, default: false },
         verified: { type: Boolean, default: false },
         suspended: { type: Boolean, default: false },
+        fraudDetection: {
+            score: { type: Number, default: 0 },
+            level: { type: String, enum: ['clean', 'review', 'suspicious', 'high_risk'], default: 'clean' },
+            status: { type: String, enum: ['clean', 'review', 'verification_requested', 'flagged'], default: 'clean' },
+            flags: [{ type: String }],
+            details: { type: mongoose.Schema.Types.Mixed },
+            analyzedAt: { type: Date },
+            analyzedByFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            verificationRequestedAt: { type: Date },
+            verificationRequestedByFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            flaggedAt: { type: Date },
+            flaggedByFK: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            flagReason: { type: String },
+        },
 
         // Legacy compatibility
         username: { type: String },
