@@ -78,6 +78,9 @@ export const adminAPI = {
     getRequests: (params?: Record<string, unknown>) => api.get('/admin/requests', { params }),
     getVerificationQueue: (status = 'pending') => api.get('/admin/verifications', { params: { status } }),
     reviewVerification: (id: string, status: string, adminNote?: string) => api.patch(`/admin/verifications/${id}`, { status, adminNote }),
+    getPayments: (params?: Record<string, unknown>) => api.get('/admin/payments', { params }),
+    verifyPayment: (id: string) => api.patch(`/admin/payments/${id}/verify`),
+    rejectPayment: (id: string, message?: string) => api.patch(`/admin/payments/${id}/reject`, { message }),
     getCashouts: (params?: Record<string, unknown>) => api.get('/admin/cashouts', { params }),
     reviewCashout: (id: string, status: 'approved' | 'rejected', data?: { transactionId?: string; rejectionReason?: string }) =>
         api.patch(`/admin/cashouts/${id}`, { status, ...data }),
@@ -120,6 +123,10 @@ export const brandAPI = {
     getRequest: (id: string) => api.get(`/brand/requests/${id}`),
     updateRequest: (id: string, data: { status: string; rejectionReason?: string; agreedPrice?: number; brandMessage?: string }) =>
         api.patch(`/brand/requests/${id}`, data),
+    completeCampaignPayment: (
+        id: string,
+        data: { payment_amount: number; proof_url: string; payment_method?: string }
+    ) => api.patch(`/collaborations/${id}/complete-payment`, data),
     // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
     // ── Brand Instagram OAuth (separate from influencer) ──

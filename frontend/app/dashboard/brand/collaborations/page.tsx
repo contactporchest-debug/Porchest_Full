@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Calendar, Download, ExternalLink, FileText, Loader2, PauseCircle, PencilLine, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Calendar, Download, ExternalLink, FileText, Loader2, PauseCircle, PencilLine, ShieldCheck, ShieldAlert } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { GlassCard, GlowButton } from '@/components/ui';
@@ -30,6 +30,11 @@ type Collaboration = {
     trackingAcceptedByInfluencer?: boolean;
     trackingLinkVisible?: boolean;
     trackingDetails?: Record<string, unknown>;
+    payment_status?: string;
+    payment_proof?: string;
+    payment_amount?: number;
+    payment_method?: string;
+    payment_timestamp?: string;
     pricing?: {
         agreedFee?: number;
         brandOffer?: number;
@@ -96,6 +101,13 @@ const STATUS_META: Record<string, { label: string; bg: string; color: string; bo
     cancelled: { label: 'Inactive', bg: 'rgba(239,68,68,0.10)', color: '#dc2626', border: 'rgba(239,68,68,0.22)' },
     declined: { label: 'Declined', bg: 'rgba(239,68,68,0.10)', color: '#dc2626', border: 'rgba(239,68,68,0.22)' },
     active: { label: 'Active', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.22)' },
+};
+
+const PAYMENT_STATUS_META: Record<string, { label: string; bg: string; color: string; border: string }> = {
+    pending: { label: 'Pending payment', bg: 'rgba(245,158,11,0.10)', color: '#d97706', border: 'rgba(245,158,11,0.22)' },
+    proof_submitted: { label: 'Waiting for admin', bg: 'rgba(56,189,248,0.10)', color: '#0284c7', border: 'rgba(56,189,248,0.22)' },
+    verified: { label: 'Verified', bg: 'rgba(16,185,129,0.10)', color: '#059669', border: 'rgba(16,185,129,0.22)' },
+    rejected: { label: 'Rejected', bg: 'rgba(239,68,68,0.10)', color: '#dc2626', border: 'rgba(239,68,68,0.22)' },
 };
 
 function fmtMoney(value?: number | null) {
@@ -318,17 +330,212 @@ function EditRequirementsModal({
     );
 }
 
+function PaymentProofModal({
+    collaboration,
+    onClose,
+    onSaved,
+}: {
+    collaboration: Collaboration | null;
+    onClose: () => void;
+    onSaved: () => void;
+}) {
+    const [saving, setSaving] = useState(false);
+    const [form, setForm] = useState({
+        payment_amount: '',
+        proof_file: '',
+        proof_file_name: '',
+        payment_method: 'Easypaisa',
+    });
+
+    useEffect(() => {
+        if (!collaboration) return;
+        setForm({
+            payment_amount: String(resolvePrice(collaboration) || ''),
+            proof_file: collaboration.payment_proof || '',
+            proof_file_name: collaboration.payment_proof ? 'Uploaded proof' : '',
+            payment_method: collaboration.payment_method || 'Easypaisa',
+        });
+    }, [collaboration]);
+
+    const handleProofFile = async (file: File | null) => {
+        if (!file) {
+            setForm((prev) => ({ ...prev, proof_file: '', proof_file_name: '' }));
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file for payment proof.');
+            return;
+        }
+
+        const maxBytes = 5 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            toast.error('Payment proof must be 5MB or smaller.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = typeof reader.result === 'string' ? reader.result : '';
+            setForm((prev) => ({
+                ...prev,
+                proof_file: result,
+                proof_file_name: file.name,
+            }));
+        };
+        reader.onerror = () => {
+            toast.error('Failed to read the selected file.');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const onSubmit = async () => {
+        if (!collaboration) return;
+        if (!form.proof_file) {
+            toast.error('Please upload your payment proof screenshot.');
+            return;
+        }
+        try {
+            setSaving(true);
+            await brandAPI.completeCampaignPayment(collaboration._id, {
+                payment_amount: Number(form.payment_amount),
+                proof_file: form.proof_file,
+                payment_method: form.payment_method.trim() || 'Easypaisa',
+            });
+            toast.success('Payment proof submitted.');
+            onSaved();
+            onClose();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to submit payment proof.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (!collaboration) return null;
+
+    const fieldStyle = {
+        width: '100%',
+        borderRadius: '12px',
+        border: '1px solid #EDD9BC',
+        background: 'rgba(255,255,255,0.75)',
+        padding: '12px 14px',
+        fontFamily: 'inherit',
+        color: '#1A0A00',
+        outline: 'none',
+        fontSize: '14px',
+    } as const;
+
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 60,
+                background: 'rgba(26,10,0,0.35)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+            }}
+            onClick={onClose}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    width: 'min(760px, 100%)',
+                    borderRadius: '24px',
+                    border: '1px solid #EDD9BC',
+                    background: '#FDF6EE',
+                    boxShadow: '0 24px 80px rgba(26,10,0,0.18)',
+                    padding: '28px',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '24px' }}>
+                    <div>
+                        <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Complete Payment</p>
+                        <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#1A0A00', marginTop: '6px' }}>{resolveCampaignName(collaboration)}</h3>
+                        <p style={{ fontSize: '14px', color: '#7A5030', marginTop: '6px', lineHeight: 1.6 }}>
+                            Upload the payment proof for Easypaisa and submit it for admin verification. The influencer will only start after approval.
+                        </p>
+                    </div>
+                    <GlowButton variant="outline" onClick={onClose}>Close</GlowButton>
+                </div>
+
+                    <div style={{ borderRadius: 16, border: '1px solid #EDD9BC', background: 'rgba(194,52,10,0.06)', padding: 16, marginBottom: 20 }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#C2340A' }}>Easypaisa details</p>
+                        <p style={{ margin: '8px 0 0', fontSize: 15, fontWeight: 700, color: '#1A0A00' }}>03197737215</p>
+                        <p style={{ margin: '6px 0 0', fontSize: 13, color: '#7A5030', lineHeight: 1.7 }}>
+                        After sending the payment, upload a screenshot of the receipt below for admin review.
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Payment amount</span>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={form.payment_amount}
+                            onChange={(e) => setForm((prev) => ({ ...prev, payment_amount: e.target.value }))}
+                            style={fieldStyle}
+                        />
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Payment method</span>
+                        <input
+                            value={form.payment_method}
+                            onChange={(e) => setForm((prev) => ({ ...prev, payment_method: e.target.value }))}
+                            style={fieldStyle}
+                        />
+                    </label>
+                    <label style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Proof screenshot</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleProofFile(e.target.files?.[0] || null)}
+                            style={{
+                                ...fieldStyle,
+                                padding: '10px 14px',
+                                lineHeight: 1.4,
+                            }}
+                        />
+                        <p style={{ margin: 0, fontSize: 12, color: '#7A5030', lineHeight: 1.6 }}>
+                            Upload a clear screenshot of the Easypaisa transfer receipt. PNG or JPG under 5MB.
+                        </p>
+                        {form.proof_file_name ? (
+                            <p style={{ margin: 0, fontSize: 12, color: '#059669', fontWeight: 700 }}>
+                                Selected file: {form.proof_file_name}
+                            </p>
+                        ) : null}
+                    </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+                    <GlowButton variant="outline" onClick={onClose}>Cancel</GlowButton>
+                    <GlowButton onClick={onSubmit} loading={saving}>Submit for admin approval</GlowButton>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function CollaborationTable({
     collaborations,
     tabKey,
     onRefresh,
     onEdit,
+    onCompletePayment,
     onOpenAnalytics,
 }: {
     collaborations: Collaboration[];
     tabKey: TabKey;
     onRefresh: () => Promise<void>;
     onEdit: (collaboration: Collaboration) => void;
+    onCompletePayment: (collaboration: Collaboration) => void;
     onOpenAnalytics: (id: string) => void;
 }) {
     const [busyId, setBusyId] = useState<string | null>(null);
@@ -435,6 +642,8 @@ function CollaborationTable({
                             const requestAge = daysSince(collaboration.sentAt || collaboration.createdAt);
                             const acceptanceAge = daysSince(collaboration.acceptedAt || collaboration.createdAt);
                             const activeAge = daysSince(collaboration.campaignActiveAt || collaboration.campaignStartAt || collaboration.acceptedAt || collaboration.createdAt);
+                            const paymentStatus = (collaboration.payment_status || 'pending').toLowerCase();
+                            const paymentMeta = PAYMENT_STATUS_META[paymentStatus] || PAYMENT_STATUS_META.pending;
 
                             return (
                                 <tr
@@ -466,7 +675,12 @@ function CollaborationTable({
                                         </p>
                                     </td>
                                     <td style={{ padding: '18px 20px', borderBottom: '1px solid rgba(237,217,188,0.8)' }}>
-                                        <StatusPill status={collaboration.status} />
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <StatusPill status={collaboration.status} />
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', width: 'fit-content', padding: '4px 10px', borderRadius: '999px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', background: paymentMeta.bg, color: paymentMeta.color, border: `1px solid ${paymentMeta.border}` }}>
+                                                Payment: {paymentMeta.label}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td style={{ padding: '18px 20px', borderBottom: '1px solid rgba(237,217,188,0.8)' }}>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -504,6 +718,13 @@ function CollaborationTable({
                                                 <GlowButton size="sm" onClick={() => onEdit(collaboration)}>
                                                     <PencilLine size={14} />
                                                     Edit Requirements
+                                                </GlowButton>
+                                            )}
+
+                                            {isAccepted && collaboration.status === 'brand_payment_pending' && (
+                                                <GlowButton size="sm" onClick={() => onCompletePayment(collaboration)}>
+                                                    <ShieldCheck size={14} />
+                                                    Complete Payment
                                                 </GlowButton>
                                             )}
 
@@ -574,6 +795,7 @@ export default function BrandCollaborationsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [editing, setEditing] = useState<Collaboration | null>(null);
+    const [paymentEditing, setPaymentEditing] = useState<Collaboration | null>(null);
 
     const profileComplete = !!profile?.profileComplete;
     const tab = TAB_CONFIG[activeTab];
@@ -675,11 +897,12 @@ export default function BrandCollaborationsPage() {
                                 </div>
                             </GlassCard>
                         ) : (
-                            <CollaborationTable
+                        <CollaborationTable
                                 collaborations={collaborations}
                                 tabKey={activeTab}
                                 onRefresh={() => fetchCollaborations(activeTab)}
                                 onEdit={setEditing}
+                                onCompletePayment={setPaymentEditing}
                                 onOpenAnalytics={(id) => router.push(`/dashboard/brand/collaborations/${id}/analytics`)}
                             />
                         )}
@@ -697,6 +920,20 @@ export default function BrandCollaborationsPage() {
                             <EditRequirementsModal
                                 collaboration={editing}
                                 onClose={() => setEditing(null)}
+                                onSaved={() => fetchCollaborations(activeTab)}
+                            />
+                        </motion.div>
+                    ) : null}
+                    {paymentEditing ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{ position: 'fixed', inset: 0, zIndex: 60 }}
+                        >
+                            <PaymentProofModal
+                                collaboration={paymentEditing}
+                                onClose={() => setPaymentEditing(null)}
                                 onSaved={() => fetchCollaborations(activeTab)}
                             />
                         </motion.div>

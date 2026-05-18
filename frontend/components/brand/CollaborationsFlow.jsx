@@ -154,13 +154,23 @@ export default function CollaborationsFlow() {
                                 </div>
                             </div>
                             <button
-                                onClick={() => action(c._id, 'confirm-brand-payment')}
+                                onClick={async () => {
+                                    const proofUrl = window.prompt('Paste your payment proof screenshot URL');
+                                    if (!proofUrl) return;
+                                    const amountInput = window.prompt('Payment amount in USD', String(Number(c.pricing?.agreedFee || c.pricing?.brandOffer || 0).toFixed(2)));
+                                    if (!amountInput) return;
+                                    await action(c._id, 'complete-payment', {
+                                        proof_url: proofUrl,
+                                        payment_amount: Number(amountInput),
+                                        payment_method: 'Easypaisa',
+                                    });
+                                }}
                                 disabled={acting}
                                 style={{ alignSelf: 'flex-start', padding: '12px 18px', borderRadius: '12px', background: '#C2340A', color: '#fff', fontSize: '14px', fontWeight: 700, border: 'none', cursor: acting ? 'not-allowed' : 'pointer', opacity: acting ? 0.6 : 1, transition: 'all 0.15s', fontFamily: 'inherit' }}
                                 onMouseEnter={e => { if (!acting) e.currentTarget.style.background = '#E8400A'; }}
                                 onMouseLeave={e => { if (!acting) e.currentTarget.style.background = '#C2340A'; }}
                             >
-                                Confirm payment received
+                                Complete payment
                             </button>
                         </div>
                     )}

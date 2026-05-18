@@ -26,7 +26,7 @@ const PROGRESS_STEPS = [
     { label: 'Brand approved content',          done: (c) => !!c.content?.brandApprovedDrive },
     { label: 'Live post submitted',             done: (c) => !!c.content?.postLink },
     { label: 'Admin verified post',             done: (c) => !!c.content?.adminVerified },
-    { label: 'Payment released',                done: (c) => c.payment?.status !== 'pending' },
+    { label: 'Payment released',                done: (c) => String(c?.payment_status || c?.paymentStatus || c?.brandPaymentStatus || '').toLowerCase() === 'verified' || c?.payment?.status === 'released' },
 ];
 
 function daysSince(value) {
@@ -62,6 +62,10 @@ export default function CampaignsFlow() {
     const [driveLinkMap, setDriveLinkMap] = useState({});
     const [postLinkMap, setPostLinkMap]   = useState({});
     const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
+    const getPaymentStatus = (collab) => String(collab?.payment_status || collab?.paymentStatus || collab?.brandPaymentStatus || 'pending').toLowerCase();
+    const isPaymentVerified = (collab) => getPaymentStatus(collab) === 'verified';
+    const isPaymentPending = (collab) => getPaymentStatus(collab) === 'pending';
+    const isPaymentProofSubmitted = (collab) => getPaymentStatus(collab) === 'proof_submitted';
 
     const collaborationsEndpoint = activeTab === 1
         ? '/influencer/campaigns/in-production'
@@ -493,7 +497,15 @@ export default function CampaignsFlow() {
                         </button>
                         <span className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs font-bold text-[#7A5030] inline-flex items-center gap-2">
                             <ShieldCheck size={12} />
-                            {c.status === 'brand_paid_work_can_start' ? 'Ready to Create' : c.status === 'content_submitted' ? 'Draft Under Review' : c.status === 'content_approved' ? 'Approved to Post' : c.status === 'posted' ? 'Posted, waiting admin' : 'In production'}
+                            {c.status === 'brand_paid_work_can_start'
+                                ? 'Ready to Create'
+                                : c.status === 'content_submitted'
+                                ? 'Draft Under Review'
+                                : c.status === 'content_approved'
+                                ? 'Approved to Post'
+                                : c.status === 'posted'
+                                ? 'Posted, waiting admin'
+                                : 'In production'}
                         </span>
                     </div>
 
@@ -520,20 +532,32 @@ export default function CampaignsFlow() {
                     </div>
 
                     {/* Payment pending notice */}
-                    {c.status === 'brand_payment_pending' && (
+                    {c.status === 'brand_payment_pending' && isPaymentProofSubmitted(c) && (
                         <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
                             <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
                             <div className="pt-1.5">
-                                <p className="text-[#d97706] font-bold text-sm">Accepted, waiting for brand payment</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">The collaboration will unlock once the brand confirms payment.</p>
+                                <p className="text-[#d97706] font-bold text-sm">Payment proof submitted</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">Admin is reviewing the Easypaisa proof before production can start.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {c.status === 'brand_payment_pending' && isPaymentPending(c) && (
+                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
+                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M4.93 19h14.14a2 2 0 001.72-3L14.83 5a2 2 0 00-1.72-1H10.9a2 2 0 00-1.72 1L3.21 16a2 2 0 001.72 3z"></path></svg>
+                            </div>
+                            <div className="pt-1.5">
+                                <p className="text-[#d97706] font-bold text-sm">Payment pending</p>
+                                <p className="text-[#7A5030] text-xs mt-0.5">Do not start work yet. Wait for the brand to submit payment proof and for admin approval.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Payment confirmed notice */}
-                    {c.status === 'brand_paid_work_can_start' && (
+                    {c.status === 'brand_paid_work_can_start' && isPaymentVerified(c) && (
                         <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
                             <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
@@ -546,7 +570,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Submit Drive link */}
-                    {c.status === 'brand_paid_work_can_start' && !c.content?.driveLink && (
+                    {c.status === 'brand_paid_work_can_start' && isPaymentVerified(c) && !c.content?.driveLink && (
                         <div className="space-y-3 pt-4 border-t border-[#EDD9BC]">
                             <p className="text-sm font-bold text-[#1A0A00]">
                                 Submit Content for Review
@@ -584,7 +608,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Submit live post link — shown after brand approves */}
-                    {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && (
+                    {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && isPaymentVerified(c) && (
                         <div className="space-y-3 pt-4 border-t border-[#EDD9BC] mt-4">
                         <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mb-4 backdrop-blur-[12px]">
                                 <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
@@ -627,7 +651,7 @@ export default function CampaignsFlow() {
                     )}
 
                     {/* Metrics */}
-                    {['content_submitted', 'content_approved', 'posted', 'campaign_active'].includes(c.status) && (
+                    {['content_submitted', 'content_approved', 'posted', 'campaign_active'].includes(c.status) && isPaymentVerified(c) && (
                         <div className="pt-2">
                             <CampaignMetricsCard collaborationId={c._id} brandFeedback={c.brandFeedback || []} />
                         </div>

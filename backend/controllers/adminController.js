@@ -4,6 +4,7 @@ const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const SoftwareClientProfile = require('../models/SoftwareClientProfile');
 const Notification = require('../models/Notification');
+const { sendCampaignEmailNotification } = require('../services/notificationDeliveryService');
 const { deleteInstagramRawDataForUser } = require('../services/instagramRetentionService');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { ADMIN_ROLES, USER_ROLES } = require('../utils/accessRoles');
@@ -126,6 +127,39 @@ async function ensureProfileForRole(user, role) {
     }
 }
 
+function emitAdminEvent(req, userIds, event, payload) {
+    const io = req.app?.locals?.io;
+    if (!io) return;
+    userIds.filter(Boolean).forEach((userId) => {
+        io.to(`user-${userId}`).emit(event, payload);
+    });
+}
+
+async function getAdminRecipients() {
+    return User.find({ role: { $in: ADMIN_ROLES }, status: { $ne: 'suspended' } }).select('_id fullName email').lean();
+}
+
+async function enrichPaymentRecord(doc) {
+    const [brandProfile, influencerProfile, brandUser, influencerUser] = await Promise.all([
+        BrandProfile.findById(doc.brandId || doc.brandProfileId).select('businessName brandName logo website userId').lean(),
+        InfluencerProfile.findById(doc.influencerId || doc.influencerProfileId).select('displayName fullName igUsername avatar igProfileUrl userId').lean(),
+        User.findById(doc.brandUserId).select('email fullName').lean(),
+        User.findById(doc.influencerUserId).select('email fullName').lean(),
+    ]);
+
+    return {
+        ...doc,
+        brandProfile: brandProfile || null,
+        influencerProfile: influencerProfile || null,
+        brandUser: brandUser || null,
+        influencerUser: influencerUser || null,
+        brandName: doc.brandName || brandProfile?.businessName || brandProfile?.brandName || '',
+        influencerName: doc.influencerName || influencerProfile?.displayName || influencerProfile?.fullName || '',
+        influencerUsername: doc.influencerUsername || influencerProfile?.igUsername || '',
+        payment_status: doc.payment_status || 'pending',
+    };
+}
+
 /* ─── GET /api/admin/stats ────────────────────────────────── */
 exports.getStats = async (req, res) => {
     try {
@@ -136,6 +170,7 @@ exports.getStats = async (req, res) => {
             totalSoftwareClients,
             totalAdmins,
             pendingUsers,
+            pendingPayments,
             totalRequests,
             pendingRequests,
             acceptedRequests,
@@ -147,6 +182,7 @@ exports.getStats = async (req, res) => {
             User.countDocuments({ role: 'software-client' }),
             User.countDocuments({ role: { $in: ADMIN_ROLES } }),
             User.countDocuments({ status: 'pending' }),
+            CampaignRequest.countDocuments({ payment_status: { $in: ['pending', 'proof_submitted'] } }),
             CampaignRequest.countDocuments(),
             CampaignRequest.countDocuments({ status: 'sent' }),
             CampaignRequest.countDocuments({ status: 'accepted' }),
@@ -162,6 +198,7 @@ exports.getStats = async (req, res) => {
                 totalAdmins,
                 pendingUsers,
                 pendingVerifications: pendingUsers, // use pending users as verification proxy
+                pendingPayments,
                 totalRequests,
                 pendingRequests,
                 acceptedRequests,
@@ -314,6 +351,191 @@ exports.getRequests = async (req, res) => {
     } catch (e) {
         console.error('[Admin] getRequests error:', e);
         return err(res, 'Failed to fetch requests');
+    }
+};
+
+/* ─── GET /api/admin/payments ────────────────────────────── */
+exports.getPayments = async (req, res) => {
+    try {
+        const { status = 'pending,proof_submitted', search, page = 1, limit = 50 } = req.query;
+        const statuses = String(status)
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+        const query = {
+            payment_status: statuses.length ? { $in: statuses } : { $in: ['pending', 'proof_submitted'] },
+        };
+
+        if (search) {
+            query.$or = [
+                { campaignTitle: { $regex: search, $options: 'i' } },
+                { brandName: { $regex: search, $options: 'i' } },
+                { influencerName: { $regex: search, $options: 'i' } },
+                { influencerUsername: { $regex: search, $options: 'i' } },
+                { payment_method: { $regex: search, $options: 'i' } },
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+        const [payments, total] = await Promise.all([
+            CampaignRequest.find(query)
+                .sort({ payment_timestamp: -1, updatedAt: -1, createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit))
+                .lean(),
+            CampaignRequest.countDocuments(query),
+        ]);
+
+        const enriched = await Promise.all(payments.map((item) => enrichPaymentRecord(item)));
+        return ok(res, {
+            payments: enriched,
+            total,
+            page: Number(page),
+            limit: Number(limit),
+        });
+    } catch (e) {
+        console.error('[Admin] getPayments error:', e);
+        return err(res, 'Failed to fetch payments');
+    }
+};
+
+/* ─── PATCH /api/admin/payments/:id/verify ──────────────── */
+exports.verifyPayment = async (req, res) => {
+    try {
+        const campaign = await CampaignRequest.findById(req.params.id).lean();
+        if (!campaign) return err(res, 'Campaign not found', 404);
+        if (!['proof_submitted', 'pending'].includes(String(campaign.payment_status || 'pending'))) {
+            return err(res, 'Payment is not ready for verification', 400);
+        }
+
+        const now = new Date();
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    payment_status: 'verified',
+                    brandPaymentStatus: 'paid',
+                    brandPaymentReceivedAt: now,
+                    status: 'brand_paid_work_can_start',
+                    campaignActiveAt: null,
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
+
+        const [brandUser, influencerUser] = await Promise.all([
+            User.findById(campaign.brandUserId).select('email fullName').lean(),
+            User.findById(campaign.influencerUserId).select('email fullName').lean(),
+        ]);
+
+        const title = 'Payment verified';
+        const message = `Payment for "${campaign.campaignTitle || 'your collaboration'}" has been verified. The campaign can now move into production.`;
+        await Promise.all([
+            sendCampaignEmailNotification({
+                email: brandUser?.email,
+                subject: title,
+                title,
+                message,
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/brand/collaborations?request=${campaign._id}`,
+            }),
+            sendCampaignEmailNotification({
+                email: influencerUser?.email,
+                subject: title,
+                title,
+                message: `Payment for "${campaign.campaignTitle || 'your collaboration'}" has been verified. You can now start production.`,
+                actionText: 'View collaboration',
+                actionHref: `/dashboard/influencer/collaborations?request=${campaign._id}`,
+            }),
+        ]);
+
+        await Notification.insertMany([
+            {
+                recipientUserId: campaign.brandUserId,
+                type: 'system',
+                title,
+                message,
+                campaignRequestId: campaign._id,
+                metadata: { action: 'verify-payment', payment_status: 'verified' },
+            },
+            {
+                recipientUserId: campaign.influencerUserId,
+                type: 'system',
+                title,
+                message: `Payment for "${campaign.campaignTitle || 'your collaboration'}" has been verified. You can now start production.`,
+                campaignRequestId: campaign._id,
+                metadata: { action: 'verify-payment', payment_status: 'verified' },
+            },
+        ]).catch((error) => {
+            console.error('[Admin] verifyPayment notification error:', error);
+        });
+
+        emitAdminEvent(req, [campaign.brandUserId, campaign.influencerUserId], 'collaboration:updated', {
+            collaborationId: campaign._id,
+            status: 'brand_paid_work_can_start',
+            payment_status: 'verified',
+            action: 'verify-payment',
+        });
+
+        return ok(res, { payment: await enrichPaymentRecord(updated) });
+    } catch (e) {
+        console.error('[Admin] verifyPayment error:', e);
+        return err(res, 'Failed to verify payment');
+    }
+};
+
+/* ─── PATCH /api/admin/payments/:id/reject ───────────────── */
+exports.rejectPayment = async (req, res) => {
+    try {
+        const campaign = await CampaignRequest.findById(req.params.id).lean();
+        if (!campaign) return err(res, 'Campaign not found', 404);
+
+        const message = String(req.body?.message || req.body?.reason || 'Payment proof rejected').trim();
+        const updated = await CampaignRequest.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    payment_status: 'rejected',
+                    brandPaymentStatus: 'failed',
+                    rejectionReason: message,
+                },
+            },
+            { new: true, strict: false }
+        ).lean();
+
+        const brandUser = await User.findById(campaign.brandUserId).select('email fullName').lean();
+        await sendCampaignEmailNotification({
+            email: brandUser?.email,
+            subject: 'Payment rejected',
+            title: 'Payment rejected',
+            message,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/brand/collaborations?request=${campaign._id}`,
+        });
+
+        await Notification.create({
+            recipientUserId: campaign.brandUserId,
+            type: 'system',
+            title: 'Payment rejected',
+            message,
+            campaignRequestId: campaign._id,
+            metadata: { action: 'reject-payment', payment_status: 'rejected' },
+        }).catch((error) => {
+            console.error('[Admin] rejectPayment notification error:', error);
+        });
+
+        emitAdminEvent(req, [campaign.brandUserId], 'collaboration:updated', {
+            collaborationId: campaign._id,
+            status: campaign.status,
+            payment_status: 'rejected',
+            action: 'reject-payment',
+        });
+
+        return ok(res, { payment: await enrichPaymentRecord(updated) });
+    } catch (e) {
+        console.error('[Admin] rejectPayment error:', e);
+        return err(res, 'Failed to reject payment');
     }
 };
 

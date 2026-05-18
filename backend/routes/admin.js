@@ -9,8 +9,11 @@ const {
     updateUserRole,
     deleteUser,
     getRequests,
+    getPayments,
     getVerificationQueue,
     reviewVerification,
+    verifyPayment,
+    rejectPayment,
 } = require('../controllers/adminController');
 const adminCampaignController = require('../controllers/adminCampaignController');
 const cashoutController = require('../controllers/cashoutController');
@@ -29,6 +32,11 @@ router.delete('/users/:id',            deleteUser);
 
 // ── Campaign Requests ──────────────────────────────────
 router.get('/requests',                getRequests);
+
+// ── Payments ───────────────────────────────────────────
+router.get('/payments',                getPayments);
+router.patch('/payments/:id/verify',   verifyPayment);
+router.patch('/payments/:id/reject',   rejectPayment);
 
 // ── Campaigns ──────────────────────────────────────────
 router.get('/campaigns',               adminCampaignController.getCampaigns);

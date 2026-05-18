@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, BarChart3, BriefcaseBusiness, Users, Shield, Wallet } from 'lucide-react';
+import { ArrowRight, BarChart3, BriefcaseBusiness, Users, Shield, Wallet, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import DashboardLayout from '@/components/DashboardLayout';
@@ -17,6 +17,7 @@ interface Stats {
     totalAdmins: number;
     pendingUsers: number;
     pendingVerifications: number;
+    pendingPayments?: number;
     totalCampaignRequests?: number;
     pendingRequests?: number;
     acceptedRequests?: number;
@@ -164,6 +165,12 @@ export default function AdminLandingPage() {
                 icon: <BarChart3 size={20} />,
             },
             {
+                title: 'Payments',
+                description: 'Review Easypaisa proof submissions and approve campaigns to start work.',
+                href: '/dashboard/admin/payments',
+                icon: <ShieldCheck size={20} />,
+            },
+            {
                 title: 'Cashouts',
                 description: 'Approve or reject influencer withdrawals and keep payout reviews organized.',
                 href: '/dashboard/admin/cashouts',
@@ -195,11 +202,12 @@ export default function AdminLandingPage() {
                         </p>
                     </motion.div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
                         <StatCard label="Total users" value={loading ? '—' : stats?.totalUsers ?? '—'} icon={<Users size={18} />} />
                         <StatCard label="Brands" value={loading ? '—' : stats?.totalBrands ?? '—'} icon={<Shield size={18} />} />
                         <StatCard label="Influencers" value={loading ? '—' : stats?.totalInfluencers ?? '—'} icon={<Users size={18} />} />
-                        <StatCard label="Pending" value={loading ? '—' : stats?.pendingUsers ?? '—'} sub="Pending verifications" icon={<BarChart3 size={18} />} />
+                        <StatCard label="Pending users" value={loading ? '—' : stats?.pendingUsers ?? '—'} sub="Pending verifications" icon={<BarChart3 size={18} />} />
+                        <StatCard label="Pending payments" value={loading ? '—' : stats?.pendingPayments ?? '—'} sub="Awaiting admin review" icon={<ShieldCheck size={18} />} />
                     </div>
 
                     <div

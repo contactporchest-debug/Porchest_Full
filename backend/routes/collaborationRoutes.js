@@ -83,6 +83,13 @@ function isValidHttpUrl(value) {
     }
 }
 
+function isValidPaymentProofAsset(value) {
+    const proof = String(value || '').trim();
+    if (!proof) return false;
+    if (/^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(proof)) return true;
+    return isValidHttpUrl(proof);
+}
+
 function getRevertStatusForRevision(collab) {
     const status = String(collab?.status || '').toLowerCase();
     if (status === 'content_submitted') return 'brand_paid_work_can_start';
@@ -94,6 +101,9 @@ function getRevertStatusForRevision(collab) {
 async function submitDriveLink(req, res, collab, driveLink) {
     if (!inStatusList(collab.status, ['brand_paid_work_can_start', 'content_submitted'])) {
         return throwStatusError(collab.status, res);
+    }
+    if (String(collab.payment_status || 'pending') !== 'verified') {
+        return res.status(400).json({ success: false, error: 'Payment must be verified before work can start' });
     }
 
     if (!isValidHttpUrl(driveLink)) {
@@ -120,6 +130,9 @@ async function submitDriveLink(req, res, collab, driveLink) {
 
 async function submitInstagramLink(req, res, collab, postLink) {
     if (String(collab.status) !== 'content_approved') return throwStatusError(collab.status, res);
+    if (String(collab.payment_status || 'pending') !== 'verified') {
+        return res.status(400).json({ success: false, error: 'Payment must be verified before work can start' });
+    }
 
     if (!isValidHttpUrl(postLink) || !/instagram\.com/i.test(postLink)) {
         return res.status(400).json({ success: false, error: 'instagram link must be a valid Instagram URL' });
@@ -353,9 +366,20 @@ function normalizePaymentForResponse(doc) {
     const payment = doc.payment || {};
     const portion1 = payment.portion1 || payment.tranche1 || {};
     const portion2 = payment.portion2 || payment.tranche2 || {};
+    const paymentStatus = doc.payment_status || 'pending';
 
     return {
         status: payment.status || 'pending',
+        payment_status: paymentStatus,
+        paymentStatus,
+        payment_proof: doc.payment_proof || null,
+        paymentProof: doc.payment_proof || null,
+        payment_amount: doc.payment_amount ?? null,
+        paymentAmount: doc.payment_amount ?? null,
+        payment_method: doc.payment_method || 'Easypaisa',
+        paymentMethod: doc.payment_method || 'Easypaisa',
+        payment_timestamp: doc.payment_timestamp || null,
+        paymentTimestamp: doc.payment_timestamp || null,
         portion1: {
             amount: portion1.amount ?? null,
             releasedAt: portion1.releasedAt || null,
@@ -573,6 +597,14 @@ function setExactAcceptanceFields(update, collab, brandWebsite, influencerUserna
     update.brandPaymentStatus = 'pending';
     update.brandPaymentReceivedAt = null;
     update.brandPaymentIntentId = update.brandPaymentIntentId || null;
+    update.payment_status = 'pending';
+    update.payment_proof = null;
+    update.payment_amount = toNumber(
+        collab.pricing?.brandOffer ?? collab.financials?.brandOfferedFee ?? collab.brandOfferedFee ?? collab.agreedPrice,
+        0
+    );
+    update.payment_method = 'Easypaisa';
+    update.payment_timestamp = null;
     update.platformFeePercent = split.platformFeePercent;
     update.platformFeeAmount = split.platformFeeAmount;
     update.influencerNetAmount = split.influencerNetAmount;
@@ -700,7 +732,100 @@ async function finalizeAcceptance(collabId, collab) {
     return updated;
 }
 
-async function markBrandPaymentReceived(collabId, collab, paymentIntentId = null) {
+async function submitBrandPaymentProof(req, collabId, collab, { paymentAmount, proofUrl, paymentMethod } = {}) {
+    const proof = String(proofUrl || '').trim();
+    const amount = toNumber(paymentAmount, toNumber(
+        collab.payment_amount
+        ?? collab.pricing?.agreedFee
+        ?? collab.financials?.agreedFee
+        ?? collab.agreedFee
+        ?? collab.agreedPrice,
+        null
+    ));
+    const method = String(paymentMethod || 'Easypaisa').trim() || 'Easypaisa';
+
+    if (!isValidPaymentProofAsset(proof)) {
+        throw new Error('payment proof must be a valid image upload or URL');
+    }
+    if (amount == null || Number.isNaN(amount) || amount <= 0) {
+        throw new Error('payment amount must be a valid number');
+    }
+
+    const now = new Date();
+    const updated = await CampaignRequest.findByIdAndUpdate(
+        collabId,
+        {
+            $set: {
+                payment_status: 'proof_submitted',
+                payment_proof: proof,
+                payment_amount: amount,
+                payment_method: method,
+                payment_timestamp: now,
+                brandPaymentStatus: 'pending',
+            },
+        },
+        { new: true, strict: false }
+    ).lean();
+
+    const [admins, brandUser] = await Promise.all([
+        getAdminRecipients(),
+        User.findById(collab.brandUserId).select('email fullName').lean(),
+    ]);
+
+    const title = 'Payment pending verification';
+    const message = `${collab.brandName || 'The brand'} submitted payment proof for "${collab.campaignTitle}" and it is waiting for admin verification.`;
+    await Promise.all([
+        sendCampaignEmailNotification({
+            email: brandUser?.email,
+            subject: title,
+            title,
+            message: 'Your payment proof was received and is waiting for admin verification.',
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+        }),
+        ...admins.map((admin) => sendCampaignEmailNotification({
+            email: admin.email,
+            subject: title,
+            title,
+            message,
+            actionText: 'Review payment queue',
+            actionHref: '/dashboard/admin/payments',
+            accent: '#C2340A',
+        })),
+    ]);
+
+    await Notification.insertMany([
+        {
+            recipientUserId: collab.brandUserId,
+            type: 'system',
+            title,
+            message: 'Your payment proof was submitted and is waiting for admin verification.',
+            campaignRequestId: collab._id,
+            metadata: { action: 'complete-payment', paymentStatus: 'proof_submitted' },
+        },
+        ...admins.map((admin) => ({
+            recipientUserId: admin._id,
+            type: 'system',
+            title,
+            message,
+            campaignRequestId: collab._id,
+            metadata: { action: 'complete-payment', paymentStatus: 'proof_submitted' },
+        })),
+    ]).catch((notificationError) => {
+        console.error('[collaborationRoutes] Payment proof notification create failed:', notificationError);
+    });
+
+    emitCollaborationEvent(req, [collab.brandUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
+        collaborationId: collab._id,
+        status: 'brand_payment_pending',
+        payment_status: 'proof_submitted',
+        action: 'complete-payment',
+    });
+
+    return updated;
+}
+
+async function markBrandPaymentVerified(req, collabId, collab, adminUser) {
     const now = new Date();
     const updated = await CampaignRequest.findByIdAndUpdate(
         collabId,
@@ -709,12 +834,116 @@ async function markBrandPaymentReceived(collabId, collab, paymentIntentId = null
                 status: 'brand_paid_work_can_start',
                 brandPaymentStatus: 'paid',
                 brandPaymentReceivedAt: now,
-                brandPaymentIntentId: paymentIntentId || collab.brandPaymentIntentId || null,
+                payment_status: 'verified',
+                brandPaymentIntentId: collab.brandPaymentIntentId || null,
                 campaignActiveAt: null,
             },
         },
         { new: true, strict: false }
     ).lean();
+
+    const [brandUser, influencerUser] = await Promise.all([
+        User.findById(collab.brandUserId).select('email fullName').lean(),
+        User.findById(collab.influencerUserId).select('email fullName').lean(),
+    ]);
+
+    const title = 'Payment verified';
+    const message = `Payment for "${collab.campaignTitle}" has been verified. The campaign can now move into production.`;
+    await Promise.all([
+        sendCampaignEmailNotification({
+            email: brandUser?.email,
+            subject: title,
+            title,
+            message,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+        }),
+        sendCampaignEmailNotification({
+            email: influencerUser?.email,
+            subject: title,
+            title,
+            message: `${collab.brandName || 'The brand'} payment has been verified. You can now start production.`,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+        }),
+    ]);
+
+    await Notification.insertMany([
+        {
+            recipientUserId: collab.brandUserId,
+            type: 'system',
+            title,
+            message,
+            campaignRequestId: collab._id,
+            metadata: { action: 'verify-payment', paymentStatus: 'verified', verifiedBy: adminUser?._id || null },
+        },
+        {
+            recipientUserId: collab.influencerUserId,
+            type: 'system',
+            title,
+            message: `${collab.brandName || 'The brand'} payment has been verified. You can now start production.`,
+            campaignRequestId: collab._id,
+            metadata: { action: 'verify-payment', paymentStatus: 'verified', verifiedBy: adminUser?._id || null },
+        },
+    ]).catch((notificationError) => {
+        console.error('[collaborationRoutes] Payment verify notification create failed:', notificationError);
+    });
+
+    emitCollaborationEvent(req, [collab.brandUserId, collab.influencerUserId], 'collaboration:updated', {
+        collaborationId: collab._id,
+        status: 'brand_paid_work_can_start',
+        payment_status: 'verified',
+        action: 'verify-payment',
+    });
+
+    return updated;
+}
+
+async function markBrandPaymentRejected(req, collabId, collab, reason, adminUser) {
+    const updated = await CampaignRequest.findByIdAndUpdate(
+        collabId,
+        {
+            $set: {
+                payment_status: 'rejected',
+                brandPaymentStatus: 'failed',
+                rejectionReason: reason || 'Payment proof rejected',
+            },
+        },
+        { new: true, strict: false }
+    ).lean();
+
+    const brandUser = await User.findById(collab.brandUserId).select('email fullName').lean();
+    const title = 'Payment rejected';
+    const message = reason || `Payment proof for "${collab.campaignTitle}" was rejected. Please resubmit a clearer proof.`;
+    await Promise.all([
+        sendCampaignEmailNotification({
+            email: brandUser?.email,
+            subject: title,
+            title,
+            message,
+            actionText: 'View collaboration',
+            actionHref: `/dashboard/brand/collaborations?request=${collab._id}`,
+        }),
+    ]);
+
+    await Notification.create({
+        recipientUserId: collab.brandUserId,
+        type: 'system',
+        title,
+        message,
+        campaignRequestId: collab._id,
+        metadata: { action: 'reject-payment', paymentStatus: 'rejected', rejectedBy: adminUser?._id || null },
+    }).catch((notificationError) => {
+        console.error('[collaborationRoutes] Payment reject notification create failed:', notificationError);
+    });
+
+    emitCollaborationEvent(req, [collab.brandUserId], 'collaboration:updated', {
+        collaborationId: collab._id,
+        status: collab.status,
+        payment_status: 'rejected',
+        action: 'reject-payment',
+    });
+
     return updated;
 }
 
@@ -892,6 +1121,28 @@ router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile
     }
 });
 
+router.patch('/:id/complete-payment', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
+    try {
+        const collab = await CampaignRequest.findById(req.params.id).lean();
+        if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
+        if (String(collab.status) !== 'brand_payment_pending') return throwStatusError(collab.status, res);
+
+        const { brandProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, brandProfile, null)) {
+            return res.status(403).json({ success: false, error: 'Access denied' });
+        }
+
+        const updated = await submitBrandPaymentProof(req, req.params.id, collab, {
+            paymentAmount: req.body?.payment_amount ?? req.body?.paymentAmount ?? req.body?.amount,
+            proofUrl: req.body?.proof_file ?? req.body?.proofFile ?? req.body?.proof_url ?? req.body?.proofUrl ?? req.body?.payment_proof,
+            paymentMethod: req.body?.payment_method ?? req.body?.paymentMethod ?? 'Easypaisa',
+        });
+        return res.json(await enrichCollaboration(updated));
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 router.patch('/:id/confirm-brand-payment', roleMiddleware('brand'), requireCompleteProfile, async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
@@ -903,7 +1154,16 @@ router.patch('/:id/confirm-brand-payment', roleMiddleware('brand'), requireCompl
             return res.status(403).json({ success: false, error: 'Access denied' });
         }
 
-        const updated = await markBrandPaymentReceived(req.params.id, collab, req.body?.paymentIntentId || null);
+        const proofUrl = req.body?.proof_file ?? req.body?.proofFile ?? req.body?.proof_url ?? req.body?.proofUrl ?? req.body?.payment_proof;
+        if (!proofUrl) {
+            return res.status(400).json({ success: false, error: 'payment proof screenshot is required' });
+        }
+
+        const updated = await submitBrandPaymentProof(req, req.params.id, collab, {
+            paymentAmount: req.body?.payment_amount ?? req.body?.paymentAmount ?? req.body?.amount,
+            proofUrl,
+            paymentMethod: req.body?.payment_method ?? req.body?.paymentMethod ?? 'Easypaisa',
+        });
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });

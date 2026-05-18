@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard, User, Users, BarChart3, Briefcase, DollarSign, Inbox,
     Building2, Handshake, Sparkles, FolderKanban, LogOut, ChevronRight, TrendingUp,
+    ShieldCheck,
 } from 'lucide-react';
 
 type Role = 'influencer' | 'brand' | 'admin' | 'software-client';
@@ -34,6 +35,7 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
     admin: [
         { label: 'Dashboard',      href: '/dashboard/admin',                     icon: <LayoutDashboard size={18} /> },
         { label: 'Users',          href: '/dashboard/admin/users',               icon: <Users size={18} /> },
+        { label: 'Payments',       href: '/dashboard/admin/payments',            icon: <ShieldCheck size={18} /> },
         { label: 'Campaigns',      href: '/dashboard/admin/campaigns',           icon: <Briefcase size={18} /> },
         { label: 'Collaborations', href: '/dashboard/admin/collaborations',      icon: <Handshake size={18} /> },
         { label: 'Cashouts',       href: '/dashboard/admin/cashouts',            icon: <DollarSign size={18} /> },
