@@ -75,6 +75,5 @@ export default function DashboardShell({
                 {children}
             </main>
         </div>
-        </div >
     );
 }
