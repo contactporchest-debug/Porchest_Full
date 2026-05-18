@@ -5,6 +5,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
+const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
 const { ensureTrackingAssets } = require('../services/trackingService');
 const { computeFixedCampaignPricing, normalizeContentTypes } = require('../services/campaignPricingService');
 const {
@@ -43,7 +44,10 @@ exports.createRequest = async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'Brand or Influencer profile not found.' });
         }
 
-        if (!brandProfile.profileCompletionStatus || !influencerProfile.profileCompletionStatus) {
+        const influencerComplete = buildInfluencerProfileChecklist(influencerProfile).isComplete;
+        const brandComplete = Boolean(brandProfile.profileComplete || brandProfile.profileCompletionStatus);
+
+        if (!brandComplete || !influencerComplete) {
             return res.status(400).json({
                 success: false,
                 message: 'Brand and Influencer profiles must be complete before creating a campaign request.',

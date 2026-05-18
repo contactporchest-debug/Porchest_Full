@@ -4,6 +4,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const { validateBrandProfile, isValidObjectId } = require('../utils/validators');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
 const INFLUENCER_CARD_FIELDS = [
     '_id',
     'influencerProfileId',
@@ -223,45 +224,11 @@ function buildInstagramConnectedFilter() {
     };
 }
 
-function isInfluencerProfileComplete(profile) {
-    if (!profile) return false;
-
-    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
-    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
-
-    const hasName = Boolean((profile.fullName || profile.displayName || '').trim?.() || profile.fullName || profile.displayName);
-    const hasEmail = Boolean(profile.contactEmail);
-    const hasBio = Boolean((profile.bio || profile.instagramBiography || '').trim?.() || profile.bio || profile.instagramBiography);
-    const hasNiche = Array.isArray(profile.niche) ? profile.niche.filter(Boolean).length > 0 : Boolean(String(profile.niche || '').trim());
-    const hasCountry = Boolean(String(profile.country || '').trim());
-    const hasCity = Boolean(String(profile.city || '').trim());
-    const hasLanguages = Array.isArray(profile.languages) ? profile.languages.filter(Boolean).length > 0 : false;
-    const hasContentStyle = Array.isArray(profile.contentStyleTags) ? profile.contentStyleTags.filter(Boolean).length > 0 : false;
-    const hasRates = postPrice > 0 && reelPrice > 0;
-
-    return Boolean(
-        hasName &&
-        hasEmail &&
-        hasBio &&
-        hasNiche &&
-        hasCountry &&
-        hasCity &&
-        hasLanguages &&
-        hasContentStyle &&
-        hasRates
-    );
-}
-
 function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
-    const profileComplete = Boolean(
-        profile.profileComplete === true ||
-        profile.profileCompletionStatus === true ||
-        profile.isSearchable === true ||
-        isInfluencerProfileComplete(profile)
-    );
+    const profileComplete = buildInfluencerProfileChecklist(profile).isComplete;
 
     return Boolean(igConnected && profileComplete);
 }

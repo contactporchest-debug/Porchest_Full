@@ -5,6 +5,7 @@ const { requireCompleteProfile } = require('../middleware/profileCompleteCheck')
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
 const { computeAudienceBrandFitScore } = require('../services/metricsService');
+const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
 
 const router = express.Router();
 
@@ -14,26 +15,7 @@ function isInfluencerDiscoverable(profile) {
     if (!profile) return false;
 
     const igConnected = profile.instagramConnected || profile.instagramConnectionStatus === 'connected';
-    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
-    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
-    const liveProfileComplete = Boolean(
-        (profile.fullName || profile.displayName || '').trim() &&
-        profile.contactEmail &&
-        (profile.bio || profile.instagramBiography) &&
-        (Array.isArray(profile.niche) ? profile.niche.length > 0 : String(profile.niche || '').trim()) &&
-        String(profile.country || '').trim() &&
-        String(profile.city || '').trim() &&
-        Array.isArray(profile.languages) && profile.languages.length > 0 &&
-        Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 &&
-        postPrice > 0 &&
-        reelPrice > 0
-    );
-    const profileComplete = Boolean(
-        profile.profileComplete === true ||
-        profile.profileCompletionStatus === true ||
-        profile.isSearchable === true ||
-        liveProfileComplete
-    );
+    const profileComplete = buildInfluencerProfileChecklist(profile).isComplete;
 
     return Boolean(igConnected && profileComplete);
 }
@@ -42,23 +24,7 @@ router.get('/influencers', requireCompleteProfile, async (req, res) => {
     try {
         const page = Math.max(1, Number(req.query.page || 1));
         const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
-        // Show only complete profiles with connected Instagram accounts
-        const filter = {
-            $and: [
-                {
-                    $or: [
-                        { profileCompletionStatus: true },
-                        { profileComplete: true },
-                    ],
-                },
-                {
-                    $or: [
-                        { instagramConnected: true },
-                        { instagramConnectionStatus: 'connected' },
-                    ],
-                },
-            ],
-        };
+        const filter = {};
 
         if (req.query.niche) filter.niche = { $in: String(req.query.niche).split(',').map((n) => n.trim()).filter(Boolean) };
         if (req.query.search) {
@@ -77,22 +43,19 @@ router.get('/influencers', requireCompleteProfile, async (req, res) => {
             ];
         }
 
-        const [influencers, total] = await Promise.all([
-            InfluencerProfile.find(filter)
-                .sort({ porchestScore: -1, influencerScore: -1 })
-                .skip((page - 1) * limit)
-                .limit(limit)
-                .lean(),
-            InfluencerProfile.countDocuments(filter),
-        ]);
-
+        const influencers = await InfluencerProfile.find(filter)
+            .sort({ porchestScore: -1, influencerScore: -1 })
+            .lean();
         const visibleInfluencers = influencers.filter(isInfluencerDiscoverable);
+        const total = visibleInfluencers.length;
+        const pages = Math.ceil(total / limit);
+        const paginated = visibleInfluencers.slice((page - 1) * limit, page * limit);
 
         return res.json({
-            influencers: visibleInfluencers,
-            total: visibleInfluencers.length,
+            influencers: paginated,
+            total,
             page,
-            pages: Math.ceil(visibleInfluencers.length / limit),
+            pages,
         });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
@@ -103,7 +66,9 @@ router.get('/influencers/:influencerId', requireCompleteProfile, async (req, res
     try {
         const influencer = await InfluencerProfile.findById(req.params.influencerId).lean()
             || await InfluencerProfile.findOne({ userId: req.params.influencerId }).lean();
-        if (!influencer) return res.status(404).json({ success: false, error: 'Influencer not found' });
+        if (!influencer || !isInfluencerDiscoverable(influencer)) {
+            return res.status(404).json({ success: false, error: 'Influencer not found' });
+        }
 
         const brandProfile = await BrandProfile.findOne({ userId: req.user._id }).select('targetAudience').lean();
         const audienceBrandFitScore = computeAudienceBrandFitScore(

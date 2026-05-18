@@ -20,19 +20,43 @@ const BRAND_NICHES = [
  */
 exports.validateInfluencerProfile = (body) => {
     const errors = [];
-    const { fullName, displayName, contactEmail, age, countryOfResidence, country, niche, avgPostCostUSD, avgReelCostUSD, shortBio, bio } = body;
+    const {
+        fullName,
+        displayName,
+        contactEmail,
+        age,
+        countryOfResidence,
+        country,
+        city,
+        niche,
+        languages,
+        contentStyleTags,
+        instagramUsername,
+        igUsername,
+        username,
+        instagramProfileURL,
+        profileUrl,
+        igProfileUrl,
+        instagramDPURL,
+        profilePictureUrl,
+        profileImageURL,
+        avatar,
+        accountType,
+        instagramAccountType,
+        igAccountType,
+        avgPostCostUSD,
+        avgReelCostUSD,
+        shortBio,
+        bio,
+    } = body;
 
-    if (fullName !== undefined || displayName !== undefined) {
-        const value = fullName || displayName;
-        if (!value || typeof value !== 'string' || value.trim().length < 2) {
-            errors.push('Full name must be at least 2 characters');
-        }
+    const nameValue = fullName || displayName;
+    if (!nameValue || typeof nameValue !== 'string' || nameValue.trim().length < 2) {
+        errors.push('Full name must be at least 2 characters');
     }
 
-    if (contactEmail !== undefined) {
-        if (!contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
-            errors.push('Contact email must be a valid email address');
-        }
+    if (!contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+        errors.push('Contact email must be a valid email address');
     }
 
     if (age !== undefined && age !== null && age !== '') {
@@ -42,29 +66,57 @@ exports.validateInfluencerProfile = (body) => {
         }
     }
 
-    if (niche !== undefined) {
-        const nicheValue = Array.isArray(niche) ? niche[0] : niche;
-        if (!INFLUENCER_NICHES.includes(nicheValue)) {
-            errors.push(`Niche must be one of: ${INFLUENCER_NICHES.join(', ')}`);
-        }
+    if (!country && !countryOfResidence) {
+        errors.push('Country of residence is required');
     }
 
-    if (avgPostCostUSD !== undefined && avgPostCostUSD !== null && avgPostCostUSD !== '') {
-        const cost = Number(avgPostCostUSD);
-        if (isNaN(cost) || cost < 0) {
-            errors.push('Average post cost must be a non-negative number');
-        }
+    if (!city || String(city).trim().length < 2) {
+        errors.push('City is required');
     }
 
-    if (avgReelCostUSD !== undefined && avgReelCostUSD !== null && avgReelCostUSD !== '') {
-        const cost = Number(avgReelCostUSD);
-        if (isNaN(cost) || cost < 0) {
-            errors.push('Average reel cost must be a non-negative number');
-        }
+    const nicheValue = Array.isArray(niche) ? niche[0] : niche;
+    if (!nicheValue || !INFLUENCER_NICHES.includes(nicheValue)) {
+        errors.push(`Niche must be one of: ${INFLUENCER_NICHES.join(', ')}`);
+    }
+
+    if (!Array.isArray(languages) || languages.length === 0 || languages.length > 2) {
+        errors.push('Select one or two languages');
+    }
+
+    if (!Array.isArray(contentStyleTags) || contentStyleTags.length === 0) {
+        errors.push('Select at least one content style');
+    }
+
+    if (!(instagramUsername || igUsername || username)) {
+        errors.push('Instagram username is required');
+    }
+
+    if (!(instagramProfileURL || profileUrl || igProfileUrl)) {
+        errors.push('Instagram profile URL is required');
+    }
+
+    if (!(instagramDPURL || profilePictureUrl || profileImageURL || avatar)) {
+        errors.push('Profile picture URL is required');
+    }
+
+    if (!(accountType || instagramAccountType || igAccountType)) {
+        errors.push('Instagram account type is required');
+    }
+
+    const postCost = Number(avgPostCostUSD);
+    if (!Number.isFinite(postCost) || postCost <= 0) {
+        errors.push('Average post cost must be a positive number');
+    }
+
+    const reelCost = Number(avgReelCostUSD);
+    if (!Number.isFinite(reelCost) || reelCost <= 0) {
+        errors.push('Average reel cost must be a positive number');
     }
 
     const bioValue = shortBio ?? bio;
-    if (bioValue !== undefined && bioValue !== null) {
+    if (!bioValue || String(bioValue).trim().length < 10) {
+        errors.push('Bio is required');
+    } else {
         const wordCount = String(bioValue).trim().split(/\s+/).filter(Boolean).length;
         if (wordCount > 100) {
             errors.push('Bio must not exceed 100 words');

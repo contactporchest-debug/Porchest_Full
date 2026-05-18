@@ -6,6 +6,8 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const User = require('../models/User');
+const { validateInfluencerProfile } = require('../utils/validators');
+const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
 
 function hasOwn(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj || {}, key);
@@ -119,6 +121,19 @@ function buildInfluencerUpdates(body) {
     applyIfPresent(updates, body, 'country', (value) => value ?? '');
     applyIfPresent(updates, body, 'city', (value) => value ?? '');
     applyIfPresent(updates, body, 'contactEmail', (value) => value ?? '');
+    applyIfPresent(updates, body, 'instagramUsername', (value) => value ?? '');
+    applyIfPresent(updates, body, 'igUsername', (value) => value ?? '');
+    applyIfPresent(updates, body, 'username', (value) => value ?? '');
+    applyIfPresent(updates, body, 'instagramProfileURL', (value) => value ?? '');
+    applyIfPresent(updates, body, 'profileUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'igProfileUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'instagramDPURL', (value) => value ?? '');
+    applyIfPresent(updates, body, 'profilePictureUrl', (value) => value ?? '');
+    applyIfPresent(updates, body, 'profileImageURL', (value) => value ?? '');
+    applyIfPresent(updates, body, 'avatar', (value) => value ?? '');
+    applyIfPresent(updates, body, 'accountType', (value) => value ?? '');
+    applyIfPresent(updates, body, 'instagramAccountType', (value) => value ?? '');
+    applyIfPresent(updates, body, 'igAccountType', (value) => value ?? '');
 
     if (hasOwn(body, 'niche')) {
         const niche = toStringArray(body.niche);
@@ -147,29 +162,6 @@ function buildInfluencerUpdates(body) {
     }
 
     return updates;
-}
-
-function isInfluencerProfileComplete(profile) {
-    const languages = Array.isArray(profile.languages) ? profile.languages : [];
-    const niches = Array.isArray(profile.niche) ? profile.niche : [];
-    const contentStyles = Array.isArray(profile.contentStyleTags) ? profile.contentStyleTags : [];
-    const hasRates = !!(
-        profile.rates &&
-        typeof profile.rates.reelPrice === 'number' &&
-        typeof profile.rates.postPrice === 'number'
-    );
-
-    return !!(
-        profile.fullName &&
-        profile.contactEmail &&
-        profile.country &&
-        profile.city &&
-        niches.length > 0 &&
-        contentStyles.length > 0 &&
-        languages.length > 0 &&
-        languages.length <= 2 &&
-        hasRates
-    );
 }
 
 function isBrandProfileComplete(profile) {
@@ -233,6 +225,20 @@ router.get('/influencer/me', authMiddleware, roleMiddleware('influencer'), async
         if (!profile) {
             return res.json({ userId: String(req.user._id), profileComplete: false });
         }
+        const completion = buildInfluencerProfileChecklist(profile);
+        if (profile.profileComplete !== completion.isComplete || profile.profileCompletionStatus !== completion.isComplete) {
+            await InfluencerProfile.updateOne(
+                { _id: profile._id },
+                {
+                    $set: {
+                        profileComplete: completion.isComplete,
+                        profileCompletionStatus: completion.isComplete,
+                    },
+                }
+            );
+            profile.profileComplete = completion.isComplete;
+            profile.profileCompletionStatus = completion.isComplete;
+        }
         return res.json(stripSecrets(profile));
     } catch (error) {
         return res.status(500).json({ message: 'Failed to load influencer profile' });
@@ -241,9 +247,17 @@ router.get('/influencer/me', authMiddleware, roleMiddleware('influencer'), async
 
 router.put('/influencer', authMiddleware, roleMiddleware('influencer'), async (req, res) => {
     try {
+        const validation = validateInfluencerProfile(req.body || {});
+        if (!validation.valid) {
+            return res.status(400).json({
+                message: 'Failed to save influencer profile',
+                errors: validation.errors,
+            });
+        }
+
         const updates = buildInfluencerUpdates(req.body || {});
         const profile = await upsertProfile(InfluencerProfile, req.user._id, updates);
-        const complete = isInfluencerProfileComplete(profile);
+        const complete = buildInfluencerProfileChecklist(profile).isComplete;
 
         await InfluencerProfile.updateOne(
             { _id: profile._id },

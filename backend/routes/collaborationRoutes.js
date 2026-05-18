@@ -1105,7 +1105,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.patch('/:id/accept', roleMiddleware('influencer'), requireCompleteProfile, async (req, res) => {
+router.patch('/:id/accept', roleMiddleware('influencer'), async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
@@ -1432,12 +1432,12 @@ router.patch('/:id/verify-content', roleMiddleware('brand'), requireCompleteProf
     }
 });
 
-router.patch('/:id/decline', async (req, res) => {
+router.patch('/:id/decline', roleMiddleware('influencer'), async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        const { brandProfile, influencerProfile } = await getUserProfiles(req.user._id);
-        if (!canAccessCollaboration(collab, req.user, brandProfile, influencerProfile)) {
+        const { influencerProfile } = await getUserProfiles(req.user._id);
+        if (!canAccessCollaboration(collab, req.user, null, influencerProfile)) {
             return res.status(403).json({ success: false, error: 'Access denied' });
         }
 

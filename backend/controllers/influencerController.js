@@ -2,6 +2,7 @@ const User = require('../models/User');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const { validateInfluencerProfile } = require('../utils/validators');
 const { generateUniqueCode } = require('../utils/generateCode');
+const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
 
 /**
  * Compute profile completion checklist and percentage.
@@ -9,28 +10,12 @@ const { generateUniqueCode } = require('../utils/generateCode');
  */
 function computeProfileCompletion(profile) {
     if (!profile) return { percentage: 0, isComplete: false, checklist: [] };
-
-    const postPrice = Number(profile?.rates?.postPrice ?? profile?.avgPostPrice ?? 0);
-    const reelPrice = Number(profile?.rates?.reelPrice ?? profile?.avgReelPrice ?? 0);
-
-    const checks = [
-        { key: 'displayName', label: 'Add display name', done: !!(profile.fullName || profile.displayName) },
-        { key: 'contactEmail', label: 'Add contact email', done: !!profile.contactEmail },
-        { key: 'bio', label: 'Add bio', done: !!(profile.bio || profile.instagramBiography) },
-        { key: 'niche', label: 'Select niche/category', done: !!profile.niche },
-        { key: 'country', label: 'Set audience region / country', done: !!profile.country },
-        { key: 'city', label: 'Set city', done: !!profile.city },
-        { key: 'languages', label: 'Select languages', done: Array.isArray(profile.languages) && profile.languages.length > 0 },
-        { key: 'contentStyleTags', label: 'Pick content style', done: Array.isArray(profile.contentStyleTags) && profile.contentStyleTags.length > 0 },
-        { key: 'postPrice', label: 'Set average post price', done: postPrice > 0 },
-        { key: 'reelPrice', label: 'Set average reel price', done: reelPrice > 0 },
-    ];
-
-    const doneCount = checks.filter(c => c.done).length;
-    const percentage = Math.round((doneCount / checks.length) * 100);
-    const isComplete = doneCount === checks.length;
-
-    return { percentage, isComplete, checklist: checks };
+    const completion = buildInfluencerProfileChecklist(profile);
+    return {
+        percentage: completion.percentage,
+        isComplete: completion.isComplete,
+        checklist: completion.checklist,
+    };
 }
 
 // @desc    Influencer dashboard overview
@@ -112,7 +97,15 @@ exports.getProfile = async (req, res, next) => {
 // @route   PUT /api/influencer/profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        // Just extracting fields manually to bypass strict legacy validator mismatch
+        const validation = validateInfluencerProfile(req.body || {});
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Failed to save influencer profile',
+                errors: validation.errors,
+            });
+        }
+
         const updates = req.body;
         const normalizeList = (value) => {
             if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
@@ -126,6 +119,10 @@ exports.updateProfile = async (req, res, next) => {
         };
         const reelPrice = normalizeRate(updates.rates?.reelPrice ?? updates.avgReelCostUSD ?? updates.avgReelPrice);
         const postPrice = normalizeRate(updates.rates?.postPrice ?? updates.avgPostCostUSD ?? updates.avgPostPrice);
+        const instagramUsername = updates.instagramUsername || updates.igUsername || updates.username;
+        const instagramProfileURL = updates.instagramProfileURL || updates.profileUrl || updates.igProfileUrl;
+        const instagramDPURL = updates.instagramDPURL || updates.profilePictureUrl || updates.profileImageURL || updates.avatar;
+        const instagramAccountType = updates.accountType || updates.instagramAccountType || updates.igAccountType;
         const mappedUpdates = {
             fullName: updates.fullName || updates.displayName || req.user?.name || req.user?.email?.split('@')[0] || 'Influencer',
             displayName: updates.displayName || updates.fullName,
@@ -143,8 +140,17 @@ exports.updateProfile = async (req, res, next) => {
             },
             avgPostPrice: postPrice,
             avgReelPrice: reelPrice,
-            profilePictureUrl: updates.profileImageURL || updates.profilePictureUrl,
-            avatar: updates.profileImageURL || updates.profilePictureUrl,
+            instagramUsername,
+            username: instagramUsername,
+            instagramProfileURL,
+            profileUrl: instagramProfileURL,
+            igProfileUrl: instagramProfileURL,
+            instagramDPURL,
+            profilePictureUrl: instagramDPURL,
+            profileImageURL: instagramDPURL,
+            avatar: instagramDPURL,
+            instagramAccountType,
+            igAccountType: instagramAccountType,
         };
 
         const existing = await InfluencerProfile.findOne({ userId: req.user._id });
@@ -171,6 +177,7 @@ exports.updateProfile = async (req, res, next) => {
 
         // Compute strict profile completion based on all required fields
         const completion = computeProfileCompletion(influencerProfile);
+        influencerProfile.profileComplete = completion.isComplete;
         influencerProfile.profileCompletionStatus = completion.isComplete;
         influencerProfile.isSearchable = completion.isComplete;
         
