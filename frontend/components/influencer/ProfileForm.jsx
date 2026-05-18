@@ -74,6 +74,7 @@ export default function ProfileForm() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const hasInitializedProfile = useRef(false);
+    const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
     const [form, setForm] = useState({
         fullName: '',
         contactEmail: '',
@@ -109,9 +110,8 @@ export default function ProfileForm() {
             rates: {
                 reelPrice: profile.rates?.reelPrice ?? profile.avgReelPrice ?? '',
                 postPrice: profile.rates?.postPrice ?? profile.avgPostPrice ?? '',
-        },
-    });
-    const instagramConnected = Boolean(user?.instagramConnected || user?.instagramConnectionStatus === 'connected');
+            },
+        });
 
         if (!hasInitializedProfile.current) {
             const hasPersistedProfile = Boolean(
