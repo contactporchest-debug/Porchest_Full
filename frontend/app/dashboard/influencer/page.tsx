@@ -51,7 +51,7 @@ export default function InfluencerPortal() {
 
     useEffect(() => {
         if (!profile) return;
-        setProfileCompletion(buildInfluencerProfileCompletion(profile, {
+        setProfileCompletion(buildInfluencerProfileCompletion(profile as any, {
             instagramConnected,
         }));
     }, [profile, instagramConnected]);

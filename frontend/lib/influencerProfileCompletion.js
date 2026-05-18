@@ -16,6 +16,10 @@ function isInstagramConnected(profile, fallback = {}) {
     );
 }
 
+/**
+ * @param {Record<string, any> | null | undefined} profile
+ * @param {Record<string, any> | null | undefined} fallback
+ */
 export function buildInfluencerProfileCompletion(profile = {}, fallback = {}) {
     const checklist = [
         { key: 'fullName', label: 'Add full name', done: !!profile?.fullName },

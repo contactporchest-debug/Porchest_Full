@@ -54,7 +54,7 @@ type InfluencerProfileResponse = {
 export default function InfluencerCollaborationsRoute() {
     const { user } = useAuth();
     const { data: profile, loading } = useApi<InfluencerProfileResponse>('/profile/influencer/me');
-    const profileComplete = buildInfluencerProfileCompletion(profile, {
+    const profileComplete = buildInfluencerProfileCompletion(profile as any, {
         instagramConnected: user?.instagramConnected,
         instagramConnectionStatus: user?.instagramConnectionStatus,
     }).isComplete;
