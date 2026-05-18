@@ -47,6 +47,20 @@ function canOpenAnalysis(collab) {
     return Boolean(collab?.content?.postLink && collab?.content?.adminVerified);
 }
 
+function formatMoney(value) {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount)) return '$0';
+    return `$${amount.toLocaleString()}`;
+}
+
+function titleCase(value) {
+    return String(value || '')
+        .replace(/[_-]+/g, ' ')
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function daysSince(value) {
     if (!value) return null;
     const date = new Date(value);
@@ -260,7 +274,7 @@ export default function CampaignsFlow() {
                                             <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>{c.brandProfile?.igUsername ? `@${c.brandProfile.igUsername}` : c.username ? `@${c.username}` : '—'}</p>
                                         </td>
                                         <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
-                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{money(c.pricing?.agreedFee || c.pricing?.brandOffer || c.price || 0)}</p>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{formatMoney(c.pricing?.agreedFee || c.pricing?.brandOffer || c.price || 0)}</p>
                                             <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>Agreed fee</p>
                                         </td>
                                         <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
