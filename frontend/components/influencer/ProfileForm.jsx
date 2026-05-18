@@ -144,26 +144,17 @@ export default function ProfileForm() {
         }
     }, [profile]);
 
-    const isComplete = useMemo(() => {
-        const hasRates = Number(form.rates.reelPrice) > 0 && Number(form.rates.postPrice) > 0;
-        return !!(
-            form.fullName.trim() &&
-            form.contactEmail.trim() &&
-            form.bio.trim() &&
-            form.country &&
-            form.city &&
-            form.niche.length > 0 &&
-            form.contentStyleTags.length > 0 &&
-            form.languages.length > 0 &&
-            form.languages.length <= 2 &&
-            form.instagramUsername.trim() &&
-            form.instagramProfileURL.trim() &&
-            form.instagramDPURL.trim() &&
-            form.accountType &&
-            hasRates
-            && instagramConnected
-        );
-    }, [form, user?.instagramConnected, user?.instagramConnectionStatus]);
+    const draftCompletion = useMemo(() => buildInfluencerProfileCompletion({
+        ...form,
+        rates: {
+            reelPrice: form.rates.reelPrice,
+            postPrice: form.rates.postPrice,
+        },
+    }, {
+        instagramConnected,
+        instagramConnectionStatus: user?.instagramConnectionStatus,
+    }), [form, instagramConnected, user?.instagramConnectionStatus]);
+    const isComplete = draftCompletion.isComplete;
 
     function toggleArray(field, value) {
         setSaved(false);

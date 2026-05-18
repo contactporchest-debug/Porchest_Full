@@ -86,16 +86,6 @@ export default function MyProfilePage() {
     const completionScore = profileCompletion.percentage;
 
     const handleSave = async () => {
-        if (!form.fullName) return toast.error('Full name is required');
-        if (!form.country) return toast.error('Country of residence is required');
-        if (!form.contactEmail) return toast.error('Contact email is required');
-        if (!form.bio) return toast.error('Bio is required');
-        if (!form.niche) return toast.error('Please select your niche');
-        if (!form.instagramUsername) return toast.error('Instagram username is required');
-        if (!form.instagramProfileURL) return toast.error('Instagram profile URL is required');
-        if (!form.instagramDPURL) return toast.error('Profile picture URL is required');
-        if (!form.accountType) return toast.error('Instagram account type is required');
-        if (!form.avgPostCostUSD || !form.avgReelCostUSD) return toast.error('Pricing fields are required for brand discovery');
         if (!profileCompletion.isComplete) return toast.error('Please complete all required fields before saving');
         setSaving(true);
         try {
