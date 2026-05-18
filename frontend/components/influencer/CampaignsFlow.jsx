@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { Download, ShieldCheck } from 'lucide-react';
 import { useApi, apiPatch, apiPost } from '../../hooks/useApi';
-import CampaignMetricsCard from './CampaignMetricsCard';
 import { brandAPI, influencerAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,6 @@ const STATUS_TABS = [
 ];
 
 const SURFACE = 'rgba(255,255,255,0.38)';
-const SURFACE_ALT = 'rgba(255,255,255,0.48)';
 const BORDER = '#EDD9BC';
 const TEXT = '#1A0A00';
 const MUTED = '#7A5030';
@@ -28,6 +27,25 @@ const PROGRESS_STEPS = [
     { label: 'Admin verified post',             done: (c) => !!c.content?.adminVerified },
     { label: 'Payment released',                done: (c) => String(c?.payment_status || c?.paymentStatus || c?.brandPaymentStatus || '').toLowerCase() === 'verified' || c?.payment?.status === 'released' },
 ];
+
+function getProgressPercent(collab) {
+    if (typeof collab?.progressPercent === 'number') return Math.max(0, Math.min(100, collab.progressPercent));
+    const days = typeof collab?.daysRan === 'number' ? collab.daysRan : daysSince(collab?.acceptedAt || collab?.createdAt || collab?.campaignActiveAt || collab?.campaignStartAt);
+    return Math.max(0, Math.min(100, Math.round((Number(days || 0) / 30) * 100)));
+}
+
+function getStatusLabel(collab) {
+    if (collab?.status === 'brand_paid_work_can_start') return 'Ready to Create';
+    if (collab?.status === 'content_submitted') return 'Draft Under Review';
+    if (collab?.status === 'content_approved') return 'Approved to Post';
+    if (collab?.status === 'posted') return 'Posted, waiting admin';
+    if (collab?.status === 'campaign_active') return 'Campaign active';
+    return 'In production';
+}
+
+function canOpenAnalysis(collab) {
+    return Boolean(collab?.content?.postLink && collab?.content?.adminVerified);
+}
 
 function daysSince(value) {
     if (!value) return null;
@@ -52,8 +70,7 @@ async function downloadCollaborationPdf(id, campaignName) {
 
 export default function CampaignsFlow() {
     const [activeTab, setActiveTab] = useState(0);
-    const [expanded, setExpanded] = useState(null);
-    const [analyticsOpen, setAnalyticsOpen] = useState(null);
+    const [expandedId, setExpandedId] = useState(null);
     const [acting, setActing] = useState(false);
     const [pdfBusyId, setPdfBusyId] = useState(null);
     const [trackingBusyId, setTrackingBusyId] = useState(null);
@@ -61,7 +78,6 @@ export default function CampaignsFlow() {
     // Per-card input state — keyed by collab _id to prevent bleed-over
     const [driveLinkMap, setDriveLinkMap] = useState({});
     const [postLinkMap, setPostLinkMap]   = useState({});
-    const isMetricsLocked = (collab) => !collab?.content?.postLink && !collab?.postLink;
     const getPaymentStatus = (collab) => String(collab?.payment_status || collab?.paymentStatus || collab?.brandPaymentStatus || 'pending').toLowerCase();
     const isPaymentVerified = (collab) => getPaymentStatus(collab) === 'verified';
     const isPaymentPending = (collab) => getPaymentStatus(collab) === 'pending';
@@ -171,6 +187,251 @@ export default function CampaignsFlow() {
         } finally {
             setTrackingBusyId(null);
         }
+    }
+
+    function renderAnalysisAction(collab) {
+        if (!canOpenAnalysis(collab)) {
+            return (
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030] text-xs font-bold">
+                    Analytics unlock after admin verification
+                </span>
+            );
+        }
+
+        return (
+            <Link
+                href={`/dashboard/influencer/performance?campaign=${encodeURIComponent(collab._id)}`}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#C2340A] text-white text-xs font-bold hover:bg-[#E8400A] transition-colors"
+            >
+                View Analysis
+            </Link>
+        );
+    }
+
+    function renderCampaignTable(collabs, variant) {
+        return (
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: 1020, borderCollapse: 'separate', borderSpacing: 0 }}>
+                    <thead>
+                        <tr>
+                            {['Campaign', 'Brand', 'Fee', 'Status', 'Progress', 'Actions'].map((heading) => (
+                                <th
+                                    key={heading}
+                                    style={{
+                                        textAlign: 'left',
+                                        padding: '14px 12px',
+                                        fontSize: 11,
+                                        color: MUTED,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.08em',
+                                        borderBottom: `1px solid ${BORDER}`,
+                                    }}
+                                >
+                                    {heading}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {collabs.map((c) => {
+                            const rowExpanded = expandedId === c._id;
+                            const progressPercent = getProgressPercent(c);
+                            const statusText = getStatusLabel(c);
+                            const isProduction = variant === 'production';
+                            return (
+                                <Fragment key={c._id}>
+                                    <tr style={{ background: rowExpanded ? 'rgba(194,52,10,0.04)' : 'transparent' }}>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TEXT }}>{c.brief?.campaignObjective || c.campaignTitle || 'Collaboration'}</p>
+                                            <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>{c.campaignTitle || c.brief?.keyMessage || 'Campaign details'}</p>
+                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.48)', border: `1px solid ${BORDER}`, color: MUTED, fontSize: 11, fontWeight: 700 }}>
+                                                    {isProduction ? 'In production' : 'Ongoing'}
+                                                </span>
+                                                {c.content?.postLink ? (
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 999, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.18)', color: '#059669', fontSize: 11, fontWeight: 700 }}>
+                                                        Final post submitted
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{c.brandProfile?.businessName || c.brandName || 'Brand'}</p>
+                                            <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>{c.brandProfile?.igUsername ? `@${c.brandProfile.igUsername}` : c.username ? `@${c.username}` : '—'}</p>
+                                        </td>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{money(c.pricing?.agreedFee || c.pricing?.brandOffer || c.price || 0)}</p>
+                                            <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>Agreed fee</p>
+                                        </td>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{statusText}</p>
+                                            <p style={{ margin: '5px 0 0', fontSize: 12, color: MUTED }}>{titleCase(c.lifecycleStatus || c.status || '')}</p>
+                                        </td>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{c.daysRan ?? daysSince(c.acceptedAt || c.createdAt || c.campaignActiveAt || c.campaignStartAt) ?? 0}/30</p>
+                                            <div style={{ marginTop: 8, height: 8, borderRadius: 999, background: 'rgba(237,217,188,0.7)', overflow: 'hidden' }}>
+                                                <div style={{ width: `${progressPercent}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #C2340A, #E8400A)' }} />
+                                            </div>
+                                            <p style={{ margin: '6px 0 0', fontSize: 11, color: MUTED }}>{progressPercent}% complete</p>
+                                        </td>
+                                        <td style={{ padding: '16px 12px', borderBottom: `1px solid ${BORDER}`, verticalAlign: 'top' }}>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExpandedId(rowExpanded ? null : c._id)}
+                                                    className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-xs hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC]"
+                                                >
+                                                    {rowExpanded ? 'Hide details' : 'View details'}
+                                                </button>
+                                                {canOpenAnalysis(c) ? renderAnalysisAction(c) : null}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {rowExpanded ? (
+                                        <tr>
+                                            <td colSpan={6} style={{ padding: '18px 12px 24px', borderBottom: `1px solid ${BORDER}` }}>
+                                                <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.78)', padding: 18 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Collaboration details</p>
+                                                            <h3 style={{ margin: '6px 0 0', fontSize: 20, color: TEXT, fontWeight: 800 }}>{c.campaignTitle || c.brief?.campaignObjective || 'Collaboration'}</h3>
+                                                            <p style={{ margin: '6px 0 0', fontSize: 13, color: MUTED, lineHeight: 1.6 }}>
+                                                                {isProduction
+                                                                    ? 'Submit the drive link, wait for brand approval, then post and submit the final Instagram link.'
+                                                                    : 'Track the live campaign and use the final post analysis once admin verifies the submission.'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+                                                        <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                            {renderTrackingTools(c)}
+                                                        </div>
+
+                                                        <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Workflow</p>
+                                                            <div style={{ marginTop: 14, display: 'grid', gap: 12 }}>
+                                                                {PROGRESS_STEPS.map((step, idx) => {
+                                                                    const done = step.done(c);
+                                                                    return (
+                                                                        <div key={`${c._id}-step-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                                            <div style={{
+                                                                                width: 24,
+                                                                                height: 24,
+                                                                                borderRadius: 999,
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                flexShrink: 0,
+                                                                                fontSize: 12,
+                                                                                fontWeight: 700,
+                                                                                color: done ? '#fff' : MUTED,
+                                                                                background: done ? '#059669' : 'rgba(255,255,255,0.48)',
+                                                                                border: done ? 'none' : `1px solid ${BORDER}`,
+                                                                            }}>
+                                                                                {done ? '✓' : ''}
+                                                                            </div>
+                                                                            <p style={{ margin: 0, fontSize: 13, color: done ? '#B48C73' : TEXT, textDecoration: done ? 'line-through' : 'none' }}>
+                                                                                {step.label}
+                                                                            </p>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+
+                                                        {c.status === 'brand_paid_work_can_start' && isPaymentVerified(c) && !c.content?.driveLink && (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TEXT }}>Submit Content for Review</p>
+                                                                <p style={{ marginTop: 6, fontSize: 12, color: MUTED }}>Provide a Google Drive folder link containing your raw or edited content.</p>
+                                                                <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+                                                                    <input
+                                                                        placeholder="https://drive.google.com/..."
+                                                                        value={driveLinkMap[c._id] || ''}
+                                                                        onChange={(e) => setDriveLinkMap((m) => ({ ...m, [c._id]: e.target.value }))}
+                                                                        className={inputClass}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => submitDriveLink(c)}
+                                                                        disabled={acting || !driveLinkMap[c._id]}
+                                                                        className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
+                                                                    >
+                                                                        Submit
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {c.content?.driveLink && !c.content?.brandApprovedDrive && (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#0284c7' }}>Under Brand Review</p>
+                                                                <p style={{ marginTop: 6, fontSize: 12, color: MUTED }}>Your content has been submitted. Waiting for the brand to approve.</p>
+                                                            </div>
+                                                        )}
+
+                                                        {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && isPaymentVerified(c) && (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#059669' }}>Content Approved</p>
+                                                                <p style={{ marginTop: 6, fontSize: 12, color: MUTED }}>You are cleared to post. Submit the live Instagram link below.</p>
+                                                                <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+                                                                    <input
+                                                                        placeholder="https://www.instagram.com/p/..."
+                                                                        value={postLinkMap[c._id] || ''}
+                                                                        onChange={(e) => setPostLinkMap((m) => ({ ...m, [c._id]: e.target.value }))}
+                                                                        className={inputClass}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => submitInstagramLink(c)}
+                                                                        disabled={acting || !postLinkMap[c._id]}
+                                                                        className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
+                                                                    >
+                                                                        Submit Post
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {c.content?.postLink && !c.content?.adminVerified && (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#d97706' }}>Verifying Post</p>
+                                                                <p style={{ marginTop: 6, fontSize: 12, color: MUTED }}>Our admins are verifying the live post. Payment releases after approval.</p>
+                                                            </div>
+                                                        )}
+
+                                                        {canOpenAnalysis(c) ? (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                                                                <div>
+                                                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: TEXT }}>Analysis ready</p>
+                                                                    <p style={{ marginTop: 6, fontSize: 12, color: MUTED }}>Admin has verified the final post. Open the performance page to review analytics.</p>
+                                                                </div>
+                                                                {renderAnalysisAction(c)}
+                                                            </div>
+                                                        ) : null}
+
+                                                        {latestFeedback(c).length > 0 && (
+                                                            <div style={{ borderRadius: 18, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.72)', padding: 18 }}>
+                                                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#C4A882', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Brand feedback</p>
+                                                                <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+                                                                    {latestFeedback(c).map((feedback, idx) => (
+                                                                        <p key={`${c._id}-feedback-${idx}`} style={{ margin: 0, fontSize: 13, color: TEXT, lineHeight: 1.7 }}>
+                                                                            {feedback}
+                                                                        </p>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : null}
+                                </Fragment>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        );
     }
 
     function renderTrackingTools(collab) {
@@ -377,13 +638,13 @@ export default function CampaignsFlow() {
 
                     {/* Toggle full brief */}
                     <button
-                        onClick={() => setExpanded(expanded === c._id ? null : c._id)}
+                        onClick={() => setExpandedId(expandedId === c._id ? null : c._id)}
                         className="text-xs font-bold text-[#7A5030] hover:text-[#1A0A00] flex items-center gap-1 bg-[rgba(255,255,255,0.48)] px-3 py-1.5 rounded-full border border-[#EDD9BC] transition-colors"
                     >
-                        {expanded === c._id ? 'Hide brief ▲' : 'View full brief ▼'}
+                        {expandedId === c._id ? 'Hide brief ▲' : 'View full brief ▼'}
                     </button>
 
-                    {expanded === c._id && (
+                    {expandedId === c._id && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-t border-[#EDD9BC] pt-4">
                             {[
                                 ['Brand intro',          c.brief?.brandIntro],
@@ -454,283 +715,10 @@ export default function CampaignsFlow() {
             ))}
 
             {/* ── IN PRODUCTION TAB ── */}
-            {activeTab === 1 && collabs.map((c, i) => (
-                <motion.div
-                    key={c._id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className={cardClass}
-                >
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-4 border-b border-[#EDD9BC] pb-4">
-                        <div>
-                            <p className="text-[#1A0A00] font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'In production'}
-                            </p>
-                            <p className="text-sm font-medium text-[#7A5030] mt-1">{c.brandProfile?.businessName || c.brandName}</p>
-                            {typeof daysSince(c.acceptedAt || c.createdAt) === 'number' && (
-                                <p className="text-xs font-semibold text-[#7A5030] mt-2">Days in production: {daysSince(c.acceptedAt || c.createdAt)} / 30</p>
-                            )}
-                            {isMetricsLocked(c) && (
-                                    <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-[10px] font-bold uppercase tracking-wide">
-                                        Metrics locked until final post
-                                    </span>
-                                )}
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-bold text-[#C2340A]">
-                                ${Number(c.pricing?.agreedFee || 0).toLocaleString()}
-                            </p>
-                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">Agreed fee</p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            onClick={() => handleDownloadPdf(c)}
-                            disabled={pdfBusyId === c._id}
-                            className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-xs hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40 inline-flex items-center justify-center gap-2"
-                        >
-                            <Download size={12} />
-                            Download PDF
-                        </button>
-                        <span className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-xs font-bold text-[#7A5030] inline-flex items-center gap-2">
-                            <ShieldCheck size={12} />
-                            {c.status === 'brand_paid_work_can_start'
-                                ? 'Ready to Create'
-                                : c.status === 'content_submitted'
-                                ? 'Draft Under Review'
-                                : c.status === 'content_approved'
-                                ? 'Approved to Post'
-                                : c.status === 'posted'
-                                ? 'Posted, waiting admin'
-                                : 'In production'}
-                        </span>
-                    </div>
-
-                    {/* Campaign tools — tracking link + promo code */}
-                    {renderTrackingTools(c)}
-
-                    {/* Progress steps */}
-                    <div className="space-y-3 pt-2">
-                        {PROGRESS_STEPS.map((step, idx) => {
-                            const done = step.done(c);
-                            return (
-                                <div key={idx} className="flex items-center gap-3">
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${
-                                        done ? 'bg-[#059669] text-white shadow-sm shadow-[#059669]/20' : 'bg-[rgba(255,255,255,0.48)] border border-[#EDD9BC] text-[#7A5030]'
-                                    }`}>
-                                        {done ? '✓' : ''}
-                                    </div>
-                                    <p className={`text-sm font-medium ${done ? 'text-[#B48C73] line-through' : 'text-[#1A0A00]'}`}>
-                                        {step.label}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Payment pending notice */}
-                    {c.status === 'brand_payment_pending' && isPaymentProofSubmitted(c) && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#d97706] font-bold text-sm">Payment proof submitted</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">Admin is reviewing the Easypaisa proof before production can start.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {c.status === 'brand_payment_pending' && isPaymentPending(c) && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M4.93 19h14.14a2 2 0 001.72-3L14.83 5a2 2 0 00-1.72-1H10.9a2 2 0 00-1.72 1L3.21 16a2 2 0 001.72 3z"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#d97706] font-bold text-sm">Payment pending</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">Do not start work yet. Wait for the brand to submit payment proof and for admin approval.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Payment confirmed notice */}
-                    {c.status === 'brand_paid_work_can_start' && isPaymentVerified(c) && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#059669] font-bold text-sm">Payment confirmed</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">You can now create content and submit the drive link.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Submit Drive link */}
-                    {c.status === 'brand_paid_work_can_start' && isPaymentVerified(c) && !c.content?.driveLink && (
-                        <div className="space-y-3 pt-4 border-t border-[#EDD9BC]">
-                            <p className="text-sm font-bold text-[#1A0A00]">
-                                Submit Content for Review
-                            </p>
-                            <p className="text-xs text-[#7A5030]">Provide a Google Drive folder link containing your raw/edited content.</p>
-                            <div className="flex gap-2">
-                                <input
-                                    placeholder="https://drive.google.com/..."
-                                    value={driveLinkMap[c._id] || ''}
-                                    onChange={(e) => setDriveLinkMap((m) => ({ ...m, [c._id]: e.target.value }))}
-                                    className={inputClass}
-                                />
-                                <button
-                                    onClick={() => submitDriveLink(c)}
-                                    disabled={acting || !driveLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
-                                >
-                                    Submit
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Drive submitted — awaiting brand approval */}
-                    {c.content?.driveLink && !c.content?.brandApprovedDrive && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#0284c7]/10 flex items-center justify-center text-[#0284c7] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#0284c7] font-bold text-sm">Under Brand Review</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">Your content has been submitted. Waiting for the brand to approve.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Submit live post link — shown after brand approves */}
-                    {c.content?.brandApprovedDrive && !c.content?.postLink && c.status !== 'brand_payment_pending' && isPaymentVerified(c) && (
-                        <div className="space-y-3 pt-4 border-t border-[#EDD9BC] mt-4">
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mb-4 backdrop-blur-[12px]">
-                                <div className="w-8 h-8 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] shrink-0">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                                </div>
-                                <div className="pt-1.5">
-                                    <p className="text-[#059669] font-bold text-sm">Content Approved!</p>
-                                    <p className="text-[#7A5030] text-xs mt-0.5">You are cleared to post. Submit the live Instagram link below.</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    placeholder="https://www.instagram.com/p/..."
-                                    value={postLinkMap[c._id] || ''}
-                                    onChange={(e) => setPostLinkMap((m) => ({ ...m, [c._id]: e.target.value }))}
-                                    className={inputClass}
-                                />
-                                <button
-                                    onClick={() => submitInstagramLink(c)}
-                                    disabled={acting || !postLinkMap[c._id]}
-                                    className="px-6 py-2.5 rounded-full bg-[#C2340A] text-white font-bold text-sm hover:bg-[#E8400A] transition-all disabled:opacity-40"
-                                >
-                                    Submit Post
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Post submitted — waiting admin */}
-                    {c.content?.postLink && !c.content?.adminVerified && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] flex items-start gap-3 mt-4 backdrop-blur-[12px]">
-                            <div className="w-8 h-8 rounded-full bg-[#d97706]/10 flex items-center justify-center text-[#d97706] shrink-0">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div className="pt-1.5">
-                                <p className="text-[#d97706] font-bold text-sm">Verifying Post</p>
-                                <p className="text-[#7A5030] text-xs mt-0.5">Our admins are verifying the live post. Your payment will be released shortly after.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Metrics */}
-                    {['content_submitted', 'content_approved', 'posted', 'campaign_active'].includes(c.status) && isPaymentVerified(c) && (
-                        <div className="pt-2">
-                            <CampaignMetricsCard collaborationId={c._id} brandFeedback={c.brandFeedback || []} />
-                        </div>
-                    )}
-
-                    {latestFeedback(c).length > 0 && (
-                        <div className="p-4 rounded-[14px] bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] mt-4 backdrop-blur-[12px]">
-                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide mb-2">Brand feedback</p>
-                            <div className="space-y-2">
-                                {latestFeedback(c).map((feedback, idx) => (
-                                    <p key={`${c._id}-feedback-${idx}`} className="text-sm text-[#1A0A00] leading-7">
-                                        {feedback}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
-            ))}
+            {activeTab === 1 && renderCampaignTable(collabs, 'production')}
 
             {/* ── ONGOING TAB ── */}
-            {activeTab === 2 && collabs.map((c, i) => (
-                <motion.div
-                    key={c._id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className={cardClass}
-                >
-                    <div className="flex items-start justify-between gap-4 border-b border-[#EDD9BC] pb-4">
-                        <div>
-                            <p className="text-[#1A0A00] font-bold text-lg">
-                                {c.brief?.campaignObjective || c.campaignTitle || 'Ongoing campaign'}
-                            </p>
-                            <p className="text-sm font-medium text-[#7A5030] mt-1">{c.brandProfile?.businessName || c.brandName}</p>
-                            {typeof daysSince(c.campaignActiveAt || c.campaignStartAt || c.createdAt) === 'number' && (
-                                <p className="text-xs font-semibold text-[#7A5030] mt-2">Days running: {daysSince(c.campaignActiveAt || c.campaignStartAt || c.createdAt)} / 30</p>
-                            )}
-                            {isMetricsLocked(c) && (
-                                <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-[#C2340A]/10 border border-[#EDD9BC] text-[#C2340A] text-[10px] font-bold uppercase tracking-wide">
-                                    Metrics locked until final post
-                                </span>
-                            )}
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-bold text-[#C2340A]">
-                                ${Number(c.pricing?.agreedFee || 0).toLocaleString()}
-                            </p>
-                            <p className="text-[10px] font-bold text-[#7A5030] uppercase tracking-wide">
-                                {c.payment?.status === 'released' ? 'Paid' : 'Payment pending'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            onClick={() => handleDownloadPdf(c)}
-                            disabled={pdfBusyId === c._id}
-                            className="px-4 py-2 rounded-full bg-[rgba(255,255,255,0.48)] text-[#7A5030] font-bold text-xs hover:bg-[rgba(255,255,255,0.65)] transition-colors border border-[#EDD9BC] disabled:opacity-40 inline-flex items-center justify-center gap-2"
-                        >
-                            <Download size={12} />
-                            Download PDF
-                        </button>
-                        <button
-                            onClick={() => setAnalyticsOpen(analyticsOpen === c._id ? null : c._id)}
-                            className="px-4 py-2 rounded-full bg-[#C2340A] text-white font-bold text-xs hover:bg-[#E8400A] transition-colors inline-flex items-center justify-center gap-2"
-                        >
-                            <ShieldCheck size={12} />
-                            {analyticsOpen === c._id ? 'Hide Analytics' : 'View Analytics'}
-                        </button>
-                    </div>
-
-                    {analyticsOpen === c._id && (
-                        <div className="pt-2">
-                            <CampaignMetricsCard collaborationId={c._id} />
-                        </div>
-                    )}
-                </motion.div>
-            ))}
+            {activeTab === 2 && renderCampaignTable(collabs, 'ongoing')}
 
             {!loading && collabs.length === 0 && (
                 <div className="text-center py-16 bg-[rgba(255,255,255,0.38)] border border-[#EDD9BC] rounded-[14px] backdrop-blur-[12px]">

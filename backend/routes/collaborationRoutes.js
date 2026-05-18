@@ -106,7 +106,8 @@ async function submitDriveLink(req, res, collab, driveLink) {
         return res.status(400).json({ success: false, error: 'Payment must be verified before work can start' });
     }
 
-    if (!isValidHttpUrl(driveLink)) {
+    const submittedDriveLink = String(driveLink || '').trim();
+    if (!isValidHttpUrl(submittedDriveLink)) {
         return res.status(400).json({ success: false, error: 'driveLink must be a valid URL' });
     }
 
@@ -116,9 +117,9 @@ async function submitDriveLink(req, res, collab, driveLink) {
         {
             $set: {
                 status: 'content_submitted',
-                draftDriveLink: driveLink,
+                draftDriveLink: submittedDriveLink,
                 draftSubmittedAt: now,
-                'content.driveLink': driveLink,
+                'content.driveLink': submittedDriveLink,
                 'content.driveSubmittedAt': now,
             },
         },
@@ -134,7 +135,8 @@ async function submitInstagramLink(req, res, collab, postLink) {
         return res.status(400).json({ success: false, error: 'Payment must be verified before work can start' });
     }
 
-    if (!isValidHttpUrl(postLink) || !/instagram\.com/i.test(postLink)) {
+    const submittedPostLink = String(postLink || '').trim();
+    if (!isValidHttpUrl(submittedPostLink) || !/instagram\.com/i.test(submittedPostLink)) {
         return res.status(400).json({ success: false, error: 'instagram link must be a valid Instagram URL' });
     }
 
@@ -144,9 +146,9 @@ async function submitInstagramLink(req, res, collab, postLink) {
         {
             $set: {
                 status: 'posted',
-                postLink,
+                postLink: submittedPostLink,
                 postSubmittedAt: now,
-                'content.postLink': postLink,
+                'content.postLink': submittedPostLink,
                 'content.postSubmittedAt': now,
             },
         },
@@ -161,7 +163,7 @@ async function submitInstagramLink(req, res, collab, postLink) {
             title: 'Post submitted for verification',
             message: `${collab.influencerName || 'The influencer'} submitted the live post for "${collab.campaignTitle}".`,
             campaignRequestId: collab._id,
-            metadata: { action: 'submit-post', postLink },
+            metadata: { action: 'submit-post', postLink: submittedPostLink },
         }).catch((notificationError) => {
             console.error('[collaborationRoutes] Brand notification create failed:', notificationError);
         }),
@@ -174,7 +176,7 @@ async function submitInstagramLink(req, res, collab, postLink) {
             title: 'Collaboration ready for admin review',
             message: `${collab.influencerName || 'An influencer'} submitted "${collab.campaignTitle}" for verification.`,
             campaignRequestId: collab._id,
-            metadata: { action: 'submit-post', postLink, collabStatus: 'posted' },
+            metadata: { action: 'submit-post', postLink: submittedPostLink, collabStatus: 'posted' },
         }))).catch((notificationError) => {
             console.error('[collaborationRoutes] Admin notification create failed:', notificationError);
         });

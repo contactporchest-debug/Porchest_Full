@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { GlassCard, GlowButton } from '@/components/ui';
@@ -155,6 +156,8 @@ function SkeletonBlock({ height, width = '100%' }: { height: number; width?: num
 }
 
 export default function InfluencerPerformancePage() {
+    const searchParams = useSearchParams();
+    const campaignIdParam = searchParams.get('campaign');
     const [campaigns, setCampaigns] = useState<CampaignPerformanceItem[]>([]);
     const [summary, setSummary] = useState<PerformanceSummary | null>(null);
     const [loading, setLoading] = useState(true);
@@ -190,6 +193,13 @@ export default function InfluencerPerformancePage() {
     useEffect(() => {
         void loadPerformance();
     }, []);
+
+    useEffect(() => {
+        if (!campaignIdParam || campaigns.length === 0) return;
+        if (campaigns.some((item) => item.campaignId === campaignIdParam)) {
+            setExpandedCampaignId(campaignIdParam);
+        }
+    }, [campaignIdParam, campaigns]);
 
     const selectedCampaign = useMemo(
         () => campaigns.find((item) => item.campaignId === expandedCampaignId) || null,
