@@ -91,7 +91,7 @@ const MUTED = '#7A5030';
 const PRIMARY = '#C2340A';
 const BORDER = '#EDD9BC';
 
-function money(value?: number | null) {
+function formatMoney(value?: number | null) {
     if (value == null || Number.isNaN(Number(value))) return '—';
     return `$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
@@ -207,13 +207,13 @@ export default function InfluencerPerformanceClient({ campaignIdParam }: { campa
 
     const summaryCards = summary ? [
         { label: 'Ongoing campaigns', value: String(summary.campaignCount), tone: PRIMARY, hint: 'Live collaborations currently in progress.' },
-        { label: 'Expected earnings', value: money(summary.totalEarnings), tone: '#7C3AED', hint: 'Contract value across your collaborations.' },
-        { label: 'Received so far', value: money(summary.totalReceived), tone: '#059669', hint: 'Released earnings already paid out.' },
-        { label: 'Pending payout', value: money(summary.totalPending), tone: '#d97706', hint: 'Tranches scheduled but not yet released.' },
+        { label: 'Expected earnings', value: formatMoney(summary.totalEarnings), tone: '#7C3AED', hint: 'Contract value across your collaborations.' },
+        { label: 'Received so far', value: formatMoney(summary.totalReceived), tone: '#059669', hint: 'Released earnings already paid out.' },
+        { label: 'Pending payout', value: formatMoney(summary.totalPending), tone: '#d97706', hint: 'Tranches scheduled but not yet released.' },
         { label: 'Overall clicks', value: summary.totalClicks.toLocaleString(), tone: '#C2340A', hint: 'Tracked link clicks across your collaborations.' },
-        { label: 'Conversion value', value: money(summary.totalRevenue), tone: '#b45309', hint: 'Dollars generated from tracked conversions.' },
+        { label: 'Conversion value', value: formatMoney(summary.totalRevenue), tone: '#b45309', hint: 'Dollars generated from tracked conversions.' },
         { label: 'Average ROAS', value: summary.averageROAS ? `${summary.averageROAS.toFixed(2)}x` : '—', tone: '#0f766e', hint: 'Average return on ad spend across campaigns.' },
-        { label: 'Average CPA', value: money(summary.averageCPA), tone: '#0284c7', hint: 'Average cost required to acquire one conversion.' },
+        { label: 'Average CPA', value: formatMoney(summary.averageCPA), tone: '#0284c7', hint: 'Average cost required to acquire one conversion.' },
     ] : [];
 
     return (
@@ -336,7 +336,7 @@ export default function InfluencerPerformanceClient({ campaignIdParam }: { campa
                                                                 <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>{item.username ? `@${item.username}` : '—'}</p>
                                                             </td>
                                                             <td style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{money(item.price)}</p>
+                                                                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{formatMoney(item.price)}</p>
                                                                 <p style={{ margin: '4px 0 0', fontSize: 12, color: MUTED }}>Campaign budget</p>
                                                             </td>
                                                             <td style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
@@ -425,9 +425,9 @@ export default function InfluencerPerformanceClient({ campaignIdParam }: { campa
                                                                             <SmallMetric label="Clicks" value={windowMetrics.totalClicks.toLocaleString()} tone={PRIMARY} />
                                                                             <SmallMetric label="Unique Visitors" value={windowMetrics.uniqueVisitors.toLocaleString()} tone="#0f766e" />
                                                                             <SmallMetric label="Conversions" value={windowMetrics.conversions.toLocaleString()} tone="#b45309" />
-                                                                            <SmallMetric label="Revenue" value={money(windowMetrics.revenue)} tone="#059669" />
+                                                                            <SmallMetric label="Revenue" value={formatMoney(windowMetrics.revenue)} tone="#059669" />
                                                                             <SmallMetric label="ROAS" value={windowMetrics.roas != null ? `${windowMetrics.roas.toFixed(2)}x` : '—'} tone="#0284c7" />
-                                                                            <SmallMetric label="CPA" value={windowMetrics.cpa != null ? money(windowMetrics.cpa) : '—'} tone="#d97706" />
+                                                                            <SmallMetric label="CPA" value={windowMetrics.cpa != null ? formatMoney(windowMetrics.cpa) : '—'} tone="#d97706" />
                                                                         </div>
 
                                                                         <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -436,7 +436,7 @@ export default function InfluencerPerformanceClient({ campaignIdParam }: { campa
                                                                                 Days Ran: {item.daysRan}/30
                                                                             </span>
                                                                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.82)', border: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 700 }}>
-                                                                                Campaign Cost: {money(windowMetrics.campaignCost)}
+                                                                                Campaign Cost: {formatMoney(windowMetrics.campaignCost)}
                                                                             </span>
                                                                             {windowMetrics.hasMatchedMedia ? (
                                                                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 999, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)', color: '#059669', fontSize: 13, fontWeight: 700 }}>
