@@ -125,7 +125,7 @@ export const brandAPI = {
         api.patch(`/brand/requests/${id}`, data),
     completeCampaignPayment: (
         id: string,
-        data: { payment_amount: number; proof_url: string; payment_method?: string }
+        data: { payment_amount: number; proof_file?: string; proof_url?: string; payment_method?: string }
     ) => api.patch(`/collaborations/${id}/complete-payment`, data),
     // Verifications
     getBrandVerifications: () => api.get('/brand/verifications'),
