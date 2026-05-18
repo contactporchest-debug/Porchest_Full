@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { CheckCircle2, RefreshCw, Store } from 'lucide-react';
+import { CheckCircle2, Store } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { GlassCard, GlowButton } from '@/components/ui';
@@ -67,12 +67,6 @@ export default function TrackingSetupPage() {
 
     const shopifyConnected = Boolean(status?.availableIntegrations?.shopify?.connected);
     const shopifyDomain = status?.availableIntegrations?.shopify?.shopDomain || status?.shopDomain || '';
-    const shopifyLabel = useMemo(() => {
-        if (shopifyConnected) return 'Connected';
-        if (shopDomain) return 'Ready to connect';
-        return 'Disconnected';
-    }, [shopifyConnected, shopDomain]);
-
     async function handleConnectShopify() {
         const domain = String(shopDomain || '').trim().toLowerCase();
         if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain)) {
@@ -96,137 +90,83 @@ export default function TrackingSetupPage() {
     return (
         <ProtectedRoute allowedRoles={['brand']}>
             <DashboardLayout>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 860, margin: '0 auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 720, margin: '0 auto' }}>
                     <GlassCard
                         padding="28px"
                         style={{
                             overflow: 'hidden',
-                            background: 'linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(248,252,247,0.98) 100%)',
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,252,247,0.98) 100%)',
                             border: '1px solid rgba(43,157,70,0.12)',
                             borderRadius: 22,
                         }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                                <div style={{
-                                    width: 58,
-                                    height: 58,
-                                    borderRadius: 18,
-                                    background: 'linear-gradient(135deg, #95BF47, #5A9E3B)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 18px 36px rgba(90,158,59,0.22)',
-                                    color: '#fff',
-                                    flexShrink: 0,
-                                }}>
-                                    <Store size={26} />
-                                </div>
-                                <div>
-                                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                                        Brand Tracking Setup
-                                    </p>
-                                    <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 900, color: '#1A0A00', letterSpacing: '-0.04em' }}>
-                                        Connect Shopify to Porchest
-                                    </h1>
-                                    <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7, maxWidth: 720 }}>
-                                        Link your Shopify store, let Porchest match campaign links to purchases, and keep your sales tracking inside a clean, simple setup flow.
-                                    </p>
-                                    <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                                        <StatusChip label={shopifyLabel} tone={shopifyConnected ? 'success' : shopDomain ? 'warning' : 'neutral'} />
-                                        <StatusChip label={shopifyDomain ? shopifyDomain : 'No store connected'} tone={shopifyConnected ? 'success' : 'neutral'} />
-                                    </div>
-                                </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                            <div style={{
+                                width: 58,
+                                height: 58,
+                                borderRadius: 18,
+                                background: 'linear-gradient(135deg, #95BF47, #5A9E3B)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 18px 36px rgba(90,158,59,0.22)',
+                                color: '#fff',
+                                flexShrink: 0,
+                            }}>
+                                <Store size={26} />
                             </div>
-
-                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                <GlowButton
-                                    onClick={() => void loadStatus(true)}
-                                    variant="outline"
-                                    loading={refreshing}
-                                >
-                                    <RefreshCw size={14} />
-                                    Refresh
-                                </GlowButton>
-                            </div>
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard
-                        padding="26px"
-                        style={{
-                            borderRadius: 22,
-                            border: '1px solid rgba(194,52,10,0.10)',
-                            background: 'rgba(255,255,255,0.86)',
-                        }}
-                    >
-                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                            Shopify Connection
-                        </p>
-                        <h2 style={{ marginTop: 8, fontSize: 22, fontWeight: 900, color: '#1A0A00' }}>
-                            {shopifyConnected ? 'Shopify connected' : 'Connect Shopify'}
-                        </h2>
-                        <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
-                            Enter your Shopify store domain and Porchest will send you to the Shopify install flow.
-                        </p>
-
-                        <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <label style={{ fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Shopify Store Domain</label>
-                            <input
-                                value={shopDomain}
-                                onChange={(e) => setShopDomain(e.target.value)}
-                                placeholder="your-store.myshopify.com"
-                                autoComplete="off"
-                                className="input-dark"
-                                style={{
-                                    height: 48,
-                                    borderRadius: 14,
-                                    border: '1px solid #EDD9BC',
-                                    background: 'rgba(255,255,255,0.82)',
-                                    padding: '0 14px',
-                                    fontSize: 14,
-                                    color: '#1A0A00',
-                                }}
-                            />
-                            <GlowButton onClick={() => void handleConnectShopify()} loading={connecting} style={{ width: '100%' }}>
-                                <CheckCircle2 size={14} />
-                                {connecting ? 'Connecting...' : 'Connect Shopify'}
-                            </GlowButton>
-                        </div>
-
-                        {loading ? (
-                            <div style={{ marginTop: 18, borderRadius: 16, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: 18, color: '#7A5030', fontSize: 14 }}>
-                                Loading Shopify connection details...
-                            </div>
-                        ) : (
-                            <div style={{ marginTop: 18, borderRadius: 16, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.72)', padding: 18 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                                            Current Status
-                                        </p>
-                                        <h3 style={{ marginTop: 8, fontSize: 20, fontWeight: 900, color: '#1A0A00' }}>
-                                            {shopifyConnected ? 'Ready to receive Shopify events' : 'Awaiting Shopify connection'}
-                                        </h3>
-                                    </div>
-                                    <StatusChip
-                                        label={loading ? 'Loading' : shopifyConnected ? 'Live' : 'Not live'}
-                                        tone={loading ? 'neutral' : shopifyConnected ? 'success' : 'danger'}
-                                    />
-                                </div>
-                                <p style={{ marginTop: 10, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                    Shopify
+                                </p>
+                                <h1 style={{ marginTop: 8, fontSize: 32, fontWeight: 900, color: '#1A0A00', letterSpacing: '-0.04em' }}>
+                                    {shopifyConnected ? 'Connected' : 'Connect Shopify'}
+                                </h1>
+                                <p style={{ marginTop: 8, fontSize: 14, color: '#7A5030', lineHeight: 1.7 }}>
                                     {shopifyConnected
-                                        ? 'Your Shopify store is connected and ready.'
-                                        : 'Connect Shopify above to start tracking purchases.'}
+                                        ? 'Your Shopify store is connected.'
+                                        : 'Enter your Shopify store domain to start the connection.'}
                                 </p>
                                 <div style={{ marginTop: 14 }}>
-                                    <GlowButton variant="outline" onClick={() => void loadStatus(true)} loading={refreshing}>
-                                        <RefreshCw size={14} />
-                                        Sync status
-                                    </GlowButton>
+                                    <StatusChip
+                                        label={shopifyConnected ? 'Connected' : 'Not connected'}
+                                        tone={shopifyConnected ? 'success' : 'neutral'}
+                                    />
                                 </div>
                             </div>
-                        )}
+                        </div>
+
+                        <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 560 }}>
+                            {!shopifyConnected && (
+                                <>
+                                    <label style={{ fontSize: 13, fontWeight: 800, color: '#1A0A00' }}>Shopify Store Domain</label>
+                                    <input
+                                        value={shopDomain}
+                                        onChange={(e) => setShopDomain(e.target.value)}
+                                        placeholder="your-store.myshopify.com"
+                                        autoComplete="off"
+                                        className="input-dark"
+                                        style={{
+                                            height: 48,
+                                            borderRadius: 14,
+                                            border: '1px solid #EDD9BC',
+                                            background: 'rgba(255,255,255,0.82)',
+                                            padding: '0 14px',
+                                            fontSize: 14,
+                                            color: '#1A0A00',
+                                        }}
+                                    />
+                                    <GlowButton onClick={() => void handleConnectShopify()} loading={connecting} style={{ width: '100%' }}>
+                                        <CheckCircle2 size={14} />
+                                        {connecting ? 'Connecting...' : 'Connect Shopify'}
+                                    </GlowButton>
+                                </>
+                            )}
+
+                            <GlowButton variant="outline" onClick={() => void loadStatus(true)} loading={refreshing}>
+                                Sync status
+                            </GlowButton>
+                        </div>
                     </GlassCard>
                 </div>
             </DashboardLayout>

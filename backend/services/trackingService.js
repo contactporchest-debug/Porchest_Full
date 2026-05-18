@@ -1,6 +1,7 @@
 const CampaignRequest = require('../models/CampaignRequest');
 const BrandProfile = require('../models/BrandProfile');
 const InfluencerProfile = require('../models/InfluencerProfile');
+const BrandTrackingConnection = require('../models/BrandTrackingConnection');
 const { fetchIgProfile } = require('./instagramService');
 
 const DEFAULT_BASE_URL = 'https://track.porchest.com';
@@ -240,10 +241,21 @@ async function ensureTrackingAssets(collaborationId) {
             return { success: false, error: 'Brand or influencer profile not found' };
         }
 
+        // Check for Shopify connection — prefer Shopify store URL as tracking destination
+        const shopifyConnection = await BrandTrackingConnection.findOne({
+            brandId: collab.brandId,
+            platform: 'shopify',
+            status: { $nin: ['disconnected', 'not_started'] },
+        }).lean();
+        const shopifyStoreUrl = shopifyConnection?.storeUrl
+            ? `https://${shopifyConnection.storeUrl}`
+            : null;
+        const trackingDestination = shopifyStoreUrl || brandProfile.website || 'https://porchest.com';
+
         const trackingLink = existingTrackingLink || generateTrackingLink(
             collab._id.toString(),
             collab.influencerId.toString(),
-            brandProfile.website || 'https://porchest.com'
+            trackingDestination
         );
 
         const promoCode = existingPromoCode || generatePromoCode(

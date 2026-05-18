@@ -309,7 +309,9 @@ function resolveTrackingState(doc) {
     const trackingEnabled = Boolean(doc?.trackingEnabledForCampaign);
     const trackingAccepted = Boolean(doc?.trackingAcceptedByInfluencer);
     const trackingLink = doc?.brief?.trackingLink || null;
-    const visible = trackingEnabled && trackingAccepted && trackingLink;
+    // Show tracking link if tracking is enabled and link exists.
+    // Auto-accepted Shopify connections don't need separate influencer acceptance.
+    const visible = trackingEnabled && trackingLink;
     return {
         trackingEnabledForCampaign: trackingEnabled,
         trackingAcceptedByInfluencer: trackingAccepted,

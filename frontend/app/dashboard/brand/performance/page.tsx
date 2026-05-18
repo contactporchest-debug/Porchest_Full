@@ -402,6 +402,23 @@ export default function BrandPerformancePage() {
                                                                             </div>
                                                                         </div>
 
+                                                                        {(item.trackingLink || item.promoCode) && (
+                                                                            <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                                                {item.trackingLink && (
+                                                                                    <div style={{ flex: '1 1 300px', padding: '12px 16px', borderRadius: 14, border: `1px solid rgba(5,150,105,0.18)`, background: 'rgba(5,150,105,0.04)' }}>
+                                                                                        <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Tracking Link</p>
+                                                                                        <p style={{ margin: '6px 0 0', fontSize: 12, color: TEXT, fontFamily: 'monospace', wordBreak: 'break-all' }}>{item.trackingLink}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {item.promoCode && (
+                                                                                    <div style={{ padding: '12px 16px', borderRadius: 14, border: `1px solid rgba(5,150,105,0.18)`, background: 'rgba(5,150,105,0.04)' }}>
+                                                                                        <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Promo Code</p>
+                                                                                        <p style={{ margin: '6px 0 0', fontSize: 15, color: TEXT, fontFamily: 'monospace', fontWeight: 800, letterSpacing: '0.06em' }}>{item.promoCode}</p>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
                                                                         <div style={{ marginTop: 18, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))' }}>
                                                                             <SmallMetric label="Likes" value={windowMetrics.likes.toLocaleString()} tone={PRIMARY} />
                                                                             <SmallMetric label="Comments" value={windowMetrics.comments.toLocaleString()} tone="#d97706" />

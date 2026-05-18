@@ -454,7 +454,7 @@ export default function CampaignsFlow() {
     function renderTrackingTools(collab) {
         const enabled = Boolean(collab.trackingEnabledForCampaign);
         const accepted = Boolean(collab.trackingAcceptedByInfluencer);
-        const linkVisible = Boolean(enabled && accepted && (collab.brief?.trackingLink || collab.brief?.promoCode));
+        const linkVisible = Boolean(enabled && (collab.brief?.trackingLink || collab.brief?.promoCode));
 
         if (!enabled) {
             return (

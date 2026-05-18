@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { influencerAPI } from '@/lib/api';
 import {
     Loader2, Inbox, Calendar, Clock, CheckCircle, XCircle,
-    Send, ChevronDown, ChevronUp, Eye, X, Download,
+    Send, ChevronDown, ChevronUp, Eye, X, Download, Link2, Copy,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -214,6 +214,49 @@ function RequestDetailPanel({ request, onRespond, responding }: { request: any; 
                                 {submittingVer ? <Loader2 size={14} className="spin" /> : <Send size={14} />} Submit
                             </button>
                         </form>
+                    </div>
+                )}
+
+                {(request.brief?.trackingLink || request.brief?.promoCode) && (
+                    <div style={{ padding: '20px', borderRadius: '18px', background: 'linear-gradient(135deg, rgba(5,150,105,0.06), rgba(255,255,255,0.45))', border: '1px solid rgba(5,150,105,0.18)', marginBottom: '4px', backdropFilter: 'blur(12px)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(5,150,105,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Link2 size={16} style={{ color: '#059669' }} />
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '14px', fontWeight: '800', color: TEXT }}>Your Tracking Assets</p>
+                                <p style={{ fontSize: '11px', color: MUTED }}>Use these in your bio, captions, and stories so we can track conversions from your audience.</p>
+                            </div>
+                        </div>
+                        {request.brief?.trackingLink && (
+                            <div style={{ marginBottom: '12px' }}>
+                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontWeight: '700' }}>Tracking Link (for bio/caption)</p>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input readOnly value={request.brief.trackingLink}
+                                        style={{ flex: 1, height: '42px', padding: '0 14px', borderRadius: '12px', background: SURFACE_ALT, border: `1px solid ${BORDER}`, color: TEXT, fontSize: '12px', fontFamily: 'monospace' }} />
+                                    <button
+                                        onClick={() => { navigator.clipboard.writeText(request.brief.trackingLink); toast.success('Tracking link copied!'); }}
+                                        style={{ padding: '0 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.45)', border: `1px solid ${BORDER}`, color: '#059669', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Copy size={12} /> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {request.brief?.promoCode && (
+                            <div>
+                                <p style={{ fontSize: '10px', color: MUTED, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px', fontWeight: '700' }}>Promo Code</p>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <span style={{ padding: '8px 20px', borderRadius: '999px', background: 'rgba(5,150,105,0.08)', border: '1px solid rgba(5,150,105,0.18)', color: TEXT, fontFamily: 'monospace', fontWeight: '800', fontSize: '15px', letterSpacing: '0.08em' }}>
+                                        {request.brief.promoCode}
+                                    </span>
+                                    <button
+                                        onClick={() => { navigator.clipboard.writeText(request.brief.promoCode); toast.success('Promo code copied!'); }}
+                                        style={{ padding: '8px 14px', borderRadius: '12px', background: 'rgba(255,255,255,0.45)', border: `1px solid ${BORDER}`, color: '#059669', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Copy size={12} /> Copy
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

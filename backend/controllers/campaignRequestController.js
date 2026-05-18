@@ -3,10 +3,11 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
+const BrandTrackingConnection = require('../models/BrandTrackingConnection');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
 const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
-const { ensureTrackingAssets } = require('../services/trackingService');
+const { ensureTrackingAssets, generateTrackingLink, generatePromoCode } = require('../services/trackingService');
 const { computeFixedCampaignPricing, normalizeContentTypes } = require('../services/campaignPricingService');
 const {
     buildEmailHtml,
@@ -68,6 +69,19 @@ exports.createRequest = async (req, res, next) => {
 
         const requestCode = await generateUniqueCode('REQ', CampaignRequest, 'requestCode');
         const agreedFee = fixedPricing.totalPrice || (agreedPrice ? Number(agreedPrice) : undefined);
+
+        // Check if brand has Shopify connected — auto-enable tracking
+        const shopifyConnection = await BrandTrackingConnection.findOne({
+            brandId: brandProfile._id,
+            platform: 'shopify',
+            status: { $nin: ['disconnected', 'not_started'] },
+        }).lean();
+        const hasShopify = Boolean(shopifyConnection && shopifyConnection.storeUrl);
+        const shopifyStoreUrl = hasShopify
+            ? `https://${shopifyConnection.storeUrl}`
+            : null;
+        const trackingDestination = shopifyStoreUrl || brandProfile.website || 'https://porchest.com';
+
         const brandName = brandProfile.businessName || brandProfile.brandName || brandProfile.companyName;
         const influencerName = influencerProfile.fullName || influencerProfile.displayName || influencerProfile.instagramUsername;
 
@@ -96,8 +110,12 @@ exports.createRequest = async (req, res, next) => {
                 requiredHashtags: Array.isArray(hashtags) ? hashtags : (hashtags ? String(hashtags).split(',').map((item) => item.trim()).filter(Boolean) : []),
                 requiredTags: [],
                 callToAction: paymentTerms || '',
-                trackingLink: null,
-                promoCode: null,
+                trackingLink: hasShopify
+                    ? generateTrackingLink(requestCode, String(influencerProfile._id), trackingDestination)
+                    : null,
+                promoCode: hasShopify
+                    ? generatePromoCode(influencerProfile.instagramUsername || influencerProfile.igUsername || 'PRCH', requestCode)
+                    : null,
                 visualRequirements: contentGuidelines || '',
                 postingSchedule: postingDeadline ? new Date(postingDeadline) : undefined,
                 revisionRounds: 0,
@@ -136,12 +154,14 @@ exports.createRequest = async (req, res, next) => {
             brandMessage,
             status: 'sent',
             sentAt: new Date(),
-            trackingEnabledForCampaign: false,
-            trackingAcceptedByInfluencer: false,
+            trackingEnabledForCampaign: hasShopify,
+            trackingAcceptedByInfluencer: hasShopify,
             trackingDetails: {
-                enabled: false,
-                accepted: false,
+                enabled: hasShopify,
+                accepted: hasShopify,
                 platform: 'shopify',
+                shopifyConnected: hasShopify,
+                shopifyStoreUrl: shopifyStoreUrl || null,
                 contentTypes: selectedContentTypes,
             },
             metrics: {
