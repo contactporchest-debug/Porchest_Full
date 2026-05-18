@@ -111,6 +111,7 @@ export const brandAPI = {
     getInfluencer60DayAnalytics: (id: string) => api.get(`/influencers/${id}/analytics`, { params: { period: 60 } }),
     updateCollaborationRequirements: (id: string, data: Record<string, unknown>) => api.patch(`/collaborations/${id}/requirements`, data),
     verifyCollaborationContent: (id: string) => api.patch(`/collaborations/${id}/verify-content`),
+    requestCollaborationRevision: (id: string, message: string) => api.post(`/collaborations/${id}/feedback`, { message, requestRevision: true }),
     stopCollaboration: (id: string, reason?: string) => api.patch(`/collaborations/${id}/stop`, { reason }),
     // Influencer discovery
     getInfluencers: (params?: Record<string, unknown>) => api.get('/brand/influencers', { params }),

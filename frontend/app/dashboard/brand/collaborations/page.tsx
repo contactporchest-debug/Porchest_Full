@@ -523,6 +523,144 @@ function PaymentProofModal({
     );
 }
 
+function ContentReviewModal({
+    collaboration,
+    onClose,
+    onApprove,
+    onRequestRevision,
+}: {
+    collaboration: Collaboration | null;
+    onClose: () => void;
+    onApprove: () => Promise<void>;
+    onRequestRevision: (message: string) => Promise<void>;
+}) {
+    const [saving, setSaving] = useState(false);
+    const [revisionNote, setRevisionNote] = useState('');
+
+    useEffect(() => {
+        if (!collaboration) return;
+        setRevisionNote('');
+    }, [collaboration]);
+
+    if (!collaboration) return null;
+
+    const driveLink = collaboration.content?.driveLink || collaboration.draftDriveLink || '';
+
+    const handleApprove = async () => {
+        try {
+            setSaving(true);
+            await onApprove();
+            onClose();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Failed to verify content.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleRevision = async () => {
+        const message = revisionNote.trim();
+        if (!message) {
+            toast.error('Please add comments for the revision request.');
+            return;
+        }
+        try {
+            setSaving(true);
+            await onRequestRevision(message);
+            onClose();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Failed to request a revision.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 60,
+                background: 'rgba(26,10,0,0.35)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+            }}
+            onClick={onClose}
+        >
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    width: 'min(860px, 100%)',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    borderRadius: '24px',
+                    border: '1px solid #EDD9BC',
+                    background: '#FDF6EE',
+                    boxShadow: '0 24px 80px rgba(26,10,0,0.18)',
+                    padding: '28px',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '20px' }}>
+                    <div>
+                        <p style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Drive review</p>
+                        <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#1A0A00', marginTop: '6px' }}>{resolveCampaignName(collaboration)}</h3>
+                        <p style={{ fontSize: '14px', color: '#7A5030', marginTop: '6px', lineHeight: 1.6 }}>
+                            Approve the submitted Google Drive content or send it back with comments for another iteration.
+                        </p>
+                    </div>
+                    <GlowButton variant="outline" onClick={onClose}>Close</GlowButton>
+                </div>
+
+                <div style={{ borderRadius: 16, border: '1px solid #EDD9BC', background: 'rgba(255,255,255,0.55)', padding: 16, marginBottom: 20 }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#C2340A' }}>Submitted drive link</p>
+                    <a
+                        href={driveLink || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block', marginTop: '8px', fontSize: 14, color: '#C2340A', textDecoration: 'underline', wordBreak: 'break-all' }}
+                    >
+                        {driveLink || 'No drive link available'}
+                    </a>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#7A5030', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reiteration comments</span>
+                        <textarea
+                            value={revisionNote}
+                            onChange={(e) => setRevisionNote(e.target.value)}
+                            rows={5}
+                            placeholder="Explain what needs to be changed, replaced, or improved."
+                            style={{
+                                width: '100%',
+                                borderRadius: '12px',
+                                border: '1px solid #EDD9BC',
+                                background: 'rgba(255,255,255,0.75)',
+                                padding: '12px 14px',
+                                fontFamily: 'inherit',
+                                color: '#1A0A00',
+                                outline: 'none',
+                                fontSize: '14px',
+                                resize: 'vertical',
+                                minHeight: '120px',
+                            }}
+                        />
+                    </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
+                    <GlowButton variant="outline" onClick={onClose} disabled={saving}>Cancel</GlowButton>
+                    <GlowButton variant="outline" onClick={handleRevision} loading={saving}>Request Reiteration</GlowButton>
+                    <GlowButton onClick={handleApprove} loading={saving}>Approve Content</GlowButton>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function CollaborationTable({
     collaborations,
     tabKey,
@@ -530,6 +668,7 @@ function CollaborationTable({
     onEdit,
     onCompletePayment,
     onOpenAnalytics,
+    onReviewContent,
 }: {
     collaborations: Collaboration[];
     tabKey: TabKey;
@@ -537,6 +676,7 @@ function CollaborationTable({
     onEdit: (collaboration: Collaboration) => void;
     onCompletePayment: (collaboration: Collaboration) => void;
     onOpenAnalytics: (id: string) => void;
+    onReviewContent: (collaboration: Collaboration) => void;
 }) {
     const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -571,19 +711,6 @@ function CollaborationTable({
             await onRefresh();
         } catch (error: any) {
             toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to stop campaign.');
-        } finally {
-            setBusyId(null);
-        }
-    };
-
-    const verifyContent = async (id: string) => {
-        try {
-            setBusyId(id);
-            await brandAPI.verifyCollaborationContent(id);
-            toast.success('Content verified.');
-            await onRefresh();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Failed to verify content.');
         } finally {
             setBusyId(null);
         }
@@ -747,9 +874,9 @@ function CollaborationTable({
                                             )}
 
                                             {canVerify && (
-                                                <GlowButton size="sm" onClick={() => verifyContent(collaboration._id)} loading={busyId === collaboration._id}>
+                                                <GlowButton size="sm" onClick={() => onReviewContent(collaboration)}>
                                                     <ShieldCheck size={14} />
-                                                    Verify Content
+                                                    Review Drive Link
                                                 </GlowButton>
                                             )}
 
@@ -796,6 +923,7 @@ export default function BrandCollaborationsPage() {
     const [error, setError] = useState<string | null>(null);
     const [editing, setEditing] = useState<Collaboration | null>(null);
     const [paymentEditing, setPaymentEditing] = useState<Collaboration | null>(null);
+    const [reviewingContent, setReviewingContent] = useState<Collaboration | null>(null);
 
     const profileComplete = !!profile?.profileComplete;
     const tab = TAB_CONFIG[activeTab];
@@ -904,6 +1032,7 @@ export default function BrandCollaborationsPage() {
                                 onEdit={setEditing}
                                 onCompletePayment={setPaymentEditing}
                                 onOpenAnalytics={(id) => router.push(`/dashboard/brand/collaborations/${id}/analytics`)}
+                                onReviewContent={setReviewingContent}
                             />
                         )}
                     </div>
@@ -935,6 +1064,29 @@ export default function BrandCollaborationsPage() {
                                 collaboration={paymentEditing}
                                 onClose={() => setPaymentEditing(null)}
                                 onSaved={() => fetchCollaborations(activeTab)}
+                            />
+                        </motion.div>
+                    ) : null}
+                    {reviewingContent ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{ position: 'fixed', inset: 0, zIndex: 60 }}
+                        >
+                            <ContentReviewModal
+                                collaboration={reviewingContent}
+                                onClose={() => setReviewingContent(null)}
+                                onApprove={async () => {
+                                    await brandAPI.verifyCollaborationContent(reviewingContent._id);
+                                    toast.success('Content verified.');
+                                    await fetchCollaborations(activeTab);
+                                }}
+                                onRequestRevision={async (message) => {
+                                    await brandAPI.requestCollaborationRevision(reviewingContent._id, message);
+                                    toast.success('Revision request sent.');
+                                    await fetchCollaborations(activeTab);
+                                }}
                             />
                         </motion.div>
                     ) : null}

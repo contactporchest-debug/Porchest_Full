@@ -1423,6 +1423,8 @@ router.patch('/:id/verify-content', roleMiddleware('brand'), requireCompleteProf
             message: `Your draft for "${collab.campaignTitle}" was approved. Please verify the final content before posting.`,
             actionText: 'View collaboration',
             actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+        }).catch((notificationError) => {
+            console.error('[collaborationRoutes] approve-drive email notification failed:', notificationError);
         });
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
@@ -1513,16 +1515,28 @@ router.patch('/:id/reject-drive', roleMiddleware('brand'), requireCompleteProfil
         if (String(collab.status) !== 'content_submitted') return throwStatusError(collab.status, res);
 
         const feedback = String(req.body.feedback || '').trim();
+        if (!feedback) {
+            return res.status(400).json({ success: false, error: 'Feedback is required when requesting a revision' });
+        }
+
+        const nextStatus = getRevertStatusForRevision(collab);
         const update = {
             $set: {
-                status: 'accepted',
-                acceptedAt: new Date(),
+                status: nextStatus,
             },
             $inc: { revisionsUsed: 1, 'content.revisionsUsed': 1 },
+            $push: { brandFeedback: feedback },
         };
-        if (feedback) {
-            update.$push = { brandFeedback: feedback };
-            update.$set.rejectionReason = feedback;
+
+        update.$set.rejectionReason = feedback;
+        if (nextStatus === 'brand_paid_work_can_start') {
+            update.$set['content.driveLink'] = '';
+            update.$set['content.driveSubmittedAt'] = null;
+            update.$set['content.brandApprovedDrive'] = false;
+            update.$set['content.brandApprovedAt'] = null;
+            update.$set.draftDriveLink = '';
+            update.$set.draftSubmittedAt = null;
+            update.$set.draftApprovedAt = null;
         }
         const updated = await CampaignRequest.findByIdAndUpdate(req.params.id, update, { new: true, strict: false }).lean();
         return res.json(await enrichCollaboration(updated));
@@ -1607,6 +1621,8 @@ router.post('/:id/feedback', roleMiddleware('brand', 'admin'), requireCompletePr
             message,
             actionText: 'View collaboration',
             actionHref: `/dashboard/influencer/collaborations?request=${collab._id}`,
+        }).catch((notificationError) => {
+            console.error('[collaborationRoutes] feedback email notification failed:', notificationError);
         });
         return res.json(await enrichCollaboration(updated));
     } catch (error) {
