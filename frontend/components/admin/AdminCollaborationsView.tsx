@@ -384,7 +384,7 @@ export default function AdminCollaborationsView() {
                                                 </div>
                                             )}
 
-                                            {selected.status !== 'completed' && selected.status !== 'cancelled' && (
+                                            {selected.status !== 'completed' && selected.status !== 'cancelled' && selected.status !== 'declined' && (
                                                 <button onClick={() => void handleStop()} disabled={actioning} className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#EDD9BC] bg-[#C2340A]/10 px-4 py-2.5 text-sm font-medium text-[#C2340A] hover:bg-[#C2340A]/15 disabled:opacity-50">
                                                     <StopCircle className="h-4 w-4" />
                                                     Stop collaboration

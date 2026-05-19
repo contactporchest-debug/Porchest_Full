@@ -1794,8 +1794,11 @@ router.patch('/:id/stop', async (req, res) => {
     try {
         const collab = await CampaignRequest.findById(req.params.id).lean();
         if (!collab) return res.status(404).json({ success: false, error: 'Collaboration not found' });
-        if (String(collab.status) === 'completed' || String(collab.status) === 'cancelled') {
+        if (String(collab.status) === 'completed') {
             return throwStatusError(collab.status, res);
+        }
+        if (String(collab.status) === 'cancelled') {
+            return res.json(await enrichCollaboration(collab));
         }
 
         const canStop = isAdmin(req.user) || (req.user?.role === 'brand' && await canManageBrandCollaboration(collab, req.user));
@@ -1806,6 +1809,61 @@ router.patch('/:id/stop', async (req, res) => {
         const now = new Date();
         const stoppedBy = isAdmin(req.user) ? 'admin' : 'brand';
         const reason = String(req.body?.reason || `Stopped by ${stoppedBy}`).trim();
+        if (stoppedBy === 'admin') {
+            await Promise.all([
+                ClickEvent.deleteMany({ collaborationId: collab._id }),
+                PurchaseEvent.deleteMany({ collaborationId: collab._id }),
+                Notification.deleteMany({ campaignRequestId: collab._id }),
+                CampaignRequest.deleteOne({ _id: collab._id }),
+            ]);
+
+            const admins = await getAdminRecipients();
+            const [brandUser, influencerUser] = await Promise.all([
+                User.findById(collab.brandUserId).select('email fullName').lean(),
+                User.findById(collab.influencerUserId).select('email fullName').lean(),
+            ]);
+
+            const stopMessage = `The collaboration "${collab.campaignTitle}" was permanently removed by admin.`;
+            await Promise.all([
+                sendCampaignEmailNotification({
+                    email: brandUser?.email,
+                    subject: 'Collaboration removed',
+                    title: 'Collaboration removed',
+                    message: stopMessage,
+                    actionText: 'Open Porchest',
+                    actionHref: '/dashboard/brand/collaborations',
+                }),
+                sendCampaignEmailNotification({
+                    email: influencerUser?.email,
+                    subject: 'Collaboration removed',
+                    title: 'Collaboration removed',
+                    message: stopMessage,
+                    actionText: 'Open Porchest',
+                    actionHref: '/dashboard/influencer/collaborations',
+                }),
+                ...admins.map((admin) => sendCampaignEmailNotification({
+                    email: admin.email,
+                    subject: 'Collaboration removed',
+                    title: 'Collaboration removed',
+                    message: stopMessage,
+                    actionText: 'Open admin portal',
+                    actionHref: '/dashboard/admin/collaborations',
+                })),
+            ]);
+
+            emitCollaborationEvent(req, [collab.brandUserId, collab.influencerUserId, ...admins.map((admin) => admin._id)], 'collaboration:updated', {
+                collaborationId: collab._id,
+                status: 'deleted',
+                action: 'stop',
+            });
+
+            return res.json({
+                success: true,
+                deleted: true,
+                collaborationId: String(collab._id),
+            });
+        }
+
         const updated = await CampaignRequest.findByIdAndUpdate(
             req.params.id,
             {
@@ -1813,7 +1871,8 @@ router.patch('/:id/stop', async (req, res) => {
                     status: 'cancelled',
                     cancelledAt: now,
                     campaignCompletedAt: now,
-                    ...(stoppedBy === 'admin' ? { adminStoppedAt: now, adminStopReason: reason } : { brandStoppedAt: now, brandStopReason: reason }),
+                    brandStoppedAt: now,
+                    brandStopReason: reason,
                     payment: {
                         ...(collab.payment || {}),
                         portion1: {
