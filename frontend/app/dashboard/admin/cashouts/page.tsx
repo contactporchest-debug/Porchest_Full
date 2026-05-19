@@ -462,15 +462,15 @@ function InfoCard({
     );
 }
 
-function Th({ children }: { children: ReactNode }) {
+function Th({ children, style }: { children: ReactNode; style?: CSSProperties }) {
     return (
-        <th style={{ padding: '0 14px 10px', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COLORS.brown }}>
+        <th style={{ padding: '0 14px 10px', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: COLORS.brown, ...style }}>
             {children}
         </th>
     );
 }
 
-function Td({ children }: { children: ReactNode }) {
+function Td({ children, style }: { children: ReactNode; style?: CSSProperties }) {
     return (
         <td
             style={{
@@ -480,6 +480,7 @@ function Td({ children }: { children: ReactNode }) {
                 borderBottom: `1px solid ${COLORS.border}`,
                 color: COLORS.ink,
                 verticalAlign: 'top',
+                ...style,
             }}
         >
             {children}
