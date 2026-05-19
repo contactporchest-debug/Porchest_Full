@@ -325,7 +325,7 @@ export default function AdminCashoutsPage() {
                                                         <Td>{formatDate(cashout.requestedAt || cashout.createdAt)}</Td>
                                                         <Td>
                                                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                                                <button onClick={() => setExpandedId(isExpanded ? null : cashout._id)} style={outlineButtonStyle}>
+                                                                <button onClick={() => setExpandedId(isExpanded ? null : cashout._id)} style={outlineButtonStyle()}>
                                                                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                                                                     View details
                                                                 </button>
