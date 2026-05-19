@@ -24,7 +24,7 @@ exports.listCashouts = async (req, res, next) => {
 
         const influencerIds = [...new Set(cashouts.map((cashout) => String(cashout.influencerUserId)).filter(Boolean))];
         const profiles = await InfluencerProfile.find({ userId: { $in: influencerIds } })
-            .select('userId fullName instagramUsername profilePictureUrl')
+            .select('userId fullName instagramUsername profilePictureUrl easypaisaNumber easypaisaScreenshotUrl')
             .lean();
         const profileMap = new Map(profiles.map((profile) => [String(profile.userId), profile]));
 
@@ -75,7 +75,7 @@ exports.reviewCashout = async (req, res, next) => {
         await cashout.save();
 
         const influencerProfile = await InfluencerProfile.findOne({ userId: cashout.influencerUserId })
-            .select('fullName instagramUsername')
+            .select('fullName instagramUsername easypaisaNumber easypaisaScreenshotUrl profilePictureUrl')
             .lean();
 
         await deliverUserNotification({

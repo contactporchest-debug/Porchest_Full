@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, User, Users, BarChart3, Briefcase, DollarSign, Inbox,
+    LayoutDashboard, User, Users, BarChart3, Briefcase, DollarSign,
     Building2, Handshake, Sparkles, FolderKanban, LogOut, ChevronRight, TrendingUp,
     ShieldCheck, ShieldAlert,
 } from 'lucide-react';
@@ -21,7 +21,6 @@ const NAVS: Record<Role, Array<{ label: string; href: string; icon: React.ReactN
         { label: 'Campaigns',      href: '/dashboard/influencer/collaborations', icon: <Briefcase size={18} /> },
         { label: 'Performance',    href: '/dashboard/influencer/performance',    icon: <TrendingUp size={18} /> },
         { label: 'Earnings',       href: '/dashboard/influencer/earnings',       icon: <DollarSign size={18} /> },
-        { label: 'Requests',       href: '/dashboard/influencer/requests',       icon: <Inbox size={18} /> },
     ],
     brand: [
         { label: 'Dashboard',      href: '/dashboard/brand',                     icon: <LayoutDashboard size={18} /> },

@@ -22,6 +22,7 @@ router.use(authMiddleware, roleMiddleware('influencer'));
 router.get('/dashboard', influencerController.getDashboard);
 router.get('/profile', influencerController.getProfile);
 router.put('/profile', influencerController.updateProfile);
+router.patch('/payment-details', influencerController.updatePaymentDetails);
 
 // ── Instagram OAuth ──
 router.get('/instagram/connect', instagramController.initiateConnect);

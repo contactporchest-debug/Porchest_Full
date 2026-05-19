@@ -201,3 +201,48 @@ exports.updateProfile = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Update influencer payout details
+// @route   PATCH /api/influencer/payment-details
+exports.updatePaymentDetails = async (req, res, next) => {
+    try {
+        const easypaisaNumber = String(req.body?.easypaisaNumber || '').trim();
+        const easypaisaScreenshotUrl = String(req.body?.easypaisaScreenshotUrl || '').trim();
+
+        if (!easypaisaNumber) {
+            return res.status(400).json({ success: false, message: 'Easypaisa number is required.' });
+        }
+
+        if (!/^[0-9+\-\s]{8,20}$/.test(easypaisaNumber)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid Easypaisa number.' });
+        }
+
+        if (easypaisaScreenshotUrl && !/^https?:\/\//i.test(easypaisaScreenshotUrl)) {
+            return res.status(400).json({ success: false, message: 'Screenshot URL must be a valid http or https URL.' });
+        }
+
+        let influencerProfile = await InfluencerProfile.findOne({ userId: req.user._id });
+        if (!influencerProfile) {
+            const influencerProfileId = await generateUniqueCode('INF', InfluencerProfile, 'influencerProfileId');
+            influencerProfile = await InfluencerProfile.create({
+                userId: req.user._id,
+                influencerProfileId,
+                easypaisaNumber,
+                easypaisaScreenshotUrl: easypaisaScreenshotUrl || undefined,
+            });
+        } else {
+            influencerProfile.easypaisaNumber = easypaisaNumber;
+            influencerProfile.easypaisaScreenshotUrl = easypaisaScreenshotUrl || undefined;
+            await influencerProfile.save();
+        }
+
+        const user = await User.findById(req.user._id).select('-password');
+        return res.json({
+            success: true,
+            user,
+            influencerProfile,
+        });
+    } catch (error) {
+        next(error);
+    }
+};

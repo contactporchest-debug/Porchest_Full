@@ -1,26 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDownCircle, CheckCircle2, Clock3, DollarSign, History, Loader2, Sparkles, TrendingUp } from 'lucide-react';
+import { BadgeCheck, Clock3, Image as ImageIcon, Loader2, ReceiptText, Save, Sparkles, TrendingUp, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { influencerAPI } from '@/lib/api';
 
 type CashoutStatus = 'pending' | 'approved' | 'rejected';
 
-interface EarningsSummary {
-    lifetimeTotal: number;
-    totalPaid: number;
-    totalPending: number;
-    availableForCashout: number;
-    pendingCashoutsTotal?: number;
-    approvedCashoutsTotal?: number;
+interface PaymentProfile {
+    easypaisaNumber?: string | null;
+    easypaisaScreenshotUrl?: string | null;
+    fullName?: string | null;
+    instagramUsername?: string | null;
 }
 
 interface Cashout {
     _id: string;
     amount: number;
     status: CashoutStatus;
+    cashoutCode?: string;
     transactionId?: string | null;
     requestedAt?: string;
     createdAt: string;
@@ -29,15 +28,17 @@ interface Cashout {
     rejectionReason?: string;
 }
 
-interface PayoutRow {
+interface CampaignPaymentRow {
     _id: string;
-    title: string;
-    source: string;
-    amount: number;
+    campaignTitle?: string;
+    brandName?: string;
     status: string;
-    createdAt: string;
+    contractValue: number;
     paidAmount: number;
     pendingAmount: number;
+    createdAt: string;
+    firstPayoutReleasedAt?: string | null;
+    secondPayoutReleasedAt?: string | null;
 }
 
 const colors = {
@@ -52,14 +53,21 @@ const colors = {
     cardStrong: 'rgba(255,255,255,0.48)',
 };
 
-const cashoutLabels: Record<CashoutStatus, { label: string; color: string; bg: string }> = {
+const statusLabels: Record<CashoutStatus, { label: string; color: string; bg: string }> = {
     pending: { label: 'Pending', color: '#d97706', bg: 'rgba(245,158,11,0.10)' },
-    approved: { label: 'Approved', color: '#059669', bg: 'rgba(16,185,129,0.10)' },
+    approved: { label: 'Cleared', color: '#059669', bg: 'rgba(16,185,129,0.10)' },
     rejected: { label: 'Rejected', color: '#dc2626', bg: 'rgba(239,68,68,0.10)' },
 };
 
 function money(value: number) {
     return `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatDate(value?: string | null) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function StatCard({
@@ -160,23 +168,33 @@ function Panel({
 
 export default function EarningsPage() {
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [summary, setSummary] = useState<EarningsSummary | null>(null);
+    const [saving, setSaving] = useState(false);
     const [cashouts, setCashouts] = useState<Cashout[]>([]);
-    const [recentPayouts, setRecentPayouts] = useState<PayoutRow[]>([]);
-    const [cashoutAmount, setCashoutAmount] = useState('');
+    const [campaignPayments, setCampaignPayments] = useState<CampaignPaymentRow[]>([]);
+    const [paymentProfile, setPaymentProfile] = useState<PaymentProfile>({});
+    const [easypaisaNumber, setEasypaisaNumber] = useState('');
+    const [easypaisaScreenshotUrl, setEasypaisaScreenshotUrl] = useState('');
 
     const load = async () => {
         setLoading(true);
         try {
-            const [earningsRes, cashoutsRes] = await Promise.all([
+            const [profileRes, earningsRes] = await Promise.all([
+                influencerAPI.getProfile(),
                 influencerAPI.getEarnings(),
-                influencerAPI.getCashouts(),
             ]);
 
-            setSummary(earningsRes.data.summary);
-            setCashouts(cashoutsRes.data.cashouts || []);
-            setRecentPayouts(earningsRes.data.payoutHistory || []);
+            const profile = profileRes.data?.influencerProfile || {};
+            setPaymentProfile({
+                easypaisaNumber: profile.easypaisaNumber || '',
+                easypaisaScreenshotUrl: profile.easypaisaScreenshotUrl || '',
+                fullName: profile.fullName || profileRes.data?.user?.name || profileRes.data?.user?.email || null,
+                instagramUsername: profile.instagramUsername || null,
+            });
+            setEasypaisaNumber(profile.easypaisaNumber || '');
+            setEasypaisaScreenshotUrl(profile.easypaisaScreenshotUrl || '');
+
+            setCashouts(earningsRes.data?.cashouts || []);
+            setCampaignPayments(earningsRes.data?.recentCollaborations || []);
         } catch (error: any) {
             toast.error(error?.response?.data?.message || 'Failed to load earnings data');
         } finally {
@@ -188,37 +206,51 @@ export default function EarningsPage() {
         void load();
     }, []);
 
-    const available = summary?.availableForCashout ?? 0;
+    const expectedPayments = useMemo(
+        () => campaignPayments.filter((row) => Number(row.pendingAmount || 0) > 0),
+        [campaignPayments]
+    );
 
-    const handleCashout = async () => {
-        const amount = Number(cashoutAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            toast.error('Enter a valid cashout amount');
+    const receivedPayments = useMemo(
+        () => cashouts.filter((row) => row.status === 'approved'),
+        [cashouts]
+    );
+
+    const totalEarned = useMemo(
+        () => receivedPayments.reduce((sum, row) => sum + Number(row.amount || 0), 0),
+        [receivedPayments]
+    );
+
+    const paymentPendingTotal = useMemo(
+        () => expectedPayments.reduce((sum, row) => sum + Number(row.pendingAmount || 0), 0),
+        [expectedPayments]
+    );
+
+    const primaryScreenshot = easypaisaScreenshotUrl || paymentProfile.easypaisaScreenshotUrl || '';
+
+    const handleSavePaymentDetails = async () => {
+        const normalizedNumber = easypaisaNumber.trim();
+        const normalizedScreenshot = easypaisaScreenshotUrl.trim();
+
+        if (!normalizedNumber) {
+            toast.error('Please enter your Easypaisa number.');
             return;
         }
-        if (amount > available) {
-            toast.error(`Amount exceeds available balance of ${money(available)}`);
-            return;
-        }
 
-        setSubmitting(true);
+        setSaving(true);
         try {
-            await influencerAPI.cashout(amount);
-            toast.success('Cashout request submitted');
-            setCashoutAmount('');
+            await influencerAPI.updatePaymentDetails({
+                easypaisaNumber: normalizedNumber,
+                easypaisaScreenshotUrl: normalizedScreenshot,
+            });
+            toast.success('Payment details saved');
             await load();
         } catch (error: any) {
-            toast.error(error?.response?.data?.message || 'Cashout request failed');
+            toast.error(error?.response?.data?.message || 'Failed to save payment details');
         } finally {
-            setSubmitting(false);
+            setSaving(false);
         }
     };
-
-    const cashoutPreview = useMemo(() => {
-        const amount = Number(cashoutAmount);
-        if (!Number.isFinite(amount) || amount <= 0) return null;
-        return Math.max(0, available - amount);
-    }, [available, cashoutAmount]);
 
     if (loading) {
         return (
@@ -230,15 +262,6 @@ export default function EarningsPage() {
             </div>
         );
     }
-
-    const safeSummary: EarningsSummary = summary || {
-        lifetimeTotal: 0,
-        totalPaid: 0,
-        totalPending: 0,
-        availableForCashout: 0,
-        pendingCashoutsTotal: 0,
-        approvedCashoutsTotal: 0,
-    };
 
     return (
         <motion.div
@@ -256,182 +279,277 @@ export default function EarningsPage() {
                     Influencer earnings
                 </p>
                 <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 800, letterSpacing: '-0.04em', color: colors.ink }}>
-                    Track payouts and request withdrawals
+                    Track campaign payments and payout details
                 </h1>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.7, color: colors.brown, maxWidth: 720 }}>
-                    Your balance is built from released campaign payouts. Cashout requests move through admin review and are confirmed by email.
+                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.7, color: colors.brown, maxWidth: 760 }}>
+                    Add your Easypaisa details once, then review money that is still expected from ongoing campaigns and money that has already been cleared.
                 </p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
-                <StatCard label="Lifetime value" value={money(safeSummary.lifetimeTotal)} helper="All campaign value tracked so far" icon={<TrendingUp size={18} />} tint={colors.rust} />
-                <StatCard label="Paid earnings" value={money(safeSummary.totalPaid)} helper="Released and available payouts" icon={<CheckCircle2 size={18} />} tint="#059669" />
-                <StatCard label="Pending earnings" value={money(safeSummary.totalPending)} helper="Contract value not released yet" icon={<Clock3 size={18} />} tint="#d97706" />
-                <StatCard label="Available now" value={money(safeSummary.availableForCashout)} helper="Can be requested for withdrawal" icon={<DollarSign size={18} />} tint="#0284c7" />
+                <StatCard
+                    label="Total earned"
+                    value={money(totalEarned)}
+                    helper="Payments cleared by admin and sent to your payout account"
+                    icon={<TrendingUp size={18} />}
+                    tint={colors.rust}
+                />
+                <StatCard
+                    label="Pending amount"
+                    value={money(paymentPendingTotal)}
+                    helper="Campaign payments not cleared yet"
+                    icon={<Clock3 size={18} />}
+                    tint="#d97706"
+                />
             </div>
 
             <Panel
-                title="Request cashout"
-                subtitle="Submit a withdrawal request for your available balance."
-                icon={<ArrowDownCircle size={18} />}
+                title="Easypaisa payout details"
+                subtitle="This is the payout information admin will see while clearing your payments."
+                icon={<Wallet size={18} />}
             >
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '14px', alignItems: 'end' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '14px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: colors.brown, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                            Withdrawal amount
+                            Easypaisa number
                         </label>
-                        <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: colors.brown, fontWeight: 700 }}>$</span>
-                            <input
-                                type="number"
-                                min="1"
-                                step="0.01"
-                                value={cashoutAmount}
-                                onChange={(e) => setCashoutAmount(e.target.value)}
-                                placeholder="0.00"
-                                style={{
-                                    width: '100%',
-                                    padding: '13px 14px 13px 30px',
-                                    borderRadius: '12px',
-                                    border: `1px solid ${colors.border}`,
-                                    background: 'rgba(255,255,255,0.60)',
-                                    outline: 'none',
-                                    color: colors.ink,
-                                    fontSize: '15px',
-                                    fontWeight: 700,
-                                }}
-                            />
-                        </div>
-                        <p style={{ margin: '8px 0 0', fontSize: '12px', color: colors.brown }}>
-                            Available balance: <strong style={{ color: colors.rust }}>{money(available)}</strong>
-                            {cashoutPreview != null ? ` • Remaining after request: ${money(cashoutPreview)}` : ''}
-                        </p>
+                        <input
+                            type="text"
+                            value={easypaisaNumber}
+                            onChange={(e) => setEasypaisaNumber(e.target.value)}
+                            placeholder="03xx-xxxxxxx"
+                            style={{
+                                width: '100%',
+                                padding: '13px 14px',
+                                borderRadius: '12px',
+                                border: `1px solid ${colors.border}`,
+                                background: 'rgba(255,255,255,0.60)',
+                                outline: 'none',
+                                color: colors.ink,
+                                fontSize: '15px',
+                                fontWeight: 700,
+                            }}
+                        />
                     </div>
 
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: colors.brown, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Screenshot URL
+                        </label>
+                        <input
+                            type="url"
+                            value={easypaisaScreenshotUrl}
+                            onChange={(e) => setEasypaisaScreenshotUrl(e.target.value)}
+                            placeholder="https://..."
+                            style={{
+                                width: '100%',
+                                padding: '13px 14px',
+                                borderRadius: '12px',
+                                border: `1px solid ${colors.border}`,
+                                background: 'rgba(255,255,255,0.60)',
+                                outline: 'none',
+                                color: colors.ink,
+                                fontSize: '15px',
+                                fontWeight: 700,
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', marginTop: '14px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: colors.brown, fontSize: '13px' }}>
+                        <BadgeCheck size={16} color={colors.rust} />
+                        {paymentProfile.easypaisaNumber ? `Currently saved for ${paymentProfile.fullName || paymentProfile.instagramUsername || 'your account'}` : 'Save once so admin can clear payouts to this number'}
+                    </div>
                     <button
-                        onClick={handleCashout}
-                        disabled={submitting || available <= 0}
+                        onClick={handleSavePaymentDetails}
+                        disabled={saving}
                         style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '10px',
                             height: '48px',
-                            padding: '0 22px',
+                            padding: '0 20px',
                             borderRadius: '12px',
                             border: 'none',
                             color: '#fff',
                             fontSize: '14px',
                             fontWeight: 700,
-                            background: available <= 0 ? 'rgba(255,255,255,0.7)' : `linear-gradient(135deg, ${colors.rust}, ${colors.flame})`,
-                            boxShadow: available <= 0 ? 'none' : '0 14px 28px rgba(194,52,10,0.16)',
-                            cursor: available <= 0 ? 'not-allowed' : 'pointer',
-                            opacity: submitting ? 0.75 : 1,
-                            minWidth: '170px',
+                            background: `linear-gradient(135deg, ${colors.rust}, ${colors.flame})`,
+                            boxShadow: '0 14px 28px rgba(194,52,10,0.16)',
+                            cursor: 'pointer',
+                            opacity: saving ? 0.8 : 1,
                         }}
                     >
-                        {submitting ? 'Submitting...' : 'Request cashout'}
+                        {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />}
+                        {saving ? 'Saving...' : 'Save payout details'}
                     </button>
                 </div>
-            </Panel>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: '14px' }}>
-                <Panel
-                    title="Payout history"
-                    subtitle="Released campaign payouts collected from your collaborations."
-                    icon={<History size={18} />}
-                >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {recentPayouts.length === 0 ? (
-                            <EmptyState title="No payouts yet" description="Released payouts from verified campaigns will appear here." />
-                        ) : (
-                            recentPayouts.slice(0, 6).map((row) => (
+                {primaryScreenshot && (
+                    <div
+                        style={{
+                            marginTop: '16px',
+                            borderRadius: '16px',
+                            border: `1px solid ${colors.border}`,
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.50))',
+                            overflow: 'hidden',
+                            boxShadow: '0 10px 24px rgba(194,52,10,0.06)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '14px 16px', borderBottom: `1px solid ${colors.border}` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <ImageIcon size={16} color={colors.rust} />
+                                <div>
+                                    <p style={{ margin: 0, fontWeight: 800, color: colors.ink }}>Easypaisa proof</p>
+                                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: colors.brown }}>Visible to admin during payout review</p>
+                                </div>
+                            </div>
+                            <span style={{ padding: '5px 10px', borderRadius: '999px', border: `1px solid rgba(5,150,105,0.20)`, background: 'rgba(5,150,105,0.10)', color: '#059669', fontSize: '11px', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                Attached
+                            </span>
+                        </div>
+                        <div style={{ padding: '16px' }}>
+                            <div
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '120px minmax(0, 1fr)',
+                                    gap: '14px',
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <div
-                                    key={row._id}
                                     style={{
-                                        padding: '16px',
+                                        width: '120px',
+                                        height: '120px',
                                         borderRadius: '14px',
                                         border: `1px solid ${colors.border}`,
-                                        background: colors.cardStrong,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        gap: '16px',
+                                        background: 'rgba(255,255,255,0.60)',
+                                        overflow: 'hidden',
+                                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.5)',
                                     }}
                                 >
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: colors.ink }}>{row.title}</p>
-                                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: colors.brown }}>
-                                            {row.source} • {new Date(row.createdAt).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ margin: 0, fontWeight: 800, fontSize: '16px', color: colors.rust }}>{money(row.amount)}</p>
-                                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: colors.brown }}>
-                                            {row.pendingAmount > 0 ? `Pending ${money(row.pendingAmount)}` : 'Fully released'}
-                                        </p>
-                                    </div>
+                                    <img
+                                        src={primaryScreenshot}
+                                        alt="Easypaisa screenshot thumbnail"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    />
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </Panel>
-
-                <Panel
-                    title="Cashout requests"
-                    subtitle="Your withdrawal requests and admin decisions."
-                    icon={<Sparkles size={18} />}
-                >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {cashouts.length === 0 ? (
-                            <EmptyState title="No cashouts yet" description="Once you submit a withdrawal request, the status trail will appear here." />
-                        ) : (
-                            cashouts.slice(0, 6).map((cashout) => {
-                                const label = cashoutLabels[cashout.status];
-                                return (
-                                    <div
-                                        key={cashout._id}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <p style={{ margin: 0, fontWeight: 800, color: colors.ink }}>Payment screenshot saved</p>
+                                    <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.6, color: colors.brown }}>
+                                        Admin can use this proof while clearing your earnings. Keep the screenshot current if your payout details change.
+                                    </p>
+                                    <a
+                                        href={primaryScreenshot}
+                                        target="_blank"
+                                        rel="noreferrer"
                                         style={{
-                                            padding: '16px',
-                                            borderRadius: '14px',
-                                            border: `1px solid ${colors.border}`,
-                                            background: colors.cardStrong,
+                                            width: 'fit-content',
+                                            color: colors.rust,
+                                            fontSize: '13px',
+                                            fontWeight: 800,
+                                            textDecoration: 'none',
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: colors.ink }}>{money(cashout.amount)}</p>
-                                                <p style={{ margin: '4px 0 0', fontSize: '12px', color: colors.brown }}>
-                                                    Requested {new Date(cashout.requestedAt || cashout.createdAt).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <span
-                                                style={{
-                                                    padding: '4px 12px',
-                                                    borderRadius: '999px',
-                                                    background: label.bg,
-                                                    border: `1px solid ${label.color}28`,
-                                                    color: label.color,
-                                                    fontSize: '11px',
-                                                    fontWeight: 800,
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.06em',
-                                                }}
-                                            >
-                                                {label.label}
-                                            </span>
-                                        </div>
-                                        {cashout.transactionId && (
-                                            <p style={{ margin: '10px 0 0', fontSize: '12px', color: colors.brown }}>
-                                                Transaction: <span style={{ fontFamily: 'monospace' }}>{cashout.transactionId}</span>
-                                            </p>
-                                        )}
-                                        {cashout.rejectionReason && (
-                                            <p style={{ margin: '10px 0 0', fontSize: '12px', color: '#9f1239' }}>{cashout.rejectionReason}</p>
-                                        )}
-                                    </div>
-                                );
-                            })
-                        )}
+                                        Open full screenshot
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </Panel>
-            </div>
+                )}
+            </Panel>
+
+            <Panel
+                title="Expected payments"
+                subtitle="Ongoing campaigns with amounts that are still waiting to be cleared."
+                icon={<ReceiptText size={18} />}
+            >
+                {expectedPayments.length === 0 ? (
+                    <EmptyState
+                        title="No pending campaign payments"
+                        description="Once a brand clears a campaign payment, the amount will appear here until it is fully received."
+                    />
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+                            <thead>
+                                <tr style={{ textAlign: 'left' }}>
+                                    <Th>Campaign</Th>
+                                    <Th>Brand</Th>
+                                    <Th>Contract</Th>
+                                    <Th>Pending</Th>
+                                    <Th>Status</Th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {expectedPayments.map((row) => (
+                                    <tr key={row._id}>
+                                        <Td>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontWeight: 800, color: colors.ink }}>{row.campaignTitle || 'Campaign'}</span>
+                                                <span style={{ fontSize: 12, color: colors.brown }}>{formatDate(row.createdAt)}</span>
+                                            </div>
+                                        </Td>
+                                        <Td>{row.brandName || 'Brand'}</Td>
+                                        <Td>{money(row.contractValue)}</Td>
+                                        <Td style={{ fontWeight: 800, color: colors.rust }}>{money(row.pendingAmount)}</Td>
+                                        <Td>
+                                            <span style={rowBadgeStyle('#d97706', 'rgba(245,158,11,0.10)')}>Awaiting clearance</span>
+                                        </Td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Panel>
+
+            <Panel
+                title="Payments received"
+                subtitle="Cashouts approved by admin and sent to your Easypaisa details."
+                icon={<Sparkles size={18} />}
+            >
+                {receivedPayments.length === 0 ? (
+                    <EmptyState
+                        title="No cleared payments yet"
+                        description="Once admin approves a cashout, the cleared amount will show here."
+                    />
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
+                            <thead>
+                                <tr style={{ textAlign: 'left' }}>
+                                    <Th>Cashout</Th>
+                                    <Th>Amount</Th>
+                                    <Th>Transaction</Th>
+                                    <Th>Cleared on</Th>
+                                    <Th>Status</Th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {receivedPayments.map((row) => (
+                                    <tr key={row._id}>
+                                        <Td>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontWeight: 800, color: colors.ink }}>{row.cashoutCode || row._id}</span>
+                                                <span style={{ fontSize: 12, color: colors.brown }}>Requested {formatDate(row.requestedAt || row.createdAt)}</span>
+                                            </div>
+                                        </Td>
+                                        <Td style={{ fontWeight: 800, color: colors.rust }}>{money(row.amount)}</Td>
+                                        <Td style={{ fontFamily: 'monospace', fontSize: 13, color: colors.brown }}>{row.transactionId || '—'}</Td>
+                                        <Td>{formatDate(row.processedAt || row.reviewedAt)}</Td>
+                                        <Td>
+                                            <span style={rowBadgeStyle(statusLabels.approved.color, statusLabels.approved.bg)}>{statusLabels.approved.label}</span>
+                                        </Td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Panel>
         </motion.div>
     );
 }
@@ -451,4 +569,46 @@ function EmptyState({ title, description }: { title: string; description: string
             <p style={{ margin: '6px 0 0', fontSize: '13px', color: colors.brown, lineHeight: 1.65 }}>{description}</p>
         </div>
     );
+}
+
+function Th({ children }: { children: ReactNode }) {
+    return (
+        <th style={{ padding: '0 14px 10px', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: colors.brown }}>
+            {children}
+        </th>
+    );
+}
+
+function Td({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+    return (
+        <td
+            style={{
+                padding: '14px',
+                background: colors.cardStrong,
+                borderTop: `1px solid ${colors.border}`,
+                borderBottom: `1px solid ${colors.border}`,
+                color: colors.ink,
+                ...style,
+            }}
+        >
+            {children}
+        </td>
+    );
+}
+
+function rowBadgeStyle(color: string, bg: string): CSSProperties {
+    return {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '5px 12px',
+        borderRadius: '999px',
+        border: `1px solid ${color}28`,
+        background: bg,
+        color,
+        fontSize: 11,
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        letterSpacing: '0.06em',
+    };
 }

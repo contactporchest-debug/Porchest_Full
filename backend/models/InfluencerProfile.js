@@ -191,6 +191,8 @@ const influencerProfileSchema = new mongoose.Schema(
             iban: { type: String },
             bankName: { type: String },
         },
+        easypaisaNumber: { type: String },
+        easypaisaScreenshotUrl: { type: String },
 
         // Porchest internal
         assignedEmployee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

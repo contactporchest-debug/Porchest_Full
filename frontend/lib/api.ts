@@ -151,6 +151,7 @@ export const influencerAPI = {
     // Profile
     getProfile: () => api.get('/influencer/profile'),
     updateProfile: (data: Record<string, unknown>) => api.put('/influencer/profile', data),
+    updatePaymentDetails: (data: { easypaisaNumber: string; easypaisaScreenshotUrl?: string }) => api.patch('/influencer/payment-details', data),
     getCollaborations: (params?: Record<string, unknown>) => api.get('/collaborations', { params }),
     // Instagram OAuth
     getInstagramConnectURL: () => api.get('/influencer/instagram/connect'),

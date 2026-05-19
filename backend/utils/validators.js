@@ -48,6 +48,7 @@ exports.validateInfluencerProfile = (body) => {
         avgReelCostUSD,
         shortBio,
         bio,
+        easypaisaNumber,
     } = body;
 
     const nameValue = fullName || displayName;
@@ -120,6 +121,13 @@ exports.validateInfluencerProfile = (body) => {
         const wordCount = String(bioValue).trim().split(/\s+/).filter(Boolean).length;
         if (wordCount > 100) {
             errors.push('Bio must not exceed 100 words');
+        }
+    }
+
+    if (easypaisaNumber !== undefined && easypaisaNumber !== null && String(easypaisaNumber).trim()) {
+        const normalized = String(easypaisaNumber).trim();
+        if (!/^[0-9+\-\s]{8,20}$/.test(normalized)) {
+            errors.push('Easypaisa number must contain a valid phone number');
         }
     }
 
