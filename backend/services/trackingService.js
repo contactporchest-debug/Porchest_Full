@@ -30,6 +30,35 @@ function getTokenFromProfile(profile) {
     return profile?.sync?.longLivedToken || profile?.sync?.accessToken || null;
 }
 
+function normalizeTrackingDestination(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw.replace(/\/$/, '');
+    return `https://${raw.replace(/\/$/, '')}`;
+}
+
+async function resolveTrackingDestination(brandId, fallbackWebsite) {
+    const shopifyConnection = await BrandTrackingConnection.findOne({
+        brandId,
+        platform: 'shopify',
+        status: { $nin: ['disconnected', 'not_started'] },
+    }).select('storeUrl metadata status').lean();
+
+    const shopifyStoreUrl = normalizeTrackingDestination(
+        shopifyConnection?.storeUrl
+        || shopifyConnection?.metadata?.shopify?.shopDomain
+    );
+
+    const destination = shopifyStoreUrl || normalizeTrackingDestination(fallbackWebsite) || 'https://porchest.com';
+
+    return {
+        destination,
+        shopifyConnected: Boolean(shopifyStoreUrl),
+        shopifyStoreUrl,
+        shopifyConnection,
+    };
+}
+
 /**
  * Generates a unique Porchest redirect URL for a collaboration.
  * @param {string} collaborationId
@@ -231,7 +260,6 @@ async function ensureTrackingAssets(collaborationId) {
             return { success: false, error: 'Collaboration not found' };
         }
 
-        const existingTrackingLink = collab.brief?.trackingLink;
         const existingPromoCode = collab.brief?.promoCode;
         const hasBaseline = Boolean(collab.followerSnapshot?.baseline?.count);
 
@@ -241,18 +269,12 @@ async function ensureTrackingAssets(collaborationId) {
             return { success: false, error: 'Brand or influencer profile not found' };
         }
 
-        // Check for Shopify connection — prefer Shopify store URL as tracking destination
-        const shopifyConnection = await BrandTrackingConnection.findOne({
-            brandId: collab.brandId,
-            platform: 'shopify',
-            status: { $nin: ['disconnected', 'not_started'] },
-        }).lean();
-        const shopifyStoreUrl = shopifyConnection?.storeUrl
-            ? `https://${shopifyConnection.storeUrl}`
-            : null;
-        const trackingDestination = shopifyStoreUrl || brandProfile.website || 'https://porchest.com';
+        const { destination: trackingDestination, shopifyConnected, shopifyStoreUrl } = await resolveTrackingDestination(
+            collab.brandId,
+            brandProfile.website
+        );
 
-        const trackingLink = existingTrackingLink || generateTrackingLink(
+        const trackingLink = generateTrackingLink(
             collab._id.toString(),
             collab.influencerId.toString(),
             trackingDestination
@@ -272,6 +294,12 @@ async function ensureTrackingAssets(collaborationId) {
                 $set: {
                     'brief.trackingLink': trackingLink,
                     'brief.promoCode': promoCode,
+                    'trackingDetails.enabled': true,
+                    'trackingDetails.accepted': Boolean(collab.status === 'accepted' || collab.trackingAcceptedByInfluencer),
+                    'trackingDetails.platform': shopifyConnected ? 'shopify' : 'porchest',
+                    'trackingDetails.shopifyConnected': shopifyConnected,
+                    'trackingDetails.shopifyStoreUrl': shopifyStoreUrl,
+                    'trackingDetails.trackingDestination': trackingDestination,
                     campaignStartDate,
                     campaignEndDate,
                     status: collab.status === 'accepted' ? 'accepted' : collab.status,
@@ -294,6 +322,7 @@ async function ensureTrackingAssets(collaborationId) {
 module.exports = {
     generateTrackingLink,
     generatePromoCode,
+    resolveTrackingDestination,
     takeFollowerBaseline,
     pollFollowerGrowthForActiveCampaigns,
     releaseDueSecondPayouts,

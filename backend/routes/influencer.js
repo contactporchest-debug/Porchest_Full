@@ -178,6 +178,7 @@ router.get('/campaigns/in-production', async (req, res, next) => {
 // ── Campaign Requests (incoming) ──
 router.get('/requests', campaignRequestController.getInfluencerRequests);
 router.patch('/requests/:id', campaignRequestController.respondToRequest);
+router.post('/verify', campaignRequestController.submitInfluencerVerification);
 
 // ── Verifications (Completed Collaborations) ───────────────────────
 router.get('/verifications', campaignRequestController.getInfluencerVerifications);

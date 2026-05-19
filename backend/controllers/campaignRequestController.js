@@ -3,11 +3,10 @@ const Notification = require('../models/Notification');
 const User = require('../models/User');
 const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandProfile = require('../models/BrandProfile');
-const BrandTrackingConnection = require('../models/BrandTrackingConnection');
 const { generateUniqueCode } = require('../utils/generateCode');
 const { isValidObjectId } = require('../utils/validators');
 const { buildInfluencerProfileChecklist } = require('../utils/influencerProfileCompletion');
-const { ensureTrackingAssets, generateTrackingLink, generatePromoCode } = require('../services/trackingService');
+const { ensureTrackingAssets, generateTrackingLink, generatePromoCode, resolveTrackingDestination } = require('../services/trackingService');
 const { computeFixedCampaignPricing, normalizeContentTypes } = require('../services/campaignPricingService');
 const {
     buildEmailHtml,
@@ -71,16 +70,11 @@ exports.createRequest = async (req, res, next) => {
         const agreedFee = fixedPricing.totalPrice || (agreedPrice ? Number(agreedPrice) : undefined);
 
         // Check if brand has Shopify connected — auto-enable tracking
-        const shopifyConnection = await BrandTrackingConnection.findOne({
-            brandId: brandProfile._id,
-            platform: 'shopify',
-            status: { $nin: ['disconnected', 'not_started'] },
-        }).lean();
-        const hasShopify = Boolean(shopifyConnection && shopifyConnection.storeUrl);
-        const shopifyStoreUrl = hasShopify
-            ? `https://${shopifyConnection.storeUrl}`
-            : null;
-        const trackingDestination = shopifyStoreUrl || brandProfile.website || 'https://porchest.com';
+        const {
+            destination: trackingDestination,
+            shopifyConnected: hasShopify,
+            shopifyStoreUrl,
+        } = await resolveTrackingDestination(brandProfile._id, brandProfile.website);
 
         const brandName = brandProfile.businessName || brandProfile.brandName || brandProfile.companyName;
         const influencerName = influencerProfile.fullName || influencerProfile.displayName || influencerProfile.instagramUsername;
@@ -433,6 +427,118 @@ exports.respondToRequest = async (req, res, next) => {
         res.json({ success: true, request });
     } catch (error) {
         console.error(`[API Error] Error responding to request:`, error);
+        next(error);
+    }
+};
+
+// @desc    Influencer submits a final Instagram post URL for verification
+// @route   POST /api/influencer/verify
+exports.submitInfluencerVerification = async (req, res, next) => {
+    try {
+        const { campaignRequestId, postUrl } = req.body;
+
+        if (!isValidObjectId(campaignRequestId)) {
+            return res.status(400).json({ success: false, message: 'Invalid campaign request ID' });
+        }
+
+        const request = await CampaignRequest.findOne({
+            _id: campaignRequestId,
+            influencerUserId: req.user._id,
+        });
+
+        if (!request) {
+            return res.status(404).json({ success: false, message: 'Request not found' });
+        }
+
+        const normalizedStatus = String(request.status || '').toLowerCase();
+        if (!['content_approved', 'posted'].includes(normalizedStatus)) {
+            return res.status(400).json({ success: false, message: `Action not allowed in current status: ${request.status}` });
+        }
+
+        const submittedPostLink = String(postUrl || '').trim();
+        if (!/^https?:\/\//i.test(submittedPostLink) || !/instagram\.com/i.test(submittedPostLink)) {
+            return res.status(400).json({ success: false, message: 'instagram link must be a valid Instagram URL' });
+        }
+
+        await ensureTrackingAssets(request._id);
+
+        const now = new Date();
+        request.status = 'posted';
+        request.postLink = submittedPostLink;
+        request.postSubmittedAt = now;
+        request.content = {
+            ...(request.content || {}),
+            postLink: submittedPostLink,
+            postSubmittedAt: now,
+        };
+        await request.save();
+
+        const admins = await User.find({ role: { $in: ['admin-marketing', 'admin-software', 'owner'] } })
+            .select('_id fullName email')
+            .lean();
+
+        await Promise.all([
+            Notification.create({
+                recipientUserId: request.brandUserId,
+                type: 'system',
+                title: 'Post submitted for verification',
+                message: `${request.influencerName || 'The influencer'} submitted the live post for "${request.campaignTitle}".`,
+                campaignRequestId: request._id,
+                metadata: { action: 'submit-post', postLink: submittedPostLink },
+            }),
+            ...admins.map((admin) => Notification.create({
+                recipientUserId: admin._id,
+                type: 'system',
+                title: 'Campaign ready for admin review',
+                message: `${request.influencerName || 'The influencer'} submitted "${request.campaignTitle}" for verification.`,
+                campaignRequestId: request._id,
+                metadata: { action: 'submit-post', postLink: submittedPostLink, collabStatus: 'posted' },
+            })),
+        ]);
+
+        const [brandUser] = await Promise.all([
+            User.findById(request.brandUserId).select('email fullName').lean(),
+        ]);
+
+        await Promise.all([
+            sendOptionalEmail({
+                email: brandUser?.email,
+                subject: 'Content submitted for approval',
+                message: `${request.influencerName || 'The influencer'} submitted the live post for "${request.campaignTitle}" and it is ready for review.`,
+                html: buildEmailHtml({
+                    title: 'Content submitted for approval',
+                    message: `${request.influencerName || 'The influencer'} submitted the live post for <strong>${request.campaignTitle}</strong> and it is ready for review.`,
+                }),
+            }),
+            ...admins.map((admin) => sendOptionalEmail({
+                email: admin.email,
+                subject: 'Campaign ready for admin review',
+                message: `${request.influencerName || 'The influencer'} submitted "${request.campaignTitle}" for verification.`,
+                html: buildEmailHtml({
+                    title: 'Campaign ready for admin review',
+                    message: `${request.influencerName || 'The influencer'} submitted <strong>${request.campaignTitle}</strong> for verification.`,
+                }),
+            })),
+        ]);
+
+        const io = req.app.locals.io;
+        if (io) {
+            io.to(`user-${request.brandUserId}`).emit('collaboration:updated', {
+                requestId: request._id,
+                status: 'posted',
+                action: 'submit-post',
+            });
+            admins.forEach((admin) => {
+                io.to(`user-${admin._id}`).emit('collaboration:updated', {
+                    requestId: request._id,
+                    status: 'posted',
+                    action: 'submit-post',
+                });
+            });
+        }
+
+        return res.json({ success: true, request });
+    } catch (error) {
         next(error);
     }
 };

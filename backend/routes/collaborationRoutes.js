@@ -14,6 +14,7 @@ const {
     generatePromoCode,
     takeFollowerBaseline,
     ensureTrackingAssets,
+    resolveTrackingDestination,
 } = require('../services/trackingService');
 const { computeFixedCampaignPricing, toNumber: toCampaignNumber } = require('../services/campaignPricingService');
 const { syncCollaborationMetrics } = require('../services/syncService');
@@ -130,7 +131,8 @@ async function submitDriveLink(req, res, collab, driveLink) {
 }
 
 async function submitInstagramLink(req, res, collab, postLink) {
-    if (String(collab.status) !== 'content_approved') return throwStatusError(collab.status, res);
+    const normalizedStatus = String(collab.status || '').toLowerCase();
+    if (!['content_approved', 'posted'].includes(normalizedStatus)) return throwStatusError(collab.status, res);
     if (String(collab.payment_status || 'pending') !== 'verified') {
         return res.status(400).json({ success: false, error: 'Payment must be verified before work can start' });
     }
@@ -588,7 +590,7 @@ async function getBrandCollaborationOrThrow(id, req, res) {
     return collab;
 }
 
-function setExactAcceptanceFields(update, collab, brandWebsite, influencerUsername) {
+function setExactAcceptanceFields(update, collab, trackingDestination, influencerUsername) {
     const now = new Date();
     const collaborationId = String(collab._id);
     const influencerRef = String(collab.influencerId || collab.influencerProfileId);
@@ -648,7 +650,7 @@ function setExactAcceptanceFields(update, collab, brandWebsite, influencerUserna
 
     update.brief = {
         ...(collab.brief || {}),
-        trackingLink: generateTrackingLink(collaborationId, influencerRef, brandWebsite || 'https://porchest.com'),
+        trackingLink: generateTrackingLink(collaborationId, influencerRef, trackingDestination || 'https://porchest.com'),
         promoCode: generatePromoCode(influencerUsername || 'PRCH', collaborationId),
     };
 
@@ -716,7 +718,21 @@ async function finalizeAcceptance(collabId, collab) {
     ]);
 
     const update = {};
-    setExactAcceptanceFields(update, collab, brandProfile?.website, influencerProfile?.igUsername || influencerProfile?.instagramUsername);
+    const { destination: trackingDestination, shopifyConnected, shopifyStoreUrl } = await resolveTrackingDestination(
+        collab.brandId || collab.brandProfileId,
+        brandProfile?.website
+    );
+
+    setExactAcceptanceFields(update, collab, trackingDestination, influencerProfile?.igUsername || influencerProfile?.instagramUsername);
+    update.trackingDetails = {
+        ...(collab.trackingDetails || {}),
+        enabled: true,
+        accepted: true,
+        platform: shopifyConnected ? 'shopify' : 'porchest',
+        shopifyConnected,
+        shopifyStoreUrl,
+        trackingDestination,
+    };
 
     const updated = await CampaignRequest.findByIdAndUpdate(
         collabId,
