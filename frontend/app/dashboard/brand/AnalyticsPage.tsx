@@ -39,7 +39,7 @@ import {
     YAxis,
 } from 'recharts';
 import { GlassCard, GlowButton } from '@/components/ui';
-import { brandAPI } from '@/lib/api';
+import { analyticsAPI, brandAPI } from '@/lib/api';
 import type {
     BrandInfluencerAnalyticsResponse,
     BrandInfluencerCard,
@@ -319,6 +319,14 @@ function typeMatches(filter: string, type: string) {
     return true;
 }
 
+function normalizeInfluencerList(items: BrandInfluencerCard[]) {
+    return items.map((item) => ({
+        ...item,
+        followerCount: item.followers,
+        profilePictureUrl: item.profilePictureUrl || (item as any).profileImageURL || null,
+    }));
+}
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs = ANALYTICS_REQUEST_TIMEOUT_MS, message = 'Request timed out.') {
     return Promise.race<T>([
         promise,
@@ -351,7 +359,7 @@ export default function BrandAnalyticsPage() {
         else setRefreshing(true);
         try {
             const response = await withTimeout(brandAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
-            const nextInfluencers = response.data?.influencers || [];
+            const nextInfluencers = normalizeInfluencerList(response.data?.influencers || []);
             const resolveId = (item: BrandInfluencerCard) => item.influencerId || item.influencerProfileId || item._id || '';
             setInfluencers(nextInfluencers);
             setSelectedId((current) => {
@@ -359,10 +367,23 @@ export default function BrandAnalyticsPage() {
                 if (current && nextInfluencers.some((item: BrandInfluencerCard) => resolveId(item) === current)) return current;
                 return resolveId(nextInfluencers[0] || ({} as BrandInfluencerCard));
             });
-        } catch (err: any) {
-            setError(err?.response?.data?.message || err?.message || 'Failed to load influencers.');
-            setInfluencers([]);
-            setSelectedId('');
+        } catch (primaryErr: any) {
+            try {
+                const fallback = await withTimeout(analyticsAPI.getInfluencers(nextSearch ? { search: nextSearch } : undefined));
+                const nextInfluencers = normalizeInfluencerList(fallback.data?.influencers || []);
+                const resolveId = (item: BrandInfluencerCard) => item.influencerId || item.influencerProfileId || item._id || '';
+                setInfluencers(nextInfluencers);
+                setSelectedId((current) => {
+                    if (targetInfluencerId && nextInfluencers.some((item: BrandInfluencerCard) => resolveId(item) === targetInfluencerId)) return targetInfluencerId;
+                    if (current && nextInfluencers.some((item: BrandInfluencerCard) => resolveId(item) === current)) return current;
+                    return resolveId(nextInfluencers[0] || ({} as BrandInfluencerCard));
+                });
+                setError('');
+            } catch (fallbackErr: any) {
+                setError(fallbackErr?.response?.data?.message || fallbackErr?.message || primaryErr?.response?.data?.message || primaryErr?.message || 'Failed to load influencers.');
+                setInfluencers([]);
+                setSelectedId('');
+            }
         } finally {
             if (!silent) setLoadingList(false);
             else setRefreshing(false);
