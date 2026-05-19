@@ -480,10 +480,11 @@ exports.getMatchedInfluencers = async (req, res, next) => {
             .limit(100)
             .lean();
 
-        // Second-pass filter: ensure the live profile is complete and connected.
-        const eligible = influencerProfiles.filter(isInfluencerDiscoverable);
-
-        const result = eligible.map(buildInfluencerCard);
+        // Brand discovery should stay usable even if profile-completion
+        // metadata is stale or incomplete in another part of the system.
+        // We keep the completion status on the card, but we do not hide
+        // connected creators from this list.
+        const result = influencerProfiles.map(buildInfluencerCard);
         res.json({ success: true, influencers: result });
     } catch (error) {
         next(error);
