@@ -4,7 +4,7 @@ const InfluencerProfile = require('../models/InfluencerProfile');
 const BrandTrackingConnection = require('../models/BrandTrackingConnection');
 const { fetchIgProfile } = require('./instagramService');
 
-const DEFAULT_BASE_URL = 'https://track.porchest.com';
+const DEFAULT_BASE_URL = 'https://porchest.com';
 const FOLLOWER_POLL_DELAY_MS = 500;
 const GRACE_PERIOD_DAYS = 7;
 
