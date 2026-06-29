@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import PostVerificationQueue from '@/components/admin/PostVerificationQueue';
 import { motion } from 'framer-motion';
 import { ArrowRight, BarChart3, BriefcaseBusiness, Users, Shield, Wallet, ShieldCheck, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -238,6 +239,8 @@ export default function AdminLandingPage() {
                             Use the cards above to move directly into the area you need. The admin workspace is now centered on users, with supporting operational screens kept available for campaign review, collaboration tracking, and cashout handling.
                         </p>
                     </motion.div>
+
+                    <PostVerificationQueue />
                 </div>
             </DashboardLayout>
         </ProtectedRoute>
